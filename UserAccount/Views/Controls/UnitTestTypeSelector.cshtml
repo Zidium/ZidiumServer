@@ -1,0 +1,23 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@model UnitTestTypeSelectorModel
+
+@if (Model.Expression == null)
+{
+    @Html.DropDownList(@Model.Name, GuiHelper.GetUnitTestTypes(Model.UnitTestTypeId, Model.AllowEmpty, Model.UserOnly), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false" })
+}
+else
+{
+    @Model.HtmlHelper.DropDownListFor(Model.Expression, GuiHelper.GetUnitTestTypes(Model.UnitTestTypeId, Model.AllowEmpty, Model.UserOnly), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false" })
+}
+
+<script>
+    $(function () {
+        var control = $('#@Model.Name');
+        var selector = new UnitTestTypeSelector(control, function() {
+            if ('@Model.AutoRefreshPage.ToString()' == 'True') {
+                document.location.href = SetQueryParamFromControl(document.location.href, control);
+            }
+        });
+    });
+</script>

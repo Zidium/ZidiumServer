@@ -1,0 +1,62 @@
+﻿@using Zidium.Core.Api
+@using Zidium.Core.Common.Helpers
+@model Zidium.UserAccount.Models.ExtentionProperties.ExtentionPropertiesModel
+@if (Model.Rows.Count == 0)
+{
+    <p>Нет свойств</p>
+}
+else
+{
+    <table class="table simpleTableClear table-condensed" style="width: 100%">
+        @if (Model.ShowHeaders)
+        {
+            <tr>
+                @if (Model.ShowDataTypes)
+                {
+                    <th class="text-nowrap">Тип</th>
+                }
+                <th class="text-nowrap">Название</th>
+                <th>Значение</th>
+            </tr>
+        }
+        @foreach (var row in Model.Rows.OrderBy(x=>x.Name))
+        {
+            <tr>
+                @if (Model.ShowDataTypes)
+                {
+                    <td style="vertical-align: top">@row.DataType</td>
+                }
+                <td style="vertical-align: top; width: 1px" class="text-nowrap">
+                    <b>@row.Name</b>
+                </td>
+                <td style="vertical-align: top">
+                    @if (row.DataType == DataType.Binary)
+                    {
+                        // бинарный файл
+                        var url = Url.Action("DownloadFile", "ExtentionProperties", new {id = row.Id, owner = Model.Owner});
+                        long size = row.Value == null ? 0 : row.Value.Length / 2; // потому что бинарные данные в base64 кодировке
+                        <a href="@url" target="_blank">
+                            Скачать (@DataSizeHelper.GetSizeText(size))
+                        </a>
+                    }
+                    else if (row.Value != null && row.Value.Length > 4000)
+                    {
+                        // файл из текста
+                        var url = Url.Action("DownloadFile", "ExtentionProperties", new { id = row.Id, owner = Model.Owner });
+                        long size = System.Text.Encoding.UTF8.GetByteCount(row.Value); // потому что храниться как строка
+                        <a href="@url" target="_blank">
+                            Скачать (@DataSizeHelper.GetSizeText(size))
+                        </a>
+                    }
+                    else
+                    {
+                        // простое значение показываем сразу
+                        <span class="text-prewrap text-wordbreak">@row.Value</span>
+                    }
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+

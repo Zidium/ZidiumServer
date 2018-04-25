@@ -1,0 +1,39 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Defects
+@model SelectResponsibleUserModel
+
+@{
+    ViewBag.Title = "Выберите ответственное лицо";
+    Layout = "/Views/Shared/_ModalDlgLayout.cshtml";
+}
+<ul class="list-group" id="selectUsersDlgList">
+    @foreach(var userItem in DropDownListHelper.GetUsers(Model.UserId, false))
+    {
+        var selected = userItem.Selected ? "active" : "";
+        <li class="list-group-item @selected" onclick="selectUserItem(this)" data-user-id="@userItem.Value">
+            @userItem.Text
+        </li>
+    }
+</ul>
+<div class="row" style="text-align: right">
+    <div class="col-sm-12">
+        <a href="#"  id="selectUserSubmitBtn" class="btn btn-primary">Применить</a>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+</div>
+<script>
+    
+    function selectUserItem(elem) {
+        $("#selectUsersDlgList li").removeClass("active");
+        elem = $(elem);
+        elem.addClass("active");
+    }
+
+    $("#selectUserSubmitBtn").click(function() {
+        var selectedLi = $("#selectUsersDlgList li.active");
+        var userId = selectedLi.data("user-id");
+        var btn = $(this);
+        var url = "/Defects/SelectResponsibleUserSubmit?eventTypeId=@Model.EventTypeId&userId=" + userId;
+        ziWaitAjaxRequest(btn, url);
+    });
+</script>

@@ -1,0 +1,172 @@
+﻿@model Zidium.UserAccount.Models.CheckModels.AddModel 
+
+@{
+    ViewBag.Title = "Добавить проверку";
+    ViewBag.ActiveMenuItems = "UnitTests,AddCheck";
+}          
+
+<style>
+    .iconButton {
+        margin-right: 20px;
+        top: 5px;
+        position: relative;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+    }
+    .addButtonDiv {
+        position: relative;
+        display: inline;
+        top: -5px;
+        margin-right: 20px;
+    }
+    .helpButton {
+        background-image: url('/Content/Icons/Round_help_button_24.png');
+        background-repeat: no-repeat;
+        margin-left: 20px;
+    }
+
+    .addCheckButton {
+        margin-top: 5px;
+    }
+
+    .checkTitle {
+        display: inline-block;
+        font-size: 18px;
+    }
+
+    .checkDescription {
+        font-size: 14px;
+        color: gray;
+        display: none;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 45px;
+    }
+
+    .list-group-item {
+        border: 0px !important;
+        padding-top: 0px;
+        padding-bottom: 20px;
+        padding-left: 0px;
+    }
+</style>
+
+@Html.Partial("_PageTitle")
+
+<ul class="list-group">
+
+    <li class="list-group-item">
+        @Html.ActionLink("Http-запрос", "EditSimple", "HttpRequestCheck",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">
+            <p>Zidium последовательно выполнит серию Http-запросов.</p>
+            <p>Для каждого http-запроса выполняется проверка:</p>
+            <ul>
+                <li>код ответа</li>
+                <li>обязательный фрагменты HTML</li>
+                <li>недопустмый фрагменты HTML</li>
+                <li>длина ответа</li>
+                <li>время выполнения запроса</li>
+            </ul>
+        </div>
+    </li>
+    
+    <li class="list-group-item">
+        @Html.ActionLink("Ping", "EditSimple", "PingChecks",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">Zidium выполнит команду ping и проверит время отклика.</div>
+    </li>
+    
+    <li class="list-group-item">
+        @Html.ActionLink("Дата оплаты доменного имени", "EditSimple", "DomainNamePaymentPeriodChecks",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">
+            Zidium проверит количество дней, которые остались до даты оплаты домена.
+        </div>
+    </li>
+    
+    <li class="list-group-item">
+        @Html.ActionLink("Срок годности Ssl-сертификата сайта", "EditSimple", "SslCertificateExpirationDateChecks",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">
+            Zidium проверит количество дней, которые остались до срока годности Ssl-сертификата.
+        </div>
+    </li>
+    
+    @*<li class="list-group-item">
+        <div class="addButtonDiv">
+            <a href='@Url.Action("Edit", "SmtpCheck")' class="btn btn-default addCheckButton">
+                <span class="glyphicon glyphicon-plus"></span>
+                Добавить
+            </a>
+        </div>
+        @Html.ActionLink("Отправка писем через SMTP-шлюз", "Index", "UnitTests",
+            new { unitTestTypeId = SystemUnitTestTypes.HttpUnitTestType.Id },
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription" id="smtp">
+            <p>Zidium проверит, что через указанный smtp-шлюз письма успешно доставляются на популярные почтовые адреса.</p>
+            <p>Основные почтовые адреса:</p>
+            <ul>
+                <li>@@mail.ru</li>
+                <li>@@yandex.ru</li>
+                <li>@@gmail.com</li>
+            </ul>
+        </div>
+    </li>*@
+
+    <li class="list-group-item">
+        @Html.ActionLink("Sql-запрос", "EditSimple", "SqlChecks",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>   
+        <div class="checkDescription">
+            <p>Пример Sql-запроса:</p>
+            <pre>
+IF (EXISTS(SELECT * FROM MyTable WHERE X = 1))
+    SELECT 'alarm', 'Случилась беда'
+ELSE
+    SELECT 'success', 'все OK'</pre>
+            <p>
+                Sql-запрос должен всегда возвращать 1 строку формата {code, message}.
+                <br /> - code = результат проверки (alarm, warning, success, unknown)
+                <br /> - message = сообщение проверки (любая строка).
+            </p>
+            @*<p>Параметры проверки:</p>
+            <ul>
+                <li>время выполнения запроса</li>
+                <li>возвращаемое значение</li>
+            </ul>*@
+        </div>
+    </li>
+    
+    <li class="list-group-item">
+        @Html.ActionLink("Пользовательская", "Add", "UnitTests",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">Данные этой проверки отправит ваше приложение через Api.</div>
+    </li>
+</ul>
+
+<script>
+
+    $(function () {
+        $(".helpButton").click(function () {
+            var elem = $(this);
+            var description = elem.nextAll(".checkDescription");
+            description.slideToggle(300);
+            return false;
+        });
+    });
+</script>
+

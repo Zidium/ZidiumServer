@@ -1,0 +1,122 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@model Zidium.UserAccount.Models.DashboardModel
+
+@{
+    ViewBag.Title = "Текущее состояние компонентов";
+    ViewBag.ActiveMenuItems = "Components,Analytics";
+    var byTypeModel = new StatusByTypeTableModel()
+    {
+        TypeColumnName = "Тип компонента"
+    };
+    foreach (var componentsByType in Model.ComponentsByTypes)
+    {
+        string getByTypeUrl = "/Components/States?componentTypeId=" + componentsByType.ComponentType.Id;
+        byTypeModel.Rows.Add(new StatusByTypeTableModel.Row()
+        {
+            TypeName = componentsByType.ComponentType.DisplayName,
+            GroupName = null,
+            RedCount = componentsByType.AlarmCount,
+            YellowCount = componentsByType.WarningCount,
+            GreenCount = componentsByType.SuccessCount,
+            GrayCount = componentsByType.OtherCount,
+            GetByGroupUrl = null,
+            GetByTypeUrl = getByTypeUrl,
+            GetByAllCountUrl = getByTypeUrl
+        });
+    }
+}
+
+@section styles {
+    <style>
+        .colorBlock {
+            padding: 10px;
+            color: white;
+        }
+
+        .mainValue {
+            font-size: 38px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+            .mainValue div {
+                display: table-cell;
+                vertical-align: middle;
+            }
+
+            .mainValue a:link {
+                color: white;
+            }
+
+            .mainValue a:visited {
+                color: white;
+            }
+
+            .mainValue a:hover {
+                color: white;
+            }
+
+        .importanceLabel {
+            font-size: 14px;
+            padding-left: 5px;
+            font-weight: normal;
+        }
+
+        #componentTypes th, #componentTypes td {
+            border: 1px solid gray;
+            padding: 5px 10px;
+        }
+
+        #componentTypes th {
+            background-color: #f5f5f5;
+        }
+
+        #componentTypes .badge a:link {
+            color: white;
+        }
+
+        #componentTypes .badge a:visited {
+            color: white;
+        }
+
+        #componentTypes .badge a:hover {
+            color: white;
+        }
+
+        .eventsTable {
+            width: 100%;
+            border: 1px dotted gray;
+        }
+
+            .eventsTable td {
+                border: 1px dotted gray;
+                padding: 3px 5px;
+                text-align: center;
+            }
+    </style>
+}
+
+@Html.Partial("_PageTitle")
+
+<p class="pageHeader1">Всего компонентов @Model.ComponentsTotal.TotalCount, из них:</p>
+<div id="components" class="row">
+    <div class="col-md-6">
+        <div class="row">
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Red, Model.ComponentsTotal.AlarmCount, Url.Action("States", "Components", new { color = "Red" })))
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Yellow, Model.ComponentsTotal.WarningCount, Url.Action("States", "Components", new { color = "Yellow" })))
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Green, Model.ComponentsTotal.SuccessCount, Url.Action("States", "Components", new { color = "Green" })))
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Gray, Model.ComponentsTotal.OtherCount, Url.Action("States", "Components", new { color = "Gray" })))
+        </div>
+    </div>
+</div>
+   
+@if (byTypeModel.Rows.Count > 0)
+{
+    <p class="pageHeader1">Состояние компонентов по типам:</p>
+    @Html.StatusByTypeTable(byTypeModel)
+}

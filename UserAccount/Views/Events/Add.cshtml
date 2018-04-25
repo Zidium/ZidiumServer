@@ -1,0 +1,67 @@
+﻿@model Zidium.UserAccount.Models.AddEventModel
+           
+@{
+    ViewBag.Title = "Добавление события";
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+<style>
+    #form-add-event .smart-col-labels {
+        min-width: 120px;
+    }
+</style>
+
+<div class="alert alert-info">Укажите данные нового события для компонента @Model.DisplayName</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal", id = "form-add-event" }))
+{
+    @Html.HiddenFor(m => m.ComponentId)
+    @Html.HiddenFor(m => m.ReturnUrl)
+
+    <div class="alert alert-danger" id="errorMessage" style="display: none"></div>
+
+    <div class="smart-container">
+        @Html.EditorFor(m => m.EventType, "SmartEdit")
+        @Html.EditorFor(m => m.Message, "SmartEdit")
+        @Html.EditorFor(m => m.EventImportance, "SmartEdit")
+        @Html.EditorFor(m => m.JoinInterval, "SmartEdit")
+
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields">
+                <div>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $(function () {
+        var form = $("#form-add-event");
+        form.submit(setUnitTestResultSubmit);
+    });
+
+    function setUnitTestResultSubmit(event) {
+        event.preventDefault();
+        var form = $("#form-add-event");
+        if (!form.valid())
+            return false;
+
+        var button = $('button[type="submit"]', form);
+        var onSuccess = function() {
+            navigateTo('@Model.ReturnUrl');
+        };
+        var onError = function (errorMessage) {
+            var alertDiv = $("#errorMessage", form);
+            alertDiv.text(errorMessage);
+            alertDiv.show();
+        }
+        var url = form.attr('action');
+        var data = form.serializeArray();
+        ziWaitAjaxRequest(button, url, data, onSuccess, onError);
+        return false;
+    }
+</script>

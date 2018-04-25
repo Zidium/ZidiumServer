@@ -1,0 +1,45 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Defects
+@model CreateDefectDialogModel
+
+@{
+    ViewBag.Title = "Создать дефект";
+    Layout = "/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+<div class="form-horizontal" style="padding: 10px;">
+    <div class="form-group">
+        <label for="responsibleUserId">Ответственный:</label>
+        @Html.DropDownList("responsibleUserId", DropDownListHelper.GetUsers(Model.UserId, false), new {@class="form-control"})
+    </div>
+    <div class="form-group">
+        <label for="defect-comment">Комментарий:</label>
+        <textarea class="form-control" id="defect-comment"></textarea>
+    </div>
+</div>
+<div class="row" style="text-align: right">
+    <hr/>
+    <div class="col-sm-12">
+        <a href="#" id="createDefectSubmitBtn" class="btn btn-primary">Создать</a>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+</div>
+
+<script>
+    $("#createDefectSubmitBtn").click(function (event) {
+        event.preventDefault();
+        var userId = $('#responsibleUserId').val();
+        var comment = $("#defect-comment").val();
+        var btn = $(this);
+        var requestData = {
+            eventTypeId: '@Model.EventTypeId',
+            userId: userId,
+            comment: comment
+        };
+        var url = "@Url.Action("CreateDefectDialog")";
+        var onSuccess = function(responseData) {
+            reloadDefectCell('@Model.EventTypeId', '@Url.Action("GetDefectControlHtml", "Events")');
+        }
+        ziWaitAjaxRequest(btn, url, requestData, onSuccess);
+    });
+</script>

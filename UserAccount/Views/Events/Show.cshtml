@@ -1,0 +1,340 @@
+﻿@using Zidium.Core.Api
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@model ShowEventModel
+
+@{
+    ViewBag.Title = Model.PageTitle;
+    ViewBag.ActiveMenuItems = "Events";
+}
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+}
+
+<style>
+    .reasonHeader {
+        font-weight: bold;
+    }
+</style>
+
+<script src="~/Scripts/Controls/DefectControl.js"></script>
+
+<p class="submenu-title">@ViewBag.Title</p>
+
+@if (Model.UnitTest != null)
+{
+    <div class="zi-bread-crumbs">
+        @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTest)
+    </div>
+}
+else
+if (Model.Component != null)
+{
+    <div class="zi-bread-crumbs">
+        @Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.Component)
+    </div>
+}
+
+<hr class="submenu" />
+
+<div class="row">
+    <div class="col-sm-12 bottom10px">
+        <table>
+            <tr>
+                <td>
+                    @Html.MonitoringStatusLabel(Model.GetMonitoringStatus())
+                </td>
+                <td style="vertical-align: top; padding-left: 20px; ">
+                    <div style="padding-top: 10px;">
+                        @if (Model.Event.Category == EventCategory.ApplicationError)
+                        {
+                            <p>
+                                <span class="simple-text-header">Случилось:</span>
+                                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.StartDate)</span>
+                                <span class="simple-text-header" style="margin-left: 30px;"> Количество:</span>
+                                <span class="simple-text-value">@Model.Event.Count</span>
+                            </p>
+                        }
+                        else
+                        {
+                            <p>
+                                <span class="simple-text-header">Началось:</span>
+                                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.StartDate)</span>
+                                <span class="simple-text-header">, длительность:</span>
+                                <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.Event.GetDuration(DateTime.Now))</span>.
+                            </p>
+                        }
+                        <p>
+                            <span class="simple-text-header">Тип: </span>
+                            @Html.ActionLink(Model.EventType.DisplayName, "Show", "EventTypes", new {id = Model.EventType.Id}, null)
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        @if (Model.Event.Message != null)
+        {
+            <div style="font-size: 18px; margin-top: 10px;">@Model.Event.Message</div>
+        }
+    </div>
+</div>
+
+@if (Model.CanChangeImportance || Model.CanChangeActuality)
+{
+    <div class="row">
+        <div class="col-sm-12">
+            <div>
+                @if (UserHelper.CurrentUser.CanEditCommonData() && Model.CanChangeActuality)
+                {
+                    @Html.ActionLink("Неактуальное...", "SetNotActual", new { id = Model.Event.Id }, new { @class = "btn btn-default", onclick = "ModalBtnClick(this, event);" })
+                }
+                @if (UserHelper.CurrentUser.CanEditCommonData() && Model.CanChangeImportance)
+                {
+                    @Html.ActionLink("Изменить важность...", "ChangeImportance", new { id = Model.Event.Id }, new { @class = "btn btn-default", onclick = "ModalBtnClick(this, event);" })
+                }
+                
+                <div style="display: inline-block">
+                    @Html.Action("DefectControl", "Defects", new { eventTypeId = Model.EventType.Id })
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.Event.Properties.Count > 0)
+{
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-sm-12">
+            <p class="simple-text-header">Дополнительные свойства:</p>
+            @Html.ExtentionPropertiesTable(Model.Event)
+        </div>
+    </div>
+}
+
+<hr />
+<p>
+    <a data-toggle="collapse" href="#cosmos-data" style="font-size: 12px; color: gray">Подробнее</a>
+</p>
+<div class="row collapse" id="cosmos-data">
+    <div class="col-sm-6 col-auto-width">
+        <p>
+            <span class="simple-text-header">Id: </span>
+            <span class="simple-text-value">@Model.Event.Id</span>
+        </p>
+        <p>
+            <span class="simple-text-header">Компонент: </span>
+            @Html.ComponentLink(Model.Component)
+        </p>
+        @if (Model.Metric != null)
+        {
+            <p>
+                <span class="simple-text-header">Метрика: </span>
+                @Html.MetricLink(Model.Metric)
+            </p>
+        }
+        @if (Model.UnitTest != null)
+        {
+            <p>
+                <span class="simple-text-header">Проверка: </span>
+                @Html.UnitTestLink(Model.UnitTest)
+            </p>
+        }
+        @if (Model.EventType.IsSystem == false)
+        {
+            if (Model.EventType.Code != null)
+            {
+                <p>
+                    <span class="simple-text-header">Код события: </span>
+                    <span class="simple-text-value">@Model.EventType.Code</span>
+                </p>
+            }
+            <p>
+                <span class="simple-text-header">Версия: </span>
+                <span class="simple-text-value">@Model.Event.Version</span>
+            </p>
+            <p>
+                <span class="simple-text-header">Ключ склейки: </span>
+                <span class="simple-text-value">@Model.Event.JoinKeyHash</span>
+            </p>
+            if (Model.Event.Properties.Count == 0)
+            {
+                <p>
+                    <span class="simple-text-header">Доп. свойства: </span>
+                    <span class="simple-text-value">Нет</span>
+                </p>
+            }
+        }
+        <p>
+            <span class="simple-text-header">Категория: </span>
+            @Model.Event.Category
+        </p>
+    </div>
+    <div class="col-sm-6 col-auto-width">
+        <p>
+            <span class="simple-text-header">Создано: </span>
+            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.CreateDate)</span>
+        </p>
+        <p>
+            <span class="simple-text-header">Началось: </span>
+            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.StartDate)</span>
+        </p>
+        
+        @if (Model.Event.ActualDate <= DateTime.Now)
+        {
+            <p>
+                <span class="simple-text-header">Закончилось: </span>
+                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.GetEndDate(DateTime.Now))</span>
+            </p>
+        }
+        else
+        {
+            <p>
+                <span class="simple-text-header">Актуально до: </span>
+                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.ActualDate)</span>
+            </p>
+        }
+
+        <p>
+            <span class="simple-text-header">Длительность: </span>
+            <span class="simple-text-value">@GuiHelper.TimeSpanAsString(Model.Event.GetDuration(DateTime.Now))</span>
+        </p>
+        
+        @if (!Model.EventType.IsSystem)
+        {
+            <p>
+                <span class="simple-text-header">Количество: </span>
+                <span class="simple-text-value">@Model.Event.Count</span>
+            </p>
+        }
+    </div>
+</div>
+
+
+
+@if (Model.HasReasons)
+{
+    var now = DateTime.Now;
+
+    <hr />
+    <div class="row">
+        <div class="col-sm-12">
+            <p style="font-size: 18px">Причины статуса</p>
+        </div>
+
+        @if (Model.UnitTestsReasons.Count > 0)
+        {
+            <div class="col-sm-12">
+                <p class="reasonHeader">Проверки (@Model.UnitTestsReasons.Count)</p>
+                <table class="simpleTable" style="margin-bottom: 20px;">
+                    <tr>
+                        <th>Начало</th>
+                        <th>Конец</th>
+                        <th>Длительность</th>
+                        <th>Количество</th>
+                        <th>Проверка</th>
+                        <th>Сообщение</th>
+                    </tr>
+                    @foreach (var reason in Model.UnitTestsReasons)
+                    {
+                        <tr>
+                            <td>@Html.EventLinkStartDate(reason.Event)</td>
+                            <td>@reason.Event.GetEndDate(now)</td>
+                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                            <td>@reason.Event.Count</td>
+                            <td>@Html.UnitTestLink(reason.UnitTest)</td>
+                            <td>@Model.GetEventMessageText(reason.Event)</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+
+        @if (Model.MetricsReasons.Count > 0)
+        {
+            <div class="col-sm-12">
+                <p class="reasonHeader">Метрики (@Model.MetricsReasons.Count)</p>
+                <table class="simpleTable" style="margin-bottom: 20px;">
+                    <tr>
+                        <th>Начало</th>
+                        <th>Конец</th>
+                        <th>Длительность</th>
+                        <th>Количество</th>
+                        <th>Метрика</th>
+                        <th>Сообщение</th>
+                    </tr>
+                    @foreach (var reason in Model.MetricsReasons)
+                    {
+                        <tr>
+                            <td>@Html.EventLinkStartDate(reason.Event)</td>
+                            <td>@reason.Event.GetEndDate(now)</td>
+                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                            <td>@reason.Event.Count</td>
+                            <td>@Html.MetricLink(reason.Metric)</td>
+                            <td>@Model.GetEventMessageText(reason.Event)</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+
+        @if (Model.ChildsReasons.Count > 0)
+        {
+            <div class="col-sm-12">
+                <p class="reasonHeader">Дочерние компоненты (@Model.ChildsReasons.Count)</p>
+                <table class="simpleTable" style="margin-bottom: 20px;">
+                    <tr>
+                        <th>Начало</th>
+                        <th>Конец</th>
+                        <th>Длительность</th>
+                        <th>Компонент</th>
+                        <th>Сообщение</th>
+                    </tr>
+                    @foreach (var reason in Model.ChildsReasons)
+                    {
+                        <tr>
+                            <td>@Html.EventLinkStartDate(reason.Event)</td>
+                            <td>@reason.Event.GetEndDate(now)</td>
+                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                            <td>@Html.ComponentLink(reason.Component)</td>
+                            <td>@Model.GetEventMessageText(reason.Event)</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+
+        @if (Model.ErrorReasons.Count > 0)
+        {
+            <div class="col-sm-12">
+                <p class="reasonHeader">Ошибки (@Model.ErrorReasons.Count)</p>
+                <table class="simpleTable" style="margin-bottom: 20px;">
+                    <tr>
+                        <th>Начало</th>
+                        <th>Конец</th>
+                        <th>Длительность</th>
+                        <th>Количество</th>
+                        <th>Сообщение</th>
+                    </tr>
+                    @foreach (var reason in Model.ErrorReasons)
+                    {
+                        <tr>
+                            <td>@Html.EventLinkStartDate(reason.Event)</td>
+                            <td>@reason.Event.GetEndDate(now)</td>
+                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                            <td>@reason.Event.Count</td>
+                            <td>@Model.GetEventMessageText(reason.Event)</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+}

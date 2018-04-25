@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9D7CD152-24E9-482B-B696-7E6E1DECE85B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Zidium.UserAccount.Tests</RootNamespace>
+    <AssemblyName>Zidium.UserAccount.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ModuleInitializer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WebAccountsTests.cs" />
+    <Compile Include="WebComponentsTests.cs" />
+    <Compile Include="WebComponentTypesTests.cs" />
+    <Compile Include="WebDomainPaymentCheckTests.cs" />
+    <Compile Include="WebEventsTests.cs" />
+    <Compile Include="WebEventTypesTests.cs" />
+    <Compile Include="WebHomeTests.cs" />
+    <Compile Include="WebHttpRequestUnitTests.cs" />
+    <Compile Include="WebLogsTests.cs" />
+    <Compile Include="WebNotificationsTests.cs" />
+    <Compile Include="WebPingChecksTests.cs" />
+    <Compile Include="WebReportsTests.cs" />
+    <Compile Include="WebSqlChecksTests.cs" />
+    <Compile Include="WebSslCertificateExpirationDateChecksTests.cs" />
+    <Compile Include="WebSubscriptionsTests.cs" />
+    <Compile Include="WebUnitTests.cs" />
+    <Compile Include="WebUnitTestTypesTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Agent\Agent.csproj">
+      <Project>{28372b08-b8f4-408b-88ca-471a3a7a3368}</Project>
+      <Name>Agent</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Api\1.0\Api\Api.1.0.csproj">
+      <Project>{1E7F3895-5BCE-4DF5-AA33-3E4E8843E0EB}</Project>
+      <Name>Api.1.0</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Core.ConfigDb\Core.ConfigDb.csproj">
+      <Project>{a75855ad-0c1a-41b7-bfe5-d13a9721b000}</Project>
+      <Name>Core.ConfigDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Core\Core.csproj">
+      <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
+      <Name>Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UserAccount.AddIn\UserAccount.AddIn.csproj">
+      <Project>{aa83b33f-ebbe-4f21-8df1-ea4166505228}</Project>
+      <Name>UserAccount.AddIn</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UserAccount\UserAccount.csproj">
+      <Project>{573cf201-63a5-4faf-bbb7-645ea8c5c3c6}</Project>
+      <Name>UserAccount</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestTools\TestTools.csproj">
+      <Project>{6b6462cd-1ea3-4ea2-897e-d1358b75abeb}</Project>
+      <Name>TestTools</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="InjectModuleInitializer">
+      <Version>1.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNet.Mvc">
+      <Version>5.2.3</Version>
+    </PackageReference>
+    <PackageReference Include="xunit">
+      <Version>2.1.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="InjectModuleInitializer" AfterTargets="AfterBuild">
+    <Exec Command="..\..\packages\InjectModuleInitializer.1.5\tools\InjectModuleInitializer.exe &quot;$(TargetPath)&quot;" />
+  </Target>
+</Project>

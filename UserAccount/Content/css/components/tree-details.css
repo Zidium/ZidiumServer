@@ -1,0 +1,498 @@
+﻿/* Общие */
+
+#details-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    min-width: 450px;
+    min-height: 290px;
+    border-left: 1px solid #aaa;
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+    border-radius: 10px;
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+    margin-bottom: 20px;
+    margin-right: -15px;
+    background-color: white;
+    padding: 10px;
+    box-shadow: 0 5px 15px #000000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
+}
+
+    #details-panel #details-panel-close {
+        float: right;
+        padding-top: 5px;
+        padding-right: 5px;
+    }
+
+    #details-panel #details-panel-container {
+    }
+
+    #details-panel #object-details-caption {
+        font-size: 20px;
+    }
+
+.accordion .accordion-group + .accordion-group {
+    margin-top: 5px;
+}
+
+.accordion .accordion-group-caption {
+    background-color: #f5f5f5;
+    padding: 5px 10px 5px 10px;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+    .accordion .accordion-group-caption > a {
+        color: inherit;
+    }
+
+.accordion .accordion-group-content > div {
+    padding-top: 10px;
+    padding-left: 5px;
+}
+
+#details-panel #details-panel-loader {
+    margin: 10px;
+    background-color: inherit;
+}
+
+#details-panel #edit-object-link {
+    margin-left: 15px;
+}
+
+#details-panel #update-panel-link {
+    margin-left: 5px;
+}
+
+.component-name-link {
+}
+
+.unittest-name-link {
+}
+
+.metric-name-link {
+}
+
+.events-link {
+}
+
+/* Компонент - Общее состояние */
+
+#component-details-state-status {
+    padding-right: 10px;
+}
+
+#component-details-state-duration {
+    padding-right: 10px;
+}
+
+#component-details-state-table {
+    margin-bottom: 10px;
+}
+
+    #component-details-state-table td {
+        padding: 5px 5px;
+        font-size: 18px;
+        color: gray;
+        min-width: 32px;
+        text-align: center;
+    }
+
+        #component-details-state-table td .badge {
+            font-size: 16px;
+        }
+
+    #component-details-state-table th {
+        font-size: 16px;
+        text-align: right;
+        padding-right: 20px;
+        font-weight: normal;
+    }
+
+/* Компонент - История */
+
+#component-details-history-table #timelineTable-row-history {
+    vertical-align: baseline;
+}
+
+#component-details-history-table #timelineTable-row-history-buttons {
+    padding-bottom: 10px;
+    padding-left: 5px;
+}
+
+#component-details-history-table #timeline-external {
+    height: 40px;
+}
+
+#component-details-history-table #timeline-unittests {
+    height: 20px;
+}
+
+#component-details-history-table #timeline-events {
+    height: 20px;
+}
+
+#component-details-history-table #timeline-metrics {
+    height: 20px;
+}
+
+#component-details-history-table #timeline-childs {
+    height: 20px;
+}
+
+#component-details-history-table th#header-total-state {
+    vertical-align: middle;
+}
+
+#component-details-history-table td {
+    padding: 2px 5px;
+    min-width: 32px;
+}
+
+    #component-details-history-table td.mini-status-count {
+        padding-right: 15px;
+        white-space: nowrap;
+        text-align: right;
+        padding-top: 2px;
+        padding-bottom: 0px;
+        vertical-align: top;
+        font-size: 12px;
+    }
+
+    #component-details-history-table td .badge {
+        font-size: 16px;
+    }
+
+    #component-details-history-table td.normal {
+        font-size: inherit;
+        color: inherit;
+        text-align: right;
+    }
+
+#component-details-history-table th {
+    font-size: 16px;
+    font-weight: normal;
+    vertical-align: top;
+    padding-top: 0px;
+}
+
+#component-details-history-table .timeline-group-item-caption {
+    color: gray;
+    text-align: left;
+    font-size: 12px;
+    padding-left: 5px;
+}
+
+#component-details-history-table .timeline-group-item-body {
+    margin-bottom: 7px;
+}
+
+    #component-details-history-table .timeline-group-item-body .timeline-subcontainer {
+        height: 10px;
+    }
+
+    #component-details-history-table .timeline-group-item-body:last-child {
+        margin-bottom: 10px;
+    }
+
+#component-details-history-table tr.timelines-group td {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+    #component-details-history-table tr.timelines-group td .timelines-group-inner-div {
+        padding-top: 10px;
+    }
+
+#component-details-history-table #th-history-label {
+    min-width: 200px;
+    text-align: right;
+    padding-right: 10px;
+}
+
+#component-details-history-table #history-label {
+    font-size: 14px;
+}
+
+#component-details-history-table .circle-group:hover, .circle-group:active, .circle-group:visited {
+    text-decoration: none;
+}
+
+#component-details-history-table .circle-group > span.badge {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+
+/* Компонент - Проверки */
+
+#component-details-system-unittests-table .th-status {
+    width: 100px;
+}
+
+#component-details-system-unittests-table .th-name {
+    width: 100%;
+}
+
+#component-details-system-unittests-table .th-result {
+    width: 150px;
+}
+
+#component-details-system-unittests-table .th-interval {
+    width: 80px;
+}
+
+#component-details-system-unittests-table .th-actions {
+    width: 60px;
+}
+
+#component-details-system-unittests-table .td-actions {
+    text-align: right;
+}
+
+#component-details-system-unittests-table .unittest-status-duration {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-system-unittests-table .unittest-interval {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-system-unittests-table .unittest-last-result-date {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-system-unittests-table .unittest-delete-link {
+}
+
+#component-details-system-unittests-table .unittest-disable-link {
+}
+
+#component-details-system-unittests-table .unittest-enable-link {
+}
+
+#component-details-system-unittests-table .unittest-run-link {
+}
+
+#component-details-user-unittests-table .th-status {
+    width: 100px;
+}
+
+#component-details-user-unittests-table .th-name {
+    width: 100%;
+}
+
+#component-details-user-unittests-table .th-result {
+    width: 150px;
+}
+
+#component-details-user-unittests-table .th-interval {
+    width: 80px;
+}
+
+#component-details-user-unittests-table .th-actions {
+    width: 60px;
+}
+
+#component-details-user-unittests-table .td-actions {
+    text-align: right;
+}
+
+#component-details-user-unittests-table .unittest-status-duration {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-user-unittests-table .unittest-actual-interval {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-user-unittests-table .unittest-last-result-date {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-user-unittests-table .unittest-delete-link {
+}
+
+#component-details-user-unittests-table .unittest-disable-link {
+}
+
+#component-details-user-unittests-table .unittest-enable-link {
+}
+
+/* Компонент - События */
+#component-details-events-buttons {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#component-details-events-timelines .timeline-group-item-body {
+    margin-top: -5px;
+    margin-bottom: 14px;
+}
+
+    #component-details-events-timelines .timeline-group-item-body .timeline-subcontainer {
+        height: 10px;
+    }
+
+    #component-details-events-timelines .timeline-group-item-body:last-child {
+        margin-bottom: 10px;
+    }
+
+/* Компонент - Метрики */
+
+#component-details-metrics-table .th-status {
+    width: 100px;
+}
+
+#component-details-metrics-table .th-name {
+    width: 100%;
+}
+
+#component-details-metrics-table .th-result {
+    width: 150px;
+}
+
+#component-details-metrics-table .th-interval {
+    width: 80px;
+}
+
+#component-details-metrics-table .th-actions {
+    width: 60px;
+}
+
+#component-details-metrics-table .td-actions {
+    text-align: right;
+}
+
+#component-details-metrics-table .metric-status-duration {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-metrics-table .metric-actual-interval {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-metrics-table .metric-last-result-date {
+    color: #999;
+    font-size: 10px;
+}
+
+#component-details-metrics-table .metric-value {
+    font-size: 18px;
+}
+
+#component-details-metrics-table .td-metric-value {
+    padding-top: 3px;
+    padding-bottom: 0px;
+}
+
+#component-details-metrics-table .metric-delete-link {
+}
+
+#component-details-metrics-table .metric-disable-link {
+}
+
+#component-details-metrics-table .metric-enable-link {
+}
+
+/* Проверка - Общее состояние */
+
+#unittest-details-state-status {
+    padding-right: 10px;
+}
+
+#unittest-details-state-duration {
+    padding-right: 10px;
+}
+
+/* Проверка - История */
+
+#unittest-details-history-timeline {
+    margin-bottom: 15px;
+}
+
+#unittest-details-history-table .th-result {
+    width: 100%;
+}
+
+#unittest-details-history-table .status-duration {
+    color: #999;
+    font-size: 10px;
+}
+
+#unittest-details-history-table .status-count {
+    color: #999;
+    font-size: 10px;
+}
+
+#unittest-details-history-timeline .timeline .timeline-subcontainer {
+    height: 16px;
+}
+
+#unittest-details-history-buttons {
+    padding-left: 10px;
+}
+
+/* Проверка - Результаты */
+
+#unittest-details-results-table .th-result {
+    width: 100%;
+}
+
+/* Метрика - Общее состояние */
+
+#metric-details-state-status {
+    padding-right: 10px;
+}
+
+#metric-details-state-duration {
+    padding-right: 10px;
+}
+
+/* Метрика - История */
+
+#metric-details-history-timeline {
+    margin-bottom: 15px;
+}
+
+    #metric-details-history-timeline .timeline .timeline-subcontainer {
+        height: 16px;
+    }
+
+#metric-details-history-buttons {
+    padding-left: 10px;
+}
+
+#metric-details-history-graph > #graph {
+    height: 350px;
+}
+
+/* События - История */
+#events-details-history-buttons {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#events-details-history-timelines .timeline-group-item-body {
+    margin-top: -5px;
+    margin-bottom: 14px;
+}
+
+    #events-details-history-timelines .timeline-group-item-body .timeline-subcontainer {
+        height: 10px;
+    }
+
+    #events-details-history-timelines .timeline-group-item-body:last-child {
+        margin-bottom: 10px;
+    }

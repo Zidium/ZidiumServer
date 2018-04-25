@@ -1,0 +1,193 @@
+﻿@using Zidium.Core.Common
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.Controls
+@using Zidium.UserAccount.Models.Events
+@model ErrorStatisticsModel
+
+@{
+    ViewBag.Title = "Ошибки" + (Model.Component != null ? " компонента" : string.Empty);
+    ViewBag.ActiveMenuItems = "Events";
+    var showNotProcessedCss = Model.Mode == ErrorStatisticsModel.ShowMode.NotProcessed ? "active" : "";
+    var showAllCss = Model.Mode == ErrorStatisticsModel.ShowMode.All ? "active" : "";
+}
+
+<link href="/Css/Controls/SimpleBarChar.css" rel="stylesheet" />
+<link href="/Css/Controls/OneLineSausageChar.css" rel="stylesheet" />
+
+<style>
+    .my-label {
+        font-weight: bold;
+    }
+
+    .event-type-name {
+        font-weight: bold;
+        color: black;
+    }
+
+    .event-message {
+        height: 27px;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        color: gray;
+        padding-top: 5px;
+        padding-bottom: 10px;
+    }
+
+    .event-graph-label {
+        display: inline-block;
+        width: 50px;
+        color: gray;
+    }
+
+    .event-graph {
+        display: inline-block;
+        height: 3px;
+        width: 100%;
+        margin-bottom: 5px;
+        margin-top: 5px;
+    }
+
+    .event-type-block {
+        padding: 10px 10px;
+    }
+
+    .defect-cell {
+        min-width: 250px;
+    }
+
+    #form-filter2 .active {
+        background-color: #00a65a;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+
+<script src="~/Scripts/Controls/DefectControl.js"></script>
+
+@Html.Partial("_PageTitle")
+
+<div class="row" id="form-filter">
+    <div class="col-sm-1 col-auto-width bottom10px">
+        <label>Период</label>
+        <div id="period-div">
+            <div class="btn-group">
+                <a id="time-selector-hour" onclick="ziReloadPage('period', 'hour', event)" href="#" class="btn btn-default">час</a>
+                <a id="time-selector-day" onclick="ziReloadPage('period', 'day', event)" href="#" class="btn btn-default">день</a>
+                <a id="time-selector-week" onclick="ziReloadPage('period', 'week', event)" href="#" class="btn btn-default">неделя</a>
+                <a id="time-selector-month" onclick="ziReloadPage('period', 'month', event)" href="#" class="btn btn-default">месяц</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-1 col-auto-width bottom10px">
+        <label>Компонент</label>
+        <div style="width: 500px;">
+            @Html.ComponentSelectorNew(m => m.ComponentId, new ComponentSelectorOptions()
+       {
+           AutoRefreshPage = true,
+           AllowEmpty = true,
+           ShowAsList = false,
+           ShowComponentTypeSelector = false
+       })
+        </div>
+    </div>
+
+    <div class="col-sm-1 col-auto-width bottom10px">
+        <label>Статус</label>
+        <div>
+            <div class="btn-group">
+                <a href="#" class="btn btn-default @showNotProcessedCss" onclick="ziReloadPage('mode', '@ErrorStatisticsModel.ShowMode.NotProcessed', event)">Необработанные</a>
+                <a href="#" class="btn btn-default @showAllCss" onclick="ziReloadPage('mode', '@ErrorStatisticsModel.ShowMode.All', event)">Все</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<p class="my-label" style="margin-top: 30px;">Результат</p>*@
+
+@if (Model.EventTypeDatas.Count == 0)
+{
+    <p>Нет ошибок</p>
+}
+@foreach (var eventTypeData in Model.EventTypeDatas)
+{
+    var message = eventTypeData.Events.First().Message;
+    var period = TimelineInterval.Day;
+    if (Model.Period == ReportPeriod.Hour)
+    {
+        period = TimelineInterval.Hour;
+    }
+    else if (Model.Period == ReportPeriod.Day)
+    {
+        period = TimelineInterval.Day;
+    }
+    else if (Model.Period == ReportPeriod.Week)
+    {
+        period = TimelineInterval.Week;
+    }
+    else if (Model.Period == ReportPeriod.Month)
+    {
+        period = TimelineInterval.Month;
+    }
+    <div class="event-type-block">
+        <table style="width: 100%;">
+            <tr id="defect-row-@eventTypeData.EventType.Id">
+                <td style="width: 70px; min-width: 70px;">
+                    <span class="badge alert-danger" style="font-size: 18px;" title="Ошибка случилась @eventTypeData.SausageModel.Count раз">@eventTypeData.SausageModel.Count</span>
+                </td>
+                <td style="width: 100%">
+                    <div class="event-type-name">
+                        <a href="@Url.Action("Show", "EventTypes", new {id = eventTypeData.EventType.Id, period})">
+                            @eventTypeData.EventType.DisplayName
+                        </a>
+                    </div>
+                    @if (string.IsNullOrEmpty(message) == false)
+                    {
+                        <div class="event-message">@message</div>
+                    }
+                    else
+                    {
+                        <div class="event-message" style="color: gray;">Нет сообщения</div>
+                    }
+                </td>
+                <td class="defect-cell">
+                    @Html.Partial("~/Views/Defects/DefectControl.cshtml", eventTypeData.EventType)
+                </td>
+            </tr>
+        </table>
+        <div class="event-graph-container">
+            <div class="event-graph">
+                @Html.PartialOneLineSausageChar(eventTypeData.SausageModel)
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $(function () {
+        @if (Model.Period == ReportPeriod.Hour)
+        {
+            <text>$("#time-selector-hour").addClass("active");</text>
+        }
+        else if (Model.Period == ReportPeriod.Day)
+        {
+            <text>$("#time-selector-day").addClass("active");</text>
+        }
+        else if (Model.Period == ReportPeriod.Month)
+        {
+            <text>$("#time-selector-month").addClass("active");</text>
+        }
+        else if (Model.Period == ReportPeriod.Week)
+        {
+            <text>$("#time-selector-week").addClass("active");</text>
+        }
+    });
+</script>
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/AllControls")
+}

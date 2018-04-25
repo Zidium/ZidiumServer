@@ -1,0 +1,81 @@
+﻿@using Zidium.Core.AccountsDb
+@model Zidium.UserAccount.Models.HttpRequestCheckModels.EditModel
+@{
+    ViewBag.Title = "Просмотр http-проверки";
+}
+<style>
+    #requestsTable td {
+        vertical-align: top;
+    }
+
+    .webFormsData td {
+        padding-left: 10px;
+    }
+</style>
+
+<style>
+    .smart-col-labels {
+        min-width: 220px;
+    }
+</style>
+
+<p class="submenu-title">@ViewBag.Title</p>
+
+<div class="zi-bread-crumbs">
+    @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTest)
+</div>
+
+<hr class="submenu" />
+
+<div class="smart-container">
+    @Html.Partial("~/Views/Checks/ShowCheckCommonSettings.cshtml", Model)
+</div>
+
+<table class="table simpleTableClear table-condensed table-hover" id="requestsTable">
+    <tr>
+        <th>Название</th>
+        <th>Метод</th>
+        <th>URL</th>
+        <th>Данные веб-формы</th>
+    </tr>
+    @if (Model.UnitTest == null || Model.UnitTest.HttpRequestUnitTest.Rules.Count == 0)
+    {
+        <tr>
+            <td colspan="5">Нет данных</td>
+        </tr>
+    }
+    else
+    {
+        foreach (var rule in Model.UnitTest.HttpRequestUnitTest.Rules.Where(t => t.IsDeleted == false).OrderBy(x => x.SortNumber))
+        {
+            <tr>
+                <td>@Html.ActionLink(rule.DisplayName, "ShowRule", new { unitTestId = rule.HttpRequestUnitTest.UnitTestId, ruleId = rule.Id })</td>
+                <td>
+                    @if (rule.Method == HttpRequestMethod.Get)
+                    {
+                        <a href="#" class="label label-success">@rule.Method</a>
+                    }
+                    else
+                    {
+                        <a href="#" class="label label-warning">@rule.Method</a>
+                    }
+                </td>
+                <td><a href="@rule.Url">@rule.Url</a></td>
+                <td>
+                    @if (rule.HasWebFormDatas())
+                    {
+                        <table class="webFormsData">
+                            @foreach (var row in rule.GetWebFormsDatas())
+                            {
+                                <tr>
+                                    <td>@row.Key</td>
+                                    <td>@row.Value</td>
+                                </tr>
+                            }
+                        </table>
+                    }
+                </td>
+            </tr>
+        }
+    }
+</table>

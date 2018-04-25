@@ -1,0 +1,881 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DC578E8E-DE61-4F6E-976A-11F339CAC837}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Zidium.Core</RootNamespace>
+    <AssemblyName>Zidium.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Publish - Work|AnyCPU'">
+    <OutputPath>bin\Publish - Work\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Publish - Test|AnyCPU'">
+    <OutputPath>bin\Publish - Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Work|AnyCPU'">
+    <OutputPath>bin\Work\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test|AnyCPU'">
+    <OutputPath>bin\Test\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="jint, Version=2.10.2.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jint.2.10.2\lib\net45\jint.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MySql.Data, Version=6.9.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\MySql.Data.6.9.7\lib\net45\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.Entity.EF6, Version=6.9.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\MySql.Data.Entity.6.9.7\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AccountsDb\Classes\AccountTariff.cs" />
+    <Compile Include="AccountsDb\Classes\BalanceOperation.cs" />
+    <Compile Include="AccountsDb\Classes\Defects\Defect.cs" />
+    <Compile Include="AccountsDb\Classes\Defects\DefectChange.cs" />
+    <Compile Include="AccountsDb\Classes\Defects\DefectStatus.cs" />
+    <Compile Include="AccountsDb\Classes\LastComponentNotification.cs" />
+    <Compile Include="AccountsDb\Classes\LimitDataType.cs" />
+    <Compile Include="AccountsDb\Classes\Metric.cs" />
+    <Compile Include="AccountsDb\Classes\LimitDataForUnitTest.cs" />
+    <Compile Include="AccountsDb\Classes\Bulb.cs" />
+    <Compile Include="AccountsDb\Classes\SubscriptionChannel.cs" />
+    <Compile Include="AccountsDb\Classes\SubscriptionObject.cs" />
+    <Compile Include="AccountsDb\Classes\SystemTariffLimits.cs" />
+    <Compile Include="AccountsDb\Classes\TariffLimitSource.cs" />
+    <Compile Include="AccountsDb\Classes\TariffLimitType.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\PingTests\PingResult.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\SslCertificateExpirationDateTests\SslCertificateExpirationDateErrorCode.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\SslCertificateExpirationDateTests\SslCertificateExpirationDateRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\DomainNamePaymentPeriodTests\DomainNamePaymentPeriodErrorCode.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\DomainNamePaymentPeriodTests\UnitTestDomainNamePaymentPeriodRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\PingTests\PingErrorCode.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\PingTests\UnitTestPingRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\SqlTests\UnitTestSqlRule.cs" />
+    <Compile Include="AccountsDb\Classes\UserFolder.cs" />
+    <Compile Include="AccountsDb\Classes\SystemUnitTestTypes.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestUnitTestRuleData.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestUnitTestRuleDataType.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\UnitTest.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\UnitTestProperty.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\UnitTestType.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestUnitTest.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestUnitTestRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestErrorCode.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestMethod.cs" />
+    <Compile Include="AccountsDb\Classes\LogConfig.cs" />
+    <Compile Include="AccountsDb\Classes\NotificationType.cs" />
+    <Compile Include="AccountsDb\Classes\SystemEventType.cs" />
+    <Compile Include="AccountsDb\Classes\UserRole.cs" />
+    <Compile Include="AccountsDb\Classes\UserSetting.cs" />
+    <Compile Include="AccountsDb\Classes\Token.cs" />
+    <Compile Include="AccountsDb\Mapping\DefectChangeMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\LastComponentNotificationMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\DefectMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\TokenMapping.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.Designer.cs">
+      <DependentUpon>201803232225266_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
+    <Compile Include="AccountsDb\Provider.cs" />
+    <Compile Include="AccountsDb\Repositories\DefectRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IDefectRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ILimitDataForUnitTestRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IStatusDataRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ITokenRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\LimitDataForUnitTestRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\TokenRepository.cs" />
+    <Compile Include="AccountsDb\Services\DefectService\DefectService.cs" />
+    <Compile Include="AccountsDb\Services\DefectService\IDefectService.cs" />
+    <Compile Include="AccountsDb\Services\StatusDataService\IBulbService.cs" />
+    <Compile Include="AccountsDb\Services\StatusDataService\BulbService.cs" />
+    <Compile Include="AccountsDb\Services\StatusDataService\BulbSignal.cs" />
+    <Compile Include="AccountsDb\Services\StatusDataService\UpdateStatusResultCode.cs" />
+    <Compile Include="AccountsDb\Services\TokenService\TokenService.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep3Request.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep3RequestData.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep2RequestData.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep2Request.cs" />
+    <Compile Include="Api\Accounts\AccountInfo.cs" />
+    <Compile Include="Api\Accounts\GetAccountById\GetAccountByIdRequest.cs" />
+    <Compile Include="Api\Accounts\GetAccountById\GetAccountByIdRequestData.cs" />
+    <Compile Include="Api\Accounts\GetAccountById\GetAccountByIdResponse.cs" />
+    <Compile Include="Api\Accounts\GetAccounts\GetAccountsRequest.cs" />
+    <Compile Include="Api\Accounts\GetAccounts\GetAccountsRequestData.cs" />
+    <Compile Include="Api\Accounts\GetAccounts\GetAccountsResponse.cs" />
+    <Compile Include="Api\Accounts\UpdateAccount\UpdateAccountRequest.cs" />
+    <Compile Include="Api\Accounts\UpdateAccount\UpdateAccountRequestData.cs" />
+    <Compile Include="Api\Accounts\UpdateAccount\UpdateAccountResponse.cs" />
+    <Compile Include="Api\Common\EmptyResponse.cs" />
+    <Compile Include="Api\Common\ExtentionPropertyDto.cs" />
+    <Compile Include="Api\Common\UnknownComponentTypeIdException.cs" />
+    <Compile Include="Api\Common\UnknownComponentIdException.cs" />
+    <Compile Include="Api\Common\CantUpdateSystemObjectException.cs" />
+    <Compile Include="Api\Common\UnknownEventIdException.cs" />
+    <Compile Include="Api\Common\UnknownUnitTestIdException.cs" />
+    <Compile Include="Api\Common\UnknownUnitTestTypeIdException.cs" />
+    <Compile Include="Api\Common\ParameterErrorException.cs" />
+    <Compile Include="Api\ComponentControls\GetComponentControlById\GetComponentControlByIdRequest.cs" />
+    <Compile Include="Api\ComponentControls\GetComponentControlById\GetComponentControlByIdRequestData.cs" />
+    <Compile Include="Api\ComponentControls\GetComponentControlById\GetComponentControlByIdResponse.cs" />
+    <Compile Include="Api\Components\CreateComponent\CreateComponentRequest.cs" />
+    <Compile Include="Api\Components\CreateComponent\CreateComponentRequestData.cs" />
+    <Compile Include="Api\Components\CreateComponent\CreateComponentResponse.cs" />
+    <Compile Include="Api\Components\Common\MonitoringStatus.cs" />
+    <Compile Include="Api\Components\Common\StatusDataInfo.cs" />
+    <Compile Include="Api\Components\GetComponentAndChildIds\GetComponentAndChildIdsRequest.cs" />
+    <Compile Include="Api\Components\GetComponentAndChildIds\GetComponentAndChildIdsRequestData.cs" />
+    <Compile Include="Api\Components\GetComponentAndChildIds\GetComponentAndChildIdsResponse.cs" />
+    <Compile Include="Api\Components\GetComponentById\GetComponentByIdResponse.cs" />
+    <Compile Include="Api\Components\GetComponentInternalState\GetComponentInternalStateRequest.cs" />
+    <Compile Include="Api\Components\GetComponentInternalState\GetComponentInternalStateRequestData.cs" />
+    <Compile Include="Api\Components\GetComponentInternalState\GetComponentInternalStateResponse.cs" />
+    <Compile Include="Api\Components\GetComponentTotalState\GetComponentTotalStateRequest.cs" />
+    <Compile Include="Api\Components\GetComponentTotalState\GetComponentTotalStateRequestData.cs" />
+    <Compile Include="Api\Components\GetComponentTotalState\GetComponentTotalStateResponse.cs" />
+    <Compile Include="Api\Components\GetOrAddComponent\GetOrAddComponentRequest.cs" />
+    <Compile Include="Api\Components\GetOrAddComponent\GetOrAddComponentResponse.cs" />
+    <Compile Include="Api\Components\SetComponentDisable\SetComponentDisableRequest.cs" />
+    <Compile Include="Api\Components\SetComponentDisable\SetComponentDisableRequestData.cs" />
+    <Compile Include="Api\Components\SetComponentDisable\SetComponentDisableResponse.cs" />
+    <Compile Include="Api\Components\SetComponentEnable\SetComponentEnableRequest.cs" />
+    <Compile Include="Api\Components\SetComponentEnable\SetComponentEnableRequestData.cs" />
+    <Compile Include="Api\Components\SetComponentEnable\SetComponentEnableResponse.cs" />
+    <Compile Include="Api\Databases\DatabaseInfo.cs" />
+    <Compile Include="Api\Databases\GetDatabases\GetDatabasesRequest.cs" />
+    <Compile Include="Api\Databases\GetDatabases\GetDatabasesResponse.cs" />
+    <Compile Include="Api\Databases\GetDatatbaseById\GetDatabaseByIdRequest.cs" />
+    <Compile Include="Api\Databases\GetDatatbaseById\GetDatabaseByIdRequestData.cs" />
+    <Compile Include="Api\Databases\GetDatatbaseById\GetDatabaseByIdResponse.cs" />
+    <Compile Include="Api\Databases\SetDatabaseIsBroken\SetDatabaseIsBrokenRequest.cs" />
+    <Compile Include="Api\Databases\SetDatabaseIsBroken\SetDatabaseIsBrokenRequestData.cs" />
+    <Compile Include="Api\Databases\SetDatabaseIsBroken\SetDatabaseIsBrokenResponse.cs" />
+    <Compile Include="Api\Events\UpdateEventsStatuses\UpdateEventsStatusesRequest.cs" />
+    <Compile Include="Api\Events\UpdateEventsStatuses\UpdateEventsStatusesRequestData.cs" />
+    <Compile Include="Api\Events\UpdateEventsStatuses\UpdateEventsStatusesResponse.cs" />
+    <Compile Include="Api\Events\UpdateEventsStatuses\UpdateEventsStatusesResponseData.cs" />
+    <Compile Include="Api\EventTypes\UpdateEventType\UpdateEventTypeRequest.cs" />
+    <Compile Include="Api\EventTypes\UpdateEventType\UpdateEventTypeRequestData.cs" />
+    <Compile Include="Api\EventTypes\UpdateEventType\UpdateEventTypeResponse.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountUsedLimitsArchiveDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountUsedLimitsInstantDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountUsedLimitsPerDayDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountUsedLimitsOverallDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAllAccountsLimits\GetAllAccountsLimitsRequest.cs" />
+    <Compile Include="Api\Limits\GetAllAccountsLimits\GetAllAccountsLimitsRequestData.cs" />
+    <Compile Include="Api\Limits\GetAllAccountsLimits\GetAllAccountsLimitsResponse.cs" />
+    <Compile Include="Api\Limits\GetAllAccountsLimits\GetAllAccountsLimitsResponseData.cs" />
+    <Compile Include="Api\Limits\Ver2\FakeAccountLimitChecker.cs" />
+    <Compile Include="Api\Limits\Ver2\FakeLimitCounter.cs" />
+    <Compile Include="Api\Limits\Ver2\IAccountLimitChecker.cs" />
+    <Compile Include="Api\Limits\Ver2\ILimitCounter.cs" />
+    <Compile Include="Api\Limits\LimitDataArchiveItem.cs" />
+    <Compile Include="Api\Limits\LimitDataArchiveUnitTestItem.cs" />
+    <Compile Include="Api\Limits\MakeAccountFree\MakeAccountFreeRequest.cs" />
+    <Compile Include="Api\Limits\MakeAccountFree\MakeAccountFreeResponse.cs" />
+    <Compile Include="Api\Limits\MakeAccountPaid\TariffConfigurationInfo.cs" />
+    <Compile Include="Api\Limits\MakeAccountPaid\MakeAccountPaidRequest.cs" />
+    <Compile Include="Api\Limits\MakeAccountPaid\MakeAccountPaidResponse.cs" />
+    <Compile Include="Api\Limits\SetAccountLimits\SetAccountLimitsResponse.cs" />
+    <Compile Include="Api\Limits\SetAccountLimits\SetAccountLimitsRequest.cs" />
+    <Compile Include="Api\Limits\SetAccountLimits\SetAccountLimitsRequestData.cs" />
+    <Compile Include="Api\Limits\Ver2\ILimitService.cs" />
+    <Compile Include="Api\Limits\Ver2\LimitCounterBase.cs" />
+    <Compile Include="Api\Limits\Ver2\LimitService.cs" />
+    <Compile Include="Api\Limits\Ver2\RealAccountLimitChecker.cs" />
+    <Compile Include="Api\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDto.cs" />
+    <Compile Include="Api\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDtoData.cs" />
+    <Compile Include="Api\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsResponseDto.cs" />
+    <Compile Include="Api\Metrics\CreateMetric\CreateMetricResponseData.cs" />
+    <Compile Include="Api\Metrics\DeleteMetric\DeleteMetricRequest.cs" />
+    <Compile Include="Api\Metrics\DeleteMetric\DeleteMetricRequestData.cs" />
+    <Compile Include="Api\Metrics\DeleteMetric\DeleteMetricResponse.cs" />
+    <Compile Include="Api\Metrics\SetMetricDisable\SetMetricDisableRequest.cs" />
+    <Compile Include="Api\Metrics\SetMetricDisable\SetMetricDisableRequestData.cs" />
+    <Compile Include="Api\Metrics\SetMetricDisable\SetMetricDisableResponse.cs" />
+    <Compile Include="Api\Metrics\SetMetricEnable\SetMetricEnableRequest.cs" />
+    <Compile Include="Api\Metrics\SetMetricEnable\SetMetricEnableRequestData.cs" />
+    <Compile Include="Api\Metrics\SetMetricEnable\SetMetricEnableResponse.cs" />
+    <Compile Include="Api\Metrics\CreateMetric\CreateMetricRequest.cs" />
+    <Compile Include="Api\Metrics\CreateMetric\CreateMetricRequestData.cs" />
+    <Compile Include="Api\Metrics\CreateMetric\CreateMetricResponse.cs" />
+    <Compile Include="Api\Metrics\UpdateMetrics\UpdateMetricsRequest.cs" />
+    <Compile Include="Api\Metrics\UpdateMetrics\UpdateMetricsRequestData.cs" />
+    <Compile Include="Api\Metrics\UpdateMetrics\UpdateMetricsResponse.cs" />
+    <Compile Include="Api\Metrics\UpdateMetrics\UpdateMetricsResponseData.cs" />
+    <Compile Include="Api\Metrics\Common\MetricInfo.cs" />
+    <Compile Include="Api\Metrics\GetMetricsHistory\GetMetricsHistoryRequest.cs" />
+    <Compile Include="Api\Metrics\GetMetricsHistory\GetMetricsHistoryRequestData.cs" />
+    <Compile Include="Api\Metrics\GetMetricsHistory\GetMetricsHistoryResponse.cs" />
+    <Compile Include="Api\Metrics\GetMetrics\GetMetricsRequest.cs" />
+    <Compile Include="Api\Metrics\GetMetrics\GetMetricsRequestData.cs" />
+    <Compile Include="Api\Metrics\GetMetrics\GetMetricsResponse.cs" />
+    <Compile Include="Api\Metrics\GetMetric\GetMetricRequest.cs" />
+    <Compile Include="Api\Metrics\GetMetric\GetMetricRequestData.cs" />
+    <Compile Include="Api\Metrics\GetMetric\GetMetricResponse.cs" />
+    <Compile Include="Api\Metrics\SendMetrics\SendMetricsRequest.cs" />
+    <Compile Include="Api\Metrics\SendMetrics\SendMetricsResponse.cs" />
+    <Compile Include="Api\Metrics\SendMetric\SendMetricRequest.cs" />
+    <Compile Include="Api\Metrics\SendMetric\SendMetricRequestData.cs" />
+    <Compile Include="Api\Metrics\SendMetric\SendMetricResponse.cs" />
+    <Compile Include="Api\Metrics\UpdateMetric\UpdateMetricRequest.cs" />
+    <Compile Include="Api\Metrics\UpdateMetric\UpdateMetricRequestData.cs" />
+    <Compile Include="Api\Metrics\UpdateMetric\UpdateMetricResponse.cs" />
+    <Compile Include="Api\MetricTypes\DeleteMetricType\DeleteMetricTypeRequest.cs" />
+    <Compile Include="Api\MetricTypes\DeleteMetricType\DeleteMetricTypeRequestData.cs" />
+    <Compile Include="Api\MetricTypes\DeleteMetricType\DeleteMetricTypeResponse.cs" />
+    <Compile Include="Api\MetricTypes\CreateMetricType\CreateMetricTypeRequest.cs" />
+    <Compile Include="Api\MetricTypes\CreateMetricType\CreateMetricTypeRequestData.cs" />
+    <Compile Include="Api\MetricTypes\CreateMetricType\CreateMetricTypeResponseData.cs" />
+    <Compile Include="Api\MetricTypes\CreateMetricType\CreateMetricTypeResponse.cs" />
+    <Compile Include="Api\MetricTypes\UpdateMetricType\UpdateMetricTypeRequest.cs" />
+    <Compile Include="Api\MetricTypes\UpdateMetricType\UpdateMetricTypeRequestData.cs" />
+    <Compile Include="Api\MetricTypes\UpdateMetricType\UpdateMetricTypeResponse.cs" />
+    <Compile Include="Api\Others\ExtentionPropertyHelper.cs" />
+    <Compile Include="Api\Others\SaveAllCaches\SaveAllCachesRequest.cs" />
+    <Compile Include="Api\Others\SaveAllCaches\SaveAllCachesResponse.cs" />
+    <Compile Include="Api\Payments\ProcessPartnerPayments\ProcessPartnerPaymentsRequest.cs" />
+    <Compile Include="Api\Payments\ProcessPartnerPayments\ProcessPartnerPaymentsRequestData.cs" />
+    <Compile Include="Api\Payments\ProcessPartnerPayments\ProcessPartnerPaymentsResponse.cs" />
+    <Compile Include="Api\Subscriptions\CreateUserDefaultSubscription\CreateUserDefaultSubscriptionRequest.cs" />
+    <Compile Include="Api\Subscriptions\CreateUserDefaultSubscription\CreateUserDefaultSubscriptionRequestData.cs" />
+    <Compile Include="Api\Subscriptions\CreateUserDefaultSubscription\CreateUserDefaultSubscriptionResponse.cs" />
+    <Compile Include="Api\Subscriptions\SendSms\SendSmsRequest.cs" />
+    <Compile Include="Api\Subscriptions\SendSms\SendSmsRequestData.cs" />
+    <Compile Include="Api\Subscriptions\SendSms\SendSmsResponse.cs" />
+    <Compile Include="Api\Subscriptions\SetSubscriptionEnable\SetSubscriptionEnableRequest.cs" />
+    <Compile Include="Api\Subscriptions\SetSubscriptionEnable\SetSubscriptionEnableRequestData.cs" />
+    <Compile Include="Api\Subscriptions\SetSubscriptionEnable\SetSubscriptionEnableResponse.cs" />
+    <Compile Include="Api\Subscriptions\SetSubscriptionDisable\SetSubscriptionDisableRequest.cs" />
+    <Compile Include="Api\Subscriptions\SetSubscriptionDisable\SetSubscriptionDisableRequestData.cs" />
+    <Compile Include="Api\Subscriptions\SetSubscriptionDisable\SetSubscriptionDisableResponse.cs" />
+    <Compile Include="Api\Subscriptions\UpdateSubscription\UpdateSubscriptionRequest.cs" />
+    <Compile Include="Api\Subscriptions\UpdateSubscription\UpdateSubscriptionRequestData.cs" />
+    <Compile Include="Api\Subscriptions\UpdateSubscription\UpdateSubscriptionResponse.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddCheckBaseRequestData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddCheckBaseResponseData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddHttpUnitTest\AddHttpUnitTestRequest.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddHttpUnitTest\AddHttpUnitTestRequestData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddHttpUnitTest\AddHttpUnitTestResponse.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddHttpUnitTest\AddHttpUnitTestResponseData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddHttpUnitTest\AddHttpUnitTestRuleRequestData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddHttpUnitTest\AddHttpUnitTestRuleResponseData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddPingUnitTest\AddPingUnitTestResponse.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddPingUnitTest\AddPingUnitTestRequest.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddPingUnitTest\AddPingUnitTestRequestData.cs" />
+    <Compile Include="Api\UnitTests\Checks\AddPingUnitTest\AddPingUnitTestResponseData.cs" />
+    <Compile Include="Api\UnitTests\SendHttpUnitTestBanner\SendHttpUnitTestBannerResponseData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequest.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponse.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestEnable\SetUnitTestEnableRequest.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestEnable\SetUnitTestEnableRequestData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestEnable\SetUnitTestEnableResponse.cs" />
+    <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsRequest.cs" />
+    <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsRequestData.cs" />
+    <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsResponse.cs" />
+    <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsResponseData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestNextTime\SetUnitTestNextTimeRequest.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestNextTime\SetUnitTestNextTimeRequestData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestNextTime\SetUnitTestNextTimeResponse.cs" />
+    <Compile Include="Api\UnitTests\UpdateUnitTest\UpdateUnitTestRequest.cs" />
+    <Compile Include="Api\UnitTests\UpdateUnitTest\UpdateUnitTestRequestData.cs" />
+    <Compile Include="Api\UnitTests\UpdateUnitTest\UpdateUnitTestResponse.cs" />
+    <Compile Include="Api\UnitTestTypes\UpdateUnitTestType\UpdateUnitTestTypeResponse.cs" />
+    <Compile Include="Api\UnitTestTypes\UpdateUnitTestType\UpdateUnitTestTypeRequest.cs" />
+    <Compile Include="Api\UnitTestTypes\UpdateUnitTestType\UpdateUnitTestTypeRequestData.cs" />
+    <Compile Include="Caching\Common\AccountCache.cs" />
+    <Compile Include="Caching\Common\AccountCacheRepository.cs" />
+    <Compile Include="Caching\Common\AccountCacheRequest.cs" />
+    <Compile Include="Caching\Common\CacheLock.cs" />
+    <Compile Include="Caching\Common\CacheLockTimeOutException.cs" />
+    <Compile Include="Caching\Common\CacheObjectReference.cs" />
+    <Compile Include="Caching\Common\CacheObjectReferenceCollection.cs" />
+    <Compile Include="Caching\Common\CacheObjectReferenceStatus.cs" />
+    <Compile Include="Caching\Common\ICacheStorage.cs" />
+    <Compile Include="Caching\Common\ICacheWriteObject.cs" />
+    <Compile Include="Caching\Common\IReadOnlyReferenceCollection.cs" />
+    <Compile Include="Caching\Common\StorageDbCacheStorageBase.cs" />
+    <Compile Include="Caching\Common\ConfigDbCacheStorageBase.cs" />
+    <Compile Include="Caching\Common\AccountDbCacheStorageBase.cs" />
+    <Compile Include="Caching\Common\AddEntityBatchProcessor.cs" />
+    <Compile Include="Caching\Common\CacheWriteDataLockedResult.cs" />
+    <Compile Include="Caching\Common\CacheReadDataLockedResult.cs" />
+    <Compile Include="Caching\Common\CacheResponse.cs" />
+    <Compile Include="Caching\Common\CacheRequest.cs" />
+    <Compile Include="Caching\Common\CacheStorageBaseT.cs" />
+    <Compile Include="Caching\Common\CacheWriteObjectBase.cs" />
+    <Compile Include="Caching\Common\AllCaches.cs" />
+    <Compile Include="Caching\Common\IAccountDbCacheReadObject.cs" />
+    <Compile Include="Caching\Common\ICacheReadObject.cs" />
+    <Compile Include="Caching\Common\ICacheRequest.cs" />
+    <Compile Include="Caching\Common\ObjectChangesHelper.cs" />
+    <Compile Include="Caching\Components\ComponentCacheResponse.cs" />
+    <Compile Include="Caching\Components\ComponentCacheStorage.cs" />
+    <Compile Include="Caching\Components\ComponentCacheWriteObject.cs" />
+    <Compile Include="Caching\Components\IComponentCacheReadObject.cs" />
+    <Compile Include="Caching\Common\ICacheStorageT.cs" />
+    <Compile Include="Caching\Common\ICacheWriteObjectT.cs" />
+    <Compile Include="Caching\Events\EventCacheResponse.cs" />
+    <Compile Include="Caching\Events\EventCacheStatusReference.cs" />
+    <Compile Include="Caching\Events\EventCacheStorage.cs" />
+    <Compile Include="Caching\Events\EventCacheWriteObject.cs" />
+    <Compile Include="Caching\Events\IEventCacheReadObject.cs" />
+    <Compile Include="Caching\Metrics\IMetricCacheReadObject.cs" />
+    <Compile Include="Caching\Metrics\MetricCacheResponse.cs" />
+    <Compile Include="Caching\Metrics\MetricCacheStorage.cs" />
+    <Compile Include="Caching\Metrics\MetricCacheWriteObject.cs" />
+    <Compile Include="Caching\MetricTypes\IMetricTypeCacheReadObject.cs" />
+    <Compile Include="Caching\MetricTypes\MetricTypeCacheResponse.cs" />
+    <Compile Include="Caching\MetricTypes\MetricTypeCacheStorage.cs" />
+    <Compile Include="Caching\MetricTypes\MetricTypeCacheWriteObject.cs" />
+    <Compile Include="Caching\StatusData\IBulbCacheReadObject.cs" />
+    <Compile Include="Caching\StatusData\StatusDataCacheResponse.cs" />
+    <Compile Include="Caching\StatusData\StatusDataCacheStorage.cs" />
+    <Compile Include="Caching\StatusData\BulbCacheWriteObject.cs" />
+    <Compile Include="Caching\UnitTests\IUnitTestCacheReadObject.cs" />
+    <Compile Include="Caching\UnitTests\UnitTestCacheResponse.cs" />
+    <Compile Include="Caching\UnitTests\UnitTestCacheStorage.cs" />
+    <Compile Include="Caching\UnitTests\UnitTestCacheWriteObject.cs" />
+    <Compile Include="Caching\UnitTestTypes\IUnitTestTypeCacheReadObject.cs" />
+    <Compile Include="Caching\UnitTestTypes\UnitTestTypeCacheStorage.cs" />
+    <Compile Include="Caching\UnitTestTypes\UnitTestTypeCacheWriteObject.cs" />
+    <Compile Include="Caching\UnitTestTypes\UnitTestTypeCacheResponse.cs" />
+    <Compile Include="Common\Databases\DataBaseProviderType.cs" />
+    <Compile Include="Common\Databases\MyDataContext.cs" />
+    <Compile Include="Common\Databases\NonClusteredPrimaryKeyCSharpMigrationCodeGenerator.cs" />
+    <Compile Include="Common\DependencyInjection.cs" />
+    <Compile Include="Common\EnumNameHelper.cs" />
+    <Compile Include="Common\EnumNames\RussionEnumName.cs" />
+    <Compile Include="Common\ExceptionTempInfo.cs" />
+    <Compile Include="Common\Helpers\AccountTypeHelper.cs" />
+    <Compile Include="Common\Helpers\BannerHelper.cs" />
+    <Compile Include="Common\Helpers\ComponentHelper.cs" />
+    <Compile Include="Common\Helpers\ComponentSelfTestResult.cs" />
+    <Compile Include="Common\Helpers\CultureHelper.cs" />
+    <Compile Include="Common\Helpers\DatabaseHelper.cs" />
+    <Compile Include="Common\Helpers\DataSizeHelper.cs" />
+    <Compile Include="Common\Helpers\DateTimeFormat.cs" />
+    <Compile Include="Common\Helpers\DateTimeHelper.cs" />
+    <Compile Include="Common\Helpers\DebugHelper.cs" />
+    <Compile Include="Common\Helpers\EventCategoryHelper.cs" />
+    <Compile Include="Common\Helpers\EventHelper.cs" />
+    <Compile Include="Common\Helpers\UrlHelper.cs" />
+    <Compile Include="Common\INaming.cs" />
+    <Compile Include="ConfigDb\Dto\LoginInfo.cs" />
+    <Compile Include="ConfigDb\Services\ConfigDbServicesHelper.cs" />
+    <Compile Include="ConfigDb\Services\IAccountManagementService.cs" />
+    <Compile Include="ConfigDb\Services\ILoginService.cs" />
+    <Compile Include="ConfigDb\Services\IPaymentService.cs" />
+    <Compile Include="Api\Payments\AddYandexKassaPayment\AddYandexKassaPaymentRequest.cs" />
+    <Compile Include="Api\Payments\AddYandexKassaPayment\AddYandexKassaPaymentRequestData.cs" />
+    <Compile Include="Api\Payments\AddYandexKassaPayment\AddYandexKassaPaymentResponse.cs" />
+    <Compile Include="Common\Helpers\ComponentSelfTest.cs" />
+    <Compile Include="Common\Helpers\MonitoringStatusHelper.cs" />
+    <Compile Include="Common\Helpers\NotificationHelper.cs" />
+    <Compile Include="Common\Helpers\NumbersHelper.cs" />
+    <Compile Include="Common\Helpers\ObjectColorHelper.cs" />
+    <Compile Include="Common\Helpers\ReportPeriodHelper.cs" />
+    <Compile Include="Common\Helpers\PhoneHelper.cs" />
+    <Compile Include="Common\Helpers\SqlCommandHelper.cs" />
+    <Compile Include="Common\Helpers\SubscriptionObjectHelper.cs" />
+    <Compile Include="Common\Helpers\TextParser.cs" />
+    <Compile Include="Common\Helpers\ThreadHelper.cs" />
+    <Compile Include="Common\Helpers\UnitTestHelper.cs" />
+    <Compile Include="Common\Helpers\UserAgentHelper.cs" />
+    <Compile Include="Common\Helpers\WebHandlerBase.cs" />
+    <Compile Include="Common\IEnumName.cs" />
+    <Compile Include="Common\InternalNLogAdapter\NLogTarget.cs" />
+    <Compile Include="Common\Language.cs" />
+    <Compile Include="Common\Period\ReportPeriodRange.cs" />
+    <Compile Include="Common\Period\ReportPeriod.cs" />
+    <Compile Include="Common\SingleThreadWorker.cs" />
+    <Compile Include="Common\TaskQueue\DeadLockHunter.cs" />
+    <Compile Include="Common\XmlExtensions.cs" />
+    <Compile Include="AccountsDb\Mapping\AccountBalanceHistoryMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UserRoleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\AccountTariffMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\MetricMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\LimitDataForUnitTestMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\LimitDataMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\LogConfigMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\StatusDataMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestSslCertificateExpirationDateRuleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestDomainNamePaymentPeriodRuleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestSqlRuleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestPingRuleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestPropertyMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\HttpRequestUnitTestMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\HttpRequestUnitTestRuleDataMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\HttpRequestUnitTestRuleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestResultMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UserSettingMapping.cs" />
+    <Compile Include="AccountsDb\Namings\CounterNaming.cs" />
+    <Compile Include="AccountsDb\Namings\ComponentNaming.cs" />
+    <Compile Include="AccountsDb\Namings\ComponentPropertyNaming.cs" />
+    <Compile Include="AccountsDb\Namings\ComponentStateNaming.cs" />
+    <Compile Include="AccountsDb\Namings\ComponentTypeNaming.cs" />
+    <Compile Include="AccountsDb\Namings\EventTypeNaming.cs" />
+    <Compile Include="AccountsDb\Namings\HttpRequestUnitTestRuleNaming.cs" />
+    <Compile Include="AccountsDb\Namings\ProblemNaming.cs" />
+    <Compile Include="AccountsDb\Namings\SubscriptionNaming.cs" />
+    <Compile Include="AccountsDb\Namings\TariffLimitNaming.cs" />
+    <Compile Include="AccountsDb\Namings\UnitTestNaming.cs" />
+    <Compile Include="AccountsDb\Namings\UnitTestTypeNaming.cs" />
+    <Compile Include="AccountsDb\Namings\UserContactNaming.cs" />
+    <Compile Include="AccountsDb\Namings\UserNaming.cs" />
+    <Compile Include="AccountsDb\Repositories\AccountBasedRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\AccountTariffRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\MetricRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\HttpRequestUnitTestRuleRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IAccountTariffRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IMetricRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ILimitDataRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IUnitTestRuleRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IUserSettingRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\LimitDataRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\UnitTestRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\UnitTestTypeRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ComponentPropertyRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ComponentTypeRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IAccountBasedRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IUnitTestRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IUnitTestTypeRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IComponentPropertyRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ILogConfigRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\LogConfigRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\UserSettingRepository.cs" />
+    <Compile Include="AccountsDb\Services\EventTypeService\EventTypeService.cs" />
+    <Compile Include="AccountsDb\Services\EventTypeService\IEventTypeService.cs" />
+    <Compile Include="AccountsDb\Services\UnitTestTypeServices\IUnitTestTypeService.cs" />
+    <Compile Include="AccountsDb\Services\UnitTestService\UnitTestService.cs" />
+    <Compile Include="AccountsDb\Services\ComponentService\ComponentService.cs" />
+    <Compile Include="AccountsDb\Services\ComponentTypeService\ComponentTypeService.cs" />
+    <Compile Include="AccountsDb\Services\UnitTestTypeServices\UnitTestTypeService.cs" />
+    <Compile Include="AccountsDb\Services\UserService\IUserSettingService.cs" />
+    <Compile Include="AccountsDb\Services\UserService\UserSettingService.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep1Request.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationResponce.cs" />
+    <Compile Include="Api\AccountRegistration\EndAccountRegistration\EndAccountRegistrationRequest.cs" />
+    <Compile Include="Api\AccountRegistration\EndAccountRegistration\EndAccountRegistrationResponce.cs" />
+    <Compile Include="Api\Adapter\AdapterDataConverter.cs" />
+    <Compile Include="Api\Adapter\ApiToDispatcherAdapter.cs" />
+    <Compile Include="Api\Common\DataType.cs" />
+    <Compile Include="Api\Common\ExtentionProperty.cs" />
+    <Compile Include="Api\Common\ExtentionPropertyCollection.cs" />
+    <Compile Include="Api\Common\ExtentionPropertyValue.cs" />
+    <Compile Include="Api\Common\ParameterRequiredException.cs" />
+    <Compile Include="Api\Common\Request.cs" />
+    <Compile Include="Api\Common\RequestT.cs" />
+    <Compile Include="Api\Common\Responce.cs" />
+    <Compile Include="Api\Common\ResponceException.cs" />
+    <Compile Include="Api\Common\ResponseT.cs" />
+    <Compile Include="Api\Common\Utf8StringWriter.cs" />
+    <Compile Include="Api\Common\XmlSerializer.cs" />
+    <Compile Include="Api\Common\XmlTimeSpan.cs" />
+    <Compile Include="Api\ComponentControls\ComponentControlData.cs" />
+    <Compile Include="Api\ComponentControls\GetOrCreateComponent\GetOrCreateComponentRequest.cs" />
+    <Compile Include="Api\ComponentControls\GetOrCreateComponent\GetOrCreateComponentResponse.cs" />
+    <Compile Include="Api\ComponentControls\GetOrCreateComponent\GetOrCreateComponentRequestData.cs" />
+    <Compile Include="Api\ComponentControls\GetRootControlData\GetRootControlDataRequest.cs" />
+    <Compile Include="Api\ComponentControls\GetRootControlData\GetRootControlDataResponse.cs" />
+    <Compile Include="Api\Components\Common\ComponentInfo.cs" />
+    <Compile Include="Api\Components\DeleteComponent\DeleteComponentRequest.cs" />
+    <Compile Include="Api\Components\DeleteComponent\DeleteComponentRequestData.cs" />
+    <Compile Include="Api\Components\DeleteComponent\DeleteComponentResponse.cs" />
+    <Compile Include="Api\Components\GetChildComponents\GetChildComponentsRequest.cs" />
+    <Compile Include="Api\Components\GetChildComponents\GetChildComponentsRequestData.cs" />
+    <Compile Include="Api\Components\GetChildComponents\GetChildComponentsResponce.cs" />
+    <Compile Include="Api\Components\GetComponentById\GetComponentByIdRequestData.cs" />
+    <Compile Include="Api\Components\GetComponentById\GetComponentByIdRequest.cs" />
+    <Compile Include="Api\Components\GetComponentById\GetComponentByIdResponce.cs" />
+    <Compile Include="Api\Components\GetComponentBySystemName\GetComponentBySystemNameRequestData.cs" />
+    <Compile Include="Api\Components\GetComponentBySystemName\GetComponentBySystemNameRequest.cs" />
+    <Compile Include="Api\Components\GetComponentBySystemName\GetComponentBySystemNameResponce.cs" />
+    <Compile Include="Api\Components\GetRootComponent\GetRootComponentRequest.cs" />
+    <Compile Include="Api\Components\GetRootComponent\GetRootComponentResponce.cs" />
+    <Compile Include="Api\Components\UpdateComponentState\UpdateComponentStateRequest.cs" />
+    <Compile Include="Api\Components\UpdateComponentState\UpdateComponentStateRequestData.cs" />
+    <Compile Include="Api\Components\UpdateComponentState\UpdateComponentStateResponse.cs" />
+    <Compile Include="Api\Components\UpdateComponent\UpdateComponentRequest.cs" />
+    <Compile Include="Api\Components\UpdateComponent\UpdateComponentRequestData.cs" />
+    <Compile Include="Api\Components\UpdateComponent\UpdateComponentResponse.cs" />
+    <Compile Include="Api\ComponentType\ComponentTypeInfo.cs" />
+    <Compile Include="Api\ComponentType\DeleteComponentType\DeleteComponentTypeRequest.cs" />
+    <Compile Include="Api\ComponentType\DeleteComponentType\DeleteComponentTypeRequestData.cs" />
+    <Compile Include="Api\ComponentType\DeleteComponentType\DeleteComponentTypeResponse.cs" />
+    <Compile Include="Api\ComponentType\GetComponentType\GetComponentTypeRequest.cs" />
+    <Compile Include="Api\ComponentType\GetComponentType\GetComponentTypeRequestData.cs" />
+    <Compile Include="Api\ComponentType\GetComponentType\GetComponentTypeResponse.cs" />
+    <Compile Include="Api\ComponentType\GetOrCreateComponentType\GetOrCreateComponentTypeRequest.cs" />
+    <Compile Include="Api\ComponentType\GetOrCreateComponentType\GetOrCreateComponentTypeRequestData.cs" />
+    <Compile Include="Api\ComponentType\GetOrCreateComponentType\GetOrCreateComponentTypeResponse.cs" />
+    <Compile Include="Api\ComponentType\UpdateComponentType\UpdateComponentTypeData.cs" />
+    <Compile Include="Api\ComponentType\UpdateComponentType\UpdateComponentTypeRequest.cs" />
+    <Compile Include="Api\ComponentType\UpdateComponentType\UpdateComponentTypeResponce.cs" />
+    <Compile Include="Api\Dispatcher\DispatcherClient.cs" />
+    <Compile Include="Api\Dispatcher\DispatcherWrapper.cs" />
+    <Compile Include="Api\Echo\GetEchoRequest.cs" />
+    <Compile Include="Api\Echo\GetEchoRequestData.cs" />
+    <Compile Include="Api\Echo\GetEchoResponce.cs" />
+    <Compile Include="AccountsDb\Repositories\EventTypeRepository.cs" />
+    <Compile Include="AccountsDb\Classes\ComponentProperty.cs" />
+    <Compile Include="AccountsDb\Repositories\IComponentTypeRepository.cs" />
+    <Compile Include="AccountsDb\Services\UnitTestService\IUnitTestService.cs" />
+    <Compile Include="AccountsDb\Services\ComponentService\IComponentService.cs" />
+    <Compile Include="AccountsDb\Services\ComponentTypeService\IComponentTypeService.cs" />
+    <Compile Include="AccountsDb\Repositories\IEventTypeRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ISubscriptionRepository.cs" />
+    <Compile Include="Api\Events\GetEventById\GetEventByIdRequestData.cs" />
+    <Compile Include="Api\Events\GetEvents\GetEventsRequest.cs" />
+    <Compile Include="Api\Events\GetEvents\GetEventsRequestData.cs" />
+    <Compile Include="Api\Events\GetEvents\GetEventsResponse.cs" />
+    <Compile Include="Api\Events\JoinEvents\JoinEventData.cs" />
+    <Compile Include="Api\Events\JoinEvents\JoinEventsRequest.cs" />
+    <Compile Include="Api\Events\JoinEvents\JoinEventsResponse.cs" />
+    <Compile Include="Api\Events\SendEvent\SendEventResponseData.cs" />
+    <Compile Include="Api\Limits\AccountLimitsChecker.cs" />
+    <Compile Include="Api\Limits\AccountLimitsCheckerManager.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountTotalLimitsDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountUsedLimitsUnitTestDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\AccountUsedLimitsTodayDataInfo.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\GetAccountLimitsRequest.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\GetAccountLimitsRequestData.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\GetAccountLimitsResponse.cs" />
+    <Compile Include="Api\Limits\GetAccountLimits\GetAccountLimitsResponseData.cs" />
+    <Compile Include="Api\Limits\LimitCheckResult.cs" />
+    <Compile Include="Api\Limits\OverLimitException.cs" />
+    <Compile Include="AccountsDb\Classes\LimitData.cs" />
+    <Compile Include="Api\Logs\GetLogConfig\GetLogConfigRequestData.cs" />
+    <Compile Include="Api\Logs\GetLogs\LogRow.cs" />
+    <Compile Include="Api\Logs\SendLogs\SendLogsRequest.cs" />
+    <Compile Include="Api\Logs\SendLogs\SendLogsResponse.cs" />
+    <Compile Include="Api\ServerTime\GetServerTimeResponse.cs" />
+    <Compile Include="Api\ServerTime\GetServerTimeResponseData.cs" />
+    <Compile Include="Api\UnitTests\SendHttpUnitTestBanner\SendHttpUnitTestBannerRequest.cs" />
+    <Compile Include="Api\UnitTests\SendHttpUnitTestBanner\SendHttpUnitTestBannerRequestData.cs" />
+    <Compile Include="Api\UnitTests\SendHttpUnitTestBanner\SendHttpUnitTestBannerResponse.cs" />
+    <Compile Include="Api\UnitTests\DeleteUnitTest\DeleteUnitTestRequest.cs" />
+    <Compile Include="Api\UnitTests\DeleteUnitTest\DeleteUnitTestRequestData.cs" />
+    <Compile Include="Api\UnitTests\DeleteUnitTest\DeleteUnitTestResponse.cs" />
+    <Compile Include="Api\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestRequest.cs" />
+    <Compile Include="Api\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestRequestData.cs" />
+    <Compile Include="Api\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestResponse.cs" />
+    <Compile Include="Api\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestResponseData.cs" />
+    <Compile Include="Api\UnitTests\GetUnitTestState\GetUnitTestStateRequest.cs" />
+    <Compile Include="Api\UnitTests\GetUnitTestState\GetUnitTestStateRequestData.cs" />
+    <Compile Include="Api\UnitTests\GetUnitTestState\GetUnitTestStateResponse.cs" />
+    <Compile Include="Api\UnitTests\GetUnitTestState\UnitTestStateInfo.cs" />
+    <Compile Include="Api\UnitTestTypes\DeleteUnitTestType\DeleteUnitTestTypeRequest.cs" />
+    <Compile Include="Api\UnitTestTypes\DeleteUnitTestType\DeleteUnitTestTypeRequestData.cs" />
+    <Compile Include="Api\UnitTestTypes\DeleteUnitTestType\DeleteUnitTestTypeResponse.cs" />
+    <Compile Include="Api\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeRequest.cs" />
+    <Compile Include="Api\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeRequestData.cs" />
+    <Compile Include="Api\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeResponse.cs" />
+    <Compile Include="Api\UnitTestTypes\UnitTestTypeInfo.cs" />
+    <Compile Include="Common\Databases\ForEachAccountData.cs" />
+    <Compile Include="Common\Databases\ForEachComponentData.cs" />
+    <Compile Include="Common\Helpers\HttpContextHelper.cs" />
+    <Compile Include="Common\Helpers\NetworkHelper.cs" />
+    <Compile Include="Common\Helpers\SystemAccountHelper.cs" />
+    <Compile Include="Common\Helpers\TimeSpanHelper.cs" />
+    <Compile Include="Common\Helpers\ValidationHelper.cs" />
+    <Compile Include="Common\Helpers\HttpServiceEventPreparer.cs" />
+    <Compile Include="Common\HtmlRender.cs" />
+    <Compile Include="AccountsDb\Namings\Naming.cs" />
+    <Compile Include="Common\Helpers\VersionHelper.cs" />
+    <Compile Include="Common\ObjectColor.cs" />
+    <Compile Include="ConfigDb\Dto\CreateAccountData.cs" />
+    <Compile Include="ConfigDb\Entities\AccountStatus.cs" />
+    <Compile Include="ConfigDb\Entities\AccountType.cs" />
+    <Compile Include="AccountsDb\Classes\TokenPurpose.cs" />
+    <Compile Include="ConfigDb\Services\IAccountService.cs" />
+    <Compile Include="ConfigDb\Services\IDatabaseService.cs" />
+    <Compile Include="ConfigDb\Services\ISettingService.cs" />
+    <Compile Include="ConfigDb\Services\IUrlService.cs" />
+    <Compile Include="ConfigDb\Services\IUserAccountActivityService.cs" />
+    <Compile Include="AccountsDb\Services\TokenService\ITokenService.cs" />
+    <Compile Include="Exceptions\AccessDeniedException.cs" />
+    <Compile Include="Exceptions\AccountIsBlockedException.cs" />
+    <Compile Include="Exceptions\AccountRequiredException.cs" />
+    <Compile Include="Exceptions\CantDeleteLastAdminException.cs" />
+    <Compile Include="Exceptions\CantDeleteLastUserException.cs" />
+    <Compile Include="Exceptions\CantRemoveAdminRoleFromLastAdmin.cs" />
+    <Compile Include="Exceptions\IncompleteRequestException.cs" />
+    <Compile Include="Exceptions\LoginAlreadyExistsException.cs" />
+    <Compile Include="Exceptions\ObjectNotFoundException.cs" />
+    <Compile Include="Exceptions\SqlExtendedException.cs" />
+    <Compile Include="Exceptions\TokenNotValidException.cs" />
+    <Compile Include="Exceptions\UserFriedlyException.cs" />
+    <Compile Include="Exceptions\WrongContentTypeException.cs" />
+    <Compile Include="Exceptions\WrongLoginException.cs" />
+    <Compile Include="AccountsDb\Classes\ArchivedStatus.cs" />
+    <Compile Include="AccountsDb\Classes\NotificationHttp.cs" />
+    <Compile Include="AccountsDb\Classes\NotificationReason.cs" />
+    <Compile Include="AccountsDb\Classes\SendSmsCommand.cs" />
+    <Compile Include="AccountsDb\Classes\SmsStatus.cs" />
+    <Compile Include="AccountsDb\Mapping\ArchivedStatusMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\NotificationHttpMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\SendSmsCommandMapping.cs" />
+    <Compile Include="AccountsDb\Namings\EventNaming.cs" />
+    <Compile Include="AccountsDb\Namings\LogNaming.cs" />
+    <Compile Include="AccountsDb\Namings\NotificationNaming.cs" />
+    <Compile Include="AccountsDb\Repositories\ArchivedStatusRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IArchivedStatusRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IComponentBasedRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\StatusDataRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ISendSmsCommandRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\SendSmsCommandRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\TimelineState.cs" />
+    <Compile Include="AccountsDb\Services\LogService\ILogService.cs" />
+    <Compile Include="AccountsDb\Services\SubscriptionService\ISubscriptionService.cs" />
+    <Compile Include="AccountsDb\Repositories\IUserRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IRoleRepository.cs" />
+    <Compile Include="AccountsDb\Services\UserService\IUserService.cs" />
+    <Compile Include="AccountsDb\Repositories\SubscriptionRepository.cs" />
+    <Compile Include="AccountsDb\Services\LogService\LogService.cs" />
+    <Compile Include="AccountsDb\Services\SubscriptionService\SubscriptionService.cs" />
+    <Compile Include="AccountsDb\Repositories\UserRepository.cs" />
+    <Compile Include="AccountsDb\Classes\Role.cs" />
+    <Compile Include="AccountsDb\Classes\RoleId.cs" />
+    <Compile Include="AccountsDb\Repositories\RoleRepository.cs" />
+    <Compile Include="AccountsDb\Services\UserService\UserService.cs" />
+    <Compile Include="AccountsDb\Mapping\SubscriptionMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\ComponentMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\RoleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\ComponentPropertyMapping.cs" />
+    <Compile Include="AccountsDb\AccountDbDataRegistator.cs" />
+    <Compile Include="AccountsDb\Classes\SystemComponentTypes.cs" />
+    <Compile Include="AccountsDb\Repositories\MetricTypeRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IMetricTypeRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ITariffLimitRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\TariffLimitRepository.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestTypeMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestMapping.cs" />
+    <Compile Include="AccountsDb\MsSql\MsSqlAccountDbContext.cs" />
+    <Compile Include="AccountsDb\MsSql\MsSqlAccountDbMConfiguration.cs" />
+    <Compile Include="AccountsDb\MySql\MySqlAccountDbContext.cs" />
+    <Compile Include="AccountsDb\MySql\MySqlAccountDbMConfiguration.cs" />
+    <Compile Include="Api\Events\Common\EventCategory.cs" />
+    <Compile Include="Api\Events\Common\EventImportance.cs" />
+    <Compile Include="Api\Events\Common\EventInfo.cs" />
+    <Compile Include="Api\Events\GetEventById\GetEventByIdRequest.cs" />
+    <Compile Include="Api\Events\GetEventById\GetEventByIdResponce.cs" />
+    <Compile Include="Api\Events\SendEvent\SendEventData.cs" />
+    <Compile Include="Api\Events\SendEvent\SendEventRequest.cs" />
+    <Compile Include="Api\Events\SendEvent\SendEventResponce.cs" />
+    <Compile Include="Api\Logs\Common\LogLevel.cs" />
+    <Compile Include="Api\Logs\GetLogConfig\GetLogConfigRequest.cs" />
+    <Compile Include="Api\Logs\GetLogConfig\GetLogConfigResponce.cs" />
+    <Compile Include="Api\Logs\GetLogConfig\WebLogConfig.cs" />
+    <Compile Include="Api\Logs\GetLogs\GetLogsRequestData.cs" />
+    <Compile Include="Api\Logs\GetLogs\GetLogsRequest.cs" />
+    <Compile Include="Api\Logs\GetLogs\GetLogsResponse.cs" />
+    <Compile Include="Api\Logs\SendLogMessage\SendLogData.cs" />
+    <Compile Include="Api\Logs\SendLogMessage\SendLogRequest.cs" />
+    <Compile Include="Api\Logs\SendLogMessage\SendLogResponse.cs" />
+    <Compile Include="Api\Others\AccessToken.cs" />
+    <Compile Include="Api\Others\ExtentionPropertyName.cs" />
+    <Compile Include="Api\Dispatcher\DispatcherHelper.cs" />
+    <Compile Include="Api\Dispatcher\DispatcherServiceProxy.cs" />
+    <Compile Include="Api\Others\ApiConverter.cs" />
+    <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep1RequestData.cs" />
+    <Compile Include="Api\AccountRegistration\EndAccountRegistration\EndAccountRegistrationRequestData.cs" />
+    <Compile Include="Api\Subscriptions\CreateSubscription\CreateSubscriptionRequestData.cs" />
+    <Compile Include="Api\Subscriptions\CreateSubscription\CreateSubscriptionRequest.cs" />
+    <Compile Include="Api\Subscriptions\SubscriptionInfo.cs" />
+    <Compile Include="Api\Subscriptions\CreateSubscription\CreateSubscriptionResponse.cs" />
+    <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultData.cs" />
+    <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultRequest.cs" />
+    <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultResponce.cs" />
+    <Compile Include="Api\UnitTests\UnitTestResultStatus.cs" />
+    <Compile Include="Common\Helpers\EventImportanceHelper.cs" />
+    <Compile Include="Common\Helpers\ImportanceHelper.cs" />
+    <Compile Include="Common\Databases\DatabasesContext.cs" />
+    <Compile Include="Common\Databases\MultipleDataBaseProcessor.cs" />
+    <Compile Include="Common\Helpers\ParseHelper.cs" />
+    <Compile Include="Common\Helpers\PasswordHelper.cs" />
+    <Compile Include="Common\Helpers\RandomHelper.cs" />
+    <Compile Include="Common\TaskQueue\ThreadTaskQueue.cs" />
+    <Compile Include="Common\TaskQueue\ThreadTask.cs" />
+    <Compile Include="Common\TaskQueue\ThreadTaskAction.cs" />
+    <Compile Include="Common\ConditionChecker.cs" />
+    <Compile Include="Common\EventParameterTypeRow.cs" />
+    <Compile Include="Api\Dispatcher\IDispatcherService.cs" />
+    <Compile Include="Api\Others\ResponceCode.cs" />
+    <Compile Include="Exceptions\EmptyParameterException.cs" />
+    <Compile Include="Common\Helpers\HashHelper.cs" />
+    <Compile Include="Common\LockObject.cs" />
+    <Compile Include="AccountsDb\Mapping\ComponentTypeMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\MetricTypeMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\EventTypeMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\TariffLimitMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UserContactMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UserMapping.cs" />
+    <Compile Include="AccountsDb\Classes\UserContact.cs" />
+    <Compile Include="Api\Dispatcher\DispatcherContext.cs" />
+    <Compile Include="AccountsDb\Repositories\ComponentRepository.cs" />
+    <Compile Include="AccountsDb\Classes\Channel.cs" />
+    <Compile Include="AccountsDb\Classes\LogProperty.cs" />
+    <Compile Include="AccountsDb\Mapping\LogParameterMapping.cs" />
+    <Compile Include="AccountsDb\Repositories\MetricHistoryRepository.cs" />
+    <Compile Include="AccountsDb\Classes\MetricHistory.cs" />
+    <Compile Include="Common\Helpers\EmailMessageHelper.cs" />
+    <Compile Include="AccountsDb\Classes\EMailStatus.cs" />
+    <Compile Include="AccountsDb\Repositories\EventRepository.cs" />
+    <Compile Include="AccountsDb\Services\MetricService\MetricService.cs" />
+    <Compile Include="AccountsDb\Services\MetricService\IMetricService.cs" />
+    <Compile Include="AccountsDb\Services\EventService\IEventService.cs" />
+    <Compile Include="AccountsDb\Repositories\ILogRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\INotificationRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ISendEmailCommandRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\LogRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\NotificationRepository.cs" />
+    <Compile Include="AccountsDb\Classes\NotificationStatus.cs" />
+    <Compile Include="AccountsDb\Classes\Notification.cs" />
+    <Compile Include="AccountsDb\Classes\SendEmailCommand.cs" />
+    <Compile Include="AccountsDb\Repositories\SendEmailCommandRepository.cs" />
+    <Compile Include="AccountsDb\Mapping\MetricHistoryMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\EventMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\EventParameterMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\LogMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\NotificationMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\SendEmailCommandMapping.cs" />
+    <Compile Include="AccountsDb\Classes\Event.cs" />
+    <Compile Include="AccountsDb\Classes\ComponentType.cs" />
+    <Compile Include="AccountsDb\Classes\MetricType.cs" />
+    <Compile Include="AccountsDb\Classes\EventType.cs" />
+    <Compile Include="AccountsDb\Classes\Subscription.cs" />
+    <Compile Include="AccountsDb\Classes\TariffLimit.cs" />
+    <Compile Include="AccountsDb\AccountDbContext.cs" />
+    <Compile Include="AccountsDb\Classes\Component.cs" />
+    <Compile Include="AccountsDb\Classes\User.cs" />
+    <Compile Include="AccountsDb\Repositories\IComponentRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IMetricHistoryRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IEventRepository.cs" />
+    <Compile Include="AccountsDb\Classes\EventProperty.cs" />
+    <Compile Include="AccountsDb\Classes\Log.cs" />
+    <Compile Include="Api\Dispatcher\DispatcherService.cs" />
+    <Compile Include="Exceptions\ZidiumException.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="AccountsDb\Services\EventService\EventService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="AccountsDb\MySql\Migrations\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Help.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Api\1.0\Api\Api.1.0.csproj">
+      <Project>{1E7F3895-5BCE-4DF5-AA33-3E4E8843E0EB}</Project>
+      <Name>Api.1.0</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.resx">
+      <DependentUpon>201803232225266_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,270 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Common
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Subscriptions
+@model ShowComponentSubscriptionsModel
+
+<style>
+    .subscription-badge {
+        height: 20px;
+        width: 20px;
+        border-radius: 10px;
+        display: block;
+    }
+    #my-subcriptions-table td {
+        padding: 5px 20px;
+        text-align: center;
+        border-bottom: 1px #e7e7e7 dashed;
+    }
+        #my-subcriptions-table td:first-child {
+            color: gray;
+            text-align: right;
+            border-bottom: 0px gray dashed !important;
+        }
+        .emptyCell {
+            color: gray;
+        }
+</style>
+
+@helper WriteImportanceTd(Subscription subscription)
+{
+    if (subscription == null)
+    {
+        <span class="emptyCell">&minus;</span>
+    }
+    else
+    {
+        <text>@SubscriptionIconHelper.GetImgHtml(subscription)</text>
+    }
+}
+@helper WriteDurationTd(Subscription subscription)
+{
+    if (subscription == null || subscription.IsEnabled==false || subscription.DurationMinimumInSeconds == null)
+    {
+        <span class="emptyCell">&minus;</span>
+    }
+    else
+    {
+        var duration = TimeSpanHelper.FromSeconds(subscription.DurationMinimumInSeconds);
+        <text>@TimeSpanHelper.Get2UnitsString(duration.Value)</text>
+    }
+}
+@helper WriteNotifyBetterTd(Subscription subscription)
+{
+if (subscription == null || subscription.IsEnabled == false || subscription.NotifyBetterStatus == false)
+{
+        <span class="emptyCell">&minus;</span>
+    }
+    else
+    {
+        <span>Уведомлять</span>
+    }
+}
+@helper WriteResendTimeTd(Subscription subscription)
+{
+    if (subscription == null || subscription.IsEnabled == false || subscription.ResendTimeInSeconds == null)
+    {
+        <span class="emptyCell">&minus;</span>
+    }
+    else
+    {
+        var duration = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds);
+        <text>@TimeSpanHelper.Get2UnitsString(duration.Value)</text>
+    }
+}
+<div id="component-subscriptions-window">
+    <div id="component-subscriptions-form">
+        <div style="padding: 0px;">
+            @if (Model.ViewMode == ShowComponentSubscriptionsModel.ViewModeCode.My)
+            {
+                var emailSubscription = Model.GetSubscription(Model.CurrentUserId, SubscriptionChannel.Email);
+                var smsSubscription = Model.GetSubscription(Model.CurrentUserId, SubscriptionChannel.Sms);
+                <div class="pull-right">
+                    @*<span>Мои подписки </span>*@
+                    <div style="display: inline" class="dropdown">
+                        <a href="#" class="btn btn-default dropdown" data-toggle="dropdown">
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu" role="menu" style="left: auto; right : 0">
+                            <li role="presentation"><a role="menuitem" href="#" id="showAllSubscriptionsBtn">Показать все подписки</a></li>
+                        </ul>
+                    </div>
+                    <a href="http://zidium.net/wiki/work-principle/subscriptions" target="_blank" class="btn btn-default">?</a>
+                </div>
+                <div>
+                    <a href="@Url.Action("EditComponentSubscriptions",new{componentId = Model.ComponentId})" id="editComponentSubscriptions" class="btn btn-default" target="_blank">Настроить</a>
+                </div>
+               
+                <table id="my-subcriptions-table" class="simpleTableClear">
+                    <tr>
+                        <td></td>
+                        <td><span style="font-weight: bold">Email</span></td>
+                        <td><span style="font-weight: bold">Sms</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right">Статус</td>
+                        <td>@WriteImportanceTd(emailSubscription)</td>
+                        <td>@WriteImportanceTd(smsSubscription)</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right">Длительность</td>
+                        <td>@WriteDurationTd(emailSubscription)</td>
+                        <td>@WriteDurationTd(smsSubscription)</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right">Если лучше</td>
+                        <td>@WriteNotifyBetterTd(emailSubscription)</td>
+                        <td>@WriteNotifyBetterTd(smsSubscription)</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right">Напоминания через</td>
+                        <td>@WriteResendTimeTd(emailSubscription)</td>
+                        <td>@WriteResendTimeTd(smsSubscription)</td>
+                    </tr>
+                </table>
+            }
+            else
+            {
+                // Если режми = все подписки
+                <div class="pull-right">
+                    @*<span>Все подписки </span>*@
+                    <div style="display: inline" class="dropdown">
+                        <a href="#" class="btn btn-default dropdown" data-toggle="dropdown">
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu" role="menu" style="left: auto; right : 0">
+                            <li role="presentation"><a role="menuitem" href="#" id="showMySubscriptionsBtn">Показать мои подписки</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <table>
+                    <tr>
+                        <td>
+                            <p style="font-weight: bold">Пользователь</p>
+                        </td>
+                        <td style="padding-left: 10px;">
+                            <p style="font-weight: bold">Канал</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            @Html.DropDownListFor(x => x.UserId, DropDownListHelper.GetUsers(Model.UserId, true), new { @class = "form-control-static" })
+                        </td>
+                        <td style="padding-left: 10px;">
+                            @Html.DropDownListFor(x => x.Channel, DropDownListHelper.GetSubscriptionChannels(Model.Channel, true), new { @class = "form-control-static" })
+                        </td>
+                    </tr>
+                </table>
+
+                if (Model.Subscriptions.Length == 0)
+                {
+                    <p>Нет подписок</p>
+                }
+                else
+                {
+                    <table id="component-subscriptions-table" class="simpleTable" style="margin-top: 10px; width: auto">
+                        <tr>
+                            @if (Model.UserId == null)
+                            {
+                                <th>Пользователь</th>
+                            }
+                            <th>Канал</th>
+                            <th>Цвет</th>
+                            <th>Длительность</th>
+                            <th>Интервал повтора</th>
+                            <th>Уведомлять об улучшениях?</th>
+                            <th></th>
+                        </tr>
+                        @foreach (var subscription in Model.Subscriptions)
+                        {
+                            var bgColor = GuiHelper.GetStrongBgColor(subscription.Importance);
+                            <tr>
+                                @if (Model.UserId == null)
+                                {
+                                    <td>@subscription.User.FioOrLogin</td>
+                                }
+                                <td>@subscription.Channel</td>
+                                @if (subscription.IsEnabled == false)
+                                {
+                                    <td colspan="4">
+                                        <img src="/Content/Icons/forbiddance-20px.png" title="Запрещено отправлять уведомления"/>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>
+                                        <span class="subscription-badge" style="background-color: @bgColor"></span>
+                                    </td>
+                                    <td>
+                                        @if (subscription.DurationMinimumInSeconds > 0)
+                                        {
+                                            var duration = TimeSpanHelper.FromSeconds(subscription.DurationMinimumInSeconds);
+                                            <span>@TimeSpanHelper.Get2UnitsString(duration.Value)</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (subscription.ResendTimeInSeconds > 0)
+                                        {
+                                            var period = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds);
+                                            <span>@TimeSpanHelper.Get2UnitsString(period.Value)</span>
+                                        }
+                                    </td>
+                                    <td>@(subscription.NotifyBetterStatus ? "да" : "")</td>
+                                }
+                                <td><a href="@Url.Action("Edit", "Subscriptions", new {id = subscription.Id})" target="_blank"><span class="glyphicon glyphicon-edit"></span></a></td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    var config = smartConfig.getOrCreate("component-subscriptions");
+    var viewMode = config.getField("viewMode");
+
+    function reloadSmartBlock() {
+        var win = $("#component-subscriptions-window");
+        var smart = win.closest(".smart-block");
+        smartBlocks.showWaitDiv(smart);
+        smartBlocks.load({elements: smart});
+    }
+
+    function init() {
+
+        // обработчик события выбора пользователя
+        $("#UserId").change(function () {
+            var selectedUser = $("#UserId").val();
+            var userId = config.getField("userId");
+            userId.setValue(selectedUser);
+            reloadSmartBlock();
+        });
+
+        // обработчик события выбора канала
+        $("#Channel").change(function () {
+            var selectedChannel = $("#Channel").val();
+            var channel = config.getField("channel");
+            channel.setValue(selectedChannel);
+            reloadSmartBlock();
+        });
+    }
+
+    init();
+
+
+    $("#showAllSubscriptionsBtn").click(function(event) {
+        event.preventDefault();
+        viewMode.setValue("all");
+        reloadSmartBlock();
+    });
+
+    $("#showMySubscriptionsBtn").click(function (event) {
+        event.preventDefault();
+        viewMode.setValue("my");
+        reloadSmartBlock();
+    });
+</script>
+

@@ -1,0 +1,68 @@
+﻿@using Zidium.UserAccount.Models
+@model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsHistoryModel
+
+<table id="component-details-history-table" class="full-width">
+    <thead>
+    <tr id="timelineTable-row-history">
+        <th class="text-nowrap normal" colspan="2" id="th-history-label">
+            <span id="history-label">История за</span>
+        </th>
+        <th id="timelineTable-row-history-buttons" class="full-width">
+
+            <div class="btn-group space-right" data-toggle="buttons">
+                <label class="btn btn-default btn-xs" id="btn-stats-hour">
+                    <input type="radio" autocomplete="off">
+                    Час
+                </label>
+                <label class="btn btn-default btn-xs active" id="btn-stats-day">
+                    <input type="radio" autocomplete="off" checked>
+                    День
+                </label>
+                <label class="btn btn-default btn-xs" id="btn-stats-week">
+                    <input type="radio" autocomplete="off">
+                    Неделя
+                </label>
+                <label class="btn btn-default btn-xs" id="btn-stats-month">
+                    <input type="radio" autocomplete="off">
+                    Месяц
+                </label>
+            </div>
+
+            <span id="timelines-loader" class="collapse">
+                <img src="~/Content/Icons/ajax-loader-white.gif" />
+            </span>
+        </th>
+    </tr>
+    </thead>
+
+    <tbody id="timelines-table-body">
+    <tr>
+        <td colspan="3" class="text-center vertical-middle">
+            <img src="~/Content/Icons/ajax-loader.gif" />
+        </td>
+    </tr>
+    </tbody>
+
+</table>
+
+<script>
+    $('#component-details-history-table #btn-stats-hour').click(function () { componentDetailsHistoryLoadStats('@TimelineInterval.Hour'); });
+    $('#component-details-history-table #btn-stats-day').click(function () { componentDetailsHistoryLoadStats('@TimelineInterval.Day'); });
+    $('#component-details-history-table #btn-stats-week').click(function () { componentDetailsHistoryLoadStats('@TimelineInterval.Week'); });
+    $('#component-details-history-table #btn-stats-month').click(function () { componentDetailsHistoryLoadStats('@TimelineInterval.Month'); });
+    $('#component-details-history-table #btn-stats-day').click();
+
+    function componentDetailsHistoryLoadStats(interval) {
+        $('#component-details-history-table #timelines-loader').show();
+
+        var url = '@Html.Raw(Url.Action("ShowTimelinesPartial", "Components"))';
+        var params = { id : '@Model.Id', interval: interval };
+
+        $('#component-details-history-table #timelines-table-body')
+            .load(url,
+                params,
+                function () {
+                    $('#component-details-history-table #timelines-loader').hide();
+                });
+    }
+</script>

@@ -1,0 +1,126 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@model Zidium.UserAccount.Models.UnitTestsListModel
+
+@{
+    ViewBag.Title = "Список проверок";
+    ViewBag.ActiveMenuItems = "UnitTests,UnitTestsList";
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="row">
+    <div class="col-sm-6 bottom10px">
+        @Html.Label("Тип компонента")
+        @Html.ComponentTypeSelector("componentTypeId", Model.ComponentTypeId, true, true)
+    </div>
+    <div class="col-sm-6 bottom10px">
+        @Html.Label("Тип проверки")
+        @Html.UnitTestTypeSelector("unitTestTypeId", Model.UnitTestTypeId, true, true)
+    </div>
+
+</div>
+
+<div class="row bottom10px">
+    <div class="col-sm-6 bottom10px">
+        @Html.Label("Компонент")
+        @Html.ComponentSelector(x => x.ComponentId, new ComponentSelectorOptions()
+        {
+            ExternalComponentTypeSelectId = "componentTypeId",
+            AutoRefreshPage = true,
+            AllowEmpty = true,
+            ShowAsList = false
+        })
+    </div>
+    <div class="col-sm-6 bottom10px">
+        @Html.Label("Статус проверки")
+        <div class="clearfix"></div>
+        @Html.ColorStatusSelector(x => x.Color)
+    </div>
+</div>
+                      
+@if (UserHelper.CurrentUser.CanEditCommonData())
+{
+    <div class="row bottom10px">
+        <div class="col-sm-12">
+            @Html.ActionLink("Добавить проверку", "Add", "Checks", null, new {@class = "btn btn-primary"})
+        </div>
+    </div>
+}
+
+<table class="table simpleTableClear table-condensed table-hover">
+    <thead>
+        <tr>
+            <th></th>
+            <th class="text-nowrap">Дата проверки</th>
+            <th>Компонент</th>
+            <th>Проверка</th>
+            <th>Результат проверки</th>
+            <th></th>   
+            @if (UserHelper.CurrentUser.CanEditCommonData())
+            {
+                <th></th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var unitTestType in Model.UnitTestTypes)
+        {
+            <tr style="background-color: #f9f9f9">
+                <td colspan="7"><b>@Html.ActionLink(unitTestType.UnitTestType.DisplayName, "Show", "UnitTestTypes", new { id = unitTestType.UnitTestType.Id }, null)</b></td>
+            </tr>
+            foreach (var unitTest in unitTestType.UnitTests)
+            {
+                var textClass = GuiHelper.GetUnitTestStatusTableTextCssClass(unitTest.Result);
+                <tr>
+                    <td class="text-center">
+                        @Html.MonitoringStatusIcon(unitTest.Result)
+                    </td>
+
+                    <td class="text-nowrap">
+                        @if (unitTest.Date.HasValue)
+                        {
+                            <text>
+                                <span class='@textClass'>@unitTest.Date.Value.ToString(GuiHelper.DateTimeDisplayFormat)</span>
+                            </text>
+                        }
+                    </td>
+
+                    <td>@Html.ActionLink(unitTest.Component.DisplayName, "Show", "Components", new { id = unitTest.Component.Id }, new { @class = textClass })</td>
+                    
+                    <td class="text-wordbreak">
+                        @Html.ActionLink(unitTest.DisplayName, "ResultDetails", "UnitTests", new { id = unitTest.Id }, new { @class = textClass })
+                    </td>
+                    
+                    <td class="text-wordbreak">
+                        @if (!string.IsNullOrEmpty(unitTest.Message))
+                        {
+                            <a href='@Url.Action("ResultDetails", "UnitTests", new { id = unitTest.Id })' class='@textClass'>@unitTest.Message</a>
+                        }
+                    </td>
+                    
+                    <td class="text-center">
+                        @if (unitTest.HasBanner)
+                        {
+                            <span class="glyphicon glyphicon-rub" aria-hidden="true" title="Бесплатная проверка за баннер Zidium"></span>
+                        }
+                    </td>
+                            
+                    @if (UserHelper.CurrentUser.CanEditCommonData())
+                    {
+                        <td class="text-center">
+                            <a href='@Url.Action("Delete", new {id = unitTest.Id})' onclick="ModalBtnClick(this, event);" class="text-danger" title="Удалить проверку">
+                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                            </a>
+                        </td>
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/AllControls")
+}

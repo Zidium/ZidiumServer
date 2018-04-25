@@ -1,0 +1,77 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Common.Helpers
+@model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsSettingsModel
+
+<p>
+    <span class="simple-text-header">Тип проверки</span><br />
+    <span class="simple-text-value">@Model.TypeName</span>
+</p>
+
+<p>
+    <span class="simple-text-header">Название</span><br />
+    <span class="simple-text-value">@Model.Name</span>
+</p>
+
+@if (Model.IsSystem)
+{
+    <p>
+        <span class="simple-text-header">Период опроса</span><br />
+        <span class="simple-text-value">@(Model.ExecutionInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ExecutionInterval.Value) : "нет")</span>
+</p>
+}
+else
+{
+    <p>
+        <span class="simple-text-header">Интервал актуальности</span><br />
+        <span class="simple-text-value">@(Model.ActualInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ActualInterval.Value) : "нет")</span>
+</p>
+}
+
+@if (Model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Http-запрос</span><br />
+        <a target="_blank" href="@Model.HttpUrl">@Model.HttpUrl</a>
+    </p>
+    <p>
+        <span class="simple-text-header">Таймаут</span><br />
+        <span class="simple-text-value">@TimeSpanHelper.GetOneUnitString(Model.HttpTimeout)</span>
+</p>
+}
+else if (Model.TypeId == SystemUnitTestTypes.PingTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Хост</span><br />
+        <span class="simple-text-value">@Model.PingHost</span>
+</p>
+    <p>
+        <span class="simple-text-header">Таймаут</span><br />
+        <span class="simple-text-value">@TimeSpanHelper.GetOneUnitString(Model.PingTimeout)</span>
+</p>
+}
+else if (Model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Домен</span><br />
+        <a target="_blank" href="@Model.DomainName">@Model.DomainName</a>
+    </p>
+}
+else if (Model.TypeId == SystemUnitTestTypes.SslTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Сайт</span><br />
+        <a target="_blank" href="@Model.SslHost">@Model.SslHost</a>
+    </p>
+}
+else if (Model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Sql-запрос</span><br />
+        <span class="simple-text-value text-wordbreak">@Model.SqlQuery</span>
+    </p>
+}
+
+<p>
+    <span class="simple-text-header">ID проверки</span><br />
+    <span class="simple-text-value">@Model.Id</span>
+</p>

@@ -1,0 +1,47 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.Subscriptions.SubscriptionsTableModel
+
+@if (Model.Rows.Length == 0)
+{
+    <p>нет подписок</p>
+}
+else
+{
+    <table class="simpleTableClear">
+        <tr>
+            <th style="min-width: 200px">@Model.SubscriptionName</th>
+            <th style="width: 100px; text-align: center">Email</th>
+            <th style="width: 100px; text-align: center">SMS</th>
+        </tr>
+        @foreach (var row in Model.Rows)
+        {
+            var first = row.GetFirstNotNull();
+            <tr>
+                <td>
+                    @if (first.Object == SubscriptionObject.Default)
+                    {
+                        <span>Подписка по умолчанию</span>
+                    }
+                    else if (first.Object == SubscriptionObject.ComponentType)
+                    {
+                        <span>@first.ComponentType.DisplayName</span>
+                    }
+                    else if (first.Object == SubscriptionObject.Component)
+                    {
+                        <text>
+                            @Html.ComponentPath(first.Component)
+                        </text>
+                    }
+                </td>
+                <td style="text-align: center">
+                    @Html.Partial("ShowSubscriptionCell", row.Email)
+                </td>
+                <td style="text-align: center">
+                    @Html.Partial("ShowSubscriptionCell", row.Sms)
+                </td>
+            </tr>
+        }
+    </table>
+}
+

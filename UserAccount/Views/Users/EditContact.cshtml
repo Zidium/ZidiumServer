@@ -1,0 +1,52 @@
+﻿@model Zidium.UserAccount.Models.UserContactModel
+
+@if (Model.ModalMode)
+{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Настройка контакта";
+    ViewBag.ActiveMenuItems = "Manage,Users";
+}
+
+@if (!Model.ModalMode)
+{
+    @Html.Partial("_PageTitle")
+}
+
+@if (Model.ModalMode)
+{
+    Ajax.BeginForm(new AjaxOptions() { InsertionMode = InsertionMode.Replace, UpdateTargetId = "uct_" + Model.Id, OnSuccess = "HideModal" });
+}
+else
+{
+    Html.BeginForm();
+}
+
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true)
+@Html.HiddenFor(m => m.Id)
+@Html.HiddenFor(m => m.UserId)
+@Html.HiddenFor(model => model.ModalMode)
+@Html.HiddenFor(model => model.ReturnUrl)
+
+@Html.EditorFor(m => m.Type, "LabeledEdit")
+@Html.EditorFor(m => m.Value, "LabeledEdit")
+
+<div class="row" style="text-align: @(Model.ModalMode ? "right" : "left")">
+    <div class="col-sm-12">
+        <input type="submit" value="Сохранить" class="btn btn-primary" />
+        &nbsp;
+        @if (!Model.ModalMode)
+        {
+            <a class="btn btn-default" href="@Model.ReturnUrl">Отмена</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+        }
+    </div>
+</div>
+
+@{Html.EndForm();}

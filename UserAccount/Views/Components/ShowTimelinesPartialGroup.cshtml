@@ -1,0 +1,59 @@
+﻿@using Zidium.Core.Api
+@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.ComponentShowTimelinesGroupModel
+
+@{ var id = "timeline-group-" + Guid.NewGuid(); }
+
+<div id="@id" class="timelines-group-inner-div">
+
+    @if (Model.Items != null)
+    {
+        foreach (var item in Model.Items)
+        {
+            <div class="timeline-group-item-caption">
+                @if (item.Count != null)
+                {
+                    var bgColor = GuiHelper.GetStrongBgColor(item.Importance ?? EventImportance.Unknown);
+                    <span class="badge" style="margin-right: 5px; background-color: @bgColor; vertical-align: top;">@item.Count</span>
+                }
+                @if (!string.IsNullOrEmpty(item.Url))
+                {
+                    <a href="@item.Url" target="_blank" title="@item.Name">@item.Name</a>
+                }
+                else
+                {
+                    <span title="@item.Name">@item.Name</span>
+                }
+            </div>
+            if (!string.IsNullOrEmpty(item.Comment))
+            {
+                <div class="timeline-group-item-caption-comment text-muted" title="@item.Comment">@item.Comment</div>
+            }
+            <div class="timeline-group-item-body" data-url='@Url.Action(item.Action, "Timeline",
+                                                           new { id = item.OwnerId,
+                                                               category = item.Category,
+                                                               eventTypeId = item.EventTypeId,
+                                                               fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate),
+                                                               toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate),
+                                                               hideUptime = Model.HideUptime
+                                                           })'>
+                <img src="~/Content/Icons/ajax-loader-white.gif" />
+            </div>
+        }
+
+        if (Model.Items.Length == 0)
+        {
+            <p>Таких событий нет</p>
+        }
+    }
+</div>
+
+<script>
+    $(function () {
+        var div = $('#@id');
+        $.each($('.timeline-group-item-body', div), function (index, element) {
+            var url = $(element).data('url');
+            $(element).load(url);
+        });
+    });
+</script>

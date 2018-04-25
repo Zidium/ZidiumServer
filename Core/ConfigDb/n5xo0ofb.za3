@@ -1,0 +1,115 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data.Entity;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AppMonitoring.Core.ConfigDb
+{
+    public class ConfigDbContext : DbContext
+    {
+        public DbSet<Account> Accounts { get; set; }
+        public DbSet<Database> Databases { get; set; }
+
+        public ConfigDbContext() : base("name=DefaultConfigDb") { }
+
+        public ConfigDbContext(string ConnectionString)
+            : base(ConnectionString) { }
+    }
+
+    public class Account
+    {
+        [Key]
+        public Guid AccountId { get; set; }
+
+        [MaxLength(255)]
+        public string SecretKey { get; set; }
+
+        [Required]
+        public Guid DataDbId { get; set; }
+
+        [ForeignKey("DataDbId")]
+        public Database DataDb { get; set; }
+
+        [Required]
+        public Guid LogDbId { get; set; }
+
+        [ForeignKey("LogDbId")]
+        public Database LogDb { get; set; }
+
+    }
+
+    public class Database
+    {
+        [Key]
+        public Guid DatabaseId { get; set; }
+
+        [MaxLength(255)]
+        public string Description { get; set; }
+
+        [Required]
+        public string ConnectionString { get; set; }
+    }
+
+    public class ConfigDbInitializer : DropCreateDatabaseIfModelChanges<ConfigDbContext>
+    {
+        protected override void Seed(ConfigDbContext Context)
+        {
+            //Context.Databases.Seed();
+            //Context.Accounts.Seed();
+        }
+    }
+
+    public class Accounts : DbSet<Account>
+    {
+        public void Seed()
+        {
+
+        }
+    }
+
+    public class Databases : DbSet<Database>
+    {
+        public void Seed()
+        {
+            #region Данные
+            Database T;
+
+            T = new Database()
+            {
+                DatabaseId = new Guid(@"{F384541D-229C-45EC-B0E1-4138B601F8D3}"),
+                Description = "Данные бесплатных аккаунтов",
+                ConnectionString = @"Data Source=Dev.AppMonitoring.ru;Initial Catalog=Dev.AppMonitoring.Data1;User Id=AppMonitoringDeveloper;Password=AppMonitoring2014"
+            };
+            this.Add(T);
+
+            T = new Database()
+            {
+                DatabaseId = new Guid(@"{587B0CB1-2850-496B-9B11-363BE9100EB2}"),
+                Description = "Логи бесплатных аккаунтов",
+                ConnectionString = @"Data Source=Dev.AppMonitoring.ru;Initial Catalog=Dev.AppMonitoring.Log1;User Id=AppMonitoringDeveloper;Password=AppMonitoring2014"
+            };
+            this.Add(T);
+
+            T = new Database()
+            {
+                DatabaseId = new Guid(@"{B8D73F81-6C35-4CD5-9D97-CDAA2B157089}"),
+                Description = "Данные premium-аккаунтов",
+                ConnectionString = @"Data Source=Dev.AppMonitoring.ru;Initial Catalog=Dev.AppMonitoring.Data2;User Id=AppMonitoringDeveloper;Password=AppMonitoring2014"
+            };
+            this.Add(T);
+
+            T = new Database()
+            {
+                DatabaseId = new Guid(@"{972620CB-16DE-457D-9679-578025C4B77F}"),
+                Description = "Логи premium-аккаунтов",
+                ConnectionString = @"Data Source=Dev.AppMonitoring.ru;Initial Catalog=Dev.AppMonitoring.Log2;User Id=AppMonitoringDeveloper;Password=AppMonitoring2014"
+            };
+            this.Add(T); 
+
+            #endregion
+        }
+    }
+}

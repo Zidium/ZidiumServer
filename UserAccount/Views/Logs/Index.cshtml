@@ -1,0 +1,517 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.Controls
+@model LogIndexModel
+
+@{
+    ViewBag.Title = "Лог" + (Model.Component != null ? " - " + Model.Component.DisplayName : string.Empty);
+    ViewBag.ActiveMenuItems = "Logs";
+    ViewBag.UseFixedHeader = true;
+}
+
+@section Styles
+{
+    <link href="~/Content/css/logs/list.css" rel="stylesheet" />
+}
+
+@section Header
+{   
+    <div id="log-header-container-full">
+
+        <p class="submenu-title">
+            Лог
+            @if (Model.Component != null)
+            {
+                <text>
+                    &mdash;
+                    @Html.ActionLink(Model.Component.DisplayName, "Show", "Components", new { id = Model.ComponentId }, null)
+                    <span id="submenu-title-levels">
+                        (@GuiHelper.GetComponentLogLevels(Model.Component.LogConfig))
+
+                        @if (UserHelper.CurrentUser.CanEditCommonData())
+                        {
+                            <button id="edit-log-levels" class="btn btn-default btn-xs">Настроить</button>
+                            <button id="add-log-link" class="btn btn-default btn-xs">Добавить запись</button>
+                        }
+                    </span>
+                </text>
+            }
+        </p>
+        <hr class="submenu" />
+
+        @using (Html.BeginSmartForm(new SmartBlocksFormOptions()
+        {
+            ActionName = "Partial",
+            Method = FormMethod.Get,
+            ContainerHtmlId = "log-partial",
+            LoaderHtmlId = "loader"
+        }, new { id = "filters" }))
+        {
+            <div class="row">
+                <div class="col-sm-6 bottom10px">
+                    @{ var componentId = Model.ComponentId; }
+                    @Html.LabelFor(m => m.ComponentId)
+                    @Html.ComponentSelectorNew(m => componentId, new ComponentSelectorOptions()
+                    {
+                        ShowAsList = false,
+                        ShowComponentStatusSelector = false,
+                        AutoRefreshPage = true
+                    })
+                </div>
+                @if (Model.ComponentId.HasValue)
+                {
+                    <div class="col-sm-3 bottom10px">
+                        @Html.LabelFor(m => m.LogLevel)
+                        @Html.DropDownList("LogLevel", GuiHelper.GetLogLevelItems(Model.LogLevel), new { @class = "form-control" })
+                    </div>
+                    <div class="col-sm-3 bottom10px">
+                        @Html.Label("Context")
+                        @Html.TextBox("Context", Model.Context, new { @class = "form-control" })
+                    </div>
+                }
+            </div>
+
+            <div>
+                @if (Model.ComponentId.HasValue)
+                {
+                    <div class="row">
+                        <div class="col-sm-3 bottom10px">
+                            @Html.Label("Date", new { @for = "textbox_DateDate" })
+                            @Html.DateSelector("Date", Model.Date, false)
+                        </div>
+                        <div class="col-sm-6">
+                            @Html.Label("Text")
+                            <div class="input-group">
+                                <span class="input-group-btn">
+                                    <button id="find-previous" class="btn btn-default" type="button" title="Найти предыдущее совпадение">
+                                        <span class="glyphicon glyphicon-chevron-left"></span>
+                                    </button>
+                                </span>
+                                @Html.TextBox("Text", Model.Text, new { @class = "form-control" })
+                                <span class="input-group-btn">
+                                    <button id="find-next" class="btn btn-default" type="button" title="Найти следующее совпадение">
+                                        <span class="glyphicon glyphicon-chevron-right"></span>
+                                    </button>
+                                </span>
+                            </div>
+                            @Html.HiddenFor(m => m.Id, new { id = "find-id" })
+                        </div>
+                        <div class="col-sm-3 text-right">
+                            <button type="button" class="btn btn-default" id="log-header-minimize" title="Свернуть шапку">
+                                <span class="glyphicon glyphicon-chevron-up"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row collapse">
+                        <div class="col-sm-12 bottom10px">
+                            <button type="submit" class="btn btn-default">Поиск</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div id="log-header-container-mini">
+        <button type="button" class="btn btn-default" id="log-header-restore" title="Развернуть шапку">
+            <span class="glyphicon glyphicon-chevron-down"></span>
+        </button>
+    </div>
+
+    <div id="log-error" class="collapse alert alert-danger">
+        <button type="button" class="close" id="log-error-hide-button"><span>&times;</span></button>
+        <p id="log-error-text"></p>
+    </div>
+}
+
+@if (Model.ComponentId.HasValue)
+{
+    <table class="table simpleTableClear table-fixed" id="table-logs">
+        <colgroup>
+            <col class="cell-mark" id="col-cell-mark" />
+            <col id="col-level-icon" />
+            <col class="column-date" />
+            <col class="full-width" />
+        </colgroup>
+
+        @*<thead>
+            <tr>
+                <th width="3px" class="cell-mark"></th>
+                <th width="30px"></th>
+                <th class="column-date">Дата</th>
+                <th width="100%">Сообщение</th>
+            </tr>
+            </thead>*@
+
+        <tbody id="log-partial" class="smart-block" data-smart-block-begin="onBegin" data-smart-block-on-error="onError" data-smart-block-complete="onComplete" data-smart-block-loader="loader">
+
+            <tr>
+                <td colspan="3"></td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <div id="loader" class="collapse overlapped-loader">
+        <div class="loader-container">
+            <div class="loader-caption">
+                <div class="loader-caption-container">
+                    <img src="~/Content/Icons/ajax-loader.gif" />
+                    <span>Обновление...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loader-search" class="collapse overlapped-loader">
+        <div class="loader-container">
+            <div class="loader-caption">
+                <div class="loader-caption-container">
+                    <div>
+                        <img src="~/Content/Icons/ajax-loader.gif" />
+                        <span>Поиск, пожалуйста, подождите...</span>
+                        <span id="loader-search-date"></span>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-default" id="button-cancel-search">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+            // Клик по сообщению раскрывает подробности
+            $('#log-partial').on('click', '.log-message', showLogProperties);
+
+            // Клик по контексту заполняет фильтр
+            $('#log-partial').on('click', '.link-context', filterByContext);
+
+            // Кнопка скрывает сообщение об ошибке
+            $('#log-error-hide-button').click(function () {
+                hideError();
+            });
+
+            // Ссылка показывает предыдущие N записей
+            $('#log-partial').on('click', '.link-show-previous-records', showPreviousRecords);
+
+            // Ссылка показывает следующие N записей
+            $('#log-partial').on('click', '.link-show-next-records', showNextRecords);
+
+            // Кнопка поиска предыдущей записи по тексту
+            $('#find-previous').click(findPreviousRecord);
+
+            // Кнопка поиска следующей записи по тексту
+            $('#find-next').click(findNextRecord);
+
+            // Обработчик нажатия клавиши в поле поиска по тексту
+            $('#Text').on('keypress', onFindTextKeyPressed);
+
+            // Обработчик отмены поиска
+            $('#button-cancel-search').click(cancelSearch);
+
+            // Обработчик кнопки добавления записи лога
+            $('#add-log-link').click(addLog);
+
+            // Обработчик кнопки настройки уровней лога
+            $('#edit-log-levels').click(editLogLevels);
+
+            // Обработчик ссылки скрытия шапки
+            $('#log-header-minimize').click(minimizeHeader);
+
+            // Обработчик ссылки восстановления шапки
+            $('#log-header-restore').click(restoreHeader);
+
+            var form = $('#filters');
+
+            // Изменения полей запускают таймер
+            $('#textbox_Date', form).bind('dateChanged', onFilterInput);
+            $('#LogLevel', form).bind('change', onFilterInput);
+            $('#Context', form).bind('input', onFilterInput);
+
+            // Обработчик изменения высоты фиксированного заголовка страницы
+            $('body').on('fixedHeaderUpdated', function () {
+                // Не чаще 100 мс
+                if (resizeTimer != null) {
+                    clearTimeout(resizeTimer);
+                }
+                resizeTimer = setTimeout(onHeaderHeightChanged, 100);
+            });
+
+            // Начальная загрузка данных
+            form.trigger('submit');
+        });
+
+        function onHeaderHeightChanged() {
+            // Настроим плавающий заголовок таблицы
+            //$('#table-logs').floatThead('destroy');
+            //$('#table-logs').floatThead({ top: fixedHeader.height(), zIndex: 999 });
+
+            // Настроим loader
+            $('#loader').css('top', fixedHeader.height() + 'px');
+            $('#loader-search').css('top', fixedHeader.height() + 'px');
+        }
+
+        var resizeTimer = null;
+
+        // Любое изменение фильтров перезапускает таймер в 1 сек
+        function onFilterInput() {
+            if (filtersTimer != null) {
+                clearTimeout(filtersTimer);
+            }
+
+            filtersTimer = setTimeout(submitForm, 1000);
+        }
+
+        // Если фильтры не менялись дольше 1 сек, применим их
+        function submitForm() {
+            var form = $('#filters');
+            form.trigger('submit');
+        }
+
+        var filtersTimer = null;
+
+        // При ошибке показываем ошибку
+        function onError(message) {
+            $('#log-error-text').text(message);
+            $('#log-error').show();
+            fixedHeader.updateHeader();
+        }
+
+        // Скрытие ошибки
+        function hideError() {
+            $('#log-error').hide();
+            fixedHeader.updateHeader();
+        }
+
+        // При обновлении списка скрываем ошибку, отменяем таймер и заменяем адрес в браузере
+        function onBegin(params) {
+            var url = '@Url.Action("Index")' + (params !== "" ? "?" + params : "");
+            window.history.pushState(null, window.document.title, url);
+            if (filtersTimer != null) {
+                clearTimeout(filtersTimer);
+                filtersTimer = null;
+            }
+            hideError();
+        }
+
+        // После любого обновления данных обновим плавающий заголовок таблицы
+        function onComplete() {
+            fixedHeader.updateHeader();
+        }
+
+        // Отображение подробностей о записи лога
+        function showLogProperties(event) {
+            event.preventDefault();
+
+            var tr = $(this).closest('tr');
+            var id = tr.data('id');
+            var divName = 'logProperties_' + id;
+            var propertiesRow = $('#' + divName, $('#log-partial'));
+
+            if (propertiesRow.length == 0) {
+                var waitDiv = $(myGetPleaseWaitLoadingDiv());
+                propertiesRow = $("<tr id='" + divName + "'></tr>").insertAfter(tr);
+                propertiesRow.addClass('log-properties-row');
+                $("<td colspan=4></td>").append(waitDiv).appendTo(propertiesRow);
+
+                var url = '@Url.Action("GetLogRowProperties")';
+                var data = {
+                    componentId: '@Model.ComponentId',
+                    logRowId: id
+                };
+
+                smartBlocks.doAjax(url, null, data, function(html) {
+                    propertiesRow.replaceWith(html);
+                }, null, onError);
+
+            } else {
+                propertiesRow.remove();
+            }
+        }
+
+        // Фильтрация по контексту
+        function filterByContext(event) {
+            event.preventDefault();
+
+            var context = $(this).data('context');
+            var form = $('#filters');
+            $('#Context', form).val(context);
+            form.trigger('submit');
+        }
+
+        // Показывает предыдущие N записей
+        function showPreviousRecords(event) {
+            event.preventDefault();
+
+            var me = $(this);
+            var tr = me.closest('tr');
+            var formData = smartBlocks.getFormDataForPost($('#filters'));
+            formData.toDate = me.data('date');
+            formData.order = me.data('order');
+            var url = '@Url.Action("GetPreviousRecords")';
+            clearNewRecordsMark();
+            smartBlocks.doSubmit(url, formData, tr);
+        }
+
+        // Показывает следующие N записей
+        function showNextRecords(event) {
+            event.preventDefault();
+
+            var me = $(this);
+            var tr = me.closest('tr');
+            var formData = smartBlocks.getFormDataForPost($('#filters'));
+            formData.fromDate = me.data('date');
+            formData.order = me.data('order');
+            var url = '@Url.Action("GetNextRecords")';
+            clearNewRecordsMark();
+            smartBlocks.doSubmit(url, formData, tr);
+        }
+
+        // Снимает отметку "новая запись" со всех строк
+        function clearNewRecordsMark() {
+            $('#log-partial td.cell-mark').removeClass('cell-new');
+        }
+
+        // Поиск предыдущей записи по тексту
+        function findPreviousRecord() {
+            var text = $('#Text').val();
+
+            if (text === '') {
+                DialogInfo('Укажите текст для поиска');
+                return;
+            }
+
+            searchRequest = null;
+            $('#loader-search-date').text("");
+
+            var formData = smartBlocks.getFormDataForPost($('#filters'));
+            var url = '@Url.Action("FindPreviousRecord")';
+            $('#loader-search').show();
+
+            findRecordIteration(url, formData);
+        }
+
+        // Поиск следующей записи по тексту
+        function findNextRecord() {
+            var text = $('#Text').val();
+
+            if (text === '') {
+                DialogInfo('Укажите текст для поиска');
+                return;
+            }
+
+            searchRequest = null;
+            $('#loader-search-date').text("");
+
+            var formData = smartBlocks.getFormDataForPost($('#filters'));
+            var url = '@Url.Action("FindNextRecord")';
+            $('#loader-search').show();
+
+            findRecordIteration(url, formData);
+        }
+
+        // Очередная итерация поиска
+        function findRecordIteration(url, data) {
+            searchRequest = smartBlocks.doAjax(url, 'GET', data, function(result) {
+                onRecordFind(result, url, data);
+            }, null, onSearchError);
+        }
+
+        // Обработчик ошибок поиска
+        function onSearchError(message) {
+            $('#loader-search').hide();
+            onError(message);
+        }
+
+        // Отмена поиска
+        function cancelSearch() {
+            searchRequest.abort();
+            $('#loader-search').hide();
+        }
+
+        // Текущий ajax-запрос поиска
+        var searchRequest = null;
+
+        // При нажатии enter в поле поиска по тексту выполним поиск следующего совпадения
+        function onFindTextKeyPressed(event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                $('#find-next').click();
+            }
+        }
+
+        // Обработчик завершения поиска записи
+        function onRecordFind(result, url, data) {
+            // Если поиск завершён, выведем сообщение
+            if (!result.found && result.id == null) {
+                $('#loader-search').hide();
+                DialogInfo(result.message);
+                return;
+            }
+
+            // Если ничего не найдено, но можно продолжить, то выполним ещё итерацию
+            if (!result.found && result.id != null){
+                data.Id = result.id;
+                $('#loader-search-date').text("(" + result.date + ")");
+                findRecordIteration(url, data);
+                return;
+            }
+
+            // Запомним id найденной записи, чтобы потом продолжить поиск от неё
+            $('#find-id').val(result.id);
+
+            // Загрузим новый список записей, отцентрированный по найденной
+            $('#loader-search').hide();
+
+            var formData = smartBlocks.getFormDataForPost($('#filters'));
+            var url2 = '@Url.Action("Center")';
+
+            smartBlocks.doSubmit(url2, formData, $('#log-partial'));
+        }
+
+        // Добавление записи лога
+        function addLog() {
+            var url = '@Url.Action("Add", new { componentId = Model.ComponentId })';
+            dialogs.showModal(url, 'Добавление записи лога', function() {
+                submitForm();
+            });
+        }
+
+        // Настройка уровней лога
+        function editLogLevels() {
+            var url = '@Url.Action("Edit", new { componentId = Model.ComponentId })';
+            dialogs.showModal(url, 'Настройка уровней лога', function() {
+                utils.reloadPage();
+            });
+        }
+
+        // Скрытие шапки
+        function minimizeHeader(event) {
+            event.preventDefault();
+            $('#log-header-container-full').hide();
+            $('#log-header-container-mini').show();
+            fixedHeader.updateHeader();
+        }
+
+        // Восстановление шапки
+        function restoreHeader(event) {
+            event.preventDefault();
+            $('#log-header-container-mini').hide();
+            $('#log-header-container-full').show();
+            fixedHeader.updateHeader();
+        }
+
+    </script>
+}
+else
+{
+    <p>Выберите компонент из списка</p>
+}
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/AllControls")
+}

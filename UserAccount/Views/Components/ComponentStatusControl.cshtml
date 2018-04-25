@@ -1,0 +1,39 @@
+﻿@using Zidium.Core.Api
+@model Zidium.UserAccount.Models.ComponentStatusControlModel
+
+@{
+    Layout = null;
+    var ajaxOptions = new AjaxOptions
+    {
+        UpdateTargetId = Model.TargetId,
+        Url = Url.Action(Model.State.Status == MonitoringStatus.Disabled ? "Enable" : "Disable"),
+        LoadingElementId = "Loading"
+    };
+}
+
+@using (Ajax.BeginForm(ajaxOptions))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.ComponentId)
+    @Html.HiddenFor(m => m.TargetId)
+    <div class="form-inline">
+        <div class="form-group" style="margin-bottom: 10px; padding-right: 30px;">
+            @Html.LabelFor(m => m.State.Status, "Статус")
+            <span style="margin-left: 15px;">
+                @Html.DisplayFor(m => m.State.Status)
+            </span>
+
+            <button type="submit" class="btn btn-default" style="margin-left: 15px;">
+                <img id="Loading" src="/Content/Icons/ajax-loader.gif" style="margin-right: 10px; height:24px; display: none;" />
+                @(Model.State.Status == MonitoringStatus.Disabled ? "Включить" : "Отключить")
+            </button>
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label>Дата статуса</label>
+            <span style="margin-left: 15px">
+                @Html.DisplayFor(m => m.State.StartDate)
+            </span>
+
+        </div>
+    </div>
+}

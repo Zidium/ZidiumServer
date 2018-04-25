@@ -1,0 +1,18 @@
+﻿@using Zidium.Core.Api
+@model EventImportance?
+@{
+    string cssClass = "label label-default";
+    if (Model == EventImportance.Alarm)
+    {
+        cssClass = "label label-danger";
+    }
+    else if (Model == EventImportance.Warning)
+    {
+        cssClass = "label label-warning";
+    }
+    else if (Model == EventImportance.Success)
+    {
+        cssClass = "label label-success";
+    }
+}
+<span class="@cssClass" style="font-size: inherit; font-weight: normal;">@Model</span>

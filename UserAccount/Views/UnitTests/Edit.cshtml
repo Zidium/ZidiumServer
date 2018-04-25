@@ -1,0 +1,44 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.UnitTestEditModel
+
+@{
+    ViewBag.Title = "Настройка проверки";
+    ViewBag.ActiveMenuItems = "UnitTests";
+}
+
+<p class="submenu-title">Настройка проверки</p>
+<div class="zi-bread-crumbs">
+    @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTest)
+</div>
+<hr class="submenu" />
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+
+    @Html.MyValidationSummaryVertical()
+
+    <div class="smart-container">
+        @Html.EditorFor(x => x.ComponentId, "SmartEdit")
+        @Html.EditorFor(x => x.DisplayName, "SmartEdit")
+        @Html.EditorFor(x => x.ActualTime, "SmartEdit")
+        @Html.EditorFor(x => x.NoSignalColor, "SmartEdit")
+        
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields">
+                <div>
+                    <input type="submit" value="Сохранить" class="btn btn-primary" />
+                    @Html.ActionLink("Вернуться к проверке", "ResultDetails", new { id = Model.Id }, new { @class = "btn btn-default" })
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/AllControls")
+}
+

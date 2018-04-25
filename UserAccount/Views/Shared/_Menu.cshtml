@@ -1,0 +1,75 @@
+﻿<div class="navbar-header">
+    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </button>
+</div>
+<div class="navbar-collapse collapse">
+    <ul class="nav navbar-nav" id="MainMenu">
+        @if (User.Identity.IsAuthenticated)
+        {
+            <li id="Start">@Html.ActionLink("Старт", "Start", "Home")</li>
+            
+            <li id="Components" class="dropdown composite-menu-item">
+                <a href="@Url.Action("Index", "ComponentTree")">Компоненты</a><a href="#" class="dropdown-toggle" data-toggle="dropdown"><b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li id="ComponentsList">@Html.ActionLink("Список", "List", "Components")</li>
+                    <li id="Analytics">@Html.ActionLink("Текущее состояние", "Index", "Dashboard")</li>
+                    <li id="ComponentHistory">@Html.ActionLink("История", "Index", "ComponentHistory")</li>
+                    <li id="Wormy">@Html.ActionLink("Червивые компоненты", "WormyApplications", "Events")</li>
+                    <li id="ComponentTypes">@Html.ActionLink("Типы компонентов", "Index", "ComponentTypes")</li>
+                </ul>
+            </li>
+            
+            <li id="Events" class="dropdown composite-menu-item">
+                <a href="@Url.Action("ErrorStatictics", "Events")">Ошибки</a><a href="#" class="dropdown-toggle" data-toggle="dropdown"><b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li id="EventsList">@Html.ActionLink("События", "Index", "Events")</li>
+                    <li id="EventTypes">@Html.ActionLink("Типы событий", "Index", "EventTypes")</li>
+                </ul>
+            </li>
+            
+            <li id="Metrics" class="dropdown composite-menu-item">
+                <a href="@Url.Action("Values", "Metrics")">Метрики</a><a href="#" class="dropdown-toggle" data-toggle="dropdown"><b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li id="MetricsData">@Html.ActionLink("Архив значений метрик", "Index", "MetricsData")</li>
+                    <li id="MetricTypes">@Html.ActionLink("Типы метрик", "Index", "MetricTypes")</li>
+                </ul>
+            </li>
+
+            <li id="UnitTests" class="dropdown composite-menu-item">
+                <a href="@Url.Action("Results", "Checks")">Проверки</a><a href="#" class="dropdown-toggle" data-toggle="dropdown"><b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li id="UnitTestsList">@Html.ActionLink("Список", "Index", "UnitTests")</li>
+                    <li id="UnitTestTypes">@Html.ActionLink("Типы проверок", "Index", "UnitTestTypes")</li>
+                </ul>
+            </li>  
+
+            <li id="Logs">@Html.ActionLink("Лог", "Index", "Logs")</li>
+            
+            <li id="DefectList">@Html.ActionLink("Дефекты", "Index", "Defects", new { UserId = UserHelper.CurrentUser.Id }, null)</li>
+
+            <li id="Manage" class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="glyphicon glyphicon-cog" id="cog"></span> <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    @if (UserHelper.CurrentUser.CanManageAccount())
+                    {
+                        <li id="Users">@Html.ActionLink("Пользователи", "Index", "Users")</li>
+                    }
+                    <li id="Subscriptions">@Html.ActionLink("Подписки", "Index", "Subscriptions")</li>
+                    <li id="NotificationsList">@Html.ActionLink("Уведомления", "Index", "Notifications")</li>
+                    <li id="Account">@Html.ActionLink("Аккаунт", "Index", "AccountInfo")</li>
+                    <li id="Limits">@Html.ActionLink("Лимиты", "Index", "Limits")</li>
+                    
+                    @Html.Action("SystemMenuPartial", "AddIn")
+                </ul>
+            </li>
+        }
+    </ul>
+    <script>
+        var mainMenu = $('#MainMenu');
+        var activeItems = '@ViewBag.ActiveMenuItems';
+        processMenu(mainMenu, activeItems);
+    </script>
+</div>

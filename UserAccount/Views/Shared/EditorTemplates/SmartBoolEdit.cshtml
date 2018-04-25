@@ -1,0 +1,17 @@
+﻿@model bool
+
+<div class="smart-row">
+    <div class="smart-col-labels smart-col-empty">
+    </div>
+
+    <div class="smart-col-fields">
+        <div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m)
+                    @Html.DisplayNameFor(m => m)
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

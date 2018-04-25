@@ -1,0 +1,33 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.ExtentionProperties
+@model Zidium.Core.AccountsDb.Event
+@{
+    Layout = null;
+}
+
+@if (Model.Properties.Count > 0)
+{
+    var properties = ExtentionPropertiesModel.Create(Model);
+    <text>@Html.ExtentionPropertiesTable(properties)</text>
+}
+else
+{
+    <div style="margin-bottom: 10px;">
+        <b>Свойства:</b> нет
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.Version))
+{
+    <div style="margin-bottom: 10px;">
+        <span class="text-prewrap text-wordbreak"><b>Версия:</b> @Model.Version</span>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.Message) && Model.Message.Length > EventsListModel.MaxMessageLength)
+{
+    <div style="margin-bottom: 10px;">
+        <span class="text-prewrap text-wordbreak"><b>Полный текст сообщения:</b> @Model.Message</span>
+    </div>
+}

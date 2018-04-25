@@ -1,0 +1,23 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.ComponentTypeEditModel
+
+@{
+    ViewBag.Title = "Добавление типа компонента";
+    ViewBag.ActiveMenuItems = "Components,ComponentTypes";
+}
+
+@Html.Partial("_PageTitle")
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.MyValidationSummary()
+    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.SystemName, "LabeledEdit", new { HorizontalForm = true })
+    <div class="form-group">
+        <div class="col-sm-10 col-sm-offset-2">
+            <input type="submit" value="Добавить" class="btn btn-primary" />
+            @Html.ActionLink("Вернуться к списку", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+}

@@ -1,0 +1,968 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard1.5</TargetFramework>
+        <AssemblyName>Zidium.Api.NetCore</AssemblyName>
+        <RootNamespace>Zidium.Api</RootNamespace>
+        <Authors>Zidium</Authors>
+        <Version>1.0.16</Version>
+        <Company>Zidium</Company>
+        <Description>This is an official .Net Core Api library for Zidium monitoring system</Description>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <PackageIconUrl>http://zidium.net/banners/nuget-icon.png</PackageIconUrl>
+        <PackageProjectUrl>http://zidium.net</PackageProjectUrl>
+        <PackageTags>Zidium monitoring events unittests metrics log core</PackageTags>
+        <Title>Zidium Api for .Net Core</Title>
+        <FileVersion>1.0.16.0</FileVersion>
+        <AssemblyVersion>1.0.16.0</AssemblyVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\Api\Client\Client.cs">
+            <Link>Client\Client.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Controls\ComponentControlBase.cs">
+            <Link>Client\Components\Controls\ComponentControlBase.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Controls\ComponentControlOffline.cs">
+            <Link>Client\Components\Controls\ComponentControlOffline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Controls\ComponentControlOnline.cs">
+            <Link>Client\Components\Controls\ComponentControlOnline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Controls\ComponentControlWrapper.cs">
+            <Link>Client\Components\Controls\ComponentControlWrapper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Controls\FakeComponentControl.cs">
+            <Link>Client\Components\Controls\FakeComponentControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Controls\IComponentControl.cs">
+            <Link>Client\Components\Controls\IComponentControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Others\ComponentInfo.cs">
+            <Link>Client\Components\Others\ComponentInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Components\Others\GetOrCreateComponentControlData.cs">
+            <Link>Client\Components\Others\GetOrCreateComponentControlData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\ComponentTypeControlBase.cs">
+            <Link>Client\ComponentTypeControl\ComponentTypeControlBase.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\ComponentTypeControlOffline.cs">
+            <Link>Client\ComponentTypeControl\ComponentTypeControlOffline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\ComponentTypeControlOnline.cs">
+            <Link>Client\ComponentTypeControl\ComponentTypeControlOnline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\ComponentTypeControlWrapper.cs">
+            <Link>Client\ComponentTypeControl\ComponentTypeControlWrapper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\ComponentTypeInfo.cs">
+            <Link>Client\ComponentTypeControl\ComponentTypeInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\FakeComponentTypeControl.cs">
+            <Link>Client\ComponentTypeControl\FakeComponentTypeControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\IComponentTypeControl.cs">
+            <Link>Client\ComponentTypeControl\IComponentTypeControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ComponentTypeControl\SystemComponentType.cs">
+            <Link>Client\ComponentTypeControl\SystemComponentType.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\ApplicationError\ApplicationErrorData.cs">
+            <Link>Client\Events\ApplicationError\ApplicationErrorData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\ApplicationError\ApplicationErrorException.cs">
+            <Link>Client\Events\ApplicationError\ApplicationErrorException.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\AddEventResult.cs">
+            <Link>Client\Events\Common\AddEventResult.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\AddEventStatus.cs">
+            <Link>Client\Events\Common\AddEventStatus.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\EventInfo.cs">
+            <Link>Client\Events\Common\EventInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\IEventInitializer.cs">
+            <Link>Client\Events\Common\IEventInitializer.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\IExceptionRender.cs">
+            <Link>Client\Events\Common\IExceptionRender.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\SendEventBase.cs">
+            <Link>Client\Events\Common\SendEventBase.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Common\SendEventBaseT.cs">
+            <Link>Client\Events\Common\SendEventBaseT.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\ComponentEvent\ComponentEventData.cs">
+            <Link>Client\Events\ComponentEvent\ComponentEventData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\ComponentEvent\SystemComponentEventType.cs">
+            <Link>Client\Events\ComponentEvent\SystemComponentEventType.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Manager\BufferEventData.cs">
+            <Link>Client\Events\Manager\BufferEventData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Manager\EventManager.cs">
+            <Link>Client\Events\Manager\EventManager.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Manager\EventQueue.cs">
+            <Link>Client\Events\Manager\EventQueue.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Manager\IEventManager.cs">
+            <Link>Client\Events\Manager\IEventManager.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Events\Manager\IEventQueue.cs">
+            <Link>Client\Events\Manager\IEventQueue.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\IClient.cs">
+            <Link>Client\IClient.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\GetLogsFilter.cs">
+            <Link>Client\Logs\Common\GetLogsFilter.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\ILogManager.cs">
+            <Link>Client\Logs\Common\ILogManager.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\LogConfig.cs">
+            <Link>Client\Logs\Common\LogConfig.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\LogLevel.cs">
+            <Link>Client\Logs\Common\LogLevel.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\LogMessage.cs">
+            <Link>Client\Logs\Common\LogMessage.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\WebLogConfig.cs">
+            <Link>Client\Logs\Common\WebLogConfig.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Common\AddLogMessageDelegate.cs">
+            <Link>Client\Logs\Common\AddLogMessageDelegate.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\InternalLog\IInternalLog.cs">
+            <Link>Client\Logs\InternalLog\IInternalLog.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\InternalLog\InternalLog.cs">
+            <Link>Client\Logs\InternalLog\InternalLog.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Log\FakeLog.cs">
+            <Link>Client\Logs\Log\FakeLog.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Log\ILog.cs">
+            <Link>Client\Logs\Log\ILog.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\Log\Log.cs">
+            <Link>Client\Logs\Log\Log.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\WebLog\IWebLogManager.cs">
+            <Link>Client\Logs\WebLog\IWebLogManager.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\WebLog\IWebLogQueue.cs">
+            <Link>Client\Logs\WebLog\IWebLogQueue.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\WebLog\WebLogManager.cs">
+            <Link>Client\Logs\WebLog\WebLogManager.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\WebLog\WebLogMessage.cs">
+            <Link>Client\Logs\WebLog\WebLogMessage.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\Logs\WebLog\WebLogQueue.cs">
+            <Link>Client\Logs\WebLog\WebLogQueue.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ObjectControl\ControlActivator.cs">
+            <Link>Client\ObjectControl\ControlActivator.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ObjectControl\ControlCache.cs">
+            <Link>Client\ObjectControl\ControlCache.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ObjectControl\IControlCache.cs">
+            <Link>Client\ObjectControl\IControlCache.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\ObjectControl\IObjectControl.cs">
+            <Link>Client\ObjectControl\IObjectControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Controls\FakeUnitTestControl.cs">
+            <Link>Client\UnitTests\Controls\FakeUnitTestControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Controls\IUnitTestControl.cs">
+            <Link>Client\UnitTests\Controls\IUnitTestControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Controls\UnitTestControlBase.cs">
+            <Link>Client\UnitTests\Controls\UnitTestControlBase.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Controls\UnitTestControlOffline.cs">
+            <Link>Client\UnitTests\Controls\UnitTestControlOffline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Controls\UnitTestControlOnline.cs">
+            <Link>Client\UnitTests\Controls\UnitTestControlOnline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Controls\UnitTestControlWrapper.cs">
+            <Link>Client\UnitTests\Controls\UnitTestControlWrapper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Others\GetOrCreateUnitTestControlData.cs">
+            <Link>Client\UnitTests\Others\GetOrCreateUnitTestControlData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Others\SendUnitTestResultData.cs">
+            <Link>Client\UnitTests\Others\SendUnitTestResultData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Others\UnitTestInfo.cs">
+            <Link>Client\UnitTests\Others\UnitTestInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Others\UnitTestStateInfo.cs">
+            <Link>Client\UnitTests\Others\UnitTestStateInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTestTypes\IUnitTestTypeControl.cs">
+            <Link>Client\UnitTestTypes\IUnitTestTypeControl.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTestTypes\UnitTestTypeControlBase.cs">
+            <Link>Client\UnitTestTypes\UnitTestTypeControlBase.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTestTypes\UnitTestTypeControlOffline.cs">
+            <Link>Client\UnitTestTypes\UnitTestTypeControlOffline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTestTypes\UnitTestTypeControlOnline.cs">
+            <Link>Client\UnitTestTypes\UnitTestTypeControlOnline.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTestTypes\UnitTestTypeControlWrapper.cs">
+            <Link>Client\UnitTestTypes\UnitTestTypeControlWrapper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\UnitTestTypes\UnitTestTypeInfo.cs">
+            <Link>Client\UnitTestTypes\UnitTestTypeInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\AccessElement.cs">
+            <Link>Client\XmlConfig\AccessElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\AutoCreateEventsElement.cs" Link="Client\XmlConfig\AutoCreateEventsElement.cs" />
+        <Compile Include="..\..\Api\Client\XmlConfig\Config.cs">
+            <Link>Client\XmlConfig\Config.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\ConfigHelper.cs">
+            <Link>Client\XmlConfig\ConfigHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\DefaultComponentElement.cs" Link="Client\XmlConfig\DefaultComponentElement.cs" />
+        <Compile Include="..\..\Api\Client\XmlConfig\DefaultEventValuesElement.cs">
+            <Link>Client\XmlConfig\DefaultEventValuesElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\EventCategoryDefaultValuesElement.cs">
+            <Link>Client\XmlConfig\EventCategoryDefaultValuesElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\EventManagerElement.cs">
+            <Link>Client\XmlConfig\EventManagerElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\EventsElement.cs">
+            <Link>Client\XmlConfig\EventsElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\InternalLogElement.cs">
+            <Link>Client\XmlConfig\InternalLogElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\LogsElement.cs">
+            <Link>Client\XmlConfig\LogsElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Client\XmlConfig\WebLogElement.cs">
+            <Link>Client\XmlConfig\WebLogElement.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\DataType.cs">
+            <Link>Common\DataType.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\EventCategory.cs">
+            <Link>Common\EventCategory.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\EventImportance.cs">
+            <Link>Common\EventImportance.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\ExtentionProperty.cs">
+            <Link>Common\ExtentionProperty.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\ExtentionPropertyCollection.cs">
+            <Link>Common\ExtentionPropertyCollection.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\ExtentionPropertyValue.cs">
+            <Link>Common\ExtentionPropertyValue.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\FakeObjectException.cs">
+            <Link>Common\FakeObjectException.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Common\SendEventCategory.cs">
+            <Link>Common\SendEventCategory.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ApiService\ApiService.cs">
+            <Link>Dao\ApiService\ApiService.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ApiService\ApiServiceWrapper.cs">
+            <Link>Dao\ApiService\ApiServiceWrapper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ApiService\FakeApiService.cs">
+            <Link>Dao\ApiService\FakeApiService.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ApiService\IApiService.cs">
+            <Link>Dao\ApiService\IApiService.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\AccessToken.cs">
+            <Link>Dao\Common\AccessToken.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\ComponentControlData.cs">
+            <Link>Dao\Common\ComponentControlData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\Request.cs">
+            <Link>Dao\Common\Request.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\ResponceException.cs">
+            <Link>Dao\Common\ResponceException.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\Response.cs">
+            <Link>Dao\Common\Response.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\ResponseHelper.cs">
+            <Link>Dao\Common\ResponseHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\ResponseInfo.cs">
+            <Link>Dao\Common\ResponseInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\ResponseT.cs">
+            <Link>Dao\Common\ResponseT.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Common\StatusDataInfo.cs">
+            <Link>Dao\Common\StatusDataInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetChildComponents\GetChildComponentsResponse.cs">
+            <Link>Dao\Components\GetChildComponents\GetChildComponentsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetComponentById\GetComponentByIdResponse.cs">
+            <Link>Dao\Components\GetComponentById\GetComponentByIdResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetComponentBySystemName\GetComponentBySystemNameData.cs">
+            <Link>Dao\Components\GetComponentBySystemName\GetComponentBySystemNameData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetComponentBySystemName\GetComponentBySystemNameResponse.cs">
+            <Link>Dao\Components\GetComponentBySystemName\GetComponentBySystemNameResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetComponentControlById\GetComponentControlByIdResponse.cs" Link="Dao\Components\GetComponentControlById\GetComponentControlByIdResponse.cs" />
+        <Compile Include="..\..\Api\Dao\Components\GetComponentInternalState\GetComponentInternalStateResponse.cs">
+            <Link>Dao\Components\GetComponentInternalState\GetComponentInternalStateResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetComponentTotalState\GetComponentTotalStateResponse.cs">
+            <Link>Dao\Components\GetComponentTotalState\GetComponentTotalStateResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetOrCreateComponent\GetOrCreateComponentData.cs">
+            <Link>Dao\Components\GetOrCreateComponent\GetOrCreateComponentData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetOrCreateComponent\GetOrCreateComponentResponse.cs">
+            <Link>Dao\Components\GetOrCreateComponent\GetOrCreateComponentResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetOrCreateFolder\GetOrCreateFolderData.cs">
+            <Link>Dao\Components\GetOrCreateFolder\GetOrCreateFolderData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetRootComponent\GetRootComponentResponse.cs">
+            <Link>Dao\Components\GetRootComponent\GetRootComponentResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\GetRootControlData\GetRootControlDataResponse.cs">
+            <Link>Dao\Components\GetRootControlData\GetRootControlDataResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\SetComponentDisable\SetComponentDisableResponse.cs">
+            <Link>Dao\Components\SetComponentDisable\SetComponentDisableResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\SetComponentEnable\SetComponentEnableResponse.cs">
+            <Link>Dao\Components\SetComponentEnable\SetComponentEnableResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\UpdateComponent\UpdateComponentData.cs">
+            <Link>Dao\Components\UpdateComponent\UpdateComponentData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\UpdateComponent\UpdateComponentResponse.cs">
+            <Link>Dao\Components\UpdateComponent\UpdateComponentResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Components\DeleteComponent\DeleteComponentResponse.cs">
+            <Link>Dao\Components\DeleteComponent\DeleteComponentResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ComponentTypes\GetComponentType\GetComponentTypeData.cs">
+            <Link>Dao\ComponentTypes\GetComponentType\GetComponentTypeData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ComponentTypes\GetComponentType\GetComponentTypeResponse.cs">
+            <Link>Dao\ComponentTypes\GetComponentType\GetComponentTypeResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeData.cs">
+            <Link>Dao\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeResponse.cs">
+            <Link>Dao\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ComponentTypes\UpdateComponentType\UpdateComponentTypeData.cs">
+            <Link>Dao\ComponentTypes\UpdateComponentType\UpdateComponentTypeData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\ComponentTypes\UpdateComponentType\UpdateComponentTypeResponse.cs">
+            <Link>Dao\ComponentTypes\UpdateComponentType\UpdateComponentTypeResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Echo\GetEchoResponse.cs">
+            <Link>Dao\Echo\GetEchoResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\GetEventById\GetEventByIdResponse.cs">
+            <Link>Dao\Events\GetEventById\GetEventByIdResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\GetEvents\GetEventsData.cs">
+            <Link>Dao\Events\GetEvents\GetEventsData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\GetEvents\GetEventsResponse.cs">
+            <Link>Dao\Events\GetEvents\GetEventsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\JoinEvents\JoinEventData.cs">
+            <Link>Dao\Events\JoinEvents\JoinEventData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\JoinEvents\JoinEventsResponse.cs">
+            <Link>Dao\Events\JoinEvents\JoinEventsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\SendEvent\SendEventData.cs">
+            <Link>Dao\Events\SendEvent\SendEventData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\SendEvent\SendEventResponse.cs">
+            <Link>Dao\Events\SendEvent\SendEventResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Events\SendEvent\SendEventResponseData.cs">
+            <Link>Dao\Events\SendEvent\SendEventResponseData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\GetServerTime\GetServerTimeResponse.cs">
+            <Link>Dao\GetServerTime\GetServerTimeResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\GetServerTime\GetServerTimeResponseData.cs">
+            <Link>Dao\GetServerTime\GetServerTimeResponseData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsResponse.cs">
+            <Link>Dao\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\GetLogConfig\GetLogConfigResponse.cs">
+            <Link>Dao\Logs\GetLogConfig\GetLogConfigResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\GetLogs\GetLogsResponse.cs">
+            <Link>Dao\Logs\GetLogs\GetLogsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\GetLogs\LogInfo.cs">
+            <Link>Dao\Logs\GetLogs\LogInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\SendLogs\SendLogsResponse.cs">
+            <Link>Dao\Logs\SendLogs\SendLogsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\SendLog\SendLogData.cs">
+            <Link>Dao\Logs\SendLog\SendLogData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Logs\SendLog\SendLogResponse.cs">
+            <Link>Dao\Logs\SendLog\SendLogResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\Common\MetricInfo.cs">
+            <Link>Dao\Metrics\Common\MetricInfo.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\GetMetricsHistory\GetMetricsHistoryFilter.cs">
+            <Link>Dao\Metrics\GetMetricsHistory\GetMetricsHistoryFilter.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\GetMetricsHistory\GetMetricsHistoryResponse.cs">
+            <Link>Dao\Metrics\GetMetricsHistory\GetMetricsHistoryResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\GetMetrics\GetMetricsResponse.cs">
+            <Link>Dao\Metrics\GetMetrics\GetMetricsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\GetMetric\GetMetricResponse.cs">
+            <Link>Dao\Metrics\GetMetric\GetMetricResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\SendMetrics\SendMetricsResponse.cs">
+            <Link>Dao\Metrics\SendMetrics\SendMetricsResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\SendMetric\SendMetricData.cs">
+            <Link>Dao\Metrics\SendMetric\SendMetricData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\Metrics\SendMetric\SendMetricResponse.cs">
+            <Link>Dao\Metrics\SendMetric\SendMetricResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTest.cs">
+            <Link>Dao\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTest.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestResponse.cs">
+            <Link>Dao\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\GetUnitTestState\GetUnitTestStateResponse.cs">
+            <Link>Dao\UnitTests\GetUnitTestState\GetUnitTestStateResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\SendUnitTestResult\SendUnitTestResultRequestData.cs">
+            <Link>Dao\UnitTests\SendUnitTestResult\SendUnitTestResultRequestData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\SendUnitTestResult\SendUnitTestResultResponse.cs">
+            <Link>Dao\UnitTests\SendUnitTestResult\SendUnitTestResultResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs">
+            <Link>Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponse.cs">
+            <Link>Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\SetUnitTestEnable\SetUnitTestEnableResponse.cs">
+            <Link>Dao\UnitTests\SetUnitTestEnable\SetUnitTestEnableResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeData.cs">
+            <Link>Dao\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeResponse.cs">
+            <Link>Dao\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\AccessTokenDto.cs">
+            <Link>Dto\Common\AccessTokenDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\ComponentControlDataDto.cs">
+            <Link>Dto\Common\ComponentControlDataDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\ComponentTypeDto.cs">
+            <Link>Dto\Common\ComponentTypeDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\ExtentionPropertyDto.cs">
+            <Link>Dto\Common\ExtentionPropertyDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\ISerializer.cs">
+            <Link>Dto\Common\ISerializer.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\JsonSerializer.cs">
+            <Link>Dto\Common\JsonSerializer.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\RequestT.cs">
+            <Link>Dto\Common\RequestT.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\ResponseCodeException.cs">
+            <Link>Dto\Common\ResponseCodeException.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\ResponseDtoT.cs">
+            <Link>Dto\Common\ResponseDtoT.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\StateDataDto.cs">
+            <Link>Dto\Common\StateDataDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\Utf8StringWriter.cs">
+            <Link>Dto\Common\Utf8StringWriter.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\XmlDeflateSerializer.cs">
+            <Link>Dto\Common\XmlDeflateSerializer.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Common\XmlSerializer.cs">
+            <Link>Dto\Common\XmlSerializer.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\Common\ComponentDto.cs">
+            <Link>Dto\Components\Common\ComponentDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\Common\MonitoringStatus.cs">
+            <Link>Dto\Components\Common\MonitoringStatus.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetChildComponents\GetChildComponentsRequestDto.cs">
+            <Link>Dto\Components\GetChildComponents\GetChildComponentsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetChildComponents\GetChildComponentsRequestDtoData.cs">
+            <Link>Dto\Components\GetChildComponents\GetChildComponentsRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetChildComponents\GetChildComponentsResponseDto.cs">
+            <Link>Dto\Components\GetChildComponents\GetChildComponentsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentById\GetComponentByIdRequestDto.cs">
+            <Link>Dto\Components\GetComponentById\GetComponentByIdRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentById\GetComponentByIdRequestDtoData.cs">
+            <Link>Dto\Components\GetComponentById\GetComponentByIdRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentById\GetComponentByIdResponseDto.cs">
+            <Link>Dto\Components\GetComponentById\GetComponentByIdResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentBySystemName\GetComponentBySystemNameRequestDto.cs">
+            <Link>Dto\Components\GetComponentBySystemName\GetComponentBySystemNameRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentBySystemName\GetComponentBySystemNameRequestDtoData.cs">
+            <Link>Dto\Components\GetComponentBySystemName\GetComponentBySystemNameRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentBySystemName\GetComponentBySystemNameResponseDto.cs">
+            <Link>Dto\Components\GetComponentBySystemName\GetComponentBySystemNameResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentControlById\GetComponentControlByIdRequestDto.cs" Link="Dto\Components\GetComponentControlById\GetComponentControlByIdRequestDto.cs" />
+        <Compile Include="..\..\Api\Dto\Components\GetComponentControlById\GetComponentControlByIdRequestDtoData.cs" Link="Dto\Components\GetComponentControlById\GetComponentControlByIdRequestDtoData.cs" />
+        <Compile Include="..\..\Api\Dto\Components\GetComponentControlById\GetComponentControlByIdResponseDto.cs" Link="Dto\Components\GetComponentControlById\GetComponentControlByIdResponseDto.cs" />
+        <Compile Include="..\..\Api\Dto\Components\GetComponentInternalState\GetComponentInternalStateRequestDto.cs">
+            <Link>Dto\Components\GetComponentInternalState\GetComponentInternalStateRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentInternalState\GetComponentInternalStateRequestDtoData.cs">
+            <Link>Dto\Components\GetComponentInternalState\GetComponentInternalStateRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentInternalState\GetComponentInternalStateResponseDto.cs">
+            <Link>Dto\Components\GetComponentInternalState\GetComponentInternalStateResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentTotalState\GetComponentTotalStateRequestDto.cs">
+            <Link>Dto\Components\GetComponentTotalState\GetComponentTotalStateRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentTotalState\GetComponentTotalStateRequestDtoData.cs">
+            <Link>Dto\Components\GetComponentTotalState\GetComponentTotalStateRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetComponentTotalState\GetComponentTotalStateResponseDto.cs">
+            <Link>Dto\Components\GetComponentTotalState\GetComponentTotalStateResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetOrAddComponent\GetOrAddComponentRequestDto.cs">
+            <Link>Dto\Components\GetOrAddComponent\GetOrAddComponentRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetOrAddComponent\GetOrAddComponentRequestDtoData.cs">
+            <Link>Dto\Components\GetOrAddComponent\GetOrAddComponentRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetOrAddComponent\GetOrAddComponentResponseDto.cs">
+            <Link>Dto\Components\GetOrAddComponent\GetOrAddComponentResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetOrCreateComponent\GetOrCreateComponentRequestDto.cs">
+            <Link>Dto\Components\GetOrCreateComponent\GetOrCreateComponentRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetOrCreateComponent\GetOrCreateComponentRequestDtoData.cs">
+            <Link>Dto\Components\GetOrCreateComponent\GetOrCreateComponentRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetOrCreateComponent\GetOrCreateComponentResponseDto.cs">
+            <Link>Dto\Components\GetOrCreateComponent\GetOrCreateComponentResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetRootComponent\GetRootComponentRequestDto.cs">
+            <Link>Dto\Components\GetRootComponent\GetRootComponentRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetRootComponent\GetRootComponentResponseDto.cs">
+            <Link>Dto\Components\GetRootComponent\GetRootComponentResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetRootControlData\GetRootControlDataRequestDto.cs">
+            <Link>Dto\Components\GetRootControlData\GetRootControlDataRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\GetRootControlData\GetRootControlDataResponseDto.cs">
+            <Link>Dto\Components\GetRootControlData\GetRootControlDataResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\SetComponentDisable\SetComponentDisableRequestDto.cs">
+            <Link>Dto\Components\SetComponentDisable\SetComponentDisableRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\SetComponentDisable\SetComponentDisableRequestDtoData.cs">
+            <Link>Dto\Components\SetComponentDisable\SetComponentDisableRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\SetComponentDisable\SetComponentDisableResponseDto.cs">
+            <Link>Dto\Components\SetComponentDisable\SetComponentDisableResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\SetComponentEnable\SetComponentEnableRequestDto.cs">
+            <Link>Dto\Components\SetComponentEnable\SetComponentEnableRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\SetComponentEnable\SetComponentEnableRequestDtoData.cs">
+            <Link>Dto\Components\SetComponentEnable\SetComponentEnableRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\SetComponentEnable\SetComponentEnableResponseDto.cs">
+            <Link>Dto\Components\SetComponentEnable\SetComponentEnableResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\UpdateComponent\UpdateComponentRequestDto.cs">
+            <Link>Dto\Components\UpdateComponent\UpdateComponentRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\UpdateComponent\UpdateComponentRequestDtoData.cs">
+            <Link>Dto\Components\UpdateComponent\UpdateComponentRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\UpdateComponent\UpdateComponentResponseDto.cs">
+            <Link>Dto\Components\UpdateComponent\UpdateComponentResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\DeleteComponent\DeleteComponentRequestDto.cs">
+            <Link>Dto\Components\DeleteComponent\DeleteComponentRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\DeleteComponent\DeleteComponentRequestDtoData.cs">
+            <Link>Dto\Components\DeleteComponent\DeleteComponentRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Components\DeleteComponent\DeleteComponentResponseDto.cs">
+            <Link>Dto\Components\DeleteComponent\DeleteComponentResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\GetComponentType\GetComponentTypeRequestDto.cs">
+            <Link>Dto\ComponentTypes\GetComponentType\GetComponentTypeRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\GetComponentType\GetComponentTypeRequestDtoData.cs">
+            <Link>Dto\ComponentTypes\GetComponentType\GetComponentTypeRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\GetComponentType\GetComponentTypeResponseDto.cs">
+            <Link>Dto\ComponentTypes\GetComponentType\GetComponentTypeResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeRequestDto.cs">
+            <Link>Dto\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeRequestDtoData.cs">
+            <Link>Dto\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeResponseDto.cs">
+            <Link>Dto\ComponentTypes\GetOrCreateComponentType\GetOrCreateComponentTypeResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\UpdateComponentType\UpdateComponentTypeRequestDto.cs">
+            <Link>Dto\ComponentTypes\UpdateComponentType\UpdateComponentTypeRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\UpdateComponentType\UpdateComponentTypeRequestDtoData.cs">
+            <Link>Dto\ComponentTypes\UpdateComponentType\UpdateComponentTypeRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ComponentTypes\UpdateComponentType\UpdateComponentTypeResponseDto.cs">
+            <Link>Dto\ComponentTypes\UpdateComponentType\UpdateComponentTypeResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\DtoServiceProxy.cs">
+            <Link>Dto\DtoServiceProxy.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\Common\EventDto.cs">
+            <Link>Dto\Events\Common\EventDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\GetEventById\GetEventByIdRequestDto.cs">
+            <Link>Dto\Events\GetEventById\GetEventByIdRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\GetEventById\GetEventByIdRequestDtoData.cs">
+            <Link>Dto\Events\GetEventById\GetEventByIdRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\GetEventById\GetEventByIdResponseDto.cs">
+            <Link>Dto\Events\GetEventById\GetEventByIdResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\GetEvents\GetEventsRequestDto.cs">
+            <Link>Dto\Events\GetEvents\GetEventsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\GetEvents\GetEventsRequestDtoData.cs">
+            <Link>Dto\Events\GetEvents\GetEventsRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\GetEvents\GetEventsResponseDto.cs">
+            <Link>Dto\Events\GetEvents\GetEventsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\JoinEvents\JoinEventDto.cs">
+            <Link>Dto\Events\JoinEvents\JoinEventDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\JoinEvents\JoinEventsRequestDto.cs">
+            <Link>Dto\Events\JoinEvents\JoinEventsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\JoinEvents\JoinEventsResponseDto.cs">
+            <Link>Dto\Events\JoinEvents\JoinEventsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\SendEvent\SendEventRequestDto.cs">
+            <Link>Dto\Events\SendEvent\SendEventRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\SendEvent\SendEventRequestDtoData.cs">
+            <Link>Dto\Events\SendEvent\SendEventRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\SendEvent\SendEventResponseDto.cs">
+            <Link>Dto\Events\SendEvent\SendEventResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Events\SendEvent\SendEventResponseDtoData.cs">
+            <Link>Dto\Events\SendEvent\SendEventResponseDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\GetEcho\GetEchoRequestDto.cs">
+            <Link>Dto\GetEcho\GetEchoRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\GetEcho\GetEchoRequestDtoData.cs">
+            <Link>Dto\GetEcho\GetEchoRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\GetEcho\GetEchoResponseDto.cs">
+            <Link>Dto\GetEcho\GetEchoResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\IDtoService.cs">
+            <Link>Dto\IDtoService.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDto.cs">
+            <Link>Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDtoData.cs">
+            <Link>Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsResponseDto.cs">
+            <Link>Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogConfig\GetLogConfigRequestDto.cs">
+            <Link>Dto\Logs\GetLogConfig\GetLogConfigRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogConfig\GetLogConfigRequestDtoData.cs">
+            <Link>Dto\Logs\GetLogConfig\GetLogConfigRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogConfig\GetLogConfigResponseDto.cs">
+            <Link>Dto\Logs\GetLogConfig\GetLogConfigResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogConfig\WebLogConfigDto.cs">
+            <Link>Dto\Logs\GetLogConfig\WebLogConfigDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogs\GetLogsRequestDto.cs">
+            <Link>Dto\Logs\GetLogs\GetLogsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogs\GetLogsRequestDtoData.cs">
+            <Link>Dto\Logs\GetLogs\GetLogsRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogs\GetLogsResponseDto.cs">
+            <Link>Dto\Logs\GetLogs\GetLogsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\GetLogs\LogDto.cs">
+            <Link>Dto\Logs\GetLogs\LogDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\SendLogs\SendLogsRequestDto.cs">
+            <Link>Dto\Logs\SendLogs\SendLogsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\SendLogs\SendLogsResponseDto.cs">
+            <Link>Dto\Logs\SendLogs\SendLogsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\SendLog\SendLogDto.cs">
+            <Link>Dto\Logs\SendLog\SendLogDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\SendLog\SendLogRequestDto.cs">
+            <Link>Dto\Logs\SendLog\SendLogRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Logs\SendLog\SendLogResponseDto.cs">
+            <Link>Dto\Logs\SendLog\SendLogResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\Common\MetricDto.cs">
+            <Link>Dto\Metrics\Common\MetricDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetricsHistory\GetMetricsHistoryRequestDto.cs">
+            <Link>Dto\Metrics\GetMetricsHistory\GetMetricsHistoryRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetricsHistory\GetMetricsHistoryRequestDtoData.cs">
+            <Link>Dto\Metrics\GetMetricsHistory\GetMetricsHistoryRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetricsHistory\GetMetricsHistoryResponseDto.cs">
+            <Link>Dto\Metrics\GetMetricsHistory\GetMetricsHistoryResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetrics\GetMetricsRequestDto.cs">
+            <Link>Dto\Metrics\GetMetrics\GetMetricsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetrics\GetMetricsRequestDtoData.cs">
+            <Link>Dto\Metrics\GetMetrics\GetMetricsRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetrics\GetMetricsResponseDto.cs">
+            <Link>Dto\Metrics\GetMetrics\GetMetricsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetric\GetMetricRequestDto.cs">
+            <Link>Dto\Metrics\GetMetric\GetMetricRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetric\GetMetricRequestDtoData.cs">
+            <Link>Dto\Metrics\GetMetric\GetMetricRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\GetMetric\GetMetricResponseDto.cs">
+            <Link>Dto\Metrics\GetMetric\GetMetricResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\SendMetrics\SendMetricsRequestDto.cs">
+            <Link>Dto\Metrics\SendMetrics\SendMetricsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\SendMetrics\SendMetricsResponseDto.cs">
+            <Link>Dto\Metrics\SendMetrics\SendMetricsResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\SendMetric\SendMetricRequestDto.cs">
+            <Link>Dto\Metrics\SendMetric\SendMetricRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\SendMetric\SendMetricRequestDtoData.cs">
+            <Link>Dto\Metrics\SendMetric\SendMetricRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Metrics\SendMetric\SendMetricResponseDto.cs">
+            <Link>Dto\Metrics\SendMetric\SendMetricResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Others\ExtentionPropertyName.cs">
+            <Link>Dto\Others\ExtentionPropertyName.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\Others\ResponseCode.cs">
+            <Link>Dto\Others\ResponseCode.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ServerTime\GetServerTimeResponseDto.cs">
+            <Link>Dto\ServerTime\GetServerTimeResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\ServerTime\GetServerTimeResponseDtoData.cs">
+            <Link>Dto\ServerTime\GetServerTimeResponseDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestRequestDto.cs">
+            <Link>Dto\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestRequestDtoData.cs">
+            <Link>Dto\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestResponseDto.cs">
+            <Link>Dto\UnitTests\GetOrCreateUnitTest\GetOrCreateUnitTestResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetOrCreateUnitTest\UnitTestDto.cs">
+            <Link>Dto\UnitTests\GetOrCreateUnitTest\UnitTestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetUnitTestState\GetUnitTestStateRequestDto.cs">
+            <Link>Dto\UnitTests\GetUnitTestState\GetUnitTestStateRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetUnitTestState\GetUnitTestStateRequestDtoData.cs">
+            <Link>Dto\UnitTests\GetUnitTestState\GetUnitTestStateRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\GetUnitTestState\GetUnitTestStateResponseDto.cs">
+            <Link>Dto\UnitTests\GetUnitTestState\GetUnitTestStateResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SendUnitTestResult\SendUnitTestResultRequestDto.cs">
+            <Link>Dto\UnitTests\SendUnitTestResult\SendUnitTestResultRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SendUnitTestResult\SendUnitTestResultRequestDtoData.cs">
+            <Link>Dto\UnitTests\SendUnitTestResult\SendUnitTestResultRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SendUnitTestResult\SendUnitTestResultResponseDto.cs">
+            <Link>Dto\UnitTests\SendUnitTestResult\SendUnitTestResultResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDto.cs">
+            <Link>Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDtoData.cs">
+            <Link>Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponseDto.cs">
+            <Link>Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestEnable\SetUnitTestEnableRequestDto.cs">
+            <Link>Dto\UnitTests\SetUnitTestEnable\SetUnitTestEnableRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestEnable\SetUnitTestEnableRequestDtoData.cs">
+            <Link>Dto\UnitTests\SetUnitTestEnable\SetUnitTestEnableRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestEnable\SetUnitTestEnableResponseDto.cs">
+            <Link>Dto\UnitTests\SetUnitTestEnable\SetUnitTestEnableResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\UnitTestResultStatus.cs">
+            <Link>Dto\UnitTests\UnitTestResultStatus.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeRequestDto.cs">
+            <Link>Dto\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeRequestDtoData.cs">
+            <Link>Dto\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeRequestDtoData.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeResponseDto.cs">
+            <Link>Dto\UnitTestTypes\GetOrCreateUnitTestType\GetOrCreateUnitTestTypeResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTestTypes\GetOrCreateUnitTestType\UnitTestTypeDto.cs">
+            <Link>Dto\UnitTestTypes\GetOrCreateUnitTestType\UnitTestTypeDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\DataConverter.cs">
+            <Link>Others\DataConverter.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\HashHelper.cs">
+            <Link>Others\HashHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\IntHelper.cs">
+            <Link>Others\IntHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\PrepareDataHelper.cs">
+            <Link>Others\PrepareDataHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\StringHelper.cs">
+            <Link>Others\StringHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\TaskQueue\ThreadTask.cs">
+            <Link>Others\TaskQueue\ThreadTask.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\TaskQueue\ThreadTaskAction.cs">
+            <Link>Others\TaskQueue\ThreadTaskAction.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\TaskQueue\ThreadTaskQueue.cs">
+            <Link>Others\TaskQueue\ThreadTaskQueue.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Others\TemplateHelper.cs">
+            <Link>Others\TemplateHelper.cs</Link>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.2" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.1.2" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
+      <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
+      <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+      <PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+      <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
+      <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+      <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
+      <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+      <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+      <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Json\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\..\Api\Zidium-Full.config" Link="Zidium-Full.config" />
+      <None Include="..\..\Api\Zidium-Nuget.config" Link="Zidium-Nuget.config" />
+    </ItemGroup>
+
+</Project>

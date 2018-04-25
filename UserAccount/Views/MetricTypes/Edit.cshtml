@@ -1,0 +1,92 @@
+﻿@model Zidium.UserAccount.Models.MetricTypes.EditModel
+
+<style>
+    .smart-col-labels {
+        min-width: 200px;
+    }
+
+    #ModalDlgBody {
+        padding-bottom: 0px;
+    }
+</style>
+
+@if (Model.ModalMode)
+{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+@{
+    ViewBag.Title = !Model.Id.HasValue ? "Добавление типа метрики" : "Настройка типа метрики";
+    ViewBag.ActiveMenuItems = "Metrics,MetricTypes";
+}
+
+@if (!Model.ModalMode)
+{
+    @Html.Partial("_PageTitle")
+}
+
+@{Html.BeginForm();}
+
+@Html.AntiForgeryToken()
+@Html.HiddenFor(model => model.Id)
+@Html.HiddenFor(model => model.ModalMode)
+
+<div class="smart-container">
+    @Html.EditorFor(m => m.SystemName, "SmartEdit")
+    @Html.EditorFor(m => m.DisplayName, "SmartEdit")
+    
+    <div class="smart-row">
+        <div class="smart-col-labels smart-col-empty"></div>
+        <div class="smart-col-fields">
+            <p class="form-control-static">
+                <strong>Настройки обработки</strong>
+            </p>
+        </div>
+    </div>
+
+    @Html.EditorFor(m => m.ActualTime, "SmartEdit")
+    @Html.EditorFor(m => m.NoSignalColor, "SmartEdit")
+
+    <div class="smart-row">
+        <div class="smart-col-labels smart-col-empty"></div>
+        <div class="smart-col-fields">
+            <p class="form-control-static">
+                <strong>Правила для цветов</strong>
+            </p>
+        </div>
+    </div>
+
+    @Html.EditorFor(m => m.ConditionRed, "SmartEdit")
+    @Html.EditorFor(m => m.ConditionYellow, "SmartEdit")
+    @Html.EditorFor(m => m.ConditionGreen, "SmartEdit")
+    @Html.EditorFor(m => m.ElseColor, "SmartEdit")
+
+    <div class="smart-row">
+        <div class="smart-col-labels smart-col-empty"></div>
+        <div class="smart-col-fields" style="text-align: @(Model.ModalMode ? "right" : "left")">
+            <div>
+                <input type="submit" value='@(Model.Id.HasValue ? "Сохранить" : "Добавить")' class="btn btn-primary smart-button" />
+                @if (!Model.ModalMode)
+                {
+                    if (Model.Id.HasValue)
+                    {
+                        <a class="btn btn-default smart-button" href="@Url.Action("Show", new {Model.Id})">Отмена</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-default smart-button" href="@Url.Action("Index")">Отмена</a>
+                    }
+                }
+                else
+                {
+                    <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Отмена</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@{Html.EndForm();}
+
+@section Scripts{
+    @Scripts.Render("~/Scripts/AllControls")
+}

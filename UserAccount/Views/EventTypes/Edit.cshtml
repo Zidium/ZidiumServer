@@ -1,0 +1,65 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.EventTypeEditModel
+
+@{
+    ViewBag.Title =  "Настройка типа события";
+    ViewBag.ActiveMenuItems = "Events,EventTypes";
+}
+
+@Html.Partial("_PageTitle")
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.MyValidationSummary()
+    @Html.HiddenFor(m => m.Id)
+
+    <div class="form-group">
+        <div class="col-sm-10 col-sm-offset-2">
+            <input type="submit" value="Сохранить" class="btn btn-primary" /> 
+            @Html.ActionLink("Отмена", "Show", new { id = Model.Id }, new { @class = "btn btn-default" })
+            @*@Html.ActionLink("Обработать", "Process", new { id = Model.Id }, new { @class = "btn btn-success", onclick = "ModalBtnClick(this, event);" })
+            @Html.ActionLink("Игнорировать", "Ignore", new { id = Model.Id }, new { @class = "btn btn-info", onclick = "ModalBtnClick(this, event);" })*@
+            @*@if (!Model.IsDeleted)
+            {
+                @Html.ActionLink("Удалить", "Delete", new { id = @Model.Id }, new { @class = "btn btn-danger", onclick = "ModalBtnClick(this, event);" })
+            }*@
+            @Html.ActionLink("Показать все типы событий", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+
+    if (Model.IsDeleted)
+    {
+        <div class="alert alert-danger">Этот тип события удалён</div>
+    }
+
+    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.SystemName, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.ImportanceForNew, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.JoinInterval, "LabeledEdit", new { HorizontalForm = true })
+
+    <hr/>
+    <div class="form-group" style="margin-top: 20px;">
+        <div class="col-sm-10 col-sm-offset-2">
+            <p style="font-size: 18px">
+                Настройки для событий старой версии
+                <span class="ziTooltipContent">
+                    Если указать версию 1.9 и важность Warning,
+                    то все события данного типа от компонентов версии 1.9 и ниже будут иметь важность Warning.
+                    <br/><br />
+                    Например, данная функция используется, когда ошибка исправлена в версии 2.0, 
+                    но некоторые пользователи продолжают пользоваться старой программой версии 1.9.
+                    Нет смысла получать уведомления об ошибках, которые уже исправлены.
+                </span>
+            </p>
+        </div>
+    </div>   
+    @Html.EditorFor(m => m.OldVersion, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.ImportanceForOld, "LabeledEdit", new { HorizontalForm = true })   
+}
+
+<script>
+    $(function() {
+        initTooltips();
+    })
+</script>

@@ -1,0 +1,603 @@
+﻿@using AppMonitoring.Core.Api
+@model UserAccount.Models.DashboardModel
+@{
+    ViewBag.Title = "Обзор";
+    ViewBag.ActiveMenuItems = "Dashboard";
+}
+<style>
+    .colorBlock {
+        padding: 10px;
+        color: white;
+    }
+
+    .mainValue {
+        font-size: 38px;
+        font-weight: bold;
+        vertical-align: middle;
+    }
+
+        .mainValue div {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .mainValue a:link {
+            color: white;
+        }
+
+        .mainValue a:visited {
+            color: white;
+        }
+
+        .mainValue a:hover {
+            color: white;
+        }
+
+    .importanceLabel {
+        font-size: 14px;
+        padding-left: 5px;
+        font-weight: normal;
+    }
+
+    .blockHeader {
+        font-weight: bold;
+    }
+
+    #componentTypes th, #componentTypes td {
+        border: 1px solid gray;
+        padding: 5px 10px;
+    }
+
+    #componentTypes th {
+        background-color: #f5f5f5;
+    }
+
+    #componentTypes .badge a:link {
+        color: white;
+    }
+
+    #componentTypes .badge a:visited {
+        color: white;
+    }
+
+    #componentTypes .badge a:hover {
+        color: white;
+    }
+
+    .eventsTable {
+        width: 100%;
+        border: 1px dotted gray;
+    }
+
+        .eventsTable td {
+            border: 1px dotted gray;
+            padding: 3px 5px;
+            text-align: center;
+        }
+
+</style>
+
+<<<<<<< HEAD
+<div class="row">
+    <div class="col-sm-3">
+        <a href="#">Моя первя ссылка 1</a>
+        <br />
+        <a href="#">еще одна  первя ссылка 1</a>
+    </div>
+    <div class="col-sm-3">
+        <a href="#">Моя первя ссылка 2</a>
+        <br />
+        <a href="#">еще одна  первя ссылка 1</a>
+    </div>
+    <div class="col-sm-3">
+        <a href="#">Моя первя ссылка 3</a>
+    </div>
+    <div class="col-sm-3">
+        <a href="#">Моя первя ссылка 4</a>
+    </div>
+</div>
+<hr/>
+@*<legend>@ViewBag.Title</legend>*@
+=======
+@Html.Partial("DashboardMenu")
+>>>>>>> e161cc115545154b7d9853e575feb5b44ac14e21
+                   
+<h3>Компоненты</h3>
+
+<div class="pull-right">
+    @Html.ActionLink("Сводка по статусам", "ByStatus", "Components")
+</div>
+
+<p class="blockHeader">Количество компонентов @Model.ComponentsTotal.TotalCount, из них:</p>
+<div id="components" class="row">
+    <div class="col-md-6">
+        <div class="row">
+            <!-- КРАСНЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #f56954">
+                    <div class="mainValue text-nowrap">
+                        <div>
+                            <a href='@Url.Action("ByStatus", "Components", new {status = ComponentStatus.Alarm.ToString()})'>@Model.ComponentsTotal.AlarmCount</a>
+                        </div><div class="importanceLabel"> &mdash; требуют действий</div>
+                    </div>
+                </div>
+            </div>
+            <!-- ОРАНЖЕВЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #f39c12">
+                    <div class="mainValue text-nowrap">
+                        <div>
+                            <a href='@Url.Action("ByStatus", "Components", new { status = ComponentStatus.Warning.ToString() })'>@Model.ComponentsTotal.WarningCount</a>
+                        </div><div class="importanceLabel"> &mdash; необходимо внимание</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            <!-- ЗЕЛЕНЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #00a65a">
+                    <div class="mainValue text-nowrap">
+                        <div>
+                            <a href='@Url.Action("ByStatus", "Components", new { status = ComponentStatus.Success.ToString() })'>@Model.ComponentsTotal.SuccessCount</a>
+                        </div><div class="importanceLabel"> &mdash; все хорошо</div>
+                    </div>
+                </div>
+            </div>
+            <!-- СЕРЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #999">
+                    <div class="mainValue">
+                        <div>
+                            <a href='@Url.Action("ByStatus", "Components", new { status = ComponentStatus.Disabled + "~" + ComponentStatus.Unknown })'>@Model.ComponentsTotal.OtherCount</a>
+                        </div><div class="importanceLabel"> &mdash; неактивны или отключены</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="clear: both"></div>
+<p class="blockHeader">Количество компонентов по типам:</p>
+<table id="componentTypes">
+    <tr>
+        <th rowspan="2">Тип компонента</th>
+        <th rowspan="2">Всего</th>
+        <th colspan="4" class="text-center">из них в состоянии</th>
+    </tr>
+    <tr>
+        <th>требуют действий</th>
+        <th>необходимо внимание</th>
+        <th>все хорошо</th>
+        <th>неактивны или отключены</th>
+    </tr>
+    @foreach (var item in Model.ComponentsByTypes)
+    {
+        <tr>
+            <td>@item.ComponentType.DisplayName</td>
+            <td class="text-center">
+                <a href='@Url.Action("ByStatus", "Components", new { componentTypeId = item.ComponentType.Id })'>@item.TotalCount</a>
+            </td>
+            <td class="text-center">
+                @if (item.AlarmCount != 0)
+                {
+                    <span class="badge" style="background-color: #f56954"><a href='@Url.Action("ByStatus", "Components", new { componentTypeId = item.ComponentType.Id, status = ComponentStatus.Alarm.ToString() })'>@item.AlarmCount</a></span>
+                }
+                else
+                {
+                    <span>0</span>
+                }
+            </td>
+            <td class="text-center">
+                @if (item.WarningCount != 0)
+                {
+                    <span class="badge" style="background-color: #f39c12"><a href='@Url.Action("ByStatus", "Components", new { componentTypeId = item.ComponentType.Id, status = ComponentStatus.Warning.ToString() })'>@item.WarningCount</a></span>
+                }
+                else
+                {
+                    <span>0</span>
+                }
+            </td>
+            <td class="text-center">
+                @if (item.SuccessCount != 0)
+                {
+                    <span class="badge" style="background-color: #00a65a"><a href='@Url.Action("ByStatus", "Components", new { componentTypeId = item.ComponentType.Id, status = ComponentStatus.Success.ToString() })'>@item.SuccessCount</a></span>
+                }
+                else
+                {
+                    <span>0</span>
+                }
+            </td>
+            <td class="text-center">
+                @if (item.OtherCount != 0)
+                {
+                    <span class="badge" style="background-color: #999"><a href='@Url.Action("ByStatus", "Components", new { componentTypeId = item.ComponentType.Id, status = ComponentStatus.Disabled + "~" + ComponentStatus.Unknown })'>@item.OtherCount</a></span>
+                }
+                else
+                {
+                    <span>0</span>
+                }
+            </td>
+        </tr>
+    }
+</table>
+
+<hr />
+<h3>Типы событий</h3>
+<p class="blockHeader">Количество типов актуальных событий @Model.ActualEventTypesCount, из них:</p>
+<div id="components" class="row">
+    <div class="col-md-6">
+        <div class="row">
+            <!-- КРАСНЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #f56954">
+                    <div class="mainValue">
+                        <div><a href='#'>@Model.ActualEventTypesAlertCount</a></div><div class="importanceLabel"> &mdash; требуют действий</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.TypesByPeriodAlert.ByToday.TotalCount</td>
+                        <td>@Model.TypesByPeriodAlert.ByToday.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodAlert.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.TypesByPeriodAlert.ByWeek.TotalCount</td>
+                        <td>@Model.TypesByPeriodAlert.ByWeek.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodAlert.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.TypesByPeriodAlert.ByMonth.TotalCount</td>
+                        <td>@Model.TypesByPeriodAlert.ByMonth.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodAlert.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+            <!-- ОРАНЖЕВЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #f39c12">
+                    <div class="mainValue">
+                        <div><a href='#'>@Model.ActualEventTypesWarningCount</a></div><div class="importanceLabel"> &mdash; необходимо внимание</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.TypesByPeriodWarning.ByToday.TotalCount</td>
+                        <td>@Model.TypesByPeriodWarning.ByToday.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodWarning.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.TypesByPeriodWarning.ByWeek.TotalCount</td>
+                        <td>@Model.TypesByPeriodWarning.ByWeek.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodWarning.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.TypesByPeriodWarning.ByMonth.TotalCount</td>
+                        <td>@Model.TypesByPeriodWarning.ByMonth.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodWarning.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- ЗЕЛЕНЫЕ -->
+    <div class="col-md-6">
+        <div class="row">
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #00a65a">
+                    <div class="mainValue">
+                        <div><a href='#'>@Model.ActualEventTypesInfoCount</a></div><div class="importanceLabel"> &mdash; информационные</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.TypesByPeriodInfo.ByToday.TotalCount</td>
+                        <td>@Model.TypesByPeriodInfo.ByToday.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodInfo.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.TypesByPeriodInfo.ByWeek.TotalCount</td>
+                        <td>@Model.TypesByPeriodInfo.ByWeek.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodInfo.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.TypesByPeriodInfo.ByMonth.TotalCount</td>
+                        <td>@Model.TypesByPeriodInfo.ByMonth.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodInfo.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+            <!-- СЕРЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #999">
+                    <div class="mainValue">
+                        <div><a href='#'>@Model.ActualEventTypesOtherCount</a></div><div class="importanceLabel"> &mdash; служебные</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.TypesByPeriodOther.ByToday.TotalCount</td>
+                        <td>@Model.TypesByPeriodOther.ByToday.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodOther.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.TypesByPeriodOther.ByWeek.TotalCount</td>
+                        <td>@Model.TypesByPeriodOther.ByWeek.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodOther.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.TypesByPeriodOther.ByMonth.TotalCount</td>
+                        <td>@Model.TypesByPeriodOther.ByMonth.ProcessedCount</td>
+                        <td>@Model.TypesByPeriodOther.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="clear: both; margin-top: 5px;"></div>
+
+<hr />
+<h3>События</h3>
+<p class="blockHeader">Количество актуальных событий @Model.ActualEventsCount, из них:</p>
+<div id="components" class="row">
+    <div class="col-md-6">
+        <div class="row">
+            <!-- КРАСНЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #f56954">
+                    <div class="mainValue">
+                        <div><a href='@Url.Action("Index", "Events", new { importance = EventImportance.Alarm.ToString(), actual = 1 })'>@Model.ActualEventsAlertCount</a></div><div class="importanceLabel"> &mdash; требуют действий</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.ByPeriodAlert.ByToday.TotalCount</td>
+                        <td>@Model.ByPeriodAlert.ByToday.ProcessedCount</td>
+                        <td>@Model.ByPeriodAlert.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.ByPeriodAlert.ByWeek.TotalCount</td>
+                        <td>@Model.ByPeriodAlert.ByWeek.ProcessedCount</td>
+                        <td>@Model.ByPeriodAlert.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.ByPeriodAlert.ByMonth.TotalCount</td>
+                        <td>@Model.ByPeriodAlert.ByMonth.ProcessedCount</td>
+                        <td>@Model.ByPeriodAlert.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+            <!-- ОРАНЖЕВЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #f39c12">
+                    <div class="mainValue">
+                        <div><a href='@Url.Action("Index", "Events", new { importance = EventImportance.Warning.ToString(), actual = 1 })'>@Model.ActualEventsWarningCount</a></div><div class="importanceLabel"> &mdash; необходимо внимание</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.ByPeriodWarning.ByToday.TotalCount</td>
+                        <td>@Model.ByPeriodWarning.ByToday.ProcessedCount</td>
+                        <td>@Model.ByPeriodWarning.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.ByPeriodWarning.ByWeek.TotalCount</td>
+                        <td>@Model.ByPeriodWarning.ByWeek.ProcessedCount</td>
+                        <td>@Model.ByPeriodWarning.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.ByPeriodWarning.ByMonth.TotalCount</td>
+                        <td>@Model.ByPeriodWarning.ByMonth.ProcessedCount</td>
+                        <td>@Model.ByPeriodWarning.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- ЗЕЛЕНЫЕ -->
+    <div class="col-md-6">
+        <div class="row">
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #00a65a">
+                    <div class="mainValue">
+                        <div><a href='@Url.Action("Index", "Events", new { importance = EventImportance.Info.ToString(), actual = 1 })'>@Model.ActualEventsInfoCount</a></div><div class="importanceLabel"> &mdash; информационные</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.ByPeriodInfo.ByToday.TotalCount</td>
+                        <td>@Model.ByPeriodInfo.ByToday.ProcessedCount</td>
+                        <td>@Model.ByPeriodInfo.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.ByPeriodInfo.ByWeek.TotalCount</td>
+                        <td>@Model.ByPeriodInfo.ByWeek.ProcessedCount</td>
+                        <td>@Model.ByPeriodInfo.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.ByPeriodInfo.ByMonth.TotalCount</td>
+                        <td>@Model.ByPeriodInfo.ByMonth.ProcessedCount</td>
+                        <td>@Model.ByPeriodInfo.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+            <!-- СЕРЫЕ -->
+            <div class="col-sm-6" style="margin-bottom: 15px;">
+                <div class="colorBlock" style="background-color: #999">
+                    <div class="mainValue">
+                        <div><a href='@Url.Action("Index", "Events", new { importance = EventImportance.Unknown.ToString(), actual = 1 })'>@Model.ActualEventsOtherCount</a></div><div class="importanceLabel"> &mdash; служебные</div>
+                    </div>
+                </div>
+                <table class="eventsTable">
+                    <tr>
+                        <td rowspan="2">Период</td>
+                        <td rowspan="2">Всего</td>
+                        <td colspan="2">Обработано</td>
+                    </tr>
+                    <tr>
+                        <td>да</td>
+                        <td>нет</td>
+                    </tr>
+                    <tr>
+                        <td>Сегодня</td>
+                        <td>@Model.ByPeriodOther.ByToday.TotalCount</td>
+                        <td>@Model.ByPeriodOther.ByToday.ProcessedCount</td>
+                        <td>@Model.ByPeriodOther.ByToday.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За неделю</td>
+                        <td>@Model.ByPeriodOther.ByWeek.TotalCount</td>
+                        <td>@Model.ByPeriodOther.ByWeek.ProcessedCount</td>
+                        <td>@Model.ByPeriodOther.ByWeek.NotProcessedCount</td>
+                    </tr>
+                    <tr>
+                        <td>За месяц</td>
+                        <td>@Model.ByPeriodOther.ByMonth.TotalCount</td>
+                        <td>@Model.ByPeriodOther.ByMonth.ProcessedCount</td>
+                        <td>@Model.ByPeriodOther.ByMonth.NotProcessedCount</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="clear: both; margin-top: 5px;"></div>
+
+<p class="blockHeader text-danger">Актуальные события, требующие действий:</p>
+<div>
+    <table id="componentTypes" class="table table-striped grid-table simpleTable table-bordered">
+        <tr>
+            <th>Тип события</th>
+            <th style="width: 5%;">Количество</th>
+        </tr>
+        @if (Model.ActualEventsAlert.Length > 0)
+        {
+            foreach (var item in Model.ActualEventsAlert)
+            {
+                <tr>
+                    <td style="text-align: left;" class="text-wordbreak"><a href='@Url.Action("Index", "Events", new { importance = EventImportance.Alarm.ToString(), actual = 1, eventTypeId = item.EventType.Id.ToString() })' class="text-danger">@item.EventType.DisplayName</a></td>
+                    <td class="text-center">@item.Count</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="2">Нет таких</td>
+            </tr>
+        }
+    </table>
+</div>
+
+<p class="blockHeader text-warning">Актуальные события, требующие внимания:</p>
+<div>
+    <table id="componentTypes" class="table table-striped grid-table simpleTable table-bordered">
+        <tr>
+            <th>Тип события</th>
+            <th style="width: 5%;">Количество</th>
+        </tr>
+        @if (Model.ActualEventsWarning.Length > 0)
+        {
+            foreach (var item in Model.ActualEventsWarning)
+            {
+                <tr>
+                    <td style="text-align: left;" class="text-wordbreak"><a href='@Url.Action("Index", "Events", new { importance = EventImportance.Alarm.ToString(), actual = 1, eventTypeId = item.EventType.Id.ToString() })' class="text-warning">@item.EventType.DisplayName</a></td>
+                    <td class="text-center">@item.Count</td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="2">Нет таких</td>
+            </tr>
+        }
+    </table>
+</div>

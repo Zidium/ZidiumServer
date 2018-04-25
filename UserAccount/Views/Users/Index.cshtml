@@ -1,0 +1,49 @@
+﻿@using Zidium.Core.AccountsDb
+@using GridMvc.Html
+@using GridMvc.Sorting
+@model IQueryable<User>
+
+@{
+    ViewBag.Title = "Пользователи";
+    ViewBag.ActiveMenuItems = "Manage,Users";
+}
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="form-horizontal">
+    <div class="form-group">
+        <div class="col-sm-12">
+            @Html.ActionLink("Добавить", "Add", "Users", null, new { @class = "btn btn-primary" })
+        </div>
+    </div>
+</div>
+
+@Html.Grid(Model).Columns(columns =>
+{
+    columns.Add(m => m.DisplayName).Titled("Отображаемое имя").RenderValueAs(
+        m => Html.ActionLink(m.DisplayName ?? m.Login, "Show", new { id = m.Id })).Encoded(false).Sanitized(false);
+    columns.Add(m => m.Login).Titled("Логин").SortInitialDirection(GridSortDirection.Ascending);
+    columns.Add(m => m.Post).Titled("Должность");
+    columns.Add().Titled("Роль").RenderValueAs(x =>
+        @<text>
+            @{ var role = x.Roles.Any() ? x.Roles.First().Role.DisplayName : "нет"; }
+            @role
+        </text>);
+
+            columns.Add().Titled(string.Empty).RenderValueAs(m =>
+            @<text>
+                <a href='@Url.Action("Delete", new { id = m.Id })' onclick="ModalBtnClick(this, event);" title="Удалить пользователя" class="text-danger">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                </a>
+            </text>).Encoded(false).Sanitized(false).Css("text-center").SetWidth(30);
+}).Sortable().Selectable(false)
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+}

@@ -1,0 +1,134 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsMetricsModel
+
+@if (Model.CanEdit)
+{
+    <p>
+        <a href="@Url.Action("Edit", "Metrics", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Добавить метрику</a>
+    </p>
+}
+
+@if (Model.Metrics.Length > 0)
+{
+    <table id="component-details-metrics-table" class="table simpleTableClear table-condensed table-fixed">
+        <thead>
+            <tr>
+                <th class="th-status">Статус</th>
+                <th class="th-name">Название</th>
+                <th class="th-result">Результат</th>
+                <th class="th-actions"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var metric in Model.Metrics)
+            {
+                var importanceColor = GuiHelper.GetImportanceColor(metric.Status);
+                var color = GuiHelper.GetStrongFgColor(importanceColor);
+                <tr style="color: @color" data-id="@metric.Id">
+                    <td>
+                        @metric.Status
+                        <br />
+                        <span class="metric-status-duration">@GuiHelper.TimeSpanAs2UnitString(metric.StatusDuration)</span>
+                    </td>
+                    <td>
+                        <a href="@Url.Action("Show", "Metrics", new {id = metric.Id})" target="_blank" title="@metric.Name">
+                            @metric.Name
+                        </a>
+                        <br />
+                        <span class="metric-actual-interval">
+                            Актуальна @GuiHelper.TimeSpanAs2UnitString(metric.ActualInterval) (до @GuiHelper.GetDateTimeString(metric.ActualDate))
+                        </span>
+                    </td>
+                    <td class="td-metric-value">      
+                        @if (metric.HasSignal)
+                        {
+                            if (metric.LastResult.HasValue)
+                            {
+                                <span class="metric-value"><b>@metric.LastResult</b></span>
+                            }
+                            else
+                            {
+                                <span>null</span>
+                            }
+                        }
+                        else
+                        {
+                            <span>Нет актуального значения</span>
+                        }
+                        
+                        <br />
+                        <span class="metric-last-result-date">
+                            @GuiHelper.GetDateTimeString(metric.LastResultDate)
+                        </span>
+                    </td>
+                    <td class="td-actions">
+                        @if (Model.CanEdit)
+                        {
+                            if (metric.IsEnabled)
+                            {
+                                <a title="Выключить метрику" class="text-muted metric-disable-link" href="#">
+                                    <span class="glyphicon glyphicon-off"></span>
+                                </a>
+                            }
+                            else
+                            {
+                                <a title="Включить метрику" class="text-muted metric-enable-link smart-block-button" href="#">
+                                    <span class="glyphicon glyphicon-record"></span>
+                                </a>
+                            }
+                            <a title="Удалить метрику" class="text-danger metric-delete-link" href="#">
+                                <span class="glyphicon glyphicon-remove"></span>
+                            </a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>У компонента нет метрик</p>
+}
+
+<script>
+    $('#component-details-metrics-table .metric-delete-link').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var url = '@Url.Action("DeleteAjax", "Metrics")';
+        var id = me.closest('tr').data('id');
+        var data = { id: id };
+        dialogs.showModal(url, 'Удаление метрики', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, data);
+    });
+
+    $('#component-details-metrics-table .metric-disable-link').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var url = '@Url.Action("DisableAjax", "Metrics")';
+        var id = me.closest('tr').data('id');
+        var data = { id: id };
+        dialogs.showModal(url, 'Выключение метрики', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, data);
+    });
+
+    $('#component-details-metrics-table .metric-enable-link').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var url = '@Url.Action("EnableAjax", "Metrics")';
+        var id = me.closest('tr').data('id');
+        var data = { id: id };
+        smartButtons.beginAction(me);
+        smartBlocks.doAjax(url, 'POST', data, function () {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, function () {
+            smartButtons.endAction(me);
+        });
+    });
+    
+</script>

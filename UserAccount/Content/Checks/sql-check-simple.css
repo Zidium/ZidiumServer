@@ -1,0 +1,7 @@
+﻿.smart-col-labels {
+    min-width: 170px;
+}
+
+.smart-col-fields > div {
+    max-width: none;
+}

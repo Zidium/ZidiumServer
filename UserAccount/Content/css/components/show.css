@@ -1,0 +1,210 @@
+﻿.zidiumHeader1 {
+    margin-top: 5px;
+}
+
+#statTable td {
+    padding: 5px 5px;
+    font-size: 18px;
+    color: gray;
+    min-width: 32px;
+    text-align: center;
+}
+
+    #statTable td .badge {
+        font-size: 16px;
+    }
+
+#statTable th {
+    font-size: 16px;
+    text-align: right;
+    padding-right: 20px;
+    font-weight: normal;
+}
+
+#logLevelsTable {
+    margin-top: 10px;
+    width: auto !important;
+    margin-bottom: 0px;
+}
+
+    #logLevelsTable th {
+        width: 80px;
+        text-align: center;
+    }
+
+#componentExtProperties .simpleTable {
+    width: auto !important;
+}
+
+.img-status-icon {
+    vertical-align: baseline;
+}
+
+.padding-right-15 {
+    padding-right: 15px;
+}
+
+.big-font {
+    font-size: 28px;
+}
+
+.no-bottom-margin {
+    margin-bottom: 0px;
+}
+
+.log-state-sign {
+    width: 60px;
+    font-size: 20px;
+}
+
+#timelineTable-row-history {
+    vertical-align: baseline;
+}
+
+#timelineTable td#timelineTable-row-history-buttons {
+    text-align: left !important;
+    padding-bottom: 10px;
+}
+
+#timeline-external {
+    height: 40px;
+}
+
+#timeline-unittests {
+    height: 20px;
+}
+
+#timeline-events {
+    height: 20px;
+}
+
+#timeline-metrics {
+    height: 20px;
+}
+
+#timeline-childs {
+    height: 20px;
+}
+
+#timelineTable th#header-total-state {
+    vertical-align: middle;
+}
+
+#timelineTable td {
+    padding: 2px 5px;
+    min-width: 32px;
+    /*text-align: center;*/
+}
+
+    #timelineTable td.mini-status-count {
+        padding-right: 15px;
+        white-space: nowrap;
+        text-align: right;
+        padding-top: 2px;
+        padding-bottom: 0px;
+        vertical-align: top;
+        font-size: 12px;
+    }
+
+    #timelineTable td .badge {
+        font-size: 16px;
+    }
+
+    #timelineTable td.normal {
+        font-size: inherit;
+        color: inherit;
+        text-align: right;
+    }
+
+#timelineTable th {
+    font-size: 16px;
+    text-align: right;
+    padding-right: 20px;
+    font-weight: normal;
+    vertical-align: top;
+    padding-top: 0px;
+}
+
+#timelineTable #timelineTable-row-history th {
+    padding-top: 8px;
+}
+
+.timeline-group-item-caption {
+    text-align: left;
+    font-size: 12px;
+    padding-left: 5px;
+}
+
+.timeline-group-item-caption-comment {
+    text-align: left;
+    font-size: 12px;
+    padding-left: 5px;
+}
+
+.timeline-group-item-body {
+    margin-top: -5px;
+    margin-bottom: 14px;
+}
+
+.timeline-group-item-body .timeline-subcontainer {
+    height: 10px;
+}
+
+.timeline-group-item-body:last-child {
+    margin-bottom: 10px;
+}
+
+#timelineTable tr.timelines-group td {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+#timelineTable tr.timelines-group td .timelines-group-inner-div {
+    padding-top: 10px;
+}
+
+#th-history-label {
+    min-width: 201px;
+}
+
+#history-label {
+    font-size: 14px;
+}
+
+.colorCircleWithValue {
+    display: inline-block;
+}
+
+.circle-group:hover, .circle-group:active, .circle-group:visited {
+    text-decoration: none;
+}
+
+.circle-group > span.badge {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+
+#recalc-status-link {
+    padding-left: 10px;
+}
+
+#recalc-status-link > span {
+    padding-right: 5px;
+}
+
+.timeline-hidden-row {
+    
+}
+
+#timeline-main-link {
+    color: black;
+}
+
+#timeline-main-link:focus {
+    text-decoration: none;
+}
+
+#timeline-main-link:hover {
+    text-decoration: underline !important;
+}

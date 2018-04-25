@@ -1,0 +1,68 @@
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.ComponentTreeDetails.MetricDetailsStateModel
+
+<p>   
+    <span id="metric-details-state-status">
+        @Html.MonitoringStatusLabel(Model.Status, Model.StatusEventId, 20, Model.ValueText)
+    </span>
+    <span class="simple-text-value" id="metric-details-state-duration">
+        @TimeSpanHelper.Get2UnitsString(Model.StatusDuration)
+    </span>
+    
+    @if (Model.CanEdit)
+    {
+        if (Model.IsEnabled)
+        {
+            <button id="metric-details-disable-metric" type="button" data-id="@Model.Id" class="btn btn-default btn-xs">Выключить</button>
+        }
+        else
+        {
+            <button id="metric-details-enable-metric" type="button" data-id="@Model.Id" class="btn btn-default btn-xs">Включить</button>
+        }
+        <button id="metric-details-delete-metric" type="button" data-id="@Model.Id" class="btn btn-default btn-xs">Удалить</button>
+    }
+</p>
+
+<p>
+    <span class="simple-text-header">Последний результат получен</span><br />
+    <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.LastResultDate)</span>
+</p>
+    
+<script>
+    $('#metric-details-state #metric-details-enable-metric').click(function() {
+        var me = $(this);
+        var url = '@Url.Action("EnableAjax", "Metrics")';
+        var id = me.data('id');
+        var data = { id: id };
+        smartButtons.beginAction(me);
+        smartBlocks.doAjax(url, 'POST', data, function () {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, function () {
+            smartButtons.endAction(me);
+        });
+    });
+
+    $('#metric-details-state #metric-details-disable-metric').click(function() {
+        var me = $(this);
+        var url = '@Url.Action("DisableAjax", "Metrics")';
+        var id = me.data('id');
+        var data = { id: id };
+        dialogs.showModal(url, 'Выключение метрики', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, data);
+    });
+
+    $('#metric-details-state #metric-details-delete-metric').click(function() {
+        var me = $(this);
+        var url = '@Url.Action("DeleteAjax", "Metrics")';
+        var id = me.data('id');
+        var data = { id: id };
+        dialogs.showModal(url, 'Удаление метрики', function() {
+            hideDetailsPanel();
+            submitForm();
+        }, data);
+    });
+</script>

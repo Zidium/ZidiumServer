@@ -1,0 +1,298 @@
+﻿@using Zidium.Core.AccountsDb.Classes
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.Controls
+@using Zidium.UserAccount.Models.Defects
+@model DefectsIndexModel
+
+@{
+    ViewBag.Title = "Дефекты";
+    ViewBag.ActiveMenuItems = "DefectList";
+    ViewBag.UseFixedHeader = true;
+
+    var enumName = FullRequestContext.Current.EnumName;
+
+    // css
+    var showInWorkCss = Model.ShowMode == DefectsIndexModel.ShowModeEnum.InWork ? "active" : "";
+    var showTestingCss = Model.ShowMode == DefectsIndexModel.ShowModeEnum.Testing ? "active" : "";
+    var showClosedCss = Model.ShowMode == DefectsIndexModel.ShowModeEnum.Closed ? "active" : "";
+    var showAllCss = Model.ShowMode == DefectsIndexModel.ShowModeEnum.All ? "active" : "";
+}
+
+<style>
+    #filters {
+        width: 100%;
+        margin-bottom: 30px;
+    }
+
+        #filters .active {
+            background-color: #00a65a;
+            color: white;
+            font-weight: bold;
+        }
+
+    #filter-status {
+        width: 50%;
+        min-width: 480px;
+    }
+
+    #filter-user {
+        width: 50%;
+    }
+
+    #filter-component {
+        width: auto;
+    }
+
+    #filter-title {
+        width: auto;
+    }
+
+    #filter-col-minimize {
+        width: auto;
+        vertical-align: bottom;
+    }
+
+    #add-defect-button {
+        margin-left: 50px;
+    }
+
+    #defects-header-container-mini {
+        display: none;
+        position: absolute;
+        right: 0;
+        padding-right: 15px;
+    }
+
+    #defects-header-minimize {
+        display: inline-block;
+        width: 34px;
+        height: 34px;
+        border-radius: 17px;
+        border: 1px solid #ccc;
+        padding-left: 2px;
+        padding-right: 0;
+        text-align: center;
+        font-size: 20px;
+        padding-top: 3px;
+    }
+
+    #defects-header-restore {
+        display: inline-block;
+        width: 34px;
+        height: 34px;
+        border-radius: 17px;
+        border: 1px solid #ccc;
+        padding-left: 2px;
+        padding-right: 0;
+        text-align: center;
+        font-size: 20px;
+        padding-top: 5px;
+    }
+</style>
+
+@section Header
+{
+    <div class="submenu-title">
+        <div id="defects-header-container-mini">
+            <button type="button" class="btn btn-default" id="defects-header-restore" title="Развернуть шапку">
+                <span class="glyphicon glyphicon-chevron-down"></span>
+            </button>
+        </div>
+
+        @ViewBag.Title
+        @if (UserHelper.CurrentUser.CanEditCommonData())
+        {
+            <button type="button" class="btn btn-primary" id="add-defect-button">Создать дефект</button>
+        }
+    </div>
+    <hr class="submenu" />
+
+    <div id="defects-header-container-full">
+        <div id="filters" class="smart-container">
+            <div class="smart-row">
+                <div class="smart-col-fields" id="filter-status">
+                    @Html.LabelFor(m => m.ShowMode)
+                    <div>
+                        <div class="btn-group">
+                            <a href="#" class="btn btn-default @showInWorkCss" onclick="ziReloadPage('showMode', '@DefectsIndexModel.ShowModeEnum.InWork', event)">В работе (@Model.InWorkCount)</a>
+                            <a href="#" class="btn btn-default @showTestingCss" onclick="ziReloadPage('showMode', '@DefectsIndexModel.ShowModeEnum.Testing', event)">Тестируются (@Model.TestingCount)</a>
+                            <a href="#" class="btn btn-default @showClosedCss" onclick="ziReloadPage('showMode', '@DefectsIndexModel.ShowModeEnum.Closed', event)">Закрыты (@Model.ClosedCount)</a>
+                            <a href="#" class="btn btn-default @showAllCss" onclick="ziReloadPage('showMode', '@DefectsIndexModel.ShowModeEnum.All', event)">Все (@Model.TotalCount)</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="smart-col-fields" id="filter-user">
+                    @Html.LabelFor(m => m.UserId)
+                    @Html.UserSelector("UserId", Model.UserId, true, true)
+                </div>
+
+                <div class="smart-col-fields smart-col-empty"></div>
+            </div>
+
+            <div class="smart-row">
+                <div class="smart-col-fields" id="filter-component">
+                    @Html.Label("ComponentId", new { @for = "ComponentId_Text" })
+                    @Html.ComponentSelectorNew(m => m.ComponentId, new ComponentSelectorOptions()
+           {
+               ShowAsList = false,
+               ShowComponentStatusSelector = false,
+               AllowEmpty = true,
+               AutoRefreshPage = true
+           })
+                </div>
+
+                <div class="smart-col-fields" id="filter-title">
+                    @Html.LabelFor(m => m.Title)
+                    @Html.TextFilter("Title", "Поиск по тексту...", Model.Title, true)
+                </div>
+
+                <div class="smart-col-fields" id="filter-col-minimize">
+                    <button type="button" class="btn btn-default" id="defects-header-minimize" title="Свернуть шапку">
+                        <span class="glyphicon glyphicon-chevron-up"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (Model.Items.Length == 0)
+{
+    <p>Нет дефектов</p>
+}
+else
+{
+    <table id="defects-table" class="simpleTable">
+        <thead>
+            <tr>
+                <th width="70px"></th>
+                <th>Дефект</th>
+                <th>Статус</th>
+                <th>Комментарий</th>
+                <th>Описание</th>
+                <th>Ответственный</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var defect in Model.Items)
+            {
+                var changeStatusUrl = Url.Action("ChangeStatusDialog", "Defects", new { defectId = defect.Id });
+                var statusCss = (defect.Status == DefectStatus.Closed) ? "badge text-strongbggreen" : "badge text-strongbgred";
+                var duration = DateTime.Now - defect.LastChangeDate;
+                var durationText = TimeSpanHelper.GetOneUnitString(duration);
+                <tr>
+                    <td>
+                        <a href="@Url.Action("Index", "Events", new {eventTypeId = defect.EventTypeId, versionFrom = defect.OldVersion})" target="_blank">
+                            <span class="badge alert-danger" style="font-size: 18px;" title="Ошибка случилась @defect.Count раз @(defect.OldVersion != null ? "после версии " + defect.OldVersion : null)">@defect.Count</span>
+                        </a>
+                    </td>
+                    <td>
+                        <div>
+                            <a href="@Url.Action("Show", "Defects", new {id = defect.Id})" style="white-space: nowrap; font-size: 18px;">
+                                № @defect.Code
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            @if (UserHelper.CurrentUser.CanEditCommonData())
+                            {
+                                <a href="#" data-ajax-url="@changeStatusUrl" onclick="beginChangeDefectStatus(this, event)">
+                                    <span class="@statusCss" style="white-space: nowrap">@enumName.GetName(defect.Status)</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="@statusCss">@enumName.GetName(defect.Status)</span>
+                            }
+                        </div>
+                        <div>
+                            <span style="font-size: 12px; margin-left: 5px; margin-top: 3px; color: gray; white-space: nowrap; text-align: center" title="@DateTimeHelper.GetRussianDateTime(defect.LastChangeDate)">@durationText назад</span>
+                        </div>
+                    </td>
+                    <td>
+                        @if (defect.Comment != null)
+                    {
+                            <div>@defect.Comment</div>
+                        }
+                    </td>
+                    <td>@defect.Title</td>
+                    <td>
+                        @defect.ResponsibleUser.FioOrLogin
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@Scripts.Render("~/Scripts/AllControls")
+
+<script>
+    $(function() {
+        // Обработчик кнопки добавления дефекта
+        $('#add-defect-button').click(addDefect);
+
+        // Обработчик ссылки скрытия шапки
+        $('#defects-header-minimize').click(minimizeHeader);
+
+        // Обработчик ссылки восстановления шапки
+        $('#defects-header-restore').click(restoreHeader);
+
+        // Обработчик изменения высоты фиксированного заголовка страницы
+        $('body').on('fixedHeaderUpdated', function () {
+            // Не чаще 100 мс
+            if (resizeTimer != null) {
+                clearTimeout(resizeTimer);
+            }
+            resizeTimer = setTimeout(onHeaderHeightChanged, 100);
+        });
+
+        onHeaderHeightChanged();
+    });
+
+    var resizeTimer = null;
+
+    function beginChangeDefectStatus(elem, eventObj) {
+        eventObj.preventDefault();
+        elem = $(elem);
+        changeStatusDialogCallback = function () {
+            ziReloadPage();
+        }
+        ziShowModalDialogByLink(elem, eventObj);
+    }
+
+    // Добавление дефекта
+    function addDefect() {
+        var url = '@Url.Action("Add")';
+        dialogs.showModal(url, 'Создание нового дефекта', function () {
+            utils.reloadPage();
+        });
+    }
+
+    // Скрытие шапки
+    function minimizeHeader(event) {
+        event.preventDefault();
+        $('#defects-header-container-full').hide();
+        $('#defects-header-container-mini').show();
+        fixedHeader.updateHeader();
+    }
+
+    // Восстановление шапки
+    function restoreHeader(event) {
+        event.preventDefault();
+        $('#defects-header-container-mini').hide();
+        $('#defects-header-container-full').show();
+        fixedHeader.updateHeader();
+    }
+
+    function onHeaderHeightChanged() {
+        // Настроим плавающий заголовок таблицы
+        $('#defects-table').floatThead('destroy');
+        $('#defects-table').floatThead({ top: fixedHeader.height(), zIndex: 999 });
+    }
+</script>

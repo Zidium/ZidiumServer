@@ -1,0 +1,45 @@
+﻿@model Zidium.UserAccount.Models.ComponentMiniStatusModel
+
+<div class="miniBadge miniBadgeBorder">
+    @if (Model.Alarm != 0)
+    {
+        <span class="badge" style="background-color: #d9534f"><a href='@Url.Action("Index", "UnitTests", new { componentId = Model.ComponentId, color = "red" })'>@Model.Alarm</a></span>
+    }
+    else
+    {
+        <span class="text-danger">@Model.Alarm</span>
+    }
+</div>
+
+<div class="miniBadge miniBadgeBorder">
+    @if (Model.Warning != 0)
+    {
+        <span class="badge" style="background-color: #f0ad4e"><a href='@Url.Action("Index", "UnitTests", new { componentId = Model.ComponentId, color = "yellow" })'>@Model.Warning</a></span>
+    }
+    else
+    {
+        <span class="text-warning">@Model.Warning</span>
+    }
+</div>
+
+<div class="miniBadge miniBadgeBorder">
+    @if (Model.Success != 0)
+    {
+        <span class="badge" style="background-color: #5cb85c"><a href='@Url.Action("Index", "UnitTests", new { componentId = Model.ComponentId, color = "green" })'>@Model.Success</a></span>
+    }
+    else
+    {
+        <span class="text-success">@Model.Success</span>
+    }
+</div>
+
+<div class="miniBadge">
+    @if (Model.Unknown != 0)
+    {
+        <span class="badge" style="background-color: #999"><a href='@Url.Action("Index", "UnitTests", new { componentId = Model.ComponentId, color = "gray" })'>@Model.Unknown</a></span>
+    }
+    else
+    {
+        <span class="text-muted">@Model.Unknown</span>
+    }
+</div>

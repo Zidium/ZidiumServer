@@ -1,0 +1,16 @@
+﻿@model HandleErrorInfo
+
+@{
+    ViewBag.Title = "Объект не найден";
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="alert alert-danger">
+    @Model.Exception.Message
+</div>
+
+@if (!ViewBag.IsChildAction)
+{
+    <p class="top10px">Нажмите здесь, чтобы <a href="/">вернуться на главную страницу</a></p>
+}

@@ -1,0 +1,30 @@
+﻿@model Zidium.UserAccount.Models.ComponentErrorStatisticsModel
+@{
+    Layout = null;
+}
+<table id="error-stat-table">
+    <tr id="errors-table-header">
+        <td>час</td>
+        <td>день</td>
+        <td>неделя</td>
+        <td>месяц</td>
+    </tr>
+    @if (Model.ShowWait)
+    {
+        <tr>
+            <td colspan="4">
+                <img src="/Content/Icons/ajax-loader-white.gif"/> <span style="padding-left: 10px">загрузка...</span>
+            </td>
+        </tr>
+    }
+    else
+    {
+        <tr>
+            <td>@Model.ByHour</td>
+            <td>@Model.ByDay</td>
+            <td>@Model.ByWeek</td>
+            <td>@Model.ByMonth</td>
+        </tr>
+    }
+</table>
+

@@ -1,0 +1,42 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.UnitTestTypeEditModel
+
+@{
+    ViewBag.Title = "Настройка типа проверки";
+    ViewBag.ActiveMenuItems = "UnitTests,UnitTestTypes";
+}
+
+@Html.Partial("_PageTitle")
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.MyValidationSummaryVertical()
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.IsDeleted)
+    @Html.HiddenFor(m => m.IsSystem)
+
+    <div class="smart-container">
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields">
+                <div>
+                    <input type="submit" value="Сохранить" class="btn btn-primary smart-button" />
+                    @Html.ActionLink("Вернуться к типу", "Show", new { id = Model.Id }, new { @class = "btn btn-default smart-button" })
+                    @Html.ActionLink("Удалить", "Delete", new { id = @Model.Id }, new { @class = "btn btn-danger smart-button", onclick = "ModalBtnClick(this, event);" })
+                </div>
+            </div>
+        </div>
+
+        @Html.EditorFor(m => m.DisplayName, "SmartEdit")
+        @Html.EditorFor(m => m.SystemName, "SmartEdit")
+        @Html.EditorFor(x => x.ActualTime, "SmartEdit")
+        @Html.EditorFor(x => x.NoSignalColor, "SmartEdit")
+
+    </div>
+}
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/AllControls")
+}

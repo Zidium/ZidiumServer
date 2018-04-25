@@ -1,0 +1,128 @@
+﻿@using GridMvc.Html
+@using GridMvc.Sorting
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@model Zidium.UserAccount.Models.Counters.ValuesModel
+
+@{
+    ViewBag.Title = "Значения метрики";
+    ViewBag.ActiveMenuItems = "Metrics";
+}
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+
+    <style>
+        #filters {
+            width: auto;
+            margin-bottom: 10px;
+        }
+
+        #filter-component {
+            width: 500px;
+        }
+
+        #filter-metric-type {
+            width: auto;
+            min-width: 200px;
+        }
+
+        #filter-color {
+            width: initial;
+            min-width: 160px;
+        }
+
+        #grid .table {
+            width: auto;
+        }
+
+            #grid .table > thead > tr > th {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            #grid .table > tbody > tr > td {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+    </style>
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="smart-container" id="filters">
+    <div class="smart-row">
+        <div class="smart-col-fields" id="filter-component">
+            @Html.Label("Компонент")
+            @Html.ComponentSelector(m => m.ComponentId, new ComponentSelectorOptions()
+            {
+                ShowAsList = false,
+                ShowComponentStatusSelector = false,
+                AllowEmpty = true,
+                AutoRefreshPage = true
+            })
+        </div>
+        <div class="smart-col-fields" id="filter-metric-type">
+            @Html.Label("Тип метрики")
+            @Html.DropDownListFor(x => x.MetricTypeId, DropDownListHelper.GetMetricTypes(Model.MetricTypeId, true), new { @class = "form-control" })
+        </div>
+        <div class="smart-col-fields" id="filter-color">
+            @Html.Label("Цвет метрики")
+            @Html.ColorStatusSelector(x => x.Color)
+        </div>
+    </div>
+</div>
+
+<div id="grid">
+    @Html.Grid(Model.Items).Columns(columns =>
+    {
+        columns.Add(m => m.Value)
+            .Titled("Значение")
+            .RenderValueAs(m => GuiHelper.GetMetricValueHtml(m.Value, ObjectColorHelper.Get(m.Bulb.Status), true))
+            .Encoded(false)
+            .Sanitized(false)
+            .SetWidth(30)
+            .Css("text-center");
+
+        columns
+            .Add(m => m.MetricType.SystemName)
+            .Titled("Метрика")
+            .RenderValueAs(m => Html.ActionLink(m.MetricType.SystemName, "Show", "Metrics", new { id = m.Id }, new { }))
+            .Encoded(false)
+            .Sanitized(false)
+            .SortInitialDirection(GridSortDirection.Ascending);
+
+        columns
+            .Add(m => m.Component.DisplayName)
+            .RenderValueAs(m => Html.ComponentPath(m.Component))
+            .Encoded(false)
+            .Sanitized(false)
+            .Titled("Компонент")
+            .SortInitialDirection(GridSortDirection.Ascending);
+
+        columns.Add(m => m.BeginDate).Titled("Дата начала").RenderValueAs(m => GuiHelper.GetDateTimeString(m.BeginDate)).SetWidth(160);
+
+        columns.Add(m => m.ActualDate).Titled("Дата актуальности").RenderValueAs(m => GuiHelper.GetDateTimeString(m.ActualDate)).SetWidth(160);
+
+    }).Sortable().Filterable(false).Selectable(false).WithPaging(20)
+
+</div>
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+    @Scripts.Render("~/Scripts/AllControls")
+
+    <script>
+        $(function () {
+            var control = $("#MetricTypeId");
+            control.change(function () {
+                var value = control.val();
+                control.data("paramvalue", value);
+                autoRefreshPage(control);
+            });
+        })
+    </script>
+}

@@ -1,0 +1,18 @@
+﻿@model Zidium.Core.AccountsDb.Component
+@{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+@Html.BeginForm();
+@Html.AntiForgeryToken()
+<div class="alert alert-danger">
+    Вы уверены, что хотите включить компонент?
+</div>
+<div class="row" style="text-align: right">
+    <div class="col-sm-12">
+        <input type="submit" value="Удалить" class="btn btn-danger" />
+        &nbsp;
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+</div>
+
+@{Html.EndForm();}

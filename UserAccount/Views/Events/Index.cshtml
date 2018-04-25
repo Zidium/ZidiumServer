@@ -1,0 +1,316 @@
+﻿@using Zidium.Core.Api
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using GridMvc.Html
+@using GridMvc.Sorting
+@using Zidium.UserAccount.Models.Controls
+@model EventsListModel
+
+@{
+    ViewBag.Title = Model.GetPageTitle();
+    ViewBag.ActiveMenuItems = "Events,EventsList";
+}
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+
+    <style>
+        [data-gridname = "main-grid"] > div > table.grid-table {
+            table-layout: fixed;
+        }
+
+        [data-gridname = "main-grid"] > div > table.grid-table > tbody > tr > td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -o-text-overflow: ellipsis; /*Opera hack*/
+        }
+
+        .big-font {
+            font-size: 18px;
+        }
+
+        tr.event-properties-row > td {
+            border: none !important;
+            padding-top: 0px !important;
+            padding-left: 35px !important;
+        }
+
+        .eventType {
+            color: gray;
+        }
+
+        #timeline {
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+
+        #timeline .timeline-subcontainer {
+            height: 16px;
+        }
+    </style>
+}
+
+@Html.Partial("_PageTitle")
+
+<div id="filters">
+    <input id="dataType" name="dataType" data-filter="true" type="hidden" />
+    
+    <!-- Источник событий -->
+    @if (Model.IsComponentEventsMode)
+    {
+        <div class="row">
+            <div class="col-sm-6 bottom10px">
+                @Html.LabelFor(m => m.ComponentTypeId, "Тип компонента")
+                @Html.ComponentTypeSelector("ComponentTypeId", Model.ComponentTypeId, true, false)
+            </div>
+            <div class="col-sm-6 bottom10px">
+                @Html.LabelFor(m => m.ComponentId, "Компонент")
+                @Html.ComponentSelector(m => m.ComponentId, new ComponentSelectorOptions()
+                {
+                    ShowAsList = false,
+                    ExternalComponentTypeSelectId = "ComponentTypeId",
+                    ShowComponentStatusSelector = false,
+                    AllowEmpty = true
+                })
+            </div>
+        </div>
+    }
+    else if (Model.UnitTest != null)
+    {
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-sm-12">
+                <span class="simple-text-header">Проверка</span>
+                <br/>
+                @Html.PartialUnitTestBreadCrumbs(Model.UnitTest)
+            </div>
+            @*<div class="col-sm-6">
+                <span class="simple-text-header">Компонент</span>
+                <br/>
+                <span class="simple-text-value big-font">@Html.ComponentLink(Model.UnitTest.Component)</span>
+            </div>*@
+        </div>
+    }
+    else if (Model.Metric != null)
+    {
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-sm-12">
+                <span class="simple-text-header">Метрика</span>
+                <br/>
+                @Html.PartialMetricBreadCrumbs(Model.Metric)
+            </div>
+            @*<div class="col-sm-6">
+                <span class="simple-text-header">Компонент</span>
+                <br/>
+                <span class="simple-text-value big-font">@Html.ComponentLink(Model.Metric.Component)</span>
+            </div>*@
+        </div>
+
+    }
+    <!-- Строка фильтров: дата, категория, важность -->
+    <div class="row">
+        <div class="col-sm-3 bottom10px">
+            @Html.LabelFor(m => m.FromDate, "Дата от")
+            @Html.DateSelector("FromDate", Model.FromDate, false)
+        </div>
+        <div class="col-sm-3 bottom10px">
+            @Html.LabelFor(m => m.ToDate, "Дата до")
+            @Html.DateSelector("ToDate", Model.ToDate, false)
+        </div>
+        @{
+            var categories = Model.GetEventCategoriesForFilter();
+            if (categories != null)
+            {
+                <div class="col-sm-3 bottom10px">
+                    @Html.LabelFor(m => m.Category, "Категория")
+                    @Html.EnumSelector("Category", Model.Category, typeof(EventCategory?), false, false, categories.Cast<object>().ToList())
+                </div>
+            }
+        }
+        <div class="col-sm-3 bottom10px">
+            @Html.LabelFor(m => m.Color, "Важность")
+            @Html.ColorStatusSelector(x => x.Color)
+        </div>
+    </div>
+
+    @if (Model.IsComponentEventsMode)
+    {
+        <div class="row">
+            <div class="col-sm-6 bottom10px">
+                @Html.LabelFor(m => m.EventTypeId, "Тип события")
+                @Html.EventTypeSelector("EventTypeId", Model.EventTypeId, true, false, false, "Category")
+            </div>
+            <div class="col-sm-6 bottom10px">
+                @Html.LabelFor(m => m.Search, "Поиск по строке")
+                @Html.TextFilter("Search", "Введите часть текста сообщения или свойства", Model.Search, false)
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-sm-12 bottom10px">
+                @Html.LabelFor(m => m.Search, "Поиск по строке")
+                @Html.TextFilter("Search", "Введите часть текста сообщения или свойства", Model.Search, false)
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-sm-12 bottom10px">
+            @Html.FilterButton("filters")
+
+            @if (Model.IsComponentEventsMode)
+            {
+                <button type="button" id="downloadXmlBtn" class="btn btn-default">Выгрузить в XML</button>
+            }
+        </div>
+    </div>
+</div>
+
+
+@if (Model.ShowTimeline)
+{
+    <div id="timeline">
+        <img src="~/Content/Icons/ajax-loader-white.gif" />
+    </div>
+
+    if (Model.ComponentId.HasValue)
+    {
+        <script>
+            $('#timeline').load('@Html.Raw(Url.Action("ForComponent", "Timeline", new { id = Model.ComponentId, category = Model.Category, fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate), toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate) }))');
+        </script>
+    }
+    else if (Model.UnitTest != null)
+    {
+        <script>
+            $('#timeline').load('@Html.Raw(Url.Action("ForUnitTest", "Timeline", new { id = Model.UnitTest.Id, category = EventCategory.UnitTestStatus, fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate), toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate) }))');
+        </script>
+    }
+    else if (Model.Metric != null)
+    {
+        <script>
+            $('#timeline').load('@Html.Raw(Url.Action("ForMetric", "Timeline", new { id = Model.Metric.Id, category = EventCategory.MetricStatus, fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate), toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate) }))');
+        </script>
+    }
+    else if (Model.EventTypeId.HasValue)
+    {
+        <script>
+            $('#timeline').load('@Html.Raw(Url.Action("ForEventTypeAnyComponents", "Timeline", new { eventTypeId = Model.EventTypeId, fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate), toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate) }))');
+        </script>
+    }
+}
+
+@Html.Grid(Model.Events).Columns(columns =>
+{
+    columns.Add().RenderValueAs(m => Html.EventImportanceIcon(m.Importance))
+        .Encoded(false).Sanitized(false).Css("text-center").SetWidth(30);
+
+    columns.Add(m => m.StartDate).Titled("Началось").RenderValueAs(m =>
+        @<text>
+            <a href='@Url.Action("Show", new {id = m.Id })' class='@GuiHelper.GetEventImportanceTextCssClass(m.Importance)'>
+                <span>
+                    @m.StartDate.ToString(GuiHelper.DateTimeDisplayFormat)
+                </span>
+            </a>
+        </text>
+            ).Encoded(false).Sanitized(false).SortInitialDirection(GridSortDirection.Descending).SetWidth(150);
+
+    columns.Add(m => m.EndDate).Titled("Закончилось").RenderValueAs(m =>
+        @<text>
+            <span class='@GuiHelper.GetEventImportanceTextCssClass(m.Importance)'>
+                @Html.Raw(m.RealEndDate.ToString(GuiHelper.DateTimeDisplayFormat) + (m.Duration != TimeSpan.Zero ? "<br><i>(" + GuiHelper.TimeSpanAs2UnitString(m.Duration) + ")</i>" : string.Empty))
+            </span>
+        </text>
+            )
+            .Encoded(false).Sanitized(false).SetWidth(150);
+
+    columns.Add(m => m.Count).Titled("Кол-во").RenderValueAs(m =>
+        @<text>
+            <span class='@GuiHelper.GetEventImportanceTextCssClass(m.Importance)'>
+                @m.Count.ToString()
+            </span>
+        </text>).Encoded(false).Sanitized(false).SetWidth(80);
+
+    if (!Model.ComponentId.HasValue && Model.IsComponentEventsMode)
+    {
+        columns.Add(m => m.OwnerId).Titled("Компонент").RenderValueAs(t =>
+        {
+            var component = Model.Components[t.OwnerId];
+            return Html.ActionLink(component.DisplayName, "Show", "Components", new { id = component.Id }, new { title = component.FullName, @class = GuiHelper.GetEventImportanceTextCssClass(t.Importance) });
+        }
+        ).Encoded(false).Sanitized(false).SetWidth("33%");
+    }
+
+    columns.Add().Titled("Описание").RenderValueAs(t =>
+        @<text>
+            @{
+                var eventType = Model.EventTypes[t.EventTypeId];
+                var description = (t.Message ?? eventType.DisplayName);
+                var codeText = eventType.DisplayName;
+                if (string.IsNullOrEmpty(eventType.Code) == false)
+                {
+                    if (eventType.Category == EventCategory.ApplicationError)
+                    {
+                        codeText = "Ошибка " + eventType.Code;
+                    }
+                    else
+                    {
+                        codeText = "Событие " + eventType.Code;
+                    }
+                }
+            }
+            <span onclick="showEventProperties('@t.Id', this)" style="cursor:pointer;">
+                <span class="@GuiHelper.GetEventImportanceTextCssClass(t.Importance)" title="@description">
+                    @description
+                </span>
+                @if (codeText != description)
+                {
+                    <br />
+                    <span class="eventType">
+                        @codeText
+                    </span>
+                }
+            </span>
+        </text>
+            ).Encoded(false).Sanitized(false).SetWidth("66%");
+
+}).Sortable().WithMultipleFilters().Selectable(false).WithPaging(50).Named("main-grid")
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+    @Scripts.Render("~/Scripts/AllControls")
+
+    <script>
+        showEventProperties = function (id, elem) {
+            var divName = 'eventProperties_' + id;
+            var messageTd = $(elem).parent();
+            var messageTr = messageTd.parent();
+            var propertiesRow = $('#' + divName, messageTr.parent());
+            if (propertiesRow.length == 0) {
+                var waitDiv = $(myGetPleaseWaitLoadingDiv());
+                propertiesRow = $("<tr id='" + divName + "'></tr>").insertAfter(messageTr);
+                propertiesRow.addClass('event-properties-row');
+                var propertiesData = $("<td colspan=6></td>").append(waitDiv).appendTo(propertiesRow);
+                var url = "@Url.Action("GetEventRowProperties")" + "?id=" + id;
+                propertiesData.load(url, function () {
+                    waitDiv.remove();
+                });
+            } else {
+                propertiesRow.remove();
+            }
+        }
+
+        $(function () {
+
+            $("#downloadXmlBtn").click(function() {
+                $("#dataType").data("paramvalue", "xml");
+                $("#filtersButton").click();
+                $("#dataType").data("paramvalue", null);
+            });
+
+        });
+    </script>
+}

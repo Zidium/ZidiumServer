@@ -1,0 +1,55 @@
+﻿@using Zidium.UserAccount.Controllers
+@using Zidium.UserAccount.Models
+@model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsEventsModel
+
+<p>
+    Самые опасные ошибки (Top @ComponentTreeDetailsController.MaxEventTimelineCount) за
+    <span class="btn-group space-right" data-toggle="buttons" id="component-details-events-buttons">
+        <label class="btn btn-default btn-xs" id="btn-stats-hour">
+            <input type="radio" autocomplete="off">
+            Час
+        </label>
+        <label class="btn btn-default btn-xs active" id="btn-stats-day">
+            <input type="radio" autocomplete="off" checked>
+            День
+        </label>
+        <label class="btn btn-default btn-xs" id="btn-stats-week">
+            <input type="radio" autocomplete="off">
+            Неделя
+        </label>
+        <label class="btn btn-default btn-xs" id="btn-stats-month">
+            <input type="radio" autocomplete="off">
+            Месяц
+        </label>
+    </span>
+
+    <span id="component-details-events-loader" class="collapse">
+        <img src="~/Content/Icons/ajax-loader-white.gif" />
+    </span>
+</p>
+
+<div id="component-details-events-timelines">
+    <img src="~/Content/Icons/ajax-loader.gif" />
+</div>
+
+<script>
+    $('#component-details-events-buttons #btn-stats-hour').click(function () { componentDetailsEventsLoadStats('@TimelineInterval.Hour'); });
+    $('#component-details-events-buttons #btn-stats-day').click(function () { componentDetailsEventsLoadStats('@TimelineInterval.Day'); });
+    $('#component-details-events-buttons #btn-stats-week').click(function () { componentDetailsEventsLoadStats('@TimelineInterval.Week'); });
+    $('#component-details-events-buttons #btn-stats-month').click(function () { componentDetailsEventsLoadStats('@TimelineInterval.Month'); });
+    $('#component-details-events-buttons #btn-stats-day').click();
+
+    function componentDetailsEventsLoadStats(interval) {
+        $('#component-details-events-loader').show();
+
+        var url = '@Html.Raw(Url.Action("ShowTimelinesEventsPartial", "ComponentTreeDetails"))';
+        var params = { id : '@Model.Id', interval: interval };
+
+        $('#component-details-events-timelines')
+            .load(url,
+                params,
+                function () {
+                    $('#component-details-events-loader').hide();
+                });
+    }
+</script>

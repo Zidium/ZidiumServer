@@ -1,0 +1,28 @@
+﻿@model Zidium.UserAccount.Models.NotificationDetailsModel
+
+@{
+    ViewBag.Title = "Просмотр уведомления";
+    ViewBag.ActiveMenuItems = "Notifications";
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="form-horizontal">
+
+    @Html.DisplayFor(m => m.Id, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.Address, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.Event, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.User, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.Channel, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.Status, "LabeledDisplay", new { HorizontalForm = true }) 
+    @Html.DisplayFor(m => m.SendError, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.CreationDate, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.SendDate, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.Subscription, "LabeledDisplay", new { HorizontalForm = true })
+    
+    <div class="form-group">
+        <div class="col-sm-10 col-sm-offset-2">
+            @Html.ActionLink("Вернуться к списку", "Index", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+</div>

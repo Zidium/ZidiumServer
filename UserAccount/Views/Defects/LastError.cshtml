@@ -1,0 +1,34 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.Defects.DefectLastErrorModel
+@{
+    var lastEvent = Model.Event;
+}
+
+@if (lastEvent == null)
+{
+    <div>
+        Не найдено ни одного события
+    </div>
+}
+else
+{
+    <div>
+        случилась <a href="@Url.Action("Show", "Events", new {id=lastEvent.Id})">@GuiHelper.GetDateTimeString(lastEvent.EndDate)</a>
+        в компоненте
+        <div style="display: inline-block">
+            <div class="zi-bread-crumbs" style="font-size: 14px;">
+                @Html.ComponentLink(Model.Component)
+            </div>
+        </div>
+        <div>
+            @if (string.IsNullOrEmpty(lastEvent.Message))
+            {
+                <span style="color: gray">Сообщения об ошибке нет</span>
+            }
+            else
+            {
+                <span style="color: @GuiHelper.StrongRedFgColor">@lastEvent.Message</span>
+            }
+        </div>
+    </div>
+}

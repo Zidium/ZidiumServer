@@ -1,0 +1,94 @@
+diff a/AppMonitoring/Core/Common/Helpers/ParseHelper.cs b/AppMonitoring/Core/Common/Helpers/ParseHelper.cs	(rejected hunks)
+@@ -42,56 +42,65 @@
+             {
+                 throw new FormatException("Неверный формат даты");
+             }
+             return result.Value;
+         }
+ 
+         public static DateTime? TryParseDateTime(string value)
+         {
+             if (value == null)
+             {
+                 return null;
+             }
+-            var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+-            culture.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
+-            culture.DateTimeFormat.DateSeparator = "/";
++
++            //var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
++            //culture.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
++            //culture.DateTimeFormat.DateSeparator = "/";
++
++            DateTime result;
+ 
+             // проверим формат веб-форм = dd.MM.yyyy_HH.mm.ss
+             if (value.Contains("_"))
+             {
+-                var strs = value.Split('_');
+-                value = strs[0] + " " + strs[1].Replace(".", ":");
++                if (DateTime.TryParseExact(value, "dd.MM.yyyy_HH.mm.ss", null, DateTimeStyles.None, out result))
++                {
++                    return result;
++                }
+             }
+             else if (value.Length > 10 && value[10] == '.') // проверим старый формат веб-форм = dd.MM.yyyy.HH.mm.ss
+             {
+-                var strs = value.Substring(11);
+-                value = value.Substring(0, 10) + " " + strs.Replace(".", ":");
++                if (DateTime.TryParseExact(value, "dd.MM.yyyy.HH.mm.ss", null, DateTimeStyles.None, out result))
++                {
++                    return result;
++                }
+             }
+-            value = value.Replace('.', '/');
+-            string[] formats =
++            else if (value.Length == 10 && value[2] == '.' && value[5] == '.')
+             {
+-                "dd/MM/yyyy hh:mm:ss"
+-                //, 
+-                //"d/M/yyyy h:mm",
+-                //"dd/MM/yyyy hh:mm:ss", 
+-                //"d/M/yyyy h:mm:ss",//
+-                //"d/M/yyyy hh:mm", 
+-                //"d/M/yyyy hh tt",
+-                //"M/d/yyyy h:mm", "M/d/yyyy h:mm",
+-                //"MM/dd/yyyy hh:mm", "M/dd/yyyy hh:mm"
+-            };
+-            DateTime result;
+-            if (DateTime.TryParse(value, culture, DateTimeStyles.None, out result))
++                if (DateTime.TryParseExact(value, "dd.MM.yyyy", null, DateTimeStyles.None, out result))
++                {
++                    return result;
++                }
++            }
++
++            //string[] formats =
++            //{
++            //    "dd/MM/yyyy hh:mm:ss"
++            //    //, 
++            //    //"d/M/yyyy h:mm",
++            //    //"dd/MM/yyyy hh:mm:ss", 
++            //    //"d/M/yyyy h:mm:ss",//
++            //    //"d/M/yyyy hh:mm", 
++            //    //"d/M/yyyy hh tt",
++            //    //"M/d/yyyy h:mm", "M/d/yyyy h:mm",
++            //    //"MM/dd/yyyy hh:mm", "M/dd/yyyy hh:mm"
++            //};
++
++            // Иначе стандартное преобразование
++            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+             {
+                 return result;
+             }
+ 
+-            // формат "yyyy/MM/dd" поддерживается, ничего делать не надо
+-            //culture.DateTimeFormat.ShortDatePattern = "yyyy/MM/dd";
+-            //if (DateTime.TryParse(value, culture, DateTimeStyles.None, out result))
+-            //{
+-            //    return result;
+-            //}
+             return null;
+         }
+     }
+ }

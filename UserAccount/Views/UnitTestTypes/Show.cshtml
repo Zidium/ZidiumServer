@@ -1,0 +1,67 @@
+﻿@using Zidium.Core.Common.Helpers
+@model Zidium.UserAccount.Models.UnitTestTypeEditModel
+
+@{
+    ViewBag.Title = "Просмотр типа проверки";
+    ViewBag.ActiveMenuItems = "UnitTests,UnitTestTypes";
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="bottom20px">
+    @if (UserHelper.CurrentUser.CanEditCommonData() && !Model.IsSystem)
+    {
+        @Html.ActionLink("Редактировать", "Edit", new {id = Model.Id}, new {@class = "btn btn-warning"})
+    }
+    @Html.ActionLink("Вернуться к списку", "Index", null, new {@class = "btn btn-default"})
+</div>
+
+@if (Model.IsDeleted)
+{
+    <div class="alert alert-danger">Этот тип проверки удалён</div>
+}
+
+<p>
+    <span class="simple-text-header">Id: </span>
+    <span class="simple-text-value">@Model.Id</span>
+</p>
+
+<p>
+    <span class="simple-text-header">Дружелюбное имя: </span>
+    <span class="simple-text-value">@Model.DisplayName</span>
+</p>
+
+<p>
+    <span class="simple-text-header">Системное имя: </span>
+    <span class="simple-text-value">@Model.SystemName</span>
+</p>
+
+<p>
+    <span class="simple-text-header">Системный тип: </span>
+    <span class="simple-text-value">@(Model.IsSystem ? "Да" : "Нет")</span>
+</p>
+
+<p>
+    <span class="simple-text-header">Интервал актуальности: </span>
+    @if (Model.ActualTime == null)
+    {
+        <span class="simple-text-value">из проверки</span>
+    }
+    else
+    {
+        <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.ActualTime.Value)</span>
+    }
+</p>
+
+<p>
+    <span class="simple-text-header">Цвет, если нет сигнала: </span>
+    @{ var noSignalColor = Model.NoSignalColor.GetSelectedOne();}
+    @if (noSignalColor == null)
+    {
+        <span class="simple-text-value">из проверки</span>
+    }
+    else
+    {
+        <span class="simple-text-value">@Zidium.UserAccount.Helpers.EnumHelper.EnumToString(noSignalColor.Value)</span>
+    }
+</p>

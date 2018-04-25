@@ -1,0 +1,30 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AppMonitoring.Core.AccountsDb;
+
+namespace AppMonitoring.Core.Repository
+{
+    public class SubscriptionRepository : ISubscriptionRepository
+    {
+        private AccountDbContext Context;
+
+        // Создание нового репозитория для указанного контекста
+        public SubscriptionRepository(AccountDbContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException("context");
+            }
+            Context = context;
+        }
+
+
+        public IQueryable<Subscription> GetAll()
+        {
+            return from s in Context.Subscriptions select s;
+        }
+    }
+}

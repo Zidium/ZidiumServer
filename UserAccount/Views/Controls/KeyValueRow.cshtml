@@ -1,0 +1,20 @@
+﻿@model Zidium.UserAccount.Models.Controls.KeyValueRowModel
+
+@using (Html.BeginCollectionItem(Model.CollectionName))
+{
+    <tr>
+        <td>
+            @Html.HiddenFor(x => x.Id)
+            @Html.TextBoxFor(x=>x.Key, new{@class="form-control"})
+        </td>
+        <td>
+            @Html.TextBoxFor(x => x.Value, new { @class = "form-control" })
+        </td>
+        <td>
+            <a href="#" onclick="$(this).closest('tr').remove(); return false;" class="text-danger">
+                <span class="glyphicon glyphicon-remove"></span>
+            </a>
+        </td>
+    </tr>
+}
+

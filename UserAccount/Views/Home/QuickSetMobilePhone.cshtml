@@ -1,0 +1,39 @@
+﻿@model Zidium.UserAccount.Models.Home.QuickSetMobilePhoneModel
+
+@{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+    ViewBag.Title = "Указать мобильный телефон";
+}
+
+<style>
+    .smart-col-labels {
+        min-width: 1px;
+    }
+
+    #ModalDlgBody {
+        padding-bottom: 0;
+    }
+</style>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.HiddenFor(m => m.ReturnUrl)
+
+    <div class="smart-container">
+        @Html.EditorFor(m => m.Phone, "SmartEdit")
+
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields">
+                <div>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $('#@Html.IdFor(m => m.Phone)').inputmask('phone');
+</script>

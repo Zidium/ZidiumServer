@@ -1,0 +1,95 @@
+﻿@using GridMvc.Sorting
+@using GridMvc.Html
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@model Zidium.UserAccount.Models.MetricData.CounterDataListModel
+
+@{
+    ViewBag.Title = "История метрики";
+    ViewBag.ActiveMenuItems = "Metrics,MetricsData";
+}
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+
+    <style>
+        div[data-gridname="grid-history"] table {
+            width: auto;
+        }
+
+        #graph {
+            height: 500px;
+        }
+    </style>
+}
+
+@Html.Partial("_PageTitle")
+
+<div id="filters">
+
+    <div class="row">
+        <div class="col-sm-6 bottom10px">
+            @Html.Label("Компонент")
+            @Html.ComponentSelector(m => m.ComponentId, new ComponentSelectorOptions()
+            {
+                ShowAsList = false,
+                ShowComponentStatusSelector = false,
+                AutoRefreshPage = false
+            })
+        </div>
+        @if (Model.ComponentId.HasValue && Model.CounterId.HasValue)
+        {
+            <div class="col-sm-6 bottom10px">
+                @Html.Label("Метрика")
+                @Html.CounterSelector("counterId", Model.CounterId, Model.ComponentId.Value, false, false)
+            </div>
+        }
+    </div>
+
+    @if (Model.ComponentId.HasValue && Model.CounterId.HasValue)
+    {
+        <div class="row">
+            <div class="col-sm-3 bottom10px">
+                @Html.Label("Дата от")
+                @Html.DateSelector("from", Model.From, false)
+            </div>
+            <div class="col-sm-3 bottom10px">
+                @Html.Label("Дата до")
+                @Html.DateSelector("to", Model.To, false)
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-sm-12 bottom10px">
+            @Html.FilterButton("filters")
+        </div>
+    </div>
+
+</div>
+
+@if (!Model.ComponentId.HasValue)
+{
+    <div>Выберите компонент из выпадающего списка</div>
+}
+else if (Model.Data == null)
+{
+    <div>У выбранного компонента пока нет метрик</div>
+}
+else
+{
+    @Html.Partial("GraphPartial", Model.Graph)
+
+    @Html.Grid(Model.Data).Columns(columns =>
+        {
+            columns.Add(m => m.BeginDate).Titled("Дата начала").SortInitialDirection(GridSortDirection.Descending).Css("column-date");
+            columns.Add(m => m.Value).Titled("Значение").Css("text-center").RenderValueAs(m => GuiHelper.GetMetricValueHtml(m.Value, m.Color, m.HasSignal)).Sanitized(false).Encoded(false);
+        }).Sortable().Filterable(false).Selectable(false).WithPaging(50).Named("grid-history")
+}
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+    @Scripts.Render("~/Scripts/AllControls")
+}

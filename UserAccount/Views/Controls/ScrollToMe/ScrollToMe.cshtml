@@ -1,0 +1,6 @@
+﻿@model int?
+@{ var id = "scroll-to-me-" + Guid.NewGuid(); }
+<span id="@id"></span>
+<script>
+    utils.scrollTo($('#@id'), @(Model.HasValue ? Model.Value.ToString() : "null"));
+</script>

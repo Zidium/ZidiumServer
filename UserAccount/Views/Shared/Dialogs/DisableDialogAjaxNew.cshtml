@@ -1,0 +1,87 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@model DisableDialogAjaxModel
+
+<style>
+    #unittest-disable-form .radio > label {
+        vertical-align: top;
+        padding-top: 6px;
+    }
+
+    #unittest-disable-form #disable-to-date-container {
+        display: inline-block;
+        width: 200px;
+        vertical-align: top;
+        margin-left: 10px;
+    }
+</style>
+
+<div><b>@Model.Message</b></div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal smart-block-form", id = "unittest-disable-form" }))
+{
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.Message)
+
+    <div class="radio">
+        <label>
+            @Html.RadioButtonFor(m => m.Interval, DisableDialogAjaxModel.DisableInterval.Forever)
+            Навсегда
+        </label>
+    </div>
+
+    <div class="radio">
+        <label>
+            @Html.RadioButtonFor(m => m.Interval, DisableDialogAjaxModel.DisableInterval.Hour)
+            На 1 час
+        </label>
+    </div>
+
+    <div class="radio">
+        <label>
+            @Html.RadioButtonFor(m => m.Interval, DisableDialogAjaxModel.DisableInterval.Day)
+            На 1 день
+        </label>
+    </div>
+
+    <div class="radio">
+        <label>
+            @Html.RadioButtonFor(m => m.Interval, DisableDialogAjaxModel.DisableInterval.Week)
+            На 1 неделю
+        </label>
+    </div>
+
+    <div class="radio">
+        <label>
+            @Html.RadioButtonFor(m => m.Interval, DisableDialogAjaxModel.DisableInterval.Custom)
+            Указать дату и время
+        </label>
+        <div id="disable-to-date-container">
+            @Html.DateSelector("Date", Model.Date, false)
+        </div>
+        @Html.ValidationMessageFor(m => m.Date, null, null, "p")
+    </div>
+
+    <hr />
+
+    <div class="bottom10px">
+        @Html.LabelFor(m => m.Comment)
+        @Html.TextAreaFor(m => m.Comment, new { @class = "form-control" })
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">Выключить</button>
+        <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Отмена</button>
+    </div>
+}
+
+<script>
+    $('#unittest-disable-form .radio input[type="radio"]').change(onIntervalChanged);
+
+    function onIntervalChanged() {
+        var isCustomDate = $('input[name="@Html.NameFor(m => m.Interval)"][value="@DisableDialogAjaxModel.DisableInterval.Custom"]').is(':checked');
+        $('#textbox_Date').prop('disabled', !isCustomDate);
+    }
+
+    onIntervalChanged();
+</script>

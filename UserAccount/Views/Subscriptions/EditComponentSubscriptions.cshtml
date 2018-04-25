@@ -1,0 +1,252 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Common
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.Subscriptions.EditComponentSubscriptionsModel
+@{
+    ViewBag.Title = "Настройка подписок на компонент";
+}
+<style>
+    #info-table {
+        margin-left: 20px;    
+    } 
+    #info-table td {
+        padding: 2px 40px;
+        vertical-align: top;
+    }
+    .emptyCell {
+        color: gray;
+    }
+    .subscriptions-table {
+        border-collapse: separate;
+        border-spacing: 20px;
+    } 
+    .subscriptions-table td {
+        vertical-align: top;
+    }
+    .subscription-type {
+        font-weight: normal;
+        padding: 5px;
+        background-color: #eee;
+        border-bottom: 0px dashed gray !important;
+    }
+    .select-title {
+        color: green;
+        font-weight: bold;
+    }
+    .cell {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        text-align: center;
+    }
+    .no-column-border {
+        border-bottom-width: 0;
+    } 
+    .select-border {
+        border: 5px green solid !important;
+    }
+    .subscription-data-column {
+        border: 1px #eee solid;
+        padding: 20px;
+        vertical-align: top;
+    }
+    .subscription-header-column {
+        padding: 20px;
+    }
+    .property-name {
+        font-size: 12px;
+        color: gray;
+        display: block;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    .property-value {
+        font-weight: bold;
+    }
+    .user-contact {
+        color: gray;
+        display: block;
+        font-size: 12px;
+        padding-top: 4px;
+    }
+</style>
+
+@Html.Partial("_PageTitle")
+
+@helper WriteSubscription(SubscriptionObject subscriptionObject, SubscriptionChannel channel)
+{
+    var column = Model.GetColumnData(subscriptionObject, channel);
+    var subscription = column.Subscription;
+
+    string title = "";
+    if (column.SubscriptionObject == SubscriptionObject.Default)
+    {
+        title = "по умолчанию";
+    }
+    else if (column.SubscriptionObject == SubscriptionObject.ComponentType)
+    {
+        title = "на тип компонента";
+    }
+    else if (column.SubscriptionObject == SubscriptionObject.Component)
+    {
+        title = "на компонент";
+    }
+
+    <div class="subscription-data-column @( column.Selected ? "select-border" : "")">
+        <div class="cell subscription-type @( column.Selected ? "select-title" : "")">@column.Title</div>
+        @if (subscription == null)
+        {
+            <p style="margin-top: 20px;">Нет подписки</p>
+            <a href="#" data-url="@column.CreateUrl" data-title="Добавление подписки @title" class="btn btn-default showDialogBtn">Создать</a>
+        }
+        else
+        {
+            <div class="cell @((column.Selected==false && subscription.IsEnabled==false) ? "no-column-border" : "")">
+                <span class="property-name">Статус</span>
+                @SubscriptionIconHelper.GetImgHtml(subscription)
+            </div>
+            if (subscription.IsEnabled)
+            {
+                <div class="cell">
+                    <span class="property-name">Минимальная длительность</span>
+                    @if (subscription.DurationMinimumInSeconds == null)
+                    {
+                        <span class="emptyCell">&minus;</span>
+                    }
+                    else
+                    {
+                        var duration = TimeSpanHelper.FromSeconds(subscription.DurationMinimumInSeconds);
+                        <span class="property-value">@TimeSpanHelper.Get2UnitsString(duration.Value)</span>
+                    }
+                </div>
+                <div class="cell">
+                    <span class="property-name">Уведомлять об улучшениях?</span>
+                    @if (subscription.NotifyBetterStatus == false)
+                    {
+                        <span class="emptyCell">&minus;</span>
+                    }
+                    else
+                    {
+                        <span class="property-value">Да</span>
+                    }
+                </div>
+                <div class="cell @(column.Selected? "":"no-column-border")">
+                    <span class="property-name">Интервал напоминаний</span>
+                    @if (subscription.ResendTimeInSeconds == null)
+                    {
+                        <span class="emptyCell">&minus;</span>
+                    }
+                    else
+                    {
+                        var duration = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds);
+                        <span class="property-value">@TimeSpanHelper.Get2UnitsString(duration.Value)</span>
+                    }
+                </div>
+            }
+            if (column.Selected)
+            {
+                <div style="margin-top: 10px; text-align: center">
+                    <a href="#"
+                       data-url="@Url.Action("Edit", "Subscriptions", new {id = column.Subscription.Id})"
+                       data-title="Настройка подписки @title"
+                       class="btn btn-default showDialogBtn">Настроить</a>
+
+                    @if (column.SubscriptionObject != SubscriptionObject.Default)
+                    {
+                        <a href="#"
+                           data-url="@Url.Action("Delete", "Subscriptions", new {id = column.Subscription.Id})"
+                           data-title="Удалить подписку @title"
+                           title="Удалить подписку @title"
+                           class="btn btn-default showDialogBtn">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    }
+                </div>
+            }
+        }
+    </div>
+}
+
+<div class="pull-right">
+    <a href="http://zidium.net/wiki/work-principle/subscriptions" target="_blank" class="btn btn-default">?</a>
+</div>
+
+<table id="info-table">
+    <tr style="font-weight: bold">
+        <td>Компонент</td>
+        <td>Тип компонента</td>
+        <td>Пользователь</td>
+    </tr>
+    <tr>
+        <td>@Html.ComponentPath(Model.Component)</td>
+        <td>@Model.Component.ComponentType.DisplayName</td>
+        <td>
+            @Model.User.FioOrLogin
+            <div style="margin-top: 5px;">
+                @if (Model.User.UserContacts != null)
+                {
+                    foreach (var contact in Model.User.UserContacts)
+                    {
+                        <div class="user-contact">@contact.Value</div>
+                    }
+                }
+            </div>
+        </td>
+    </tr>
+</table>
+
+@{
+    var channels = new[]
+{
+        SubscriptionChannel.Email,
+        SubscriptionChannel.Sms
+    };
+    foreach (var channel in channels)
+    {
+        <div style="padding: 10px;">
+            <h4 style="font-weight: bold">@channel</h4>
+            <table class="subscriptions-table">
+                <tr>
+                    <td>@WriteSubscription(SubscriptionObject.Default, channel)</td>
+                    <td>@WriteSubscription(SubscriptionObject.ComponentType, channel)</td>
+                    <td>@WriteSubscription(SubscriptionObject.Component, channel)</td>
+                </tr>
+            </table>
+        </div>
+    }
+}
+
+<script>
+
+    function selectColumn(event) {
+        event.preventDefault();
+        var column = $(event.target).closest(".subscription-data-column");
+        var table = column.closest(".subscriptions-table");
+        $(".select-border", table).removeClass("select-border");
+        column.addClass("select-border");
+    }
+
+    function init() {
+        $(".showDialogBtn").on("click", function(event) {
+            event.preventDefault();
+            //alert(event.target.outerHTML);
+            var btn = $(this);
+            var url = btn.data("url");
+            var title = btn.data("title");
+            var action = function () {
+                var column = btn.closest(".subscription-data-column");
+                smartBlocks.showWaitDiv(column);
+                ziReloadPage();
+            }
+            dialogs.showModal(url, title, action, null, true);
+        });
+    }
+
+    init();
+    
+</script>
+
+@section Scripts
+    {
+        @Scripts.Render("~/Scripts/AllControls")
+    }

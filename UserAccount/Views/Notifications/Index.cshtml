@@ -1,0 +1,124 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using GridMvc.Html
+@using GridMvc.Sorting
+@using Zidium.UserAccount.Models.Controls
+@model NotificationsListModel
+
+@{
+    ViewBag.Title = "Уведомления";
+    ViewBag.ActiveMenuItems = "Manage,NotificationsList";
+}
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+}
+
+@Html.Partial("_PageTitle")
+
+<div id="filters">
+
+    <div class="row">
+        <div class="col-sm-12 bottom10px">
+            @Html.Label("Компонент")
+            @Html.ComponentSelector(m => m.ComponentId, new ComponentSelectorOptions()
+                {
+                    ShowAsList = false,
+                    ShowComponentStatusSelector = false
+                })
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-4 bottom10px">
+            @Html.Label("Дата от")
+            @Html.DateSelector("fromDate", Model.FromDate, false)
+        </div>
+        <div class="col-sm-4 bottom10px">
+            @Html.Label("Дата до")
+            @Html.DateSelector("toDate", Model.ToDate, false)
+        </div>
+        <div class="col-sm-4 bottom10px">
+            @Html.Label("Категория")
+            @Html.DropDownList("category", GuiHelper.GetEventCategoryItems(Model.Category, true), new { @class = "form-control", data_filterbyvalue = "true" })
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-4 bottom10px">
+            @Html.Label("Канал")
+            @Html.DropDownList("channel", GuiHelper.GetNotificationTypeItems(Model.Channel, true), new { @class = "form-control", data_filterbyvalue = "true" })
+        </div>
+        <div class="col-sm-4 bottom10px">
+            @Html.Label("Статус")
+            @Html.DropDownList("status", GuiHelper.GetNotificationStatusItems(Model.Status, true), new { @class = "form-control", data_filterbyvalue = "true" })
+        </div>
+        
+        @if (UserHelper.CurrentUser.CanManageAccount())
+        {
+            <div class="col-sm-4 bottom10px">
+                @Html.Label("Получатель")
+                @Html.UserSelector("userId", Model.UserId, true, false)
+            </div>
+        }
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 bottom10px">
+            @Html.FilterButton("filters")
+        </div>
+    </div>
+</div>
+
+@Html.Grid(Model.Notifications).Columns(columns =>
+{
+    columns.Add(m => m.SendDate).Titled("Дата отправки").RenderValueAs(m =>
+        Html.ActionLink(m.SendDate == null ? "..." : m.SendDate.Value.ToString(GuiHelper.DateTimeDisplayFormat), "Show", new { id = m.Id, componentId = m.Component.Id }))
+        .Encoded(false).Sanitized(false).SortInitialDirection(GridSortDirection.Descending).Css("text-nowrap");
+
+    columns.Add(t => t.Component.DisplayName).Titled("Компонент").RenderValueAs(t =>
+        Html.ActionLink(t.Component.DisplayName, "Show", "Components", new { id = t.Component.Id }, null))
+        .Encoded(false).Sanitized(false).Css("text-wordbreak");
+
+    columns.Add(m => m.Event.Message).Titled("Событие").RenderValueAs(t =>
+    {
+        var descriptionFull = (!string.IsNullOrEmpty(t.Event.Message) ? t.Event.Message : t.EventType.DisplayName);
+        var description = descriptionFull.Length <= NotificationsListModel.MaxMessageLength ? descriptionFull : descriptionFull.Substring(0, NotificationsListModel.MaxMessageLength) + "...";
+        return Html.ActionLink(description, "Show", "Events", new { id = t.Event.Id, componentId = t.Component.Id }, null);
+    }).Encoded(false).Sanitized(false).Css("text-wordbreak");
+
+    columns.Add(m => m.User.Login).Titled("Адрес").RenderValueAs(t =>
+        Html.ActionLink(t.Address, "Show", "Users", new { id = t.User.Id }, null))
+        .Encoded(false).Sanitized(false);
+
+    columns.Add(t => t.Channel).Titled("Канал");
+
+    columns.Add(t => t.Status).Titled("Статус").RenderValueAs(m =>
+        @<text>
+            @{
+                string labelClass = "label-default";
+                if (m.Status == NotificationStatus.Error)
+                {
+                    labelClass = "label-danger";
+                }
+                else if (m.Status == NotificationStatus.InQueue)
+                {
+                    labelClass = "label-warning";
+                }
+                else if (m.Status == NotificationStatus.Sended)
+                {
+                    labelClass = "label-success";
+                }
+            }
+            <span class="label @labelClass" title="@m.SendError">@m.Status</span>
+        </text>)
+        .Encoded(false).Sanitized(false).Css("text-center");
+}).Sortable().WithMultipleFilters().Selectable(false).WithPaging(50)
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+    @Scripts.Render("~/Scripts/AllControls")
+}

@@ -1,0 +1,20 @@
+﻿@model Zidium.UserAccount.Models.DeleteConfirmationSmartModel
+
+<div class="alert alert-danger">@Model.Message</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new{ @class = "form-horizontal smart-block-form"}))
+{
+    <div class="smart-container">
+        @Html.HiddenFor(x=>x.Id)
+        @Html.HiddenFor(x => x.Message)
+        <div class="smart-row">
+            <div class="smart-col-fields">
+                <div>
+                    <hr style="margin-top: 0"/>
+                    <button type="submit" class="btn btn-danger smart-block-button" data-smart-button-loader="blue">Удалить</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

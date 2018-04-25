@@ -1,0 +1,202 @@
+﻿@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.ComponentHistory
+@model IndexModel
+
+@{
+    ViewBag.Title = "История компонентов";
+    ViewBag.ActiveMenuItems = "Components,ComponentHistory";
+}
+
+<style>
+    #components-tree li {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    #components-tree div.components-tree-item-content {
+    }
+
+    #components-tree input:checked:not(:disabled) ~ div.components-tree-item-content {
+        display: block;
+    }
+
+    #components-tree input ~ div.components-tree-item-content {
+        display: none;
+    }
+
+    #components-tree .components-tree-item-details {
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    #components-tree .components-tree-item-content-loading {
+        margin-left: 0px;
+    }
+
+    #components-tree .components-tree-item-details-events {
+        margin-bottom: 5px;
+    }
+
+    #components-tree .components-tree-item-details-loaded > ul {
+    }
+
+    #components-tree .components-tree-item-details-loaded .components-tree-details-list {
+    }
+
+    #components-tree .components-tree-item-details-loaded > ul > li {
+        margin-bottom: 0px;
+    }
+
+    #components-tree .components-tree-timeline-main .timeline-subcontainer {
+        height: 10px;
+    }
+
+    #components-tree .components-tree-timeline-groups .timeline-subcontainer {
+        height: 10px;
+    }
+
+    #components-tree .components-tree-timeline-details .timeline-subcontainer {
+        height: 10px;
+    }
+
+    #components-tree label.components-tree-timeline-label {
+        display: inline-block;
+        width: 16px;
+        margin-bottom: 0px;
+    }
+
+    #components-tree input:checked + div > label.components-tree-timeline-label {
+        background-position: -16px 3px;
+    }
+</style>
+
+@Html.Partial("_PageTitle")
+
+<div class="row">
+    <div class="col-sm-12 bottom10px">
+        <span class="space-right">История за</span>
+        <div class="btn-group">
+            <a class="btn btn-default @(Model.Interval == TimelineInterval.Hour ? "active" : "")" id="btn-stats-hour"
+               href="@Url.Action("Index", new {interval = TimelineInterval.Hour})">
+                Час
+            </a>
+            <a class="btn btn-default @(Model.Interval == TimelineInterval.Day ? "active" : "")" id="btn-stats-day"
+               href="@Url.Action("Index", new {interval = TimelineInterval.Day})">
+                День
+            </a>
+            <a class="btn btn-default @(Model.Interval == TimelineInterval.Week ? "active" : "")" id="btn-stats-week"
+               href="@Url.Action("Index", new {interval = TimelineInterval.Week})">
+                Неделя
+            </a>
+            <a class="btn btn-default @(Model.Interval == TimelineInterval.Month ? "active" : "")" id="btn-stats-month"
+               href="@Url.Action("Index", new {interval = TimelineInterval.Month})">
+                Месяц
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="components-tree" class="css-treeview">
+    @{ Html.RenderAction("GetComponentsTree", new { from = Model.FromDate, to = Model.ToDate }); }
+</div>
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/AllControls")
+    <script src="~/Scripts/js.cookie.js"></script>
+}
+
+<script>
+    $(function () {
+        // Подгрузка разворачиваемых узлов
+        $('#components-tree').on('change', 'input.components-tree-item-checkbox-component', function () {
+            var me = $(this);
+            var isOpening = me.is(":checked");
+            if (isOpening) {
+                var item = me.closest('li');
+
+                var contentDiv = $('> div.components-tree-item-content', item);
+                var contentDivLoaded = $('> div.components-tree-item-content-loaded', contentDiv);
+                var isContentLoaded = contentDivLoaded.length > 0;
+                if (!isContentLoaded) {
+                    var contentUrl = '@Url.Action("GetComponentsTreeItemContent")';
+                    var contentData = {
+                        id: item.data('id'),
+                        from: '@Model.FromDate',
+                        to: '@Model.ToDate'
+                    };
+                    contentDiv.load(contentUrl, contentData);
+                    return;
+                }
+
+                var detailsDiv = $('> div.components-tree-item-details', contentDivLoaded);
+                var detailsDivLoaded = $('> div.components-tree-item-details-loaded', detailsDiv);
+                var isDetailsLoaded = detailsDivLoaded.length > 0;
+                if (!isDetailsLoaded) {
+                    var detailsUrl = '@Url.Action("GetComponentsTreeItemDetails")';
+                    var detailsData = {
+                        id: item.data('id'),
+                        from: '@Model.FromDate',
+                        to: '@Model.ToDate'
+                    };
+                    detailsDiv.load(detailsUrl, detailsData);
+                    return;
+                }
+            }
+        });
+
+        // Запоминание состояний узлов в cookie
+        $('#components-tree').on('change', 'input.components-tree-item-checkbox', function () {
+            var me = $(this);
+            var expanded = me.is(":checked");
+            var id = this.id;
+
+            var items = getExpandedItemsFromCookie();
+            modifyExpandedItems(items, id, expanded);
+
+            // Если узел свернули, то надо свернуть и все вложенные узлы
+            if (!expanded) {
+                var childs = $('input.components-tree-item-checkbox', me.parent());
+                $.each(childs, function (index, element) {
+                    var checkbox = $(element);
+                    if (checkbox != me) {
+                        checkbox.prop('checked', false);
+                        modifyExpandedItems(items, element.id, false);
+                    }
+                });
+            }
+
+            setExpandedItemsToCookie(items);
+        });
+    });
+
+    function modifyExpandedItems(items, id, expanded) {
+        if (expanded) {
+            if ($.inArray(id, items) === -1) {
+                items.push(id);
+            }
+        } else {
+            var index = $.inArray(id, items);
+            if (index !== -1) {
+                items.splice(index, 1);
+            }
+        }
+    }
+
+    function getExpandedItemsFromCookie() {
+        var result = Cookies.getJSON('@IndexModel.ExpandedItemsCookieName');
+
+        if (!result) {
+            var items = $('#components-tree input.components-tree-item-checkbox:checked').toArray();
+            result = $.map(items, function (element) {
+                return element.id;
+            });
+        }
+
+        return result;
+    }
+
+    function setExpandedItemsToCookie(items) {
+        Cookies.set('@IndexModel.ExpandedItemsCookieName', items);
+    }
+</script>

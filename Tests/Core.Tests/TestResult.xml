@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!--This file represents the results of running a test suite-->
+<test-results name="E:\AppMonitoring\AppMonitoring\Tests\NUnitTests.nunit" total="1" errors="1" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2014-05-03" time="22:52:51">
+  <environment nunit-version="2.6.3.13283" clr-version="2.0.50727.5477" os-version="Microsoft Windows NT 6.1.7601 Service Pack 1" platform="Win32NT" cwd="E:\AppMonitoring\AppMonitoring\Tests\bin\Debug" machine-name="VMWORKLPDEM" user="LPDem" user-domain="VMWORKLPDEM" />
+  <culture-info current-culture="ru-RU" current-uiculture="ru-RU" />
+  <test-suite type="Project" name="E:\AppMonitoring\AppMonitoring\Tests\NUnitTests.nunit" executed="True" result="Failure" success="False" time="29.005" asserts="0">
+    <results>
+      <test-suite type="Assembly" name="E:\AppMonitoring\AppMonitoring\Tests\bin\Debug\Tests.dll" executed="True" result="Failure" success="False" time="29.004" asserts="0">
+        <results>
+          <test-suite type="Namespace" name="AppMonitoring" executed="True" result="Failure" success="False" time="29.002" asserts="0">
+            <results>
+              <test-suite type="Namespace" name="Core" executed="True" result="Failure" success="False" time="29.000" asserts="0">
+                <results>
+                  <test-suite type="Namespace" name="StorageDb" executed="True" result="Failure" success="False" time="28.999" asserts="0">
+                    <results>
+                      <test-suite type="TestFixture" name="CounterDataRepositoryTests" executed="True" result="Failure" success="False" time="28.997" asserts="0">
+                        <results>
+                          <test-case name="AppMonitoring.Core.StorageDb.CounterDataRepositoryTests.AddCounterData" executed="True" result="Error" success="False" time="28.966" asserts="0">
+                            <failure>
+                              <message><![CDATA[System.Data.Entity.Core.ProviderIncompatibleException : An error occurred accessing the database. This usually means that the connection to the database failed. Check that the connection string is correct and that the appropriate DbContext constructor is being used to specify it or find it in the application's config file. See http://go.microsoft.com/fwlink/?LinkId=386386 for information on DbContext and connections. See the inner exception for details of the failure.
+  ----> System.Data.Entity.Core.ProviderIncompatibleException : The provider did not return a ProviderManifestToken string.
+  ----> System.Data.SqlClient.SqlException : При установлении соединения с SQL Server произошла ошибка, связанная с сетью или с определенным экземпляром. Сервер не найден или недоступен. Убедитесь, что имя экземпляра указано правильно и что на SQL Server разрешены удаленные соединения. (provider: SQL Network Interfaces, error: 26 - Ошибка при обнаружении указанного сервера или экземпляра)]]></message>
+                              <stack-trace><![CDATA[в System.Data.Entity.Utilities.DbProviderServicesExtensions.GetProviderManifestTokenChecked(DbProviderServices providerServices, DbConnection connection)
+в System.Data.Entity.Infrastructure.DefaultManifestTokenResolver.<>c__DisplayClass1.<ResolveManifestToken>b__0(Tuple`3 k)
+в System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+в System.Data.Entity.Infrastructure.DefaultManifestTokenResolver.ResolveManifestToken(DbConnection connection)
+в System.Data.Entity.Utilities.DbConnectionExtensions.GetProviderInfo(DbConnection connection, DbProviderManifest& providerManifest)
+в System.Data.Entity.DbModelBuilder.Build(DbConnection providerConnection)
+в System.Data.Entity.Internal.LazyInternalContext.CreateModel(LazyInternalContext internalContext)
+в System.Data.Entity.Internal.RetryLazy`2.GetValue(TInput input)
+в System.Data.Entity.Internal.LazyInternalContext.InitializeContext()
+в System.Data.Entity.Internal.InternalContext.GetEntitySetAndBaseTypeForType(Type entityType)
+в System.Data.Entity.Internal.Linq.InternalSet`1.Initialize()
+в System.Data.Entity.Internal.Linq.InternalSet`1.get_InternalContext()
+в System.Data.Entity.Infrastructure.DbQuery`1.System.Linq.IQueryable.get_Provider()
+в System.Linq.Queryable.SingleOrDefault[TSource](IQueryable`1 source, Expression`1 predicate)
+в AppMonitoring.Tests.TestHelper.GetTestAccount() в e:\AppMonitoring\AppMonitoring\Tests\Common\TestHelper.cs:строка 64
+в AppMonitoring.Core.StorageDb.CounterDataRepositoryTests.AddCounterData() в e:\AppMonitoring\AppMonitoring\Tests\Repository\CounterDataRepositoryTests.cs:строка 16
+--ProviderIncompatibleException
+в System.Data.Entity.Core.Common.DbProviderServices.GetProviderManifestToken(DbConnection connection)
+в System.Data.Entity.Utilities.DbProviderServicesExtensions.GetProviderManifestTokenChecked(DbProviderServices providerServices, DbConnection connection)
+--SqlException
+в System.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+в System.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+в System.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Boolean encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean withFailover)
+в System.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+в System.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+в System.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+в System.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData)
+в System.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+в System.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+в System.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+в System.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+в System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+в System.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+в System.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+в System.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+в System.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+в System.Data.SqlClient.SqlConnection.TryOpenInner(TaskCompletionSource`1 retry)
+в System.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry)
+в System.Data.SqlClient.SqlConnection.Open()
+в System.Data.Entity.Infrastructure.Interception.DbConnectionDispatcher.<Open>b__38(DbConnection t, DbConnectionInterceptionContext c)
+в System.Data.Entity.Infrastructure.Interception.InternalDispatcher`1.Dispatch[TTarget,TInterceptionContext](TTarget target, Action`2 operation, TInterceptionContext interceptionContext, Action`3 executing, Action`3 executed)
+в System.Data.Entity.Infrastructure.Interception.DbConnectionDispatcher.Open(DbConnection connection, DbInterceptionContext interceptionContext)
+в System.Data.Entity.SqlServer.SqlProviderServices.<>c__DisplayClass31.<UsingConnection>b__2f()
+в System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.<>c__DisplayClass1.<Execute>b__0()
+в System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.Execute[TResult](Func`1 operation)
+в System.Data.Entity.SqlServer.DefaultSqlExecutionStrategy.Execute(Action operation)
+в System.Data.Entity.SqlServer.SqlProviderServices.UsingConnection(DbConnection sqlConnection, Action`1 act)
+в System.Data.Entity.SqlServer.SqlProviderServices.UsingMasterConnection(DbConnection sqlConnection, Action`1 act)
+в System.Data.Entity.SqlServer.SqlProviderServices.GetDbProviderManifestToken(DbConnection connection)
+в System.Data.Entity.Core.Common.DbProviderServices.GetProviderManifestToken(DbConnection connection)
+]]></stack-trace>
+                            </failure>
+                          </test-case>
+                        </results>
+                      </test-suite>
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

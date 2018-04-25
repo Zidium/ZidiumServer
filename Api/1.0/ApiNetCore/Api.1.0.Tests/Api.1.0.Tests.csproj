@@ -1,0 +1,203 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp1.1</TargetFramework>
+
+        <IsPackable>false</IsPackable>
+
+        <AssemblyName>Zidium.Api.Core.Tests</AssemblyName>
+
+        <RootNamespace>Zidium.Api.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="appsettings.json" />
+      <None Remove="Files\Responses\ErrorResponse.xml" />
+      <None Remove="Files\Responses\ErrorResponse1.xml" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+        <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+        <PackageReference Include="xunit" Version="2.2.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\Tests\ClientTests\ServerTimeTests.cs">
+            <Link>ClientTests\ServerTimeTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\ChildComponentsTests.cs">
+            <Link>Components\ChildComponentsTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\ComponentSystemNameTests.cs">
+            <Link>Components\ComponentSystemNameTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\ControlWrapperTests.cs">
+            <Link>Components\ControlWrapperTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\DeleteComponentTests.cs" Link="Components\DeleteComponentTests.cs" />
+        <Compile Include="..\..\Tests\Components\DisableComponentTests.cs">
+            <Link>Components\DisableComponentTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\FakeComponentControlTests.cs">
+            <Link>Components\FakeComponentControlTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\GetComponentControlByIdTests.cs" Link="Components\GetComponentControlByIdTests.cs" />
+        <Compile Include="..\..\Tests\Components\GetDefaultComponentControlTests.cs" Link="Components\GetDefaultComponentControlTests.cs" />
+        <Compile Include="..\..\Tests\Components\GetOrCreateComponentTests.cs">
+            <Link>Components\GetOrCreateComponentTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\GetOrCreateFolderTests.cs">
+            <Link>Components\GetOrCreateFolderTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\GetRootComponentTests.cs">
+            <Link>Components\GetRootComponentTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Components\UpdateComponentTests.cs">
+            <Link>Components\UpdateComponentTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\ComponentTypes\GetOrCreateComponentTypeControlTests.cs">
+            <Link>ComponentTypes\GetOrCreateComponentTypeControlTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\ComponentTypes\GetOrCreateComponentTypeTests.cs">
+            <Link>ComponentTypes\GetOrCreateComponentTypeTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\EchoTests\EchoTests.cs">
+            <Link>EchoTests\EchoTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\AddEventTests.cs">
+            <Link>Events\AddEventTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ApplicationErrors\ApplicationErrorTypeSystemNameHelper.cs">
+            <Link>Events\ApplicationErrors\ApplicationErrorTypeSystemNameHelper.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ApplicationErrors\CreateTests.cs">
+            <Link>Events\ApplicationErrors\CreateTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ApplicationErrors\ErrorCodeTests.cs">
+            <Link>Events\ApplicationErrors\ErrorCodeTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ApplicationErrors\ExceptionRenderTests.cs">
+            <Link>Events\ApplicationErrors\ExceptionRenderTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ApplicationErrors\SendTests.cs">
+            <Link>Events\ApplicationErrors\SendTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ApplicationErrors\SystemNameTests.cs">
+            <Link>Events\ApplicationErrors\SystemNameTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\Common\EventDefaultValuesTest.cs">
+            <Link>Events\Common\EventDefaultValuesTest.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\Common\EventTypesTests.cs">
+            <Link>Events\Common\EventTypesTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\Common\FutureEventTests.cs">
+            <Link>Events\Common\FutureEventTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\Common\GetEventsTests.cs">
+            <Link>Events\Common\GetEventsTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\Common\JoinEventsTests.cs">
+            <Link>Events\Common\JoinEventsTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\Common\PrepareEventTests.cs">
+            <Link>Events\Common\PrepareEventTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ComponentEvents\AddTests.cs">
+            <Link>Events\ComponentEvents\AddTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\ComponentEvents\SendTests.cs">
+            <Link>Events\ComponentEvents\SendTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\EventManagerTests\ClearEventsQueueTests.cs">
+            <Link>Events\EventManagerTests\ClearEventsQueueTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\EventMaxCountTests.cs">
+            <Link>Events\EventMaxCountTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Events\EventVersionTests.cs">
+            <Link>Events\EventVersionTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\EventTypes\CreateFromOthersComponentTypes.cs">
+            <Link>EventTypes\CreateFromOthersComponentTypes.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Logs\AutoCreateEventsTests.cs" Link="Logs\AutoCreateEventsTests.cs" />
+        <Compile Include="..\..\Tests\Logs\FakeLogTests.cs">
+            <Link>Logs\FakeLogTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Logs\LogLevelsTests.cs">
+            <Link>Logs\LogLevelsTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Logs\LogTests.cs">
+            <Link>Logs\LogTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Logs\SendMessageTests.cs">
+            <Link>Logs\SendMessageTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Metrics\MetricsTests.cs">
+            <Link>Metrics\MetricsTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\ConfigTests.cs">
+            <Link>Others\ConfigTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\DateTimeTests.cs">
+            <Link>Others\DateTimeTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\ExtentionPropertyCollectionTests.cs">
+            <Link>Others\ExtentionPropertyCollectionTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\SerializerTests.cs">
+            <Link>Others\SerializerTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\StringHelperTests.cs">
+            <Link>Others\StringHelperTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\ToolsTests.cs">
+            <Link>Others\ToolsTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\Others\VersionTests.cs">
+            <Link>Others\VersionTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\UnitTests\FakeUnitTestTests.cs">
+            <Link>UnitTests\FakeUnitTestTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\UnitTests\UnitTestTests.cs">
+            <Link>UnitTests\UnitTestTests.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Tests\UnitTestTypes\UnitTestTypeTests.cs">
+            <Link>UnitTestTypes\UnitTestTypeTests.cs</Link>
+        </Compile>
+        <None Include="..\..\Tests\Files\DefaultConfig.xml" Link="Files\DefaultConfig.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\..\Tests\Files\MiniConfig.xml" Link="Files\MiniConfig.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <Content Include="Files\Responses\ErrorResponse.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Files\Responses\ErrorResponse1.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Api.1.0\Api.1.0.csproj" />
+      <ProjectReference Include="..\TestTools\TestTools.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Files\ConfigIgnoreCase.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

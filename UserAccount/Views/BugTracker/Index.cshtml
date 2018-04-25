@@ -1,0 +1,52 @@
+﻿@using GridMvc.Html
+@model Zidium.UserAccount.Models.BugTrackerModel
+@{
+    ViewBag.Title = "Все разные ошибки";
+    ViewBag.ActiveMenuItems = "BugTracker";
+}
+
+@Html.Partial("_PageTitle")
+
+@section Styles
+{
+    @Styles.Render("~/Content/GridMvc")
+}
+
+@Html.Grid(Model.Events).Columns(columns =>
+{
+    columns.Add(t => t.EventType.SystemName).Titled("Тип события").RenderValueAs(m =>
+        @<text>
+            <div class="pull-right" style="margin-left: 10px;">
+                <a href="javascript:void(0);" onclick="ShowEventsInfo('event_@m.EventType.Id.ToString()')">
+                    <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                </a>
+            </div>
+             <p>
+                 <a href='@Url.Action("Show", "EventTypes", new {Id = m.EventType.Id} )'>@Html.Encode(m.EventType.SystemName)</a>
+             </p>
+            <div id='event_@m.EventType.Id.ToString()' style="display: none">
+                @foreach (var e in m.InnerEvents)
+                {
+                    var eventDescription = Html.Encode(e.StartDate) + " &mdash; " + Html.Encode(e.Component) + " (" + Html.Encode(e.Version) + ")";
+                    <p style="margin-left: 20px;">
+                        <a href='@Url.Action("Show", "Events", new { id = e.Id, componentId = e.ComponentId })'>@Html.Raw(eventDescription)</a>
+                    </p>
+                }
+            </div>
+        </text>
+    ).Encoded(false).Sanitized(false).Css("text-wordbreak");
+    columns.Add(t => t.Count).Titled("Количество").Css("text-center");
+}).Selectable(false)
+
+@section Scripts
+{
+    @Scripts.Render("~/Scripts/GridMvc")
+    @Scripts.Render("~/Scripts/AllControls")
+
+    <script>
+        function ShowEventsInfo(id) {
+            var div = $('#' + id);
+            div.toggle();
+        }
+    </script>
+}

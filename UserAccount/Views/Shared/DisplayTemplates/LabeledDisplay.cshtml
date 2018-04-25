@@ -1,0 +1,87 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Api
+@using Zidium.UserAccount.Helpers
+@model object
+
+@{
+    bool noGroup = ViewData.ContainsKey("NoGroup");
+    bool horizontalForm = ViewData.ContainsKey("HorizontalForm") && (bool)ViewData["HorizontalForm"] == true;
+    bool twoColumns = ViewData.ContainsKey("TwoColumns");
+}
+
+@if (!noGroup)
+{
+    @Html.Raw(@"<div class=""form-group"">")
+}
+
+@if (ViewData.ContainsKey("Caption"))
+{
+    @Html.Label(ViewData["Caption"].ToString(), new { @class = horizontalForm ? (twoColumns ? "col-sm-4 control-label" : "col-sm-2 control-label") : string.Empty });
+}
+else
+{
+    @Html.LabelFor(m => m, new { @class = horizontalForm ? (twoColumns ? "col-sm-4 control-label" : "col-sm-2 control-label") : string.Empty });
+}
+
+<p class='@(horizontalForm ? "col-sm-8" : string.Empty) form-control-static text-wordbreak'>
+    @if (@Model != null)
+    {
+        if (Model is bool)
+        {
+            @((bool)Model ? "Да" : "Нет")
+        }
+        else if (Model is DateTime)
+        {
+            @Html.Raw(((DateTime)Model).ToString("dd.MM.yyyy HH:mm:ss"))
+        }
+        else if (Model is TimeSpan)
+        {
+            @Html.Raw(GuiHelper.TimeSpanAsString((TimeSpan)Model))
+        }
+        else if (Model is Component)
+        {
+            @Html.ActionLink((Model as Component).DisplayName, "Show", "Components", new { id = (Model as Component).Id }, null)
+        }
+        else if (Model is ComponentType)
+        {
+            @Html.ActionLink((Model as ComponentType).DisplayName, "Show", "ComponentTypes", new { id = (Model as ComponentType).Id }, null)
+        }
+        else if (Model is EventType)
+        {
+            @Html.ActionLink((Model as EventType).DisplayName, "Show", "EventTypes", new { id = (Model as EventType).Id }, null)
+        }
+        else if (Model is Event)
+        {
+            @Html.ActionLink((Model as Event).Message ?? (Model as Event).Id.ToString(), "Show", "Events", new { id = (Model as Event).Id }, null)
+        }
+        else if (Model is User)
+        {
+            @Html.ActionLink((Model as User).Login, "Show", "Users", new { id = (Model as User).Id.ToString() }, null)
+        }
+        else if (Model is Subscription)
+        {
+            @Html.ActionLink((Model as Subscription).Id.ToString(), "Edit", "Subscriptions", new { id = (Model as Subscription).Id }, null)
+        }
+        else if (Model is UnitTestType)
+        {
+            @Html.ActionLink((Model as UnitTestType).DisplayName, "Show", "UnitTestTypes", new { id = (Model as UnitTestType).Id }, null)
+        }
+        else if (Model is EventImportance)
+        {
+            @Html.EventImportanceLabel((EventImportance)Model)
+        }
+        else if (Model is MonitoringStatus)
+        {
+            <span class="@GuiHelper.GetComponentStatusLabelCssClass((MonitoringStatus)Model)">@Model</span>
+        }
+        else
+        {
+            @Model.ToString()
+        }
+    }
+</p>
+
+@if (!noGroup)
+{
+    @Html.Raw(@"</div>")
+}

@@ -1,0 +1,55 @@
+﻿@using Zidium.UserAccount.Controllers
+@using Zidium.UserAccount.Models
+@model Zidium.UserAccount.Models.ComponentTreeDetails.EventsDetailsHistoryModel
+
+<p>
+    История событий (Top @ComponentTreeDetailsController.MaxEventTimelineCount) за
+    <span class="btn-group space-right" data-toggle="buttons" id="events-details-history-buttons">
+        <label class="btn btn-default btn-xs" id="btn-stats-hour">
+            <input type="radio" autocomplete="off">
+            Час
+        </label>
+        <label class="btn btn-default btn-xs active" id="btn-stats-day">
+            <input type="radio" autocomplete="off" checked>
+            День
+        </label>
+        <label class="btn btn-default btn-xs" id="btn-stats-week">
+            <input type="radio" autocomplete="off">
+            Неделя
+        </label>
+        <label class="btn btn-default btn-xs" id="btn-stats-month">
+            <input type="radio" autocomplete="off">
+            Месяц
+        </label>
+    </span>
+
+    <span id="events-details-history-loader" class="collapse">
+        <img src="~/Content/Icons/ajax-loader-white.gif" />
+    </span>
+</p>
+
+<div id="events-details-history-timelines">
+    <img src="~/Content/Icons/ajax-loader.gif" />
+</div>
+
+<script>
+    $('#events-details-history-buttons #btn-stats-hour').click(function () { eventsDetailsHistoryLoadStats('@TimelineInterval.Hour'); });
+    $('#events-details-history-buttons #btn-stats-day').click(function () { eventsDetailsHistoryLoadStats('@TimelineInterval.Day'); });
+    $('#events-details-history-buttons #btn-stats-week').click(function () { eventsDetailsHistoryLoadStats('@TimelineInterval.Week'); });
+    $('#events-details-history-buttons #btn-stats-month').click(function () { eventsDetailsHistoryLoadStats('@TimelineInterval.Month'); });
+    $('#events-details-history-buttons #btn-stats-day').click();
+
+    function eventsDetailsHistoryLoadStats(interval) {
+        $('#events-details-history-loader').show();
+
+        var url = '@Html.Raw(Url.Action("ShowTimelinesEventsPartial", "ComponentTreeDetails"))';
+        var params = { id : '@Model.Id', interval: interval, all: true };
+
+        $('#events-details-history-timelines')
+            .load(url,
+                params,
+                function () {
+                    $('#events-details-history-loader').hide();
+                });
+    }
+</script>
