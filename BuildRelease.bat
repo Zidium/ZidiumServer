@@ -25,3 +25,5 @@ xcopy /E /Y /S Tools\DatabasesUpdate\bin\Release\NLog.config Release\DatabasesUp
 xcopy /E /Y /S Tools\DatabasesUpdate\bin\Release\DatabasesUpdate.exe.config Release\DatabasesUpdate\
 xcopy /E /Y /S Tools\DatabasesUpdate\bin\Release\*.exe Release\DatabasesUpdate\
 xcopy /E /Y /S Tools\DatabasesUpdate\bin\Release\*.dll Release\DatabasesUpdate\
+
+pause
