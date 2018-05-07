@@ -123,19 +123,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-
-            int count;
-            try
-            {
-                count = repository.DeleteEvents(categories, maxCount, date);
-            }
-            catch
-            {
-                var statusesData = repository.DebugGetEventStatusesData(categories, maxCount, date);
-                logger.Warn("EventStatusesData: " + statusesData);
-                throw;
-            }
-
+            var count = repository.DeleteEvents(categories, maxCount, date);
             stopwatch.Stop();
             logger.Trace("Удалено строк событий: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
             Interlocked.Add(ref DeletedEventsCount, count);

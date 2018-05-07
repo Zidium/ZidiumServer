@@ -285,7 +285,12 @@ namespace Zidium.Core.AccountsDb
                     command.CommandTimeout = 0;
 
                     var query = string.Format(
-                        @"DELETE FROM [dbo].[Events] WHERE Id IN
+                        @"UPDATE [dbo].[Events]
+                        SET LastStatusEventId = NULL
+                        WHERE LastStatusEventId IN
+                        (" + EventsSubQuery + @")
+
+                        DELETE FROM [dbo].[Events] WHERE Id IN
                         (" + EventsSubQuery + ")",
                         maxCount, categories);
 
@@ -419,6 +424,11 @@ namespace Zidium.Core.AccountsDb
 
                     var query = string.Format(
                         @"DELETE FROM [dbo].[NotificationsHttp]
+                        WHERE NotificationId IN (SELECT Id FROM [dbo].[Notifications]
+                        WHERE EventId IN 
+                        (" + EventsSubQuery + @"))
+
+                        DELETE FROM [dbo].[LastComponentNotifications]
                         WHERE NotificationId IN (SELECT Id FROM [dbo].[Notifications]
                         WHERE EventId IN 
                         (" + EventsSubQuery + @"))
