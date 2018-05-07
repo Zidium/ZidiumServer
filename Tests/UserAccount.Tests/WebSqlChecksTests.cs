@@ -53,6 +53,7 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal("Sql-запрос: " + model.Name, unitTest.DisplayName);
                 Assert.Equal(model.Provider, unitTest.SqlRule.Provider);
                 Assert.True(unitTest.SimpleMode);
+                Assert.Equal(2, unitTest.AttempMax);
 
                 unitTestId = unitTest.Id;
             }

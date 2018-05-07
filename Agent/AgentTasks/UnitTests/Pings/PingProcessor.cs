@@ -27,34 +27,37 @@ namespace Zidium.Agent.AgentTasks
                     ErrorMessage = "Не удалось получить IP адрес"
                 };
             }
-            var ping = new Ping();
-            int timeoutMs = (int) timeout.TotalMilliseconds;
-            var buffer = new byte[] {1, 2, 3, 4};
-            var option = new PingOptions()
+
+            using (var ping = new Ping())
             {
-                DontFragment = false,
-                Ttl = 32
-            };
+                var timeoutMs = (int) timeout.TotalMilliseconds;
+                var buffer = new byte[] {1, 2, 3, 4};
+                var option = new PingOptions()
+                {
+                    DontFragment = false,
+                    Ttl = 32
+                };
 
-            var reply = ping.Send(ip, timeoutMs, buffer, option);
+                var reply = ping.Send(ip, timeoutMs, buffer, option);
 
-            if (reply == null)
-                return null;
+                if (reply == null)
+                    return null;
 
-            if (reply.Status == IPStatus.Success)
-            {
+                if (reply.Status == IPStatus.Success)
+                {
+                    return new PingResult()
+                    {
+                        ErrorCode = PingErrorCode.Success,
+                        ErrorMessage = null
+                    };
+                }
+
                 return new PingResult()
                 {
-                    ErrorCode = PingErrorCode.Success,
-                    ErrorMessage = null
+                    ErrorCode = PingErrorCode.Timeout,
+                    ErrorMessage = "Ошибка: " + reply.Status
                 };
             }
-
-            return new PingResult()
-            {
-                ErrorCode = PingErrorCode.Timeout,
-                ErrorMessage = "Ошибка: " + reply.Status
-            };
         }
 
         protected override Guid GetUnitTestTypeId()
@@ -62,10 +65,9 @@ namespace Zidium.Agent.AgentTasks
             return SystemUnitTestTypes.PingTestType.Id;
         }
 
-        protected override SendUnitTestResultRequestData GetResult(
-            Guid accountId, 
+        protected override UnitTestExecutionInfo GetResult(Guid accountId,
             AccountDbContext accountDbContext,
-            UnitTest unitTest, 
+            UnitTest unitTest,
             ILogger logger,
             CancellationToken token)
         {
@@ -80,44 +82,25 @@ namespace Zidium.Agent.AgentTasks
                 return null; // Правило ещё не сохранено
             }
 
-            var timeOut = TimeSpan.FromMilliseconds(rule.TimeoutMs);
+            var timeout = TimeSpan.FromMilliseconds(rule.TimeoutMs);
             PingResult result = null;
-            int attemps = 5;
 
-            // если пинга раньше не было, то нет смысла делать много попыток
-            if (unitTest.Bulb.Status != MonitoringStatus.Success)
+            token.ThrowIfCancellationRequested();
+
+            try
             {
-                attemps = 2;
+                result = Ping(rule.Host, timeout);
             }
-
-            for (int i = 0; i < attemps; i++)
+            catch (Exception exception)
             {
-                token.ThrowIfCancellationRequested();
+                exception.Data.Add("AccountId", accountId);
+                exception.Data.Add("UnitTestId", rule.UnitTestId);
+                exception.Data.Add("UnitTestName", rule.UnitTest.DisplayName);
+                exception.Data.Add("Address", rule.Host);
+                logger.Error(exception);
 
-                try
-                {
-                    result = Ping(rule.Host, timeOut);
-                }
-                catch (Exception exception)
-                {
-                    exception.Data.Add("AccountId", accountId);
-                    exception.Data.Add("UnitTestId", rule.UnitTestId);
-                    exception.Data.Add("UnitTestName", rule.UnitTest.DisplayName);
-                    exception.Data.Add("Address", rule.Host);
-                    logger.Error(exception);
-
-                    // ошибка агента, не обновляем данные проверки
-                    return null;
-                }
-                if (result.ErrorCode == PingErrorCode.Success)
-                {
-                    break;
-                }
-                if (IsInternetWork() == false)
-                {
-                    // если интернет не работает, то не обновляем данные проверки
-                    return null;
-                }
+                // ошибка агента, не обновляем данные проверки
+                return null;
             }
 
             if (result == null)
@@ -125,17 +108,18 @@ namespace Zidium.Agent.AgentTasks
 
             if (result.ErrorCode == PingErrorCode.Success)
             {
-                return new SendUnitTestResultRequestData()
+                return new UnitTestExecutionInfo()
                 {
                     Message = "Успешно",
                     Result = UnitTestResult.Success
                 };
             }
 
-            return new SendUnitTestResultRequestData()
+            return new UnitTestExecutionInfo()
             {
-                Message =  result.ErrorMessage,
-                Result = UnitTestResult.Alarm
+                Message = result.ErrorMessage,
+                Result = UnitTestResult.Alarm,
+                IsNetworkProblem = true // Для пинга всегда будем использовать попытки
             };
         }
     }

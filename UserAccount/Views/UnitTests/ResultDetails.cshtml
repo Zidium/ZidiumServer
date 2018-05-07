@@ -164,6 +164,10 @@ else
                     @if (Model.UnitTest.PeriodSeconds.HasValue)
                     {
                         @GuiHelper.TimeSpanAsString(TimeSpan.FromSeconds(Model.UnitTest.PeriodSeconds.Value))
+                        if (Model.UnitTest.AttempMax > 1)
+                        {
+                            <text>(@Model.UnitTest.AttempMax попытки)</text>
+                        }
                     }
                     else
                     {

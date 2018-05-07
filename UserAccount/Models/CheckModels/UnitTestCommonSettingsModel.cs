@@ -25,7 +25,7 @@ namespace Zidium.UserAccount.Models.CheckModels
 
         [Display(Name = "Период")]
         public TimeSpan? Period { get; set; }
-        
+
         [Display(Name = "Цвет проверки при ошибке")]
         public ColorStatusSelectorValue ErrorColor { get; set; }
 
@@ -34,6 +34,9 @@ namespace Zidium.UserAccount.Models.CheckModels
 
         [Display(Name = "Время актуальности")]
         public TimeSpan? ActualTime { get; set; }
+
+        [Display(Name = "Количество попыток")]
+        public int AttempMax { get; set; }
 
         public string Action { get; set; }
 
@@ -65,12 +68,13 @@ namespace Zidium.UserAccount.Models.CheckModels
                 ComponentId = test.ComponentId;
                 Period = TimeSpan.FromSeconds(test.PeriodSeconds ?? 0);
                 ActualTime = TimeSpanHelper.FromSeconds(test.ActualTimeSecs);
-                NoSignalColor =  ColorStatusSelectorValue.FromColor(test.NoSignalColor);
+                NoSignalColor = ColorStatusSelectorValue.FromColor(test.NoSignalColor);
                 ErrorColor = ColorStatusSelectorValue.FromUnitTestResultStatus(test.ErrorColor);
                 if (ErrorColor.NotChecked)
                 {
                     ErrorColor.RedChecked = true;
                 }
+                AttempMax = test.AttempMax;
             }
             else
             {
@@ -80,6 +84,7 @@ namespace Zidium.UserAccount.Models.CheckModels
                 CheckName = DefaultCheckName;
                 ErrorColor = ColorStatusSelectorValue.FromUnitTestResultStatus(UnitTestResult.Alarm);
                 NoSignalColor = ColorStatusSelectorValue.FromUnitTestResultStatus(UnitTestResult.Alarm);
+                AttempMax = 2;
             }
         }
 
@@ -167,14 +172,15 @@ namespace Zidium.UserAccount.Models.CheckModels
                 {
                     ComponentId = ComponentId,
                     DisplayName = CheckName,
-                    PeriodSeconds = Period != null ? Period.Value.TotalSeconds : (double?) null,
+                    PeriodSeconds = Period != null ? Period.Value.TotalSeconds : (double?)null,
                     ActualTime = !isSystem ? TimeSpanHelper.GetSeconds(ActualTime) : null,
                     ErrorColor = ErrorColor.GetSelectedUnitTestResultStatuses().FirstOrDefault(),
                     NoSignalColor = !isSystem ? NoSignalColor.GetSelectedColors().FirstOrDefault() : Core.Common.ObjectColor.Gray,
                     UnitTestId = UnitTest.Id,
-                    SimpleMode = false
+                    SimpleMode = false,
+                    AttempMax = AttempMax
                 });
-           
+
             updateResponse.Check();
 
             var setNextTime = new SetUnitTestNextTimeRequestData()

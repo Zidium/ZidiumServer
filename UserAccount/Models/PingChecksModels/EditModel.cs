@@ -14,9 +14,6 @@ namespace Zidium.UserAccount.Models.PingChecksModels
         [Display(Name = "Таймаут, мс")]
         public int TimeoutMs { get; set; }
 
-        [Display(Name = "Количество попыток")]
-        public int Attemps { get; set; }
-
         public override string ComponentLabelText
         {
             get { return "Выберите компонент (хост)"; }
@@ -45,7 +42,6 @@ namespace Zidium.UserAccount.Models.PingChecksModels
         public void LoadRule()
         {
             TimeoutMs = 1000;
-            Attemps = 5;
 
             if (UnitTest != null)
             {
@@ -54,7 +50,6 @@ namespace Zidium.UserAccount.Models.PingChecksModels
                 {
                     Host = rule.Host;
                     TimeoutMs = rule.TimeoutMs;
-                    Attemps = rule.Attemps;
                 }
             }
         }
@@ -71,7 +66,6 @@ namespace Zidium.UserAccount.Models.PingChecksModels
             var rule = UnitTest.PingRule;
             rule.Host = Host;
             rule.TimeoutMs = TimeoutMs;
-            rule.Attemps = Attemps;
         }
 
         protected override void ValidateRule()
@@ -79,10 +73,6 @@ namespace Zidium.UserAccount.Models.PingChecksModels
             if (string.IsNullOrEmpty(Host))
             {
                 throw new UserFriendlyException("Заполните хост");
-            }
-            if (Attemps < 1)
-            {
-                throw new UserFriendlyException("Количество попыток должно быть больше нуля");
             }
             if (TimeoutMs <= 0)
             {

@@ -9,7 +9,6 @@ namespace Zidium.Core.AccountsDb.Mapping
             ToTable("HttpRequestUnitTests");
             HasKey(t => t.UnitTestId);
             Property(t => t.UnitTestId).HasColumnName("UnitTestId");
-            Property(t => t.ProcessAllRulesOnError).HasColumnName("ProcessAllRulesOnError");
             HasRequired(t => t.UnitTest).WithOptional(t => t.HttpRequestUnitTest);
         }
     }

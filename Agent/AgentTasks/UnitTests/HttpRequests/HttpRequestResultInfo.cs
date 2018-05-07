@@ -23,5 +23,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
         public string ResponseHeaders { get; set; }
 
         public HttpStatusCode? HttpStatusCode { get; set; }
+
+        public bool IsNetworkProblem { get; set; }
     }
 }

@@ -25,6 +25,11 @@ namespace Zidium.Core.Api
         /// </summary>
         public string Message { get; set; }
 
+        /// <summary>
+        /// Номер попытки по счёту, для неудачных попыток
+        /// </summary>
+        public int? AttempCount { get; set; }
+
         public List<ExtentionPropertyDto> Properties { get; set; }
 
         public long GetSize()

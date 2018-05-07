@@ -19,18 +19,20 @@ namespace Zidium.Agent.AgentTasks
 
         public static DateTime GetPaymentDate(Uri uri)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            response.Close();
+            var request = (HttpWebRequest)WebRequest.Create(uri);
+            using (var response = (HttpWebResponse) request.GetResponse())
+            {
+                response.Close();
+            }
 
             //retrieve the ssl cert and assign it to an X509Certificate object
-            X509Certificate cert = request.ServicePoint.Certificate;
+            var cert = request.ServicePoint.Certificate;
 
             if (cert == null)
                 throw new ArgumentNullException("cert");
 
             //convert the X509Certificate to an X509Certificate2 object by passing it into the constructor
-            X509Certificate2 cert2 = new X509Certificate2(cert);
+            var cert2 = new X509Certificate2(cert);
             var value = cert2.GetExpirationDateString();
             var date = ParseHelper.TryParseDateTime(value);
             if (date == null)
@@ -45,10 +47,9 @@ namespace Zidium.Agent.AgentTasks
             return SystemUnitTestTypes.SslTestType.Id;
         }
 
-        protected override SendUnitTestResultRequestData GetResult(
-            Guid accountId, 
-            AccountDbContext accountDbContext, 
-            UnitTest unitTest, 
+        protected override UnitTestExecutionInfo GetResult(Guid accountId,
+            AccountDbContext accountDbContext,
+            UnitTest unitTest,
             ILogger logger,
             CancellationToken token)
         {
@@ -58,7 +59,7 @@ namespace Zidium.Agent.AgentTasks
             if (uri.Scheme != "https")
             {
                 rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
-                return new SendUnitTestResultRequestData()
+                return new UnitTestExecutionInfo()
                 {
                     Message = "Url должен начинаться с https://",
                     Result = UnitTestResult.Alarm
@@ -73,16 +74,17 @@ namespace Zidium.Agent.AgentTasks
             catch (WebException exception)
             {
                 rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
-                return new SendUnitTestResultRequestData()
+                return new UnitTestExecutionInfo()
                 {
                     Result = UnitTestResult.Alarm,
-                    Message = exception.Message
+                    Message = exception.Message,
+                    IsNetworkProblem = true
                 };
             }
 
             var days = (date.Date - DateTime.Now.Date).TotalDays;
             rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
-            var result = new SendUnitTestResultRequestData()
+            var result = new UnitTestExecutionInfo()
             {
                 Message = string.Format(
                     "Осталось {0} дней до окончания срока действия сертификата. Срок действия {1}",
@@ -91,7 +93,7 @@ namespace Zidium.Agent.AgentTasks
             };
             if (days <= rule.AlarmDaysCount)
             {
-                result.Result = UnitTestResult.Alarm; 
+                result.Result = UnitTestResult.Alarm;
             }
             else if (days <= rule.WarningDaysCount)
             {

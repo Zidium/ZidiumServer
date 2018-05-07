@@ -47,6 +47,8 @@ namespace Zidium.Core.Caching
             dbEntity.NoSignalColor = unitTest.NoSignalColor;
             dbEntity.ActualTimeSecs = TimeSpanHelper.GetSeconds(unitTest.ActualTime);
             dbEntity.LastExecutionDate = unitTest.LastExecutionDate;
+            dbEntity.AttempCount = unitTest.AttempCount;
+            dbEntity.AttempMax = unitTest.AttempMax;
         }
 
         public override int BatchCount

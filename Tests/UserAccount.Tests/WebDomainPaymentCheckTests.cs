@@ -51,6 +51,7 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(30, unitTest.DomainNamePaymentPeriodRule.WarningDaysCount);
                 Assert.Equal(14, unitTest.DomainNamePaymentPeriodRule.AlarmDaysCount);
                 Assert.True(unitTest.SimpleMode);
+                Assert.Equal(2, unitTest.AttempMax);
 
                 unitTestId = unitTest.Id;
             }

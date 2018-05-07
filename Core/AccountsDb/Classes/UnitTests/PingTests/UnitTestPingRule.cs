@@ -19,11 +19,6 @@ namespace Zidium.Core.AccountsDb
         public int TimeoutMs { get; set; }
 
         /// <summary>
-        /// Количество попыток
-        /// </summary>
-        public int Attemps { get; set; }
-
-        /// <summary>
         /// Код ошибки последнего выполнения
         /// </summary>
         public PingErrorCode? LastRunErrorCode { get; set; }

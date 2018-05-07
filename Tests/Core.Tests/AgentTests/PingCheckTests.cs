@@ -5,7 +5,6 @@ using Zidium.Core.AccountsDb;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    
     public class PingCheckTests
     {
         [Fact]

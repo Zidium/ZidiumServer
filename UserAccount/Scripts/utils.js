@@ -18,7 +18,7 @@
 function initTooltips(context) {
 
     if (!context) {
-        context = $(window);
+        context = $(document);
     }
 
     // добавляем иконку

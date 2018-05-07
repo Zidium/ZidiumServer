@@ -50,9 +50,6 @@
         /// </summary>
         UrlFormatError = 9,
 
-        // Не работает интернет на стороне агента
-        InternetNotWork = 20,
-
         /// <summary>
         /// Ошибка неизвестна
         /// </summary>

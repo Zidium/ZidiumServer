@@ -49,6 +49,7 @@
         @Html.TextBoxFor(x => x.CheckName, new { @class = "form-control" })
     </div>
 </div>
+
 <div class="form-group">
     <label for="ComponentId" class="control-label col-sm-3">
         <span>Выберите компонент (хост)</span>&nbsp;<sup><span class="text-danger glyphicon glyphicon-asterisk" style="font-size: 7px;"></span></sup>
@@ -125,10 +126,10 @@
     </label>
     <div class="col-sm-6">
         @Html.ColorStatusSelector(x => Model.ErrorColor, new ColorStatusSelectorOptions()
-       {
-           AutoRefreshPage = false,
-           MultiSelectMode = false
-       })
+   {
+       AutoRefreshPage = false,
+       MultiSelectMode = false
+   })
     </div>
 </div>
 
@@ -137,7 +138,7 @@
     // Цвет без сигнала настраивается только для пользовательских проверок
 
     <div class="form-group">
-        <label class="control-label col-sm-3" for="NoSignalColor">
+        <label for="NoSignalColor" class="control-label col-sm-3">
             Цвет, если нет сигнала
             <span class="ziTooltipContent">
                 Если время актуальности последнего результата проверки истекло,
@@ -154,6 +155,20 @@
         </div>
     </div>
 }
+
+<div class="form-group">
+    <label for="AttempMax" class="control-label col-sm-3">
+        <span>Количество попыток</span>&nbsp;<sup><span class="text-danger glyphicon glyphicon-asterisk" style="font-size: 7px;"></span></sup>
+        <span class="ziTooltipContent">
+            Количество неуспешных попыток, после достижения которого проверка будет считаться проваленной.
+            Одиночная попытка всегда может провалиться из-за сетевых проблем.
+            Поэтому мы рекомендуем хотя бы две попытки.
+        </span>
+    </label>
+    <div class="col-sm-3">
+        @Html.TextBoxFor(x => x.AttempMax, new { @class = "form-control" })
+    </div>
+</div>
 
 <script>
     $(function () {

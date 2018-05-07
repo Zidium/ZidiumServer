@@ -5,6 +5,7 @@ using NLog;
 using Zidium.Agent.AgentTasks.HttpRequests;
 using Zidium.Core.AccountsDb;
 using Xunit;
+using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 using Zidium.TestTools;
 
@@ -19,7 +20,7 @@ namespace Zidium.Core.Tests.AgentTests
         }
 
         [Fact]
-        public void IsIPTest()
+        public void IsIpTest()
         {
             Assert.True(NetworkHelper.IsIpAddress("212.45.18.181"));
             Assert.True(NetworkHelper.IsIpAddress("127.0.0.1"));
@@ -40,172 +41,464 @@ namespace Zidium.Core.Tests.AgentTests
         }
 
         [Fact]
-        public void HttpRequestCheck()
+        public void SuccessCheckTest()
         {
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck");
-            Guid unitTestId = unitTest.Info.Id;
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                var code = HttpRequestErrorCode.ErrorHtmlFound;
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
+                    Url = "http://fakesite.zidium.net/ok",
+                    TimeoutSeconds = 5
+                });
+
+                accountDbContext.SaveChanges();
+            }
+
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть зелёной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Success, unitTestObj.Bulb.Status);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckErrorHtmlFoundTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
+                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                {
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
                     ErrorHtml = "Все хорошо",
                     TimeoutSeconds = 5
                 });
 
-                code = HttpRequestErrorCode.InvalidResponseCode;
+                accountDbContext.SaveChanges();
+            }
+
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.ErrorHtmlFound, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckInvalidResponseCodeTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
                     Url = "http://fakesite.zidium.net/ok-22222222",
                     TimeoutSeconds = 5
                 });
 
-                code = HttpRequestErrorCode.Success;
+                accountDbContext.SaveChanges();
+            }
+
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.InvalidResponseCode, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckSuccessHtmlNotFoundTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
-                    TimeoutSeconds = 5,
-                    SuccessHtml = "Все хорошо"
+                    SuccessHtml = "Все хорошо 77777777",
+                    TimeoutSeconds = 5
                 });
 
-                code = HttpRequestErrorCode.SuccessHtmlNotFound;
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
-                {
-                    DisplayName = code.ToString(),
-                    Url = "http://fakesite.zidium.net/ok",
-                    TimeoutSeconds = 5,
-                    SuccessHtml = "Все хорошо 77777777"
-                });
+                accountDbContext.SaveChanges();
+            }
 
-                code = HttpRequestErrorCode.TcpError;
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.SuccessHtmlNotFound, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckTcpErrorTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
                     Url = "http://localhost:3451/",
-                    TimeoutSeconds = 60
+                    TimeoutSeconds = 5
                 });
 
-                code = HttpRequestErrorCode.Timeout;
+                accountDbContext.SaveChanges();
+            }
+
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.TcpError, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckTimeoutTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
                     Url = "http://fakesite.zidium.net/ok?wait=5",
                     TimeoutSeconds = 4
                 });
 
-                code = HttpRequestErrorCode.TooLargeResponse;
+                accountDbContext.SaveChanges();
+            }
+
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.Timeout, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckTooLargeResponseTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
                     TimeoutSeconds = 5,
                     MaxResponseSize = 1
                 });
 
-                code = HttpRequestErrorCode.UnknownDomain;
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
-                {
-                    DisplayName = code.ToString(),
-                    Url = "http://fakesite22222.zidium.net/ok",
-                    TimeoutSeconds = 5
-                });
-
-                code = HttpRequestErrorCode.UrlFormatError;
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
-                {
-                    DisplayName = code.ToString(),
-                    Url = "http555555://fakesite.zidium.net/ok",
-                    TimeoutSeconds = 5
-                });
-
-                int order = 0;
-                foreach (var rule in httpUnitTest.Rules)
-                {
-                    rule.SortNumber = order++;
-                    rule.HttpRequestUnitTest = httpUnitTest;
-                    rule.HttpRequestUnitTestId = httpUnitTest.UnitTestId;
-                    rule.Id = Guid.NewGuid();
-                }
-                httpUnitTest.ProcessAllRulesOnError = true;
                 accountDbContext.SaveChanges();
-
-                var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
-                processor.ProcessAccount(account.Id, unitTestId);
             }
 
-            // проверим данные в БД
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
             using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
             {
-                var test = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
-                Assert.True(test.NextExecutionDate > DateTime.Now);
-                var codes = new[]
-                {
-                    HttpRequestErrorCode.ErrorHtmlFound,
-                    HttpRequestErrorCode.InvalidResponseCode,
-                    HttpRequestErrorCode.Success,
-                    HttpRequestErrorCode.SuccessHtmlNotFound,
-                    HttpRequestErrorCode.TcpError,
-                    HttpRequestErrorCode.Timeout,
-                    HttpRequestErrorCode.TooLargeResponse,
-                    HttpRequestErrorCode.UnknownDomain,
-                    HttpRequestErrorCode.UrlFormatError
-                };
-                foreach (var code in codes)
-                {
-                    var rule = test.HttpRequestUnitTest.Rules.Single(x => x.DisplayName == code.ToString());
-                    Assert.Equal(code, rule.LastRunErrorCode);
-                }
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.TooLargeResponse, rule.LastRunErrorCode);
             }
         }
 
         [Fact]
-        public void HttpProcessorTest()
+        public void FailedCheckUnknownDomainTest()
         {
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck");
-            Guid unitTestId = unitTest.Info.Id;
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                var code = HttpRequestErrorCode.ErrorHtmlFound;
                 httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
                 {
-                    DisplayName = code.ToString(),
-                    Url = "http://fakesite.zidium.net/ok",
-                    ErrorHtml = "Все хорошо",
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
+                    Url = "http://fakesite2222.zidium.net/ok",
                     TimeoutSeconds = 5
                 });
-                foreach (var rule in httpUnitTest.Rules)
-                {
-                    rule.HttpRequestUnitTest = httpUnitTest;
-                    rule.HttpRequestUnitTestId = httpUnitTest.UnitTestId;
-                    rule.Id = Guid.NewGuid();
-                }
 
                 accountDbContext.SaveChanges();
+            }
 
-                var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
-                processor.ProcessAccount(account.Id, unitTestObj.Id);
-                Assert.True(processor.SuccessCount >= 1);
-                Assert.Equal(0, processor.ErrorCount);
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.UnknownDomain, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void FailedCheckUrlFormatErrorTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
+                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                {
+                    Id = Guid.NewGuid(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    DisplayName = Guid.NewGuid().ToString(),
+                    Url = "http5://fakesite.zidium.net/ok",
+                    TimeoutSeconds = 5
+                });
+
+                accountDbContext.SaveChanges();
+            }
+
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
+                var rule = unitTestObj.HttpRequestUnitTest.Rules.First();
+                Assert.Equal(HttpRequestErrorCode.UrlFormatError, rule.LastRunErrorCode);
+            }
+        }
+
+        [Fact]
+        public void MultipleAttempsTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var client = account.GetClient();
+            var component = account.CreateRandomComponentControl();
+
+            // Создадим проверку, которая должна провалиться только после второй попытки
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTestId = unitTest.Info.Id;
+
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                unitTestObj.PeriodSeconds = (int)TimeSpan.FromMinutes(1).TotalSeconds;
+                unitTestObj.AttempMax = 2;
+                unitTestObj.ErrorColor = UnitTestResult.Alarm;
+
+                var httpUnitTest = unitTestObj.HttpRequestUnitTest;
+
+                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                {
+                    Id = Guid.NewGuid(),
+                    DisplayName = Guid.NewGuid().ToString(),
+                    HttpRequestUnitTest = httpUnitTest,
+                    Url = "http://fakesite.zidium.net/ok?wait=10",
+                    TimeoutSeconds = 5
+                });
+
+                accountDbContext.SaveChanges();
+            }
+
+            // Первая попытка
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Null(processor.DbProcessor.FirstException);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Проверка не должна стать красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(1, unitTestObj.AttempCount);
+                Assert.Equal(MonitoringStatus.Unknown, unitTestObj.Bulb.Status);
+            }
+
+            // Вторая попытка
+            processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.SetNow(DateTime.Now.AddMinutes(1));
+            processor.ProcessAccount(account.Id, unitTestId);
+            Assert.Null(processor.DbProcessor.FirstException);
+            Assert.Equal(1, processor.SuccessCount);
+            Assert.Equal(0, processor.ErrorCount);
+
+            // Теперь проверка должна быть красной
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
+                Assert.Equal(2, unitTestObj.AttempCount);
+                Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
             }
         }
     }

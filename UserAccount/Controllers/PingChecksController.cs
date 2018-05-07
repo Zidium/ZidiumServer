@@ -100,7 +100,6 @@ namespace Zidium.UserAccount.Controllers
                 unitTest.PingRule = new UnitTestPingRule()
                 {
                     TimeoutMs = 5000,
-                    Attemps = 4
                 };
             }
             unitTest.PingRule.Host = GetModelHost(model);

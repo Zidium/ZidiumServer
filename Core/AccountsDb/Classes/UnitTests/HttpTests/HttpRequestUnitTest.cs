@@ -28,8 +28,6 @@ namespace Zidium.Core.AccountsDb
         /// </summary>
         public virtual ICollection<HttpRequestUnitTestRule> Rules { get; set; }
 
-        public bool ProcessAllRulesOnError { get; set; }
-
         /// <summary>
         /// Подтверждено наличие баннера
         /// </summary>

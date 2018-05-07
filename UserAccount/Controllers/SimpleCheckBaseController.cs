@@ -176,7 +176,8 @@ namespace Zidium.UserAccount.Controllers
                     NoSignalColor = ObjectColor.Gray,
                     PeriodSeconds = TimeSpanHelper.GetSeconds(model.Period),
                     SystemName = UnitTestHelper.GetDynamicSystemName(unitTestId),
-                    UnitTestTypeId = GetUnitTestTypeId()
+                    UnitTestTypeId = GetUnitTestTypeId(),
+                    AttempMax = 2
                 };
                 dispatcher.GetOrCreateUnitTest(CurrentUser.AccountId, createUnitTestData).Check();
                 var unitTest = GetUnitTestById(unitTestId);

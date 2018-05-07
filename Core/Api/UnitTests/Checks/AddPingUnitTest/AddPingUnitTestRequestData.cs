@@ -12,10 +12,5 @@
         /// </summary>
         public int TimeoutMs { get; set; }
 
-        /// <summary>
-        /// Количество попыток
-        /// </summary>
-        public int Attemps { get; set; }
-
     }
 }

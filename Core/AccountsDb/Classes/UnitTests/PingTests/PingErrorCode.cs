@@ -16,10 +16,5 @@
         /// Превышение таймаута
         /// </summary>
         Timeout = 3,
-
-        /// <summary>
-        /// Неизвестная ошибка
-        /// </summary>
-        UnknownError = 50
     }
 }

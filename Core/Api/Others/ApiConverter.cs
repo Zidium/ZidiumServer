@@ -736,7 +736,7 @@ namespace Zidium.Core
                 ErrorColor = unitTest.ErrorColor,
                 Host = unitTest.PingRule.Host,
                 TimeoutMs = unitTest.PingRule.TimeoutMs,
-                Attemps = unitTest.PingRule.Attemps
+                AttempMax = unitTest.AttempMax
             };
         }
 
@@ -754,6 +754,7 @@ namespace Zidium.Core
                 DisplayName = unitTest.DisplayName,
                 PeriodSeconds = unitTest.PeriodSeconds ?? 0,
                 ErrorColor = unitTest.ErrorColor,
+                AttempMax = unitTest.AttempMax,
                 Rules = unitTest.HttpRequestUnitTest.Rules.Select(t => new AddHttpUnitTestRuleResponseData()
                 {
                     SortNumber = t.SortNumber,

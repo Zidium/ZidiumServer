@@ -23,6 +23,8 @@ namespace Zidium.Core.Api
 
         public bool? SimpleMode { get; set; }
 
+        public int? AttempMax { get; set; }
+
         /// <summary>
         /// Если ИД указан, то при создании проверки будет использоваться данный ИД
         /// Используется при содании "простых" проверок

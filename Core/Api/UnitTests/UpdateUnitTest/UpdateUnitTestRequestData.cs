@@ -22,5 +22,7 @@ namespace Zidium.Core.Api
         public ObjectColor? NoSignalColor { get; set; }
 
         public bool? SimpleMode { get; set; }
+
+        public int? AttempMax { get; set; }
     }
 }

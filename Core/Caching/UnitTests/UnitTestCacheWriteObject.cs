@@ -121,6 +121,10 @@ namespace Zidium.Core.Caching
             get { return SystemUnitTestTypes.IsSystem(TypeId); }
         }
 
+        public int AttempCount { get; set; }
+
+        public int AttempMax { get; set; }
+
         public static UnitTestCacheWriteObject Create(UnitTest unitTest, Guid accountId)
         {
             if (unitTest == null)
@@ -149,7 +153,9 @@ namespace Zidium.Core.Caching
                 TypeId = unitTest.TypeId,
                 NoSignalColor = unitTest.NoSignalColor,
                 ActualTime = TimeSpanHelper.FromSeconds(unitTest.ActualTimeSecs),
-                LastExecutionDate = unitTest.LastExecutionDate
+                LastExecutionDate = unitTest.LastExecutionDate,
+                AttempCount = unitTest.AttempCount,
+                AttempMax = unitTest.AttempMax
             };
         }
 
@@ -175,7 +181,9 @@ namespace Zidium.Core.Caching
                 TypeId = TypeId,
                 NoSignalColor = NoSignalColor,
                 ActualTimeSecs = TimeSpanHelper.GetSeconds(ActualTime),
-                LastExecutionDate = LastExecutionDate
+                LastExecutionDate = LastExecutionDate,
+                AttempCount = AttempCount,
+                AttempMax = AttempMax
             };
         }
     }

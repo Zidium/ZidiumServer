@@ -47,6 +47,7 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal((int)TimeSpan.FromMinutes(10).TotalSeconds, unitTest.PeriodSeconds);
                 Assert.Equal(ObjectColor.Gray, unitTest.NoSignalColor);
                 Assert.True(unitTest.SimpleMode);
+                Assert.Equal(2, unitTest.AttempMax);
 
                 unitTestId = unitTest.Id;
             }

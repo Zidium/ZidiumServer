@@ -159,6 +159,14 @@
     <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.Designer.cs">
       <DependentUpon>201803232225266_Initial.cs</DependentUpon>
     </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201805040752329_AddedAttempsToUnittest.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201805040752329_AddedAttempsToUnittest.Designer.cs">
+      <DependentUpon>201805040752329_AddedAttempsToUnittest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.Designer.cs">
+      <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
+    </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
     <Compile Include="AccountsDb\Provider.cs" />
     <Compile Include="AccountsDb\Repositories\DefectRepository.cs" />
@@ -867,6 +875,12 @@
   <ItemGroup>
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.resx">
       <DependentUpon>201803232225266_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201805040752329_AddedAttempsToUnittest.resx">
+      <DependentUpon>201805040752329_AddedAttempsToUnittest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.resx">
+      <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

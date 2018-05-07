@@ -22,9 +22,8 @@ namespace Zidium.Agent.AgentTasks
             return SystemUnitTestTypes.SqlTestType.Id;
         }
 
-        protected override SendUnitTestResultRequestData GetResult(
-            Guid accountId, 
-            AccountDbContext accountDbContext, 
+        protected override UnitTestExecutionInfo GetResult(Guid accountId,
+            AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
             CancellationToken token)
@@ -60,7 +59,7 @@ namespace Zidium.Agent.AgentTasks
             throw new UserFriendlyException("Неизвестное значение статуса: " + text);
         }
 
-        public static SendUnitTestResultRequestData CheckSql(UnitTestSqlRule rule)
+        public static UnitTestExecutionInfo CheckSql(UnitTestSqlRule rule)
         {
             if (rule == null)
             {
@@ -114,7 +113,7 @@ namespace Zidium.Agent.AgentTasks
                 string statusText = row[0].ToString();
                 string message = row[1].ToString();
                 var status = GetStatus(statusText);
-                return new SendUnitTestResultRequestData()
+                return new UnitTestExecutionInfo()
                 {
                     Message = message,
                     Result = status
@@ -122,10 +121,13 @@ namespace Zidium.Agent.AgentTasks
             }
             catch (Exception exception)
             {
-                return new SendUnitTestResultRequestData()
+                var sqlException = exception as SqlException;
+
+                return new UnitTestExecutionInfo()
                 {
                     Message = error + ": " + exception.Message,
-                    Result = UnitTestResult.Alarm
+                    Result = UnitTestResult.Alarm,
+                    IsNetworkProblem = sqlException?.Number == -2 || sqlException?.Number == 11 // TIMEOUT_EXPIRED = -2, GENERAL_NETWORK_ERROR = 11
                 };
             }
         }

@@ -26,7 +26,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 ErrorColor = UnitTestResult.Alarm,
                 Host = Guid.NewGuid() + ".ru",
                 TimeoutMs = 1000,
-                Attemps = 1
+                AttempMax = 3
             };
             var response = dispatcher.AddPingUnitTest(account.Id, data);
 
@@ -40,7 +40,7 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.Equal(data.ErrorColor, result.ErrorColor); 
             Assert.Equal(data.Host, result.Host);
             Assert.Equal(data.TimeoutMs, result.TimeoutMs);
-            Assert.Equal(data.Attemps, result.Attemps);
+            Assert.Equal(data.AttempMax, result.AttempMax);
         }
 
         [Fact]
@@ -57,6 +57,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 SystemName = "Http_" + Guid.NewGuid(),
                 PeriodSeconds = 600,
                 ErrorColor = UnitTestResult.Alarm,
+                AttempMax = 3,
                 Rules = new[]
                 {
                     new AddHttpUnitTestRuleRequestData()
@@ -83,6 +84,7 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.NotNull(result.DisplayName);
             Assert.Equal(data.PeriodSeconds, result.PeriodSeconds);
             Assert.Equal(data.ErrorColor, result.ErrorColor);
+            Assert.Equal(data.AttempMax, result.AttempMax);
             var rules = data.Rules;
             Assert.NotNull(rules);
             var rule = rules.SingleOrDefault(t => t.SortNumber == data.Rules[0].SortNumber);

@@ -7,7 +7,7 @@ using Zidium.Core.Common;
 namespace Zidium.Core.AccountsDb
 {
     /// <summary>
-    /// Юнит-тест
+    /// Проверка
     /// </summary>
     public class UnitTest
     {
@@ -32,12 +32,12 @@ namespace Zidium.Core.AccountsDb
         public string DisplayName { get; set; }
 
         /// <summary>
-        /// Ссылка на тип юнит-теста
+        /// Ссылка на тип проверки
         /// </summary>
         public Guid TypeId { get; set; }
 
         /// <summary>
-        /// Тип юнит-теста
+        /// Тип проверки
         /// </summary>
         public virtual UnitTestType Type { get; set; }
 
@@ -77,7 +77,7 @@ namespace Zidium.Core.AccountsDb
         public DateTime? LastExecutionDate { get; set; }
 
         /// <summary>
-        /// Настройки http-юнит-теста, если есть
+        /// Настройки http-проверки, если есть
         /// </summary>
         public virtual HttpRequestUnitTest HttpRequestUnitTest { get; set; }
 
@@ -102,12 +102,12 @@ namespace Zidium.Core.AccountsDb
         public virtual UnitTestSslCertificateExpirationDateRule SslCertificateExpirationDateRule { get; set; }
 
         /// <summary>
-        /// Дата до которой выключен юнит-тест
+        /// Дата, до которой выключена проверка
         /// </summary>
         public DateTime? DisableToDate { get; set; }
 
         /// <summary>
-        /// Комментарий к юнит-тесту (указывается при выключении)
+        /// Комментарий к выключению (указывается при выключении)
         /// </summary>
         public string DisableComment { get; set; }
 
@@ -146,7 +146,7 @@ namespace Zidium.Core.AccountsDb
 
         /// <summary>
         /// Переопределение цвета ошибки
-        /// Это цвет, который будет у ошибки в случае НЕ прохождения теста
+        /// Это цвет, который будет у ошибки в случае провала проверки
         /// </summary>
         public UnitTestResult? ErrorColor { get; set; }
 
@@ -172,6 +172,16 @@ namespace Zidium.Core.AccountsDb
         /// Свойства
         /// </summary>
         public virtual ICollection<UnitTestProperty> Properties { get; set; }
+
+        /// <summary>
+        /// Количество выполненных неуспешных попыток
+        /// </summary>
+        public int AttempCount { get; set; }
+
+        /// <summary>
+        /// Максимальное количество неуспешных попыток, после которого проверка провалится
+        /// </summary>
+        public int AttempMax { get; set; }
 
         public string GetFullDisplayName()
         {

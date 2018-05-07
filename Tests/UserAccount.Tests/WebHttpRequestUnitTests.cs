@@ -17,7 +17,7 @@ namespace Zidium.UserAccount.Tests
     public class WebHttpRequestUnitTests
     {
         /// <summary>
-        /// Был дефект, что после сохранения проверки, она начинал постоянно выполняться, как будет период равен 1 чекунде.
+        /// Был дефект, что после сохранения проверки, она начинала постоянно выполняться, как будет период равен 1 секунде
         /// </summary>
         [Fact]
         public void HttpRequestUnitTestAddTest()
@@ -34,11 +34,13 @@ namespace Zidium.UserAccount.Tests
                 model = (EditModel) result.Model;
             }
             Assert.Equal(component.Info.Id, model.ComponentId);
+            Assert.Equal(2, model.AttempMax);
 
             model.CheckName = "Test_" + Guid.NewGuid();
             model.Method = HttpRequestMethod.Get;
             model.ResponseCode = 200;
             model.Url = "http://recursion.ru";
+            model.AttempMax = 3;
 
             using (var controller = new HttpRequestCheckController(account.Id, user.Id))
             {
@@ -58,6 +60,7 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(model.CheckName, unitTest.DisplayName);
                 Assert.Equal(model.Period, TimeSpanHelper.FromSeconds(unitTest.PeriodSeconds));
                 Assert.Equal(ObjectColor.Gray, unitTest.NoSignalColor);
+                Assert.Equal(3, unitTest.AttempMax);
                 var httpUnitTest = unitTest.HttpRequestUnitTest;
                 Assert.NotNull(httpUnitTest);
                 var rule = unitTest.HttpRequestUnitTest.Rules.Single();

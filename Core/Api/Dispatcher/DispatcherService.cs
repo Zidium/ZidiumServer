@@ -1804,7 +1804,7 @@ namespace Zidium.Core
             {
                 var accountId = request.Token.AccountId.Value;
                 var service = context.UnitTestService;
-                var result = service.SendUnitTestResult(accountId, request.Data);
+                service.SendUnitTestResult(accountId, request.Data);
                 return new SendUnitTestResultResponse()
                 {
                     Code = Zidium.Api.ResponseCode.Success,

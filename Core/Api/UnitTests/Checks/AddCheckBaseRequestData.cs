@@ -13,5 +13,7 @@ namespace Zidium.Core.Api
         public int PeriodSeconds { get; set; }
 
         public UnitTestResult? ErrorColor { get; set; }
+
+        public int AttempMax { get; set; }
     }
 }

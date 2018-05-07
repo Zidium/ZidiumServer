@@ -114,7 +114,7 @@ namespace Zidium.Agent.AgentTasks
                     };
                 }
             }
-            
+
             if (html.IndexOf("Справка по поддоменам домена", StringComparison.InvariantCultureIgnoreCase) > -1)
             {
                 return new DomainNamePaymentPeriodCheckResult()
@@ -245,10 +245,9 @@ namespace Zidium.Agent.AgentTasks
             return SystemUnitTestTypes.DomainNameTestType.Id;
         }
 
-        protected override Core.Api.SendUnitTestResultRequestData GetResult(
-            Guid accountId, 
-            AccountDbContext accountDbContext, 
-            UnitTest unitTest, 
+        protected override UnitTestExecutionInfo GetResult(Guid accountId,
+            AccountDbContext accountDbContext,
+            UnitTest unitTest,
             ILogger logger,
             CancellationToken token)
         {
@@ -256,31 +255,28 @@ namespace Zidium.Agent.AgentTasks
             {
                 throw new ArgumentNullException("unitTest");
             }
-            if (unitTest.DomainNamePaymentPeriodRule == null)
-            {
-                // Правило ещё не создалось, бывает
-                return new Core.Api.SendUnitTestResultRequestData()
-                {
-                    Result = Core.Api.UnitTestResult.Unknown
-                };
-            }
             var rule = unitTest.DomainNamePaymentPeriodRule;
+            if (rule == null)
+                return null; // Правило ещё не создалось, выход
+            
             if (string.IsNullOrWhiteSpace(rule.Domain))
             {
                 throw new UserFriendlyException("Не указан домен для проверки");
             }
-            
+
             var resultInfo = GetPaymentDate(rule.Domain);
 
             // Сервис недоступен
             if (resultInfo.Code == DomainNamePaymentPeriodErrorCode.Unavailable)
             {
-                // Отмена выполнения
-                logger.Warn(resultInfo.ErrorMessage);
-
-                throw new OperationCanceledException();
+                return new UnitTestExecutionInfo()
+                {
+                    Message = resultInfo.ErrorMessage,
+                    Result = Core.Api.UnitTestResult.Unknown,
+                    IsNetworkProblem = true
+                };
             }
-            
+
             if (resultInfo.Code == DomainNamePaymentPeriodErrorCode.UnknownError)
             {
                 var logEvent = new LogEventInfo()
@@ -297,7 +293,7 @@ namespace Zidium.Agent.AgentTasks
             if (resultInfo.Date == null)
             {
                 rule.LastRunErrorCode = resultInfo.Code;
-                return new Core.Api.SendUnitTestResultRequestData()
+                return new UnitTestExecutionInfo()
                 {
                     Result = Core.Api.UnitTestResult.Alarm,
                     Message = resultInfo.ErrorMessage
@@ -306,7 +302,7 @@ namespace Zidium.Agent.AgentTasks
 
             var days = (int)((resultInfo.Date.Value - DateTime.Now.Date).TotalDays);
             rule.LastRunErrorCode = DomainNamePaymentPeriodErrorCode.Success;
-            var result = new Core.Api.SendUnitTestResultRequestData()
+            var result = new UnitTestExecutionInfo()
             {
                 Message = string.Format(
                     "Осталось {0} дней до окончания срока оплаты. Домен оплачен до {1}",
@@ -315,7 +311,7 @@ namespace Zidium.Agent.AgentTasks
             };
             if (days <= rule.AlarmDaysCount)
             {
-                result.Result = Core.Api.UnitTestResult.Alarm; 
+                result.Result = Core.Api.UnitTestResult.Alarm;
             }
             else if (days <= rule.WarningDaysCount)
             {
@@ -370,7 +366,7 @@ namespace Zidium.Agent.AgentTasks
                 if (t.IndexOf(": ", StringComparison.Ordinal) == -1)
                     return null;
 
-                var pair = t.Split(new [] {": "}, StringSplitOptions.None);
+                var pair = t.Split(new[] { ": " }, StringSplitOptions.None);
 
                 return new Pair
                 {

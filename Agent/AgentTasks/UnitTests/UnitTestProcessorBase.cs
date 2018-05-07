@@ -3,12 +3,9 @@ using System.Linq;
 using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
-using Zidium.Core.Common.Helpers;
-using SendUnitTestResultRequestData = Zidium.Core.Api.SendUnitTestResultRequestData;
-using ThreadTaskQueue = Zidium.Core.Common.ThreadTaskQueue;
-using UnitTestResult = Zidium.Core.Api.UnitTestResult;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -79,30 +76,17 @@ namespace Zidium.Agent.AgentTasks
 
         protected abstract Guid GetUnitTestTypeId();
 
-        protected bool IsInternetWork()
-        {
-            if (NetworkHelper.IsInternetWork())
-            {
-                return true;
-            }
-
-            Logger.Warn("Не работает интернет");
-
-            return false;
-        }
-
         protected void ProcessAccount(
-            Guid accountId, 
-            AccountDbContext accountDbContext, 
-            ILogger logger, 
-            string accountName, 
+            Guid accountId,
+            AccountDbContext accountDbContext,
+            ILogger logger,
+            string accountName,
             CancellationToken token,
             Guid? unitTestId = null)
         {
-            var now = GetDispatcherClient().GetServerTime().Data.Date;
             var repository = accountDbContext.GetUnitTestRepository();
             var unitTestTypeId = GetUnitTestTypeId();
-            var tests = repository.GetForProcessing(unitTestTypeId, now);
+            var tests = repository.GetForProcessing(unitTestTypeId, Now());
 
             if (unitTestId.HasValue)
                 tests = tests.Where(t => t.Id == unitTestId.Value).ToList();
@@ -127,10 +111,7 @@ namespace Zidium.Agent.AgentTasks
                 {
                     ProcessUnitTest(accountId, testId, logger, accountName, token);
                 }
-                catch (OperationCanceledException)
-                {
-
-                }
+                catch (OperationCanceledException) { }
             });
 
             if (SuccessCount > 0 || ErrorCount > 0)
@@ -142,8 +123,7 @@ namespace Zidium.Agent.AgentTasks
             return new DispatcherClient(GetType().Name);
         }
 
-        protected abstract SendUnitTestResultRequestData GetResult(
-            Guid accountId,
+        protected abstract UnitTestExecutionInfo GetResult(Guid accountId,
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
@@ -168,10 +148,12 @@ namespace Zidium.Agent.AgentTasks
 
                         if (result == null)
                         {
-                            logger.Warn("Отмена выполнения проверки {0} из-за нерабочего интернета", unitTestId);
+                            logger.Warn("Отмена выполнения проверки {0} из-за внутренней проблемы", unitTestId);
 
                             return;
                         }
+
+                        var failedAttemp = result.Result == UnitTestResult.Alarm;
 
                         // переопределим цвет проверки
                         if (result.Result == UnitTestResult.Alarm && unitTest.ErrorColor.HasValue)
@@ -185,8 +167,47 @@ namespace Zidium.Agent.AgentTasks
                             result.ActualIntervalSeconds = unitTest.PeriodSeconds * 2;
                         }
 
+                        // Если попытка провалилась из-за проблем с сетью, но количество неуспешных попыток не превышено,
+                        // то отправим повторно предыдущий результат
+                        // Если попытка успешная, то сбросим счётчик
+                        var attempCount = unitTest.AttempCount + 1;
+                        var needNextAttemp = false;
+                        if (failedAttemp && result.IsNetworkProblem)
+                        {
+                            if (attempCount < unitTest.AttempMax)
+                            {
+                                var previousStatus = unitTest.Bulb.Status;
+                                if (previousStatus == MonitoringStatus.Alarm)
+                                    result.Result = UnitTestResult.Alarm;
+                                else if (previousStatus == MonitoringStatus.Warning)
+                                    result.Result = UnitTestResult.Warning;
+                                else if (previousStatus == MonitoringStatus.Success)
+                                    result.Result = UnitTestResult.Success;
+                                else if (previousStatus == MonitoringStatus.Unknown)
+                                    result.Result = UnitTestResult.Unknown;
+                                needNextAttemp = true;
+                            }
+                        }
+                        else
+                        {
+                            attempCount = 0;
+                        }
+
+                        result.AttempCount = attempCount;
+
                         var response = dispatcher.SendUnitTestResult(accountId, result);
                         response.Check();
+
+                        // Если попытки не закончились, то запланируем следующую через минуту, а не через штатный интервал
+                        if (needNextAttemp)
+                        {
+                            var response2 = dispatcher.SetUnitTestNextTime(accountId, new SetUnitTestNextTimeRequestData()
+                            {
+                                UnitTestId = unitTest.Id,
+                                NextTime = Now().AddMinutes(1)
+                            });
+                            response2.Check();
+                        }
 
                         logger.Info(unitTest.Id + " => " + (result.Result ?? UnitTestResult.Unknown));
                         SuccessCount++;
@@ -221,5 +242,17 @@ namespace Zidium.Agent.AgentTasks
                 logger.Error(exception);
             }
         }
+
+        protected DateTime Now()
+        {
+            return _nowOverride ?? GetDispatcherClient().GetServerTime().Data.Date;
+        }
+
+        public void SetNow(DateTime now)
+        {
+            _nowOverride = now;
+        }
+
+        private DateTime? _nowOverride;
     }
 }

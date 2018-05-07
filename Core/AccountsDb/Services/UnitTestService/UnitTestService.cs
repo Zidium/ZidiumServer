@@ -245,6 +245,7 @@ namespace Zidium.Core.AccountsDb
                     unitTestCache.NoSignalColor = data.NoSignalColor;
                     unitTestCache.ErrorColor = data.ErrorColor;
                     unitTestCache.ActualTime = TimeSpanHelper.FromSeconds(data.ActualTimeSecs);
+                    unitTestCache.AttempMax = data.AttempMax ?? 1;
                     if (data.PeriodSeconds.HasValue)
                     {
                         unitTestCache.PeriodSeconds = data.PeriodSeconds;
@@ -295,46 +296,30 @@ namespace Zidium.Core.AccountsDb
             {
                 throw new ParameterRequiredException("UnitTestId");
             }
-            if (data.ComponentId == null)
-            {
-                throw new ParameterRequiredException("ComponentId");
-            }
             if (data.UnitTestId == Guid.Empty)
             {
                 throw new ParameterErrorException("UnitTestId не может быть Guid.Empty");
             }
-            if (data.DisplayName == null)
-            {
-                throw new ParameterRequiredException("DisplayName");
-            }
-            if (string.IsNullOrWhiteSpace(data.DisplayName))
+            if (data.DisplayName != null && string.IsNullOrWhiteSpace(data.DisplayName))
             {
                 throw new ParameterErrorException("DisplayName не может быть пустым");
             }
-            //if (data.ErrorColor == null)
-            //{
-            //    throw new ParameterRequiredException("ErrorColor");
-            //}
 
-            // SystemName сейчас не настраивается через GUI
-
-            //if (data.SystemName == null)
-            //{
-            //    throw new ParameterRequiredException("SystemName");
-            //}
-
-            //получим компонент, чтобы убедится, что он принадлежит аккаунту
-            var req = new AccountCacheRequest()
+            if (data.ComponentId.HasValue)
             {
-                AccountId = accountId,
-                ObjectId = data.ComponentId.Value
-            };
-            var component = AllCaches.Components.Find(req);
-            if (component == null)
-            {
-                throw new UnknownComponentIdException(data.ComponentId.Value, accountId);
+                //получим компонент, чтобы убедится, что он принадлежит аккаунту
+                var req = new AccountCacheRequest()
+                {
+                    AccountId = accountId,
+                    ObjectId = data.ComponentId.Value
+                };
+                var component = AllCaches.Components.Find(req);
+                if (component == null)
+                {
+                    throw new UnknownComponentIdException(data.ComponentId.Value, accountId);
+                }
             }
-
+            
             var request = new AccountCacheRequest()
             {
                 AccountId = accountId,
@@ -353,31 +338,24 @@ namespace Zidium.Core.AccountsDb
                     // не для всех системных проверок можно указывать период (для проверки домена нельзя)
                     if (SystemUnitTestTypes.CanEditPeriod(unitTest.TypeId))
                     {
-                        if (data.PeriodSeconds == null)
-                        {
-                            throw new ParameterRequiredException("Period");
-                        }
-                        if (data.PeriodSeconds.Value < 60)
+                        if (data.PeriodSeconds.HasValue && data.PeriodSeconds.Value < 60)
                         {
                             throw new ParameterErrorException("Период проверки НЕ может быть меньше 1 минуты");
                         }
-                        unitTest.PeriodSeconds = (int)data.PeriodSeconds.Value;
+                        unitTest.PeriodSeconds = (int?) data.PeriodSeconds ?? unitTest.PeriodSeconds;
                     }
 
                     // чтобы выполнить проверку прямо сейчас с новыми параметрами и увидеть результат
                     unitTest.NextDate = DateTime.Now;
                 }
 
-                unitTest.DisplayName = data.DisplayName;
-                unitTest.ComponentId = data.ComponentId.Value;
-                unitTest.ErrorColor = data.ErrorColor;
-                unitTest.NoSignalColor = data.NoSignalColor;
-                unitTest.ActualTime = TimeSpanHelper.FromSeconds(data.ActualTime);
-
-                if (data.SimpleMode.HasValue)
-                {
-                    unitTest.SimpleMode = data.SimpleMode.Value;
-                }
+                unitTest.DisplayName = data.DisplayName ?? unitTest.DisplayName;
+                unitTest.ComponentId = data.ComponentId ?? unitTest.ComponentId;
+                unitTest.ErrorColor = data.ErrorColor ?? unitTest.ErrorColor;
+                unitTest.NoSignalColor = data.NoSignalColor ?? unitTest.NoSignalColor;
+                unitTest.ActualTime = data.ActualTime.HasValue ? TimeSpanHelper.FromSeconds(data.ActualTime) : unitTest.ActualTime;
+                unitTest.SimpleMode = data.SimpleMode ?? unitTest.SimpleMode;
+                unitTest.AttempMax = data.AttempMax ?? unitTest.AttempMax;
                 
                 unitTest.BeginSave();
             }
@@ -463,7 +441,8 @@ namespace Zidium.Core.AccountsDb
                 UnitTestTypeId = SystemUnitTestTypes.PingTestType.Id,
                 ComponentId = data.ComponentId,
                 SystemName = data.SystemName,
-                DisplayName = data.DisplayName
+                DisplayName = data.DisplayName,
+                AttempMax = data.AttempMax
             });
 
             using (var unitTest = AllCaches.UnitTests.Write(unitTestCache))
@@ -484,7 +463,6 @@ namespace Zidium.Core.AccountsDb
 
             unitTestObj.PingRule.Host = data.Host;
             unitTestObj.PingRule.TimeoutMs = data.TimeoutMs;
-            unitTestObj.PingRule.Attemps = data.Attemps;
 
             accountDbContext.SaveChanges();
 
@@ -498,7 +476,8 @@ namespace Zidium.Core.AccountsDb
                 UnitTestTypeId = SystemUnitTestTypes.HttpUnitTestType.Id,
                 ComponentId = data.ComponentId,
                 SystemName = data.SystemName,
-                DisplayName = data.DisplayName
+                DisplayName = data.DisplayName,
+                AttempMax = data.AttempMax
             });
 
             using (var unitTest = AllCaches.UnitTests.Write(unitTestCache))
@@ -539,12 +518,11 @@ namespace Zidium.Core.AccountsDb
             return unitTestObj;
         }
 
-
-
         protected IBulbCacheReadObject SaveResultEvent(
             DateTime processDate,
             IUnitTestCacheReadObject unitTest,
-            Event newEvent)
+            Event newEvent,
+            int? attempCount = null)
         {
             var request = new AccountCacheRequest()
             {
@@ -601,9 +579,10 @@ namespace Zidium.Core.AccountsDb
                 using (var wUnitTest = AllCaches.UnitTests.Write(unitTest))
                 {
                     wUnitTest.LastExecutionDate = newEvent.EndDate;
+                    wUnitTest.AttempCount = attempCount ?? wUnitTest.AttempCount;
 
                     // расчитаем время следующего выполнения
-                    if (unitTest.PeriodSeconds > 0)
+                    if (wUnitTest.PeriodSeconds > 0)
                     {
                         var nextTime = wUnitTest.NextDate ?? processDate;
                         var period = TimeSpan.FromSeconds(wUnitTest.PeriodSeconds.Value);
@@ -683,7 +662,7 @@ namespace Zidium.Core.AccountsDb
 
 
                 // сохраним результаты
-                var result = SaveResultEvent(processDate, unitTest, resultEvent);
+                var result = SaveResultEvent(processDate, unitTest, resultEvent, data.AttempCount);
 
                 // увеличим счетчик лимита проверки "Количество запросов в день"
                 checker.AddUnitTestsSizePerDay(accountDbContext, size);

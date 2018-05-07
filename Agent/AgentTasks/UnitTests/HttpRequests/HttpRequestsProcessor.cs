@@ -27,8 +27,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             return SystemUnitTestTypes.HttpUnitTestType.Id;
         }
 
-        protected override SendUnitTestResultRequestData GetResult(
-            Guid accountId,
+        protected override UnitTestExecutionInfo GetResult(Guid accountId,
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
@@ -52,10 +51,9 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                         return bannerResultData;
                 }
 
-                var resultData = new SendUnitTestResultRequestData();
+                var resultData = new UnitTestExecutionInfo();
                 resultData.Properties = new List<ExtentionPropertyDto>();
 
-                HttpRequestUnitTestRule errorRule = null;
                 foreach (var rule in rules)
                 {
                     token.ThrowIfCancellationRequested();
@@ -68,12 +66,6 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                         logger.Debug("Выход из-за неизвестной ошибки");
                         return null;
                     }
-                    if (ruleResult.ErrorCode == HttpRequestErrorCode.InternetNotWork)
-                    {
-                        // Если интернет не работает, то не обновляем статус проверки
-                        logger.Debug("Выход из-за InternetNotWork");
-                        return null;
-                    }
 
                     // обновим правило
                     rule.LastRunErrorCode = ruleResult.ErrorCode;
@@ -82,9 +74,8 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     rule.LastRunErrorMessage = ruleResult.ErrorMessage;
 
                     // сохраним информацию об ошибке
-                    if (errorRule == null && ruleResult.ErrorCode != HttpRequestErrorCode.Success)
+                    if (ruleResult.ErrorCode != HttpRequestErrorCode.Success)
                     {
-                        errorRule = rule;
                         resultData.Properties.AddValue("Rule", rule.DisplayName);
                         resultData.Properties.AddValue("ErrorMessage", rule.LastRunErrorMessage);
                         resultData.Properties.AddValue("ErrorCode", rule.LastRunErrorCode.ToString());
@@ -107,23 +98,20 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                         {
                             resultData.Properties.AddValue("ResponseHtml", ruleResult.ResponseHtml);
                         }
-                        if (unitTest.HttpRequestUnitTest.ProcessAllRulesOnError == false)
-                        {
-                            break; // прекращаем выполнять правила, если хотя бы в одном ошибка
-                        }
+
+                        resultData.Result = UnitTestResult.Alarm;
+                        var errorMessage = rule.DisplayName + ". " + rule.LastRunErrorMessage;
+                        resultData.Message = errorMessage;
+                        resultData.IsNetworkProblem = ruleResult.IsNetworkProblem;
+
+                        accountDbContext.SaveChanges();
+
+                        return resultData;
                     }
                 }
-                if (errorRule != null)
-                {
-                    resultData.Result = UnitTestResult.Alarm;
-                    var errorMessage = errorRule.DisplayName + ". " + errorRule.LastRunErrorMessage;
-                    resultData.Message = errorMessage;
-                }
-                else
-                {
-                    resultData.Result = UnitTestResult.Success;
-                    resultData.Message = "Успешно";
-                }
+
+                resultData.Result = UnitTestResult.Success;
+                resultData.Message = "Успешно";
 
                 // сохраним изменения статусов правил
                 accountDbContext.SaveChanges();
@@ -131,7 +119,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 return resultData;
             }
 
-            return new SendUnitTestResultRequestData()
+            return new UnitTestExecutionInfo()
             {
                 Result = UnitTestResult.Unknown,
                 Message = "Укажите хотя бы один запрос (правило) для проверки"
@@ -271,25 +259,6 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
 
         protected HttpRequestResultInfo ProcessRule(HttpRequestUnitTestRule rule, ILogger logger)
         {
-            var result = ProcessRuleRaw(rule, logger);
-
-            if (result.ErrorCode == HttpRequestErrorCode.Success)
-            {
-                return result;
-            }
-
-            if (IsInternetWork() == false)
-            {
-                result.ErrorCode = HttpRequestErrorCode.InternetNotWork;
-                result.ErrorMessage = "Неполадки в сети";
-                return result;
-            }
-
-            return result;
-        }
-
-        protected HttpRequestResultInfo ProcessRuleRaw(HttpRequestUnitTestRule rule, ILogger logger)
-        {
             var result = new HttpRequestResultInfo
             {
                 ErrorCode = HttpRequestErrorCode.Success,
@@ -423,12 +392,14 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 {
                     result.ErrorMessage = exception.Message;
                     result.ErrorCode = HttpRequestErrorCode.TcpError;
+                    result.IsNetworkProblem = true;
                     logger.Error(exception);
                 }
                 catch (IOException exception)
                 {
                     result.ErrorMessage = exception.Message;
                     result.ErrorCode = HttpRequestErrorCode.TcpError;
+                    result.IsNetworkProblem = true;
                     logger.Error(exception);
                 }
                 catch (WebException exception)
@@ -453,6 +424,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     if (exception.Status == WebExceptionStatus.Timeout)
                     {
                         result.ErrorCode = HttpRequestErrorCode.Timeout;
+                        result.IsNetworkProblem = true;
                     }
                     else if (exception.Status == WebExceptionStatus.ProtocolError)
                     {
@@ -461,6 +433,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     else
                     {
                         result.ErrorCode = HttpRequestErrorCode.TcpError;
+                        result.IsNetworkProblem = true;
                         logger.Error(exception);
                     }
                 }
@@ -469,6 +442,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             {
                 result.ErrorCode = HttpRequestErrorCode.TcpError;
                 result.ErrorMessage = exception.Message;
+                result.IsNetworkProblem = true;
                 logger.Error(exception);
             }
             catch (Exception exception)
@@ -491,14 +465,14 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             return result;
         }
 
-        protected SendUnitTestResultRequestData CheckForBanner(
+        protected UnitTestExecutionInfo CheckForBanner(
             Guid accountId,
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger)
         {
             logger.Debug("Поиск баннера Zidium для проверки " + unitTest.DisplayName);
-            SendUnitTestResultRequestData result = null;
+            UnitTestExecutionInfo result = null;
 
             // Из всех правил получим главные уникальные страницы сайтов
             var urls = unitTest.HttpRequestUnitTest.Rules.Select(t =>
@@ -518,14 +492,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     var hasPageBanner = BannerHelper.FindBanner(url);
                     logger.Debug("Результат: " + hasPageBanner + ", страница: " + url);
 
-                    // Если баннер не найден и нет интернета, то отложим проверку
-                    if (hasPageBanner == false && IsInternetWork() == false)
-                    {
-                        logger.Debug("Интернет не работает, поиск баннера отложен");
-                        return null;
-                    }
-
-                    if (hasPageBanner == false)
+                    if (!hasPageBanner)
                     {
                         noBannerUrl = url;
                         hasBanner = false;
@@ -554,7 +521,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             // Если лимит превышен, то проверка уже отключена диспетчером, осталось поменять результат
             if (response.Data.CanProcessUnitTest == false)
             {
-                result = new SendUnitTestResultRequestData()
+                result = new UnitTestExecutionInfo()
                 {
                     Result = UnitTestResult.Alarm,
                     Message = "Проверка отключена, не найден баннер Zidium на странице " + noBannerUrl

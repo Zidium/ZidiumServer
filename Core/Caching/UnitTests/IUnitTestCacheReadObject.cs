@@ -83,5 +83,9 @@ namespace Zidium.Core.Caching
         /// Проверяет что тип проверки системный
         /// </summary>
         bool IsSystemType { get; }
+
+        int AttempCount { get; }
+
+        int AttempMax { get; }
     }
 }

@@ -211,6 +211,7 @@
     <Compile Include="AgentTasks\Notifications\EmailNotifications\EmailNotificationsTask.cs" />
     <Compile Include="AgentTasks\UnitTests\SqlChecks\SqlCheckProcessor.cs" />
     <Compile Include="AgentTasks\UnitTests\SqlChecks\SqlCheckTask.cs" />
+    <Compile Include="AgentTasks\UnitTests\UnitTestExecutionInfo.cs" />
     <Compile Include="AgentTasks\UnitTests\UnitTestProcessorBase.cs" />
     <Compile Include="AgentTasks\OutdatedUnitTests\OutdatedUnitTestsProcessor.cs" />
     <Compile Include="AgentTasks\OutdatedUnitTests\OutdatedUnitTestsTask.cs" />
