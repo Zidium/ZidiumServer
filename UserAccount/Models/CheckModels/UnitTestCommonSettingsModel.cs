@@ -35,9 +35,6 @@ namespace Zidium.UserAccount.Models.CheckModels
         [Display(Name = "Время актуальности")]
         public TimeSpan? ActualTime { get; set; }
 
-        [Display(Name = "Количество попыток")]
-        public int AttempMax { get; set; }
-
         public string Action { get; set; }
 
         protected AccountDbContext AccountDbContext
@@ -74,7 +71,6 @@ namespace Zidium.UserAccount.Models.CheckModels
                 {
                     ErrorColor.RedChecked = true;
                 }
-                AttempMax = test.AttempMax;
             }
             else
             {
@@ -84,7 +80,6 @@ namespace Zidium.UserAccount.Models.CheckModels
                 CheckName = DefaultCheckName;
                 ErrorColor = ColorStatusSelectorValue.FromUnitTestResultStatus(UnitTestResult.Alarm);
                 NoSignalColor = ColorStatusSelectorValue.FromUnitTestResultStatus(UnitTestResult.Alarm);
-                AttempMax = 2;
             }
         }
 
@@ -151,7 +146,8 @@ namespace Zidium.UserAccount.Models.CheckModels
                         ComponentId = ComponentId,
                         SystemName = "GUID_" + Guid.NewGuid(),
                         DisplayName = CheckName,
-                        UnitTestTypeId = UnitTestTypeId
+                        UnitTestTypeId = UnitTestTypeId,
+                        AttempMax = 2
                     });
 
                 unitTestResponse.Check();
@@ -177,8 +173,7 @@ namespace Zidium.UserAccount.Models.CheckModels
                     ErrorColor = ErrorColor.GetSelectedUnitTestResultStatuses().FirstOrDefault(),
                     NoSignalColor = !isSystem ? NoSignalColor.GetSelectedColors().FirstOrDefault() : Core.Common.ObjectColor.Gray,
                     UnitTestId = UnitTest.Id,
-                    SimpleMode = false,
-                    AttempMax = AttempMax
+                    SimpleMode = false
                 });
 
             updateResponse.Check();

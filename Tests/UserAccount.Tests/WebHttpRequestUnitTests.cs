@@ -34,13 +34,11 @@ namespace Zidium.UserAccount.Tests
                 model = (EditModel) result.Model;
             }
             Assert.Equal(component.Info.Id, model.ComponentId);
-            Assert.Equal(2, model.AttempMax);
 
             model.CheckName = "Test_" + Guid.NewGuid();
             model.Method = HttpRequestMethod.Get;
             model.ResponseCode = 200;
             model.Url = "http://recursion.ru";
-            model.AttempMax = 3;
 
             using (var controller = new HttpRequestCheckController(account.Id, user.Id))
             {
@@ -60,7 +58,7 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(model.CheckName, unitTest.DisplayName);
                 Assert.Equal(model.Period, TimeSpanHelper.FromSeconds(unitTest.PeriodSeconds));
                 Assert.Equal(ObjectColor.Gray, unitTest.NoSignalColor);
-                Assert.Equal(3, unitTest.AttempMax);
+                Assert.Equal(2, unitTest.AttempMax);
                 var httpUnitTest = unitTest.HttpRequestUnitTest;
                 Assert.NotNull(httpUnitTest);
                 var rule = unitTest.HttpRequestUnitTest.Rules.Single();

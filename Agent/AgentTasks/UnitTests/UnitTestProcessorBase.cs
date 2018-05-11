@@ -185,6 +185,7 @@ namespace Zidium.Agent.AgentTasks
                                     result.Result = UnitTestResult.Success;
                                 else if (previousStatus == MonitoringStatus.Unknown)
                                     result.Result = UnitTestResult.Unknown;
+                                result.Message = "Ошибка сети? " + result.Message;
                                 needNextAttemp = true;
                             }
                         }

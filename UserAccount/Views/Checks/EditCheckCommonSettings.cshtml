@@ -156,20 +156,6 @@
     </div>
 }
 
-<div class="form-group">
-    <label for="AttempMax" class="control-label col-sm-3">
-        <span>Количество попыток</span>&nbsp;<sup><span class="text-danger glyphicon glyphicon-asterisk" style="font-size: 7px;"></span></sup>
-        <span class="ziTooltipContent">
-            Количество неуспешных попыток, после достижения которого проверка будет считаться проваленной.
-            Одиночная попытка всегда может провалиться из-за сетевых проблем.
-            Поэтому мы рекомендуем хотя бы две попытки.
-        </span>
-    </label>
-    <div class="col-sm-3">
-        @Html.TextBoxFor(x => x.AttempMax, new { @class = "form-control" })
-    </div>
-</div>
-
 <script>
     $(function () {
         setPostLink("#enableUnitTestBtn");
