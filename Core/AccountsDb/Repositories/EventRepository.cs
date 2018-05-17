@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity.Core.Objects;
+using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 using Zidium.Core.Api;
@@ -100,7 +102,7 @@ namespace Zidium.Core.AccountsDb
             }
 
             Context.Events.Add(eventObj);
-            
+
             return eventObj;
         }
 
@@ -218,7 +220,7 @@ namespace Zidium.Core.AccountsDb
                 x.StartDate < to &&
                 x.EndDate >= from &&
                 x.Category == EventCategory.ApplicationError);
-                //&& (x.Category == EventCategory.ApplicationError || x.Category == EventCategory.ComponentEvent));
+            //&& (x.Category == EventCategory.ApplicationError || x.Category == EventCategory.ComponentEvent));
         }
 
         public void Remove(Event entity)
@@ -247,8 +249,13 @@ namespace Zidium.Core.AccountsDb
             return Context.Events.Where(x => x.EventTypeId == eventTypeId);
         }
 
-        public int DeleteEventParameters(string categories, int maxCount, DateTime toDate)
+        public int DeleteEventParameters(EventCategory[] categories, int maxCount, DateTime toDate)
         {
+            var subQuery = GetEventsSubQuery(categories, toDate, maxCount);
+
+            var objectQuery = (ObjectQuery)((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<EventProperty>()
+                .Where(t => subQuery.Contains(t.EventId)).OrderBy(t => t.Id).Select(t => t.Id).Take(maxCount);
+
             using (var connection = Context.CreateConnection())
             {
                 connection.Open();
@@ -256,27 +263,27 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    var query = string.Format(
-                        @"DELETE FROM [dbo].[EventParameters]
-                        WHERE Id IN (SELECT TOP {0} Id FROM [dbo].[EventParameters]
-                        WHERE EventId IN 
-                        (" + EventsSubQuery + "))",
-                        maxCount, categories);
+                    var query = $"DELETE FROM {Context.FormatTableName("EventParameters")} WHERE {Context.FormatColumnName("Id")} IN ({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
 
                     return SqlCommandHelper.ExecuteNonQuery(command);
                 }
             }
         }
 
-        public int DeleteEvents(string categories, int maxCount, DateTime toDate)
+        public int DeleteEvents(EventCategory[] categories, int maxCount, DateTime toDate)
         {
+            var objectQuery = (ObjectQuery)GetEventsSubQuery(categories, toDate, maxCount);
+
             using (var connection = Context.CreateConnection())
             {
                 connection.Open();
@@ -284,30 +291,46 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    var query = string.Format(
-                        @"UPDATE [dbo].[Events]
-                        SET LastStatusEventId = NULL
-                        WHERE LastStatusEventId IN
-                        (" + EventsSubQuery + @")
-
-                        DELETE FROM [dbo].[Events] WHERE Id IN
-                        (" + EventsSubQuery + ")",
-                        maxCount, categories);
+                    var query = $"UPDATE {Context.FormatTableName("Events")} SET {Context.FormatColumnName("LastStatusEventId")} = NULL WHERE {Context.FormatColumnName("LastStatusEventId")} IN({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
+
+                    SqlCommandHelper.ExecuteNonQuery(command);
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandTimeout = 0;
+
+                    var query = $"DELETE FROM {Context.FormatTableName("Events")} WHERE {Context.FormatColumnName("Id")} IN({objectQuery.ToTraceString()})";
+
+                    command.CommandText = query;
+
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
 
                     return SqlCommandHelper.ExecuteNonQuery(command);
                 }
             }
         }
 
-        public int DeleteEventStatuses(string categories, int maxCount, DateTime toDate)
+        public int DeleteEventStatuses(EventCategory[] categories, int maxCount, DateTime toDate)
         {
+            var objectQuery = (ObjectQuery)GetEventsSubQuery(categories, toDate, maxCount);
+
             var count = 0;
             using (var connection = Context.CreateConnection())
             {
@@ -316,19 +339,17 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    var query = string.Format(
-                        @"DELETE FROM [dbo].[EventStatuses]
-                        WHERE 
-                        EventId IN 
-                        (" + EventsSubQuery + @")",
-                        maxCount, categories);
+                    var query = $"DELETE FROM {Context.FormatTableName("EventStatuses")} WHERE {Context.FormatColumnName("EventId")} IN ({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
 
                     count += SqlCommandHelper.ExecuteNonQuery(command);
                 }
@@ -337,19 +358,17 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    var query = string.Format(
-                        @"DELETE FROM [dbo].[EventStatuses]
-                        WHERE
-                        StatusId IN 
-                        (" + EventsSubQuery + ")",
-                        maxCount, categories);
+                    var query = $"DELETE FROM {Context.FormatTableName("EventStatuses")} WHERE {Context.FormatColumnName("StatusId")} IN ({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
 
                     count += SqlCommandHelper.ExecuteNonQuery(command);
                 }
@@ -358,8 +377,10 @@ namespace Zidium.Core.AccountsDb
             return count;
         }
 
-        public int DeleteEventArchivedStatuses(string categories, int maxCount, DateTime toDate)
+        public int DeleteEventArchivedStatuses(EventCategory[] categories, int maxCount, DateTime toDate)
         {
+            var objectQuery = (ObjectQuery)GetEventsSubQuery(categories, toDate, maxCount);
+
             using (var connection = Context.CreateConnection())
             {
                 connection.Open();
@@ -367,146 +388,127 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    var query = string.Format(
-                        @"DELETE FROM [dbo].[ArchivedStatuses]
-                        WHERE
-                        EventId IN 
-                        (" + EventsSubQuery + ")",
-                        maxCount, categories);
-
+                    var query = $"DELETE FROM {Context.FormatTableName("ArchivedStatuses")} WHERE {Context.FormatColumnName("EventId")} IN ({objectQuery.ToTraceString()})";
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    return SqlCommandHelper.ExecuteNonQuery(command);
-                }
-            }
-        }
-
-        public int UpdateMetricsHistory(string categories, int maxCount, DateTime toDate)
-        {
-            using (var connection = Context.CreateConnection())
-            {
-                connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandTimeout = 0;
-
-                    var query = string.Format(
-                        @"UPDATE [dbo].[MetricHistory] SET StatusEventId = NULL
-                        WHERE StatusEventId IN 
-                        (" + EventsSubQuery + ")",
-                        maxCount, categories);
-
-                    command.CommandText = query;
-
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    return SqlCommandHelper.ExecuteNonQuery(command);
-                }
-            }
-        }
-
-        public int DeleteNotifications(string categories, int maxCount, DateTime toDate)
-        {
-            using (var connection = Context.CreateConnection())
-            {
-                connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandTimeout = 0;
-
-                    var query = string.Format(
-                        @"DELETE FROM [dbo].[NotificationsHttp]
-                        WHERE NotificationId IN (SELECT Id FROM [dbo].[Notifications]
-                        WHERE EventId IN 
-                        (" + EventsSubQuery + @"))
-
-                        DELETE FROM [dbo].[LastComponentNotifications]
-                        WHERE NotificationId IN (SELECT Id FROM [dbo].[Notifications]
-                        WHERE EventId IN 
-                        (" + EventsSubQuery + @"))
-
-                        DELETE FROM [dbo].[Notifications]
-                        WHERE EventId IN 
-                        (" + EventsSubQuery + ")",
-                        maxCount, categories);
-
-                    command.CommandText = query;
-
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    return SqlCommandHelper.ExecuteNonQuery(command);
-                }
-            }
-        }
-
-        public int GetEventsCountForDeletion(string categories, DateTime toDate)
-        {
-            using (var connection = Context.CreateConnection())
-            {
-                connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandTimeout = 0;
-
-                    var query = string.Format(@"SELECT COUNT(1) AS Cnt FROM [dbo].[Events] WHERE Category IN ({0}) AND ActualDate < @ActualDate", categories);
-
-                    command.CommandText = query;
-
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    return (int)command.ExecuteScalar();
-                }
-            }
-        }
-
-        public string DebugGetEventStatusesData(string categories, int maxCount, DateTime toDate)
-        {
-            using (var connection = Context.CreateConnection())
-            {
-                connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandTimeout = 0;
-
-                    var query = string.Format(
-                        @"SELECT E.* FROM [dbo].[EventStatuses] AS S INNER JOIN [dbo].[Events] AS E ON E.Id = S.StatusId
-                        WHERE
-                        S.StatusId IN 
-                        (" + EventsSubQuery + ")",
-                        maxCount, categories);
-
-                    command.CommandText = query;
-
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ActualDate";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    using (var dataset = new DataSet())
+                    foreach (var objectParameter in objectQuery.Parameters)
                     {
-                        using (var dataAdapter = new SqlDataAdapter((SqlCommand)command))
-                        {
-                            dataAdapter.Fill(dataset);
-                            var xml = dataset.GetXml();
-                            return xml;
-                        }
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
                     }
+
+                    return SqlCommandHelper.ExecuteNonQuery(command);
                 }
             }
+        }
+
+        public int UpdateMetricsHistory(EventCategory[] categories, int maxCount, DateTime toDate)
+        {
+            var objectQuery = (ObjectQuery)GetEventsSubQuery(categories, toDate, maxCount);
+
+            using (var connection = Context.CreateConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandTimeout = 0;
+
+                    var query = $"UPDATE {Context.FormatTableName("MetricHistory")} SET {Context.FormatColumnName("StatusEventId")} = NULL WHERE {Context.FormatColumnName("StatusEventId")} IN ({objectQuery.ToTraceString()})";
+
+                    command.CommandText = query;
+
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
+
+                    return SqlCommandHelper.ExecuteNonQuery(command);
+                }
+            }
+        }
+
+        public int DeleteNotifications(EventCategory[] categories, int maxCount, DateTime toDate)
+        {
+            var subQuery = GetEventsSubQuery(categories, toDate, maxCount);
+
+            using (var connection = Context.CreateConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    var objectQuery = (ObjectQuery)((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<Notification>()
+                        .Where(t => subQuery.Contains(t.EventId)).Select(t => t.Id);
+
+                    command.CommandTimeout = 0;
+
+                    var query = $"DELETE FROM {Context.FormatTableName("NotificationsHttp")} WHERE {Context.FormatColumnName("NotificationId")} IN ({objectQuery.ToTraceString()})";
+
+                    command.CommandText = query;
+
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
+
+                    SqlCommandHelper.ExecuteNonQuery(command);
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    var objectQuery = (ObjectQuery)((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<Notification>()
+                        .Where(t => subQuery.Contains(t.EventId)).Select(t => t.Id);
+
+                    command.CommandTimeout = 0;
+
+                    var query = $"DELETE FROM {Context.FormatTableName("LastComponentNotifications")} WHERE {Context.FormatColumnName("NotificationId")} IN ({objectQuery.ToTraceString()})";
+
+                    command.CommandText = query;
+
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
+
+                    SqlCommandHelper.ExecuteNonQuery(command);
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    var objectQuery = (ObjectQuery)GetEventsSubQuery(categories, toDate, maxCount);
+
+                    command.CommandTimeout = 0;
+
+                    var query = $"DELETE FROM {Context.FormatTableName("Notifications")} WHERE {Context.FormatColumnName("EventId")} IN ({objectQuery.ToTraceString()})";
+
+                    command.CommandText = query;
+
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
+
+                    return SqlCommandHelper.ExecuteNonQuery(command);
+                }
+            }
+        }
+
+        public int GetEventsCountForDeletion(EventCategory[] categories, DateTime toDate)
+        {
+            return Context.Events.Count(t => categories.Contains(t.Category) && t.ActualDate < toDate);
         }
 
         public Event GetRecentReasonEvent(Event statusEvent)
@@ -601,7 +603,15 @@ namespace Zidium.Core.AccountsDb
                     .FirstOrDefault();
         }
 
-        protected static string EventsSubQuery = @"SELECT TOP {0} Id FROM [dbo].[Events] WHERE Category IN ({1}) AND ActualDate < @ActualDate ORDER BY Category, ActualDate";
+        private IQueryable<Guid> GetEventsSubQuery(EventCategory[] categories, DateTime actualDate, int maxCount)
+        {
+            return ((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<Event>()
+                .Where(t => categories.Contains(t.Category) && t.ActualDate < actualDate)
+                .OrderBy(t => t.Category)
+                .ThenBy(t => t.ActualDate)
+                .Select(t => t.Id)
+                .Take(maxCount);
+        }
 
     }
 }

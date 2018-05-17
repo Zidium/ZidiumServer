@@ -5,6 +5,7 @@ using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
 using System.Text;
+using Zidium.Core.AccountsDb;
 
 namespace Zidium.Core.Common
 {
@@ -74,6 +75,16 @@ namespace Zidium.Core.Common
                 }
                 throw new DbEntityValidationException("Entity Validation Failed - errors follow:\n" + sb, ex);
             }
+        }
+
+        public string FormatTableName(string tableName)
+        {
+            return Provider.Current().FormatSchemaName("dbo") + "." + Provider.Current().FormatTableName(tableName);
+        }
+
+        public string FormatColumnName(string columnName)
+        {
+            return Provider.Current().FormatColumnName(columnName);
         }
     }
 }

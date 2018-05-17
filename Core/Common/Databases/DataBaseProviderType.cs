@@ -16,13 +16,8 @@
         MySql = 2,
 
         /// <summary>
-        /// Oracle
-        /// </summary>
-        Oracle = 3,
-
-        /// <summary>
         /// PostgreSQL
         /// </summary>
-        PostgreSql = 4
+        PostgreSql = 3
     }
 }

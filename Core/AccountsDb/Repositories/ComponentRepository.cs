@@ -42,9 +42,7 @@ namespace Zidium.Core.AccountsDb
 
         public List<Component> GetAllBySystemName(string systemName)
         {
-            return QueryAll()
-                    .Where(x => x.SystemName.Equals(systemName, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+            return QueryAll().Where(x => x.SystemName.ToLower() == systemName.ToLower()).ToList();
         } 
 
         public IQueryable<Component> QueryAll()

@@ -80,21 +80,19 @@ namespace Zidium.Core.AccountsDb
 
         Event GetLastEventByEndDate(Guid eventTypeId);
 
-        int DeleteEventParameters(string categories, int maxCount, DateTime toDate);
+        int DeleteEventParameters(EventCategory[] categories, int maxCount, DateTime toDate);
 
-        int DeleteEvents(string categories, int maxCount, DateTime toDate);
+        int DeleteEvents(EventCategory[] categories, int maxCount, DateTime toDate);
 
-        int DeleteEventStatuses(string categories, int maxCount, DateTime toDate);
+        int DeleteEventStatuses(EventCategory[] categories, int maxCount, DateTime toDate);
 
-        int UpdateMetricsHistory(string categories, int maxCount, DateTime toDate);
+        int UpdateMetricsHistory(EventCategory[] categories, int maxCount, DateTime toDate);
 
-        int DeleteNotifications(string categories, int maxCount, DateTime toDate);
+        int DeleteNotifications(EventCategory[] categories, int maxCount, DateTime toDate);
 
-        int DeleteEventArchivedStatuses(string categories, int maxCount, DateTime toDate);
+        int DeleteEventArchivedStatuses(EventCategory[] categories, int maxCount, DateTime toDate);
 
-        int GetEventsCountForDeletion(string categories, DateTime toDate);
-
-        string DebugGetEventStatusesData(string categories, int maxCount, DateTime toDate);
+        int GetEventsCountForDeletion(EventCategory[] categories, DateTime toDate);
 
         /// <summary>
         /// Получает последнюю причину для статусного события

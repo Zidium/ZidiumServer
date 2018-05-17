@@ -4,7 +4,6 @@
 // modifications, this file may also be moved to any location, as long as it
 // remains a part of its current project.
 
-using System.Data.Entity;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.ConfigDb;
 
@@ -15,10 +14,7 @@ namespace Zidium.UserAccount.Tests
         internal static void Run()
         {
             // Тесты не должны накатывать миграции или создавать базы
-            // MsSql
-            System.Data.Entity.Database.SetInitializer(new NullDatabaseInitializer<MsSqlAccountDbContext>());
-            // MySql
-            System.Data.Entity.Database.SetInitializer(new NullDatabaseInitializer<MySqlAccountDbContext>());
+            AccountDbContext.DisableMigrations();
 
             Initialization.SetServices();
         }

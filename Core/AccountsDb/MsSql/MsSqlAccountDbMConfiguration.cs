@@ -10,7 +10,7 @@ namespace Zidium.Core.AccountsDb.Migrations.MsSql
             AutomaticMigrationsEnabled = false;
             MigrationsDirectory = @"AccountsDb\MsSql\Migrations";
             CodeGenerator = new NonClusteredPrimaryKeyCSharpMigrationCodeGenerator();
-            SetSqlGenerator("System.Data.SqlClient", new NonClusteredPrimaryKeySqlMigrationSqlGenerator());
+            SetSqlGenerator("System.Data.SqlClient", new NonClusteredPrimaryKeySqlServerMigrationSqlGenerator());
             CommandTimeout = 600; // 10 минут
             AutomaticMigrationDataLossAllowed = true;
         }

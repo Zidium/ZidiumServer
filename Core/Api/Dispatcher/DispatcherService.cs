@@ -2276,12 +2276,16 @@ namespace Zidium.Core
                 var accountsIds = context.AccountService.GetAccounts(new GetAccountsRequestData()).Select(t => t.Id);
                 foreach (var accountId in accountsIds)
                 {
-                    var limits = GetAccountLimitsResponseData(accountId, context, request.Data.ArchiveDays);
-                    limitsList.Add(new GetAllAccountsLimitsResponseData()
+                    try
                     {
-                        AccountId = accountId,
-                        Limits = limits
-                    });
+                        var limits = GetAccountLimitsResponseData(accountId, context, request.Data.ArchiveDays);
+                        limitsList.Add(new GetAllAccountsLimitsResponseData()
+                        {
+                            AccountId = accountId,
+                            Limits = limits
+                        });
+                    }
+                    catch { }
                 }
             }
 

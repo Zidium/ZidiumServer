@@ -1,7 +1,5 @@
 ﻿using System.Data.Common;
 using System.Data.Entity;
-using System.Data.Entity.Core;
-using Zidium.Core.Common;
 using MySql.Data.Entity;
 using MySql.Data.MySqlClient;
 

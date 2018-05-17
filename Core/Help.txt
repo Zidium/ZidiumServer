@@ -20,3 +20,15 @@ Update-Database -configuration "MySqlAccountDbMConfiguration" -Verbose -ProjectN
 
 Как откатится до нужной миграции?
 Update-Database -TargetMigration:"MigrationName" -configuration "MySqlAccountDbMConfiguration" -ProjectName "Core"  -StartUpProjectName "Core"
+
+
+--- Для PostgreSql ---
+
+Создание миграции
+Add-Migration <Migrations-Name> -configuration "PostgreSqlAccountDbMConfiguration" -ProjectName "Core"  -StartUpProjectName "Core"
+
+Обновление
+Update-Database -configuration "PostgreSqlAccountDbMConfiguration" -Verbose -ProjectName "Core"  -StartUpProjectName "Core"
+
+Как откатится до нужной миграции?
+Update-Database -TargetMigration:"MigrationName" -configuration "PostgreSqlAccountDbMConfiguration" -ProjectName "Core"  -StartUpProjectName "Core"

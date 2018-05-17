@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Core.Objects;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
@@ -274,6 +276,12 @@ namespace Zidium.Core.AccountsDb
 
         public int DeleteLogProperties(Guid componentId, int maxCount, DateTime toDate)
         {
+            var subQuery = Context.Logs
+                .Where(t => t.ComponentId == componentId && t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount);
+
+            var objectQuery = (ObjectQuery) ((IObjectContextAdapter) Context).ObjectContext.CreateObjectSet<LogProperty>()
+                .Where(t => subQuery.Contains(t.LogId)).OrderBy(t => t.Id).Select(t => t.Id).Take(maxCount);
+
             using (var connection = Context.CreateConnection())
             {
                 connection.Open();
@@ -281,23 +289,17 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    string query = string.Format(
-                        @"DELETE FROM LogParameters 
-                      WHERE Id IN (SELECT TOP {0} Id FROM LogParameters 
-                        WHERE LogId IN (SELECT TOP {0} Id FROM Logs WHERE ComponentId = @ComponentId AND Date < @Date ORDER BY Date) ORDER BY Id)",
-                        maxCount);
+                    var query = $"DELETE FROM {Context.FormatTableName("LogParameters")} WHERE {Context.FormatColumnName("Id")} IN ({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@Date";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ComponentId";
-                    parameter.Value = componentId;
-                    command.Parameters.Add(parameter);
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
 
                     return command.ExecuteNonQuery();
                 }
@@ -306,6 +308,9 @@ namespace Zidium.Core.AccountsDb
 
         public int DeleteLogs(Guid componentId, int maxCount, DateTime toDate)
         {
+            var objectQuery = (ObjectQuery)((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<Log>()
+                .Where(t => t.ComponentId == componentId && t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount);
+
             using (var connection = Context.CreateConnection())
             {
                 connection.Open();
@@ -313,21 +318,17 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    string query = string.Format(
-                        "DELETE FROM Logs WHERE Id IN (SELECT TOP {0} Id FROM Logs WHERE ComponentId = @ComponentId AND Date < @Date ORDER BY Date)",
-                        maxCount);
+                    var query = $"DELETE FROM {Context.FormatTableName("Logs")} WHERE {Context.FormatColumnName("Id")} IN ({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 
-                    var parameter = command.CreateParameter();
-                    parameter.ParameterName = "@Date";
-                    parameter.Value = toDate;
-                    command.Parameters.Add(parameter);
-
-                    parameter = command.CreateParameter();
-                    parameter.ParameterName = "@ComponentId";
-                    parameter.Value = componentId;
-                    command.Parameters.Add(parameter);
+                    foreach (var objectParameter in objectQuery.Parameters)
+                    {
+                        var parameter = command.CreateParameter();
+                        parameter.ParameterName = objectParameter.Name;
+                        parameter.Value = objectParameter.Value;
+                        command.Parameters.Add(parameter);
+                    }
 
                     return command.ExecuteNonQuery();
                 }

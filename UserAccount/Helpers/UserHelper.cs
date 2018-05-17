@@ -64,6 +64,12 @@ namespace Zidium.UserAccount
                     {
                         var dbLogin = ConfigDbServicesHelper.GetLoginService().GetOneOrNullById(userId);
 
+                        if (dbLogin == null)
+                        {
+                            HttpContext.Current.Session.Clear();
+                            return null;
+                        }
+
                         var service = new UserService(contexts);
                         var user = service.GetByIdOrNull(dbLogin.Account.Id, userId);
 

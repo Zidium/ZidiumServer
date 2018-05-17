@@ -1,5 +1,8 @@
 ﻿using System.Data.Entity.Migrations.Design;
+using System.Data.Entity.Migrations.Sql;
 using System.Data.Entity.SqlServer;
+using MySql.Data.Entity;
+using Npgsql;
 
 namespace Zidium.Core.Common
 {
@@ -29,7 +32,7 @@ namespace Zidium.Core.Common
         }
     }
 
-    public class NonClusteredPrimaryKeySqlMigrationSqlGenerator : SqlServerMigrationSqlGenerator
+    public class NonClusteredPrimaryKeySqlServerMigrationSqlGenerator : SqlServerMigrationSqlGenerator
     {
         protected override void Generate(System.Data.Entity.Migrations.Model.AddPrimaryKeyOperation addPrimaryKeyOperation)
         {
@@ -47,6 +50,48 @@ namespace Zidium.Core.Common
         {
             moveTableOperation.CreateTableOperation.PrimaryKey.IsClustered = false;
             base.Generate(moveTableOperation);
+        }
+    }
+
+    public class NonClusteredPrimaryKeyMySqlMigrationSqlGenerator : MySqlMigrationSqlGenerator
+    {
+        protected override MigrationStatement Generate(System.Data.Entity.Migrations.Model.AddPrimaryKeyOperation addPrimaryKeyOperation)
+        {
+            addPrimaryKeyOperation.IsClustered = false;
+            return base.Generate(addPrimaryKeyOperation);
+        }
+
+        protected override MigrationStatement Generate(System.Data.Entity.Migrations.Model.CreateTableOperation createTableOperation)
+        {
+            createTableOperation.PrimaryKey.IsClustered = false;
+            return base.Generate(createTableOperation);
+        }
+
+        protected override MigrationStatement Generate(System.Data.Entity.Migrations.Model.MoveTableOperation moveTableOperation)
+        {
+            moveTableOperation.CreateTableOperation.PrimaryKey.IsClustered = false;
+            return base.Generate(moveTableOperation);
+        }
+    }
+
+    public class NonClusteredPrimaryKeyPostgreSqlMigrationSqlGenerator : NpgsqlMigrationSqlGenerator
+    {
+        protected override void Convert(System.Data.Entity.Migrations.Model.AddPrimaryKeyOperation addPrimaryKeyOperation)
+        {
+            addPrimaryKeyOperation.IsClustered = false;
+            base.Convert(addPrimaryKeyOperation);
+        }
+
+        protected override void Convert(System.Data.Entity.Migrations.Model.CreateTableOperation createTableOperation)
+        {
+            createTableOperation.PrimaryKey.IsClustered = false;
+            base.Convert(createTableOperation);
+        }
+
+        protected override void Convert(System.Data.Entity.Migrations.Model.MoveTableOperation moveTableOperation)
+        {
+            moveTableOperation.CreateTableOperation.PrimaryKey.IsClustered = false;
+            base.Convert(moveTableOperation);
         }
     }
 }

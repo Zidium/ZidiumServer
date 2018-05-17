@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Api;
 using Zidium.Core.AccountsDb;
 
 namespace Zidium.Agent.AgentTasks.DeleteEvents
@@ -11,17 +10,15 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
         public DeleteComponentEventsProcessor(ILogger logger, CancellationToken cancellationToken)
             : base(logger, cancellationToken)
         {
-            var categories = new[]
+            Categories = new[]
             {
-                EventCategory.ComponentExternalStatus,
-                EventCategory.ComponentInternalStatus,
-                EventCategory.ComponentChildsStatus
+                Core.Api.EventCategory.ComponentExternalStatus,
+                Core.Api.EventCategory.ComponentInternalStatus,
+                Core.Api.EventCategory.ComponentChildsStatus
             };
-
-            Categories = string.Join(", ", categories.Select(t => (int)t));
         }
 
-        protected string Categories;
+        protected Core.Api.EventCategory[] Categories;
 
         public override int GetMaxDaysFromTariffLimit(TariffLimit tariffLimit)
         {
@@ -34,7 +31,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             return maxDays.Max();
         }
 
-        public override string GetCategories()
+        public override Core.Api.EventCategory[] GetCategories()
         {
             return Categories;
         }

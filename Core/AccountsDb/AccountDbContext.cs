@@ -458,6 +458,7 @@ namespace Zidium.Core.AccountsDb
         {
             Database.SetInitializer(new NullDatabaseInitializer<MsSqlAccountDbContext>());
             Database.SetInitializer(new NullDatabaseInitializer<MySqlAccountDbContext>());
+            Database.SetInitializer(new NullDatabaseInitializer<PostgreSqlAccountDbContext>());
         }
 
         #region Статистика использования

@@ -40,9 +40,9 @@ namespace Zidium.UserAccount.Tests
             // Посмотрим, как создалась проверка и правило
             using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
             {
+                var displayName = "Sql-запрос: " + model.Name;
                 var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.QueryAll()
-                    .FirstOrDefault(t => t.DisplayName == "Sql-запрос: " + model.Name);
+                var unitTest = unitTestRepository.QueryAll().FirstOrDefault(t => t.DisplayName == displayName);
 
                 Assert.NotNull(unitTest);
                 Assert.Equal(SystemUnitTestTypes.SqlTestType.Id, unitTest.TypeId);
@@ -50,7 +50,7 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(ObjectColor.Gray, unitTest.NoSignalColor);
                 Assert.Equal(model.ConnectionString, unitTest.SqlRule.ConnectionString);
                 Assert.Equal(model.Query, unitTest.SqlRule.Query);
-                Assert.Equal("Sql-запрос: " + model.Name, unitTest.DisplayName);
+                Assert.Equal(displayName, unitTest.DisplayName);
                 Assert.Equal(model.Provider, unitTest.SqlRule.Provider);
                 Assert.True(unitTest.SimpleMode);
                 Assert.Equal(2, unitTest.AttempMax);
@@ -69,7 +69,7 @@ namespace Zidium.UserAccount.Tests
             model.ConnectionString = "Data Source=Server2;Initial Catalog=Database2;User Id=User2;Password=Password2";
             model.Query = Guid.NewGuid().ToString();
             model.Period = TimeSpan.FromMinutes(20);
-            model.Provider = DatabaseProviderType.Oracle;
+            model.Provider = DatabaseProviderType.PostgreSql;
 
             using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
             {

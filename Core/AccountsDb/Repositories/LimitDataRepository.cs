@@ -55,7 +55,7 @@ namespace Zidium.Core.AccountsDb
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandTimeout = 0;
-                    command.CommandText = "DELETE FROM dbo.LimitDatasForUnitTests WHERE LimitDataId IN (SELECT Id FROM dbo.LimitDatas WHERE BeginDate < @BeginDate AND Type = @Type)";
+                    command.CommandText = $"DELETE FROM {Context.FormatTableName("LimitDatasForUnitTests")} WHERE {Context.FormatColumnName("LimitDataId")} IN (SELECT {Context.FormatColumnName("Id")} FROM {Context.FormatTableName("LimitDatas")} WHERE {Context.FormatColumnName("BeginDate")} < @BeginDate AND {Context.FormatColumnName("Type")} = @Type)";
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "@BeginDate";
@@ -73,7 +73,7 @@ namespace Zidium.Core.AccountsDb
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandTimeout = 0;
-                    command.CommandText = "DELETE FROM dbo.LimitDatas WHERE BeginDate < @BeginDate AND Type = @Type";
+                    command.CommandText = $"DELETE FROM {Context.FormatTableName("LimitDatas")} WHERE {Context.FormatColumnName("BeginDate")} < @BeginDate AND {Context.FormatColumnName("Type")} = @Type";
 
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "@BeginDate";

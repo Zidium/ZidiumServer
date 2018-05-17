@@ -14,7 +14,7 @@ namespace Zidium.Core.AccountsDb
         {
             if (entity.Id == Guid.Empty)
                 entity.Id = Guid.NewGuid();
-            
+
             Context.MetricTypes.Add(entity);
             return entity;
         }
@@ -59,7 +59,7 @@ namespace Zidium.Core.AccountsDb
 
         public MetricType GetOneOrNullByName(string name)
         {
-            return QueryAll().FirstOrDefault(t => name.Equals(t.SystemName, StringComparison.OrdinalIgnoreCase));
+            return QueryAll().FirstOrDefault(t => t.SystemName.ToLower() == name.ToLower());
         }
     }
 }

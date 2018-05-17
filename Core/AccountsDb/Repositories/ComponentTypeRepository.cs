@@ -34,7 +34,7 @@ namespace Zidium.Core.AccountsDb
 
         public ComponentType GetOneOrNullBySystemName(string systemName)
         {
-            return QueryAll().FirstOrDefault(x => x.SystemName.Equals(systemName, StringComparison.OrdinalIgnoreCase));
+            return QueryAll().FirstOrDefault(x => x.SystemName.ToLower() == systemName.ToLower());
         }
 
         public ComponentType UpdateBySystemName(string systemName, string displayName)

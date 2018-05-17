@@ -77,6 +77,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="EntityFramework6.Npgsql, Version=3.1.1.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework6.Npgsql.3.1.1\lib\net45\EntityFramework6.Npgsql.dll</HintPath>
+    </Reference>
     <Reference Include="jint, Version=2.10.2.0, Culture=neutral, PublicKeyToken=2e92ba9c8d81157f, processorArchitecture=MSIL">
       <HintPath>..\packages\Jint.2.10.2\lib\net45\jint.dll</HintPath>
       <Private>True</Private>
@@ -96,6 +99,9 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="Npgsql, Version=3.2.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Npgsql.3.2.7\lib\net451\Npgsql.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
@@ -104,6 +110,9 @@
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.3.0\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -168,6 +177,12 @@
       <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
     </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
+      <DependentUpon>201805151013039_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbContext.cs" />
+    <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
     <Compile Include="AccountsDb\Provider.cs" />
     <Compile Include="AccountsDb\Repositories\DefectRepository.cs" />
     <Compile Include="AccountsDb\Repositories\IDefectRepository.cs" />
@@ -881,6 +896,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.resx">
       <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.resx">
+      <DependentUpon>201805151013039_Initial.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

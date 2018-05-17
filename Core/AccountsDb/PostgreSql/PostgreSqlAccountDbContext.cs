@@ -1,15 +1,15 @@
-﻿using System.Data.Common;
-using System.Data.SqlClient;
+using System.Data.Common;
+using Npgsql;
 
 namespace Zidium.Core.AccountsDb
 {
-    public class MsSqlAccountDbContext : AccountDbContext
+    public class PostgreSqlAccountDbContext : AccountDbContext
     {
-        public MsSqlAccountDbContext() : base()
+        public PostgreSqlAccountDbContext() : base()
         {
         }
 
-        public MsSqlAccountDbContext(DbConnection connection) : base(connection)
+        public PostgreSqlAccountDbContext(DbConnection connection) : base(connection)
         {
         }
 
@@ -20,7 +20,7 @@ namespace Zidium.Core.AccountsDb
 
         public override DbConnection CreateConnection()
         {
-            return new SqlConnection(ConnectionString);
+            return new NpgsqlConnection(ConnectionString);
         }
     }
 }

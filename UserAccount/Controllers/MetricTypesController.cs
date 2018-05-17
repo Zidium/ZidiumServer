@@ -21,7 +21,10 @@ namespace Zidium.UserAccount.Controllers
                 .Where(t => t.IsDeleted == false);
 
             if (!string.IsNullOrEmpty(search))
-                query = query.Where(t => t.Id.ToString().Equals(search, StringComparison.OrdinalIgnoreCase) || t.SystemName.Contains(search));
+            {
+                var searchLowerCase = search.ToLower();
+                query = query.Where(t => t.Id.ToString().ToLower() == searchLowerCase || t.SystemName.ToLower().Contains(searchLowerCase));
+            }
 
             var counters = query.OrderBy(t => t.SystemName);
 

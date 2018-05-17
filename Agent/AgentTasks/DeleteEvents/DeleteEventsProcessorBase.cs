@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 
@@ -63,7 +64,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             }
         }
 
-        protected void DeleteParameters(ILogger logger, IEventRepository repository, Guid accountId, string categories, DateTime date, int maxCount)
+        protected void DeleteParameters(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
             while (true)
             {
@@ -79,7 +80,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             }
         }
 
-        protected void DeleteEventStatuses(ILogger logger, IEventRepository repository, Guid accountId, string categories, DateTime date, int maxCount)
+        protected void DeleteEventStatuses(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
             DbProcessor.CancellationToken.ThrowIfCancellationRequested();
             var stopwatch = new Stopwatch();
@@ -89,7 +90,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             logger.Trace("Удалено статусов событий: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
         }
 
-        protected void UpdateMetricsHistory(ILogger logger, IEventRepository repository, Guid accountId, string categories, DateTime date, int maxCount)
+        protected void UpdateMetricsHistory(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
             DbProcessor.CancellationToken.ThrowIfCancellationRequested();
             var stopwatch = new Stopwatch();
@@ -99,7 +100,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             logger.Trace("Обновлено строк истории метрик: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
         }
 
-        protected void DeleteNotifications(ILogger logger, IEventRepository repository, Guid accountId, string categories, DateTime date, int maxCount)
+        protected void DeleteNotifications(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
             DbProcessor.CancellationToken.ThrowIfCancellationRequested();
             var stopwatch = new Stopwatch();
@@ -109,7 +110,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             logger.Trace("Удалено строк уведомлений: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
         }
 
-        protected void DeleteArchivedStatuses(ILogger logger, IEventRepository repository, Guid accountId, string categories, DateTime date, int maxCount)
+        protected void DeleteArchivedStatuses(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
             DbProcessor.CancellationToken.ThrowIfCancellationRequested();
             var stopwatch = new Stopwatch();
@@ -119,7 +120,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             logger.Trace("Удалено архивных статусов: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
         }
 
-        protected int DeleteEvents(ILogger logger, IEventRepository repository, Guid accountId, string categories, DateTime date, int maxCount)
+        protected int DeleteEvents(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -132,7 +133,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         public abstract int GetMaxDaysFromTariffLimit(TariffLimit tariffLimit);
 
-        public abstract string GetCategories();
+        public abstract EventCategory[] GetCategories();
 
         public void ProcessAccount(ForEachAccountData data)
         {
