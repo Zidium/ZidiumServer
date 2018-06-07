@@ -2,9 +2,9 @@
 using System.Web;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
-using Zidium.Core.ConfigDb;
 using Zidium.UserAccount.Controllers;
 
 namespace Zidium.UserAccount.Models
@@ -68,7 +68,7 @@ namespace Zidium.UserAccount.Models
             }
             CurrentUser = user;
             var accountId = user.AccountId;
-            CurrentAccount = ConfigDbServicesHelper.GetAccountService().GetOneById(accountId);
+            CurrentAccount = GetDispatcherClient().GetAccountById(new GetAccountByIdRequestData() { Id = accountId }).Data;
             AccountDbContext = DbContext.GetAccountDbContextByDataBaseId(CurrentAccount.AccountDatabaseId);
         }
 
@@ -104,5 +104,14 @@ namespace Zidium.UserAccount.Models
                 return _enumName;
             }
         }
+
+        public DispatcherClient GetDispatcherClient()
+        {
+            if (_dispatcherClient == null)
+                _dispatcherClient = new DispatcherClient("UserAccount." + GetType().Name);
+            return _dispatcherClient;
+        }
+
+        private DispatcherClient _dispatcherClient;
     }
 }
