@@ -127,7 +127,7 @@ namespace Zidium.Core.AccountsDb
                     if (unitTestTypeId == SystemUnitTestTypes.DomainNameTestType.Id)
                     {
                         // для доменной проверки период задается системой, пользователь НЕ может его менять сам
-                        unitTest.PeriodSeconds = (int) TimeSpan.FromDays(1).TotalSeconds;
+                        unitTest.PeriodSeconds = (int)TimeSpan.FromDays(1).TotalSeconds;
                     }
                     else
                     {
@@ -327,7 +327,7 @@ namespace Zidium.Core.AccountsDb
                     throw new UnknownComponentIdException(data.ComponentId.Value, accountId);
                 }
             }
-            
+
             var request = new AccountCacheRequest()
             {
                 AccountId = accountId,
@@ -350,7 +350,7 @@ namespace Zidium.Core.AccountsDb
                         {
                             throw new ParameterErrorException("Период проверки НЕ может быть меньше 1 минуты");
                         }
-                        unitTest.PeriodSeconds = (int?) data.PeriodSeconds ?? unitTest.PeriodSeconds;
+                        unitTest.PeriodSeconds = (int?)data.PeriodSeconds ?? unitTest.PeriodSeconds;
                     }
 
                     // чтобы выполнить проверку прямо сейчас с новыми параметрами и увидеть результат
@@ -364,7 +364,7 @@ namespace Zidium.Core.AccountsDb
                 unitTest.ActualTime = data.ActualTime.HasValue ? TimeSpanHelper.FromSeconds(data.ActualTime) : unitTest.ActualTime;
                 unitTest.SimpleMode = data.SimpleMode ?? unitTest.SimpleMode;
                 unitTest.AttempMax = data.AttempMax ?? unitTest.AttempMax;
-                
+
                 unitTest.BeginSave();
             }
 
@@ -734,11 +734,11 @@ namespace Zidium.Core.AccountsDb
             var cache = new AccountCache(unitTest.AccountId);
             var unittestType = cache.UnitTestTypes.Read(unitTest.TypeId);
 
-            var noSignalImportance = ImportanceHelper.Get(unitTest.NoSignalColor) ??
-                ImportanceHelper.Get(unittestType.NoSignalColor) ??
-                (unitTest.IsSystemType
+            var noSignalImportance = unitTest.IsSystemType
                 ? EventImportance.Unknown
-                : EventImportance.Alarm);
+                : ImportanceHelper.Get(unitTest.NoSignalColor) ??
+                  ImportanceHelper.Get(unittestType.NoSignalColor) ??
+                  EventImportance.Alarm;
 
             var noSignalEvent = new Event()
             {
@@ -756,6 +756,7 @@ namespace Zidium.Core.AccountsDb
                 EventTypeId = SystemEventType.UnitTestResult.Id,
                 Importance = noSignalImportance
             };
+
             return SaveResultEvent(processDate, unitTest, noSignalEvent);
         }
 
