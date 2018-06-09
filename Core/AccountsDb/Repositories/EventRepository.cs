@@ -251,10 +251,7 @@ namespace Zidium.Core.AccountsDb
 
         public int DeleteEventParameters(EventCategory[] categories, int maxCount, DateTime toDate)
         {
-            var subQuery = GetEventsSubQuery(categories, toDate, maxCount);
-
-            var objectQuery = (ObjectQuery)((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<EventProperty>()
-                .Where(t => subQuery.Contains(t.EventId)).OrderBy(t => t.Id).Select(t => t.Id).Take(maxCount);
+            var objectQuery = (ObjectQuery)GetEventsSubQuery(categories, toDate, maxCount);
 
             using (var connection = Context.CreateConnection())
             {
@@ -263,7 +260,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     command.CommandTimeout = 0;
 
-                    var query = $"DELETE FROM {Context.FormatTableName("EventParameters")} WHERE {Context.FormatColumnName("Id")} IN ({objectQuery.ToTraceString()})";
+                    var query = $"DELETE FROM {Context.FormatTableName("EventParameters")} WHERE {Context.FormatColumnName("EventId")} IN ({objectQuery.ToTraceString()})";
 
                     command.CommandText = query;
 

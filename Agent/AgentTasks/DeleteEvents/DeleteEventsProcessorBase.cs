@@ -66,18 +66,13 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         protected void DeleteParameters(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
         {
-            while (true)
-            {
-                DbProcessor.CancellationToken.ThrowIfCancellationRequested();
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
-                var count = repository.DeleteEventParameters(categories, maxCount, date);
-                stopwatch.Stop();
-                logger.Trace("Удалено строк свойств событий: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
-                Interlocked.Add(ref DeletedPropertiesCount, count);
-                if (count == 0)
-                    break;
-            }
+            DbProcessor.CancellationToken.ThrowIfCancellationRequested();
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var count = repository.DeleteEventParameters(categories, maxCount, date);
+            stopwatch.Stop();
+            logger.Trace("Удалено строк свойств событий: {0} за {1} мс", count, stopwatch.ElapsedMilliseconds);
+            Interlocked.Add(ref DeletedPropertiesCount, count);
         }
 
         protected void DeleteEventStatuses(ILogger logger, IEventRepository repository, Guid accountId, EventCategory[] categories, DateTime date, int maxCount)
