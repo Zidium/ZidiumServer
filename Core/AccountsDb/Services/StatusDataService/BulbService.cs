@@ -298,7 +298,7 @@ namespace Zidium.Core.AccountsDb
             else
             {
                 // у виртуальных лампочек время актуальности и завершения не меняется при продлении
-                data.ActualDate = EventHelper.InfiniteActualDate;
+                data.ActualDate = DateTimeHelper.InfiniteActualDate;
             }
 
             CreateOrUpdateStatusEvent(signal.AccountId, data);
@@ -382,7 +382,7 @@ namespace Zidium.Core.AccountsDb
             else
             {
                 // время актуальности колбасок, которые НЕ являются листьями дерева, бесконечо
-                data.ActualDate = EventHelper.InfiniteActualDate;
+                data.ActualDate = DateTimeHelper.InfiniteActualDate;
             }
 
             data.StartDate = startDate;
@@ -667,7 +667,7 @@ namespace Zidium.Core.AccountsDb
                 Id = Guid.NewGuid(),
                 StartDate = createDate,
                 EndDate = createDate,
-                ActualDate = EventHelper.InfiniteActualDate,
+                ActualDate = DateTimeHelper.InfiniteActualDate,
                 EventCategory = eventCategory,
                 Count = 1,
                 HasSignal = false,

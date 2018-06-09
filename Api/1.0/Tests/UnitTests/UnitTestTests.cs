@@ -295,5 +295,23 @@ namespace ApiTests_1._0.UnitTests
             state = unitTest.GetState().Data;
             Assert.Equal(MonitoringStatus.Success, state.Status);
         }
+
+        [Fact]
+        public void SendMaxActualIntervalTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var component = account.CreateRandomComponentControl();
+            var unitTest = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+
+            var response = unitTest.SendResult(new SendUnitTestResultData()
+            {
+                Result = UnitTestResult.Success,
+                ActualInterval = TimeSpan.MaxValue
+            });
+            response.Check();
+
+            var state = unitTest.GetState().Data;
+            Assert.Equal(2050, state.ActualDate.Year);
+        }
     }
 }

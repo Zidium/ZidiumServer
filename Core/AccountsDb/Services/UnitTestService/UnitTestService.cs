@@ -50,7 +50,15 @@ namespace Zidium.Core.AccountsDb
                 ?? TimeSpanHelper.FromSeconds(data.ActualIntervalSeconds) // потом из сообщения
                 ?? TimeSpan.FromMinutes(5); // по умолчанию 5 мин
 
-            var actualDate = processDate + actualInterval;
+            DateTime actualDate;
+            try
+            {
+                actualDate = processDate + actualInterval;
+            }
+            catch
+            {
+                actualDate = DateTimeHelper.InfiniteActualDate;
+            }
 
             var joinKeyHash = data.ReasonCode ?? 0;
 
@@ -615,6 +623,10 @@ namespace Zidium.Core.AccountsDb
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
+            if (data.ActualIntervalSeconds.HasValue && data.ActualIntervalSeconds < 0)
+            {
+                throw new ParameterErrorException("ActualIntervalSeconds must be >= 0");
+            }
 
             using (var unitTest = AllCaches.UnitTests.Write(new AccountCacheRequest()
             {
@@ -733,7 +745,7 @@ namespace Zidium.Core.AccountsDb
                 Id = Guid.NewGuid(),
                 Message = "Нет сигнала",
                 OwnerId = unitTest.Id,
-                ActualDate = EventHelper.InfiniteActualDate,
+                ActualDate = DateTimeHelper.InfiniteActualDate,
                 Category = EventCategory.UnitTestResult,
                 Count = 1,
                 CreateDate = processDate,

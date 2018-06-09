@@ -137,5 +137,20 @@ namespace ApiTests_1._0.Metrics
             Assert.Equal(1141, sendResponse.Code);
             Assert.Equal("Metric value can't be Nan or Infinity", sendResponse.ErrorMessage);
         }
+
+        [Fact]
+        public void SendMaxActualDateTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var component = account.CreateRandomComponentControl();
+            var metricName = Guid.NewGuid().ToString();
+            var metricValue = 10;
+
+            var sendResponse = component.SendMetric(metricName, metricValue, TimeSpan.MaxValue);
+            Assert.True(sendResponse.Success);
+
+            var metricInfo = sendResponse.Data;
+            Assert.Equal(2050, metricInfo.ActualDate.Year);
+        }
     }
 }

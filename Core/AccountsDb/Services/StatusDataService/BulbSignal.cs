@@ -43,7 +43,7 @@ namespace Zidium.Core.AccountsDb
                 AccountId = accountId,
                 StartDate = startDate,
                 ProcessDate = startDate,
-                ActualDate = EventHelper.InfiniteActualDate,
+                ActualDate = DateTimeHelper.InfiniteActualDate,
                 Message = "Нет данных",
                 Status = MonitoringStatus.Unknown,
                 NoSignalImportance = EventImportance.Unknown,
@@ -60,7 +60,7 @@ namespace Zidium.Core.AccountsDb
                 AccountId = accountId,
                 StartDate = startDate,
                 ProcessDate = startDate,
-                ActualDate = EventHelper.InfiniteActualDate,
+                ActualDate = DateTimeHelper.InfiniteActualDate,
                 Message = "Нет сигнала",
                 Status = noSignalStatus,
                 NoSignalImportance = EventImportance.Unknown,
@@ -74,7 +74,7 @@ namespace Zidium.Core.AccountsDb
             var signal = new BulbSignal()
             {
                 AccountId = accountId,
-                ActualDate = EventHelper.InfiniteActualDate, // чтобы статус был актуален вечно
+                ActualDate = DateTimeHelper.InfiniteActualDate, // чтобы статус был актуален вечно
                 StartDate = processTime,
                 ProcessDate = processTime,
                 Status = MonitoringStatus.Disabled,
@@ -93,7 +93,7 @@ namespace Zidium.Core.AccountsDb
                 NoSignalImportance = EventImportance.Unknown,
                 StartDate = processDate,
                 ProcessDate = processDate,
-                ActualDate = EventHelper.InfiniteActualDate,
+                ActualDate = DateTimeHelper.InfiniteActualDate,
                 EventId = child.StatusEventId,
                 IsSpace = child.IsSpace,
                 Message = child.Message,

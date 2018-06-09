@@ -1,12 +1,11 @@
 ﻿@using Zidium.Core.Api
-@using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Helpers
 @model Zidium.Core.AccountsDb.Metric
 
 @{
     var statusData = Model.Bulb;
     var status = statusData != null ? statusData.Status : MonitoringStatus.Unknown;
-    var hasSignal = statusData != null && statusData.HasSignal && statusData.ActualDate != EventHelper.InfiniteActualDate;
+    var hasSignal = statusData != null && statusData.HasSignal;
 }
 
 <tr id="ccr_@Model.Id.ToString()" style="color: @GuiHelper.GetStrongFgColor(status)">

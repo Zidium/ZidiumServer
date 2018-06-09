@@ -214,7 +214,9 @@
                 <tr>
                     <td class="text-nowrap">@GuiHelper.GetDateTimeString(value.BeginDate)</td>
                     <td class="text-center">
-                        @GuiHelper.GetMetricValueHtml(value.Value, value.Color, value.HasSignal)
+                        <span title="Актуально до @GuiHelper.GetDateTimeString(value.ActualDate)">
+                            @GuiHelper.GetMetricValueHtml(value.Value, value.Color, value.HasSignal)
+                        </span>
                     </td>
                 </tr>
             }

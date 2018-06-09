@@ -84,7 +84,11 @@ else
     @Html.Grid(Model.Data).Columns(columns =>
         {
             columns.Add(m => m.BeginDate).Titled("Дата начала").SortInitialDirection(GridSortDirection.Descending).Css("column-date");
-            columns.Add(m => m.Value).Titled("Значение").Css("text-center").RenderValueAs(m => GuiHelper.GetMetricValueHtml(m.Value, m.Color, m.HasSignal)).Sanitized(false).Encoded(false);
+            columns.Add(m => m.Value).Titled("Значение").Css("text-center").RenderValueAs(m =>@<text>
+                    <span title="Актуально до @GuiHelper.GetDateTimeString(m.ActualDate)">
+                        @GuiHelper.GetMetricValueHtml(m.Value, m.Color, m.HasSignal)
+                    </span>
+            </text>).Sanitized(false).Encoded(false);
         }).Sortable().Filterable(false).Selectable(false).WithPaging(50).Named("grid-history")
 }
 

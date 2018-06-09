@@ -79,7 +79,7 @@ namespace Zidium.Core.AccountsDb
                     ObjectId = metric.MetricTypeId
                 });
                 processDate = metricWrite.ActualDate; // чтобы НЕ было пробела
-                var actualDate = EventHelper.InfiniteActualDate;
+                var actualDate = DateTimeHelper.InfiniteActualDate;
                 var noSignalColor = metricWrite.NoSignalColor ?? metricType.NoSignalColor ?? ObjectColor.Red;
                 var status = MonitoringStatusHelper.Get(noSignalColor);
                 SetMetricValue(metricType, metricWrite, null, processDate, actualDate, status, "Нет сигнала", false);
@@ -681,6 +681,11 @@ namespace Zidium.Core.AccountsDb
                 throw new ParameterErrorException("Metric value can't be Nan or Infinity");
             }
 
+            if (data.ActualIntervalSecs.HasValue && data.ActualIntervalSecs < 0)
+            {
+                throw new ParameterErrorException("ActualIntervalSecs must be >= 0");
+            }
+
             var processDate = DateTime.Now;
             var accountDbContext = Context.GetAccountDbContext(accountId);
 
@@ -742,13 +747,22 @@ namespace Zidium.Core.AccountsDb
                 var status = MonitoringStatusHelper.Get(color);
 
                 // Время актуальности
-                var actualTime =
+                var actualInterval =
                     metric.ActualTime
                     ?? metricType.ActualTime
                     ?? TimeSpanHelper.FromSeconds(data.ActualIntervalSecs)
                     ?? TimeSpan.FromHours(1);
 
-                var actualDate = processDate + actualTime;
+                DateTime actualDate;
+                try
+                {
+                    actualDate = processDate + actualInterval;
+                }
+                catch
+                {
+                    actualDate = DateTimeHelper.InfiniteActualDate;
+                }
+
                 var statusData = SetMetricValue(metricType, metric, data.Value, processDate, actualDate, status, errorMessage, true);
 
                 limitChecker.AddMetricsRequestsPerDay(accountDbContext);

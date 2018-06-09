@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using Zidium.Core.Api;
 using Zidium.Core.Caching;
 using Zidium.Core.AccountsDb;
 
@@ -8,11 +6,6 @@ namespace Zidium.Core.Common.Helpers
 {
     public static class EventHelper
     {
-        /// <summary>
-        /// 01.01.2050 - считаем что это бесконечно далеко
-        /// </summary>
-        public static readonly DateTime InfiniteActualDate = new DateTime(2050, 1, 1);
-
         /// <summary>
         /// Проверяет можно ли склеивать события.
         /// Все события склеиваются одинаково (простые и непрерывные).

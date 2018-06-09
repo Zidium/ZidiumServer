@@ -501,7 +501,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 }
                 catch (Exception exception)
                 {
-                    logger.Warn("Ошибка проверки баннера " + url + ": " + exception.Message);
+                    logger.Debug("Ошибка проверки баннера " + url + ": " + exception.Message);
                     noBannerUrl = url;
                     hasBanner = false;
                     break;

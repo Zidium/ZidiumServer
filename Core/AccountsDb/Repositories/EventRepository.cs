@@ -33,7 +33,7 @@ namespace Zidium.Core.AccountsDb
                 .Where(x =>
                     categories.Contains(x.Category) &&
                     x.LastNotificationDate == null &&
-                    x.ActualDate < EventHelper.InfiniteActualDate &&
+                    x.ActualDate < DateTimeHelper.InfiniteActualDate &&
                     x.StartDate != x.EndDate);
 
             if (componentId.HasValue)
@@ -54,7 +54,7 @@ namespace Zidium.Core.AccountsDb
                 .Where(x =>
                     categories.Contains(x.Category) &&
                     x.LastUpdateDate > x.LastNotificationDate &&
-                    x.ActualDate < EventHelper.InfiniteActualDate &&
+                    x.ActualDate < DateTimeHelper.InfiniteActualDate &&
                     x.StartDate != x.EndDate);
 
             if (componentId.HasValue)
@@ -74,7 +74,7 @@ namespace Zidium.Core.AccountsDb
             var subQuery = Context.Events
                 .Where(x =>
                     categories.Contains(x.Category) &&
-                    x.ActualDate == EventHelper.InfiniteActualDate);
+                    x.ActualDate == DateTimeHelper.InfiniteActualDate);
 
             if (componentId.HasValue)
                 subQuery = subQuery.Where(t => t.OwnerId == componentId.Value);

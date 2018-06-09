@@ -378,7 +378,7 @@ namespace Zidium.Api.Common
             {
                 return null;
             }
-            return (int)timeSpan.Value.TotalSeconds;
+            return Math.Round(timeSpan.Value.TotalSeconds);
         }
 
         public static SendUnitTestResultRequestDtoData GetSendUnitTestResultRequestDtoData(Guid unitTestId, SendUnitTestResultData data)

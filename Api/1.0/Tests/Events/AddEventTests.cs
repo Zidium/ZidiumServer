@@ -224,7 +224,7 @@ namespace ApiTests_1._0.Events
             var component = account.CreateRandomComponentControl();
 
             // добавим событие в очередь 1-ый раз
-            string errorType = "test erro " + Guid.NewGuid();
+            string errorType = "test error " + Guid.NewGuid();
 
             var error = component
                 .CreateApplicationError(errorType)

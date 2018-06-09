@@ -94,14 +94,14 @@ namespace Zidium.Core.Common.Helpers
         public static string GetRussianDate(DateTime? date)
         {
             if (date == null)
-                return string.Empty;
+                return String.Empty;
             return date.Value.ToString(DateTimeFormat.RUS_DDMMYYYY);
         }
 
         public static string GetRussianDateTime(DateTime? date)
         {
             if (date == null)
-                return string.Empty;
+                return String.Empty;
             return date.Value.ToString(DateTimeFormat.RUS_DDMMYYYY_HHMMSS);
         }
 
@@ -130,17 +130,17 @@ namespace Zidium.Core.Common.Helpers
             {
                 throw new FormatException("Неверный URL-формат даты");
             }
-            int year = int.Parse(parts[0], CultureInfo.InvariantCulture);
+            int year = Int32.Parse(parts[0], CultureInfo.InvariantCulture);
             if (year < 1 || year > 3000)
             {
                 throw new FormatException("Неверный URL-формат даты");
             }
-            int month = int.Parse(parts[1], CultureInfo.InvariantCulture);
+            int month = Int32.Parse(parts[1], CultureInfo.InvariantCulture);
             if (month < 1 || month > 12)
             {
                 throw new FormatException("Неверный URL-формат даты");
             }
-            int day = int.Parse(parts[2], CultureInfo.InvariantCulture);
+            int day = Int32.Parse(parts[2], CultureInfo.InvariantCulture);
             if (day < 1 || day > 31)
             {
                 throw new FormatException("Неверный URL-формат даты");
@@ -193,12 +193,12 @@ namespace Zidium.Core.Common.Helpers
             {
                 throw new FormatException("Неверный URL-формат даты");
             }
-            int hours = int.Parse(parts[0], CultureInfo.InvariantCulture);
+            int hours = Int32.Parse(parts[0], CultureInfo.InvariantCulture);
             int minutes = 0;
             int seconds = 0;
             if (parts.Length > 1)
             {
-                minutes = int.Parse(parts[1], CultureInfo.InvariantCulture);
+                minutes = Int32.Parse(parts[1], CultureInfo.InvariantCulture);
                 if (minutes < 0 || minutes > 59)
                 {
                     throw new FormatException("Неверный URL-формат даты");
@@ -206,7 +206,7 @@ namespace Zidium.Core.Common.Helpers
             }
             if (parts.Length > 2)
             {
-                seconds = int.Parse(parts[2], CultureInfo.InvariantCulture);
+                seconds = Int32.Parse(parts[2], CultureInfo.InvariantCulture);
                 if (seconds < 0 || seconds > 59)
                 {
                     throw new FormatException("Неверный URL-формат даты");
@@ -214,5 +214,10 @@ namespace Zidium.Core.Common.Helpers
             }
             return new DateTime(date.Year, date.Month, date.Day, hours, minutes, seconds);
         }
+
+        /// <summary>
+        /// 01.01.2050 - считаем что это бесконечно далеко
+        /// </summary>
+        public static readonly DateTime InfiniteActualDate = new DateTime(2050, 1, 1);
     }
 }
