@@ -28,24 +28,21 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             };
         }
 
-        public void Process(Guid? accountId = null, Guid? componentId = null)
+        public void Process(Guid? accountId = null)
         {
             DeletedMetricValueCount = 0;
 
-            if (!accountId.HasValue)
-                DbProcessor.ForEachComponent(data => ProcessComponent(data), true);
-            else
-                DbProcessor.ForEachAccountComponents(accountId.Value, data =>
-                {
-                    if (!componentId.HasValue || componentId.Value == data.Component.Id)
-                        ProcessComponent(data);
-                }, true);
+            DbProcessor.ForEachAccount(data =>
+            {
+                if (!accountId.HasValue || accountId.Value == data.Account.Id)
+                    ProcessAccount(data);
+            });
 
             if (DeletedMetricValueCount > 0)
                 Logger.Info("Удалено значений метрик: " + DeletedMetricValueCount);
         }
 
-        public void ProcessComponent(ForEachComponentData data)
+        public void ProcessAccount(ForEachAccountData data)
         {
             var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
             var tariffLimit = accountTariffRepository.GetHardTariffLimit();
@@ -58,8 +55,8 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
 
-                var count = metricHistoryRepository.DeleteMetricsHistory(data.Component.Id, MaxDeleteCount, date);
-                data.Logger.Trace("Удалено значений метрик: {0}", count);
+                var count = metricHistoryRepository.DeleteMetricsHistory(MaxDeleteCount, date);
+                data.Logger.Trace("Удалено строк истории метрик: {0}", count);
                 Interlocked.Add(ref DeletedMetricValueCount, count);
 
                 if (count == 0)
@@ -69,7 +66,7 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             }
 
             if (deletedCount > 0)
-                data.Logger.Debug("Удалено значений метрик: " + deletedCount + " по компоненту " + data.Component.Id);
+                data.Logger.Debug("Удалено значений метрик: " + deletedCount);
 
         }
     }

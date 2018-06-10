@@ -40,7 +40,7 @@ namespace Zidium.Core.Single.Tests
 
             // Выполним предварительную очистку истории метрик
             var processor = new DeleteMetricHistoryProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
-            processor.Process(account.Id, component.Info.Id);
+            processor.Process(account.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Создадим одно старое значение метрики и одно новое
@@ -53,8 +53,8 @@ namespace Zidium.Core.Single.Tests
                 {
                     ComponentId = component.Info.Id,
                     MetricTypeId = metric.MetricTypeId,
-                    BeginDate = now.AddDays(-20),
-                    ActualDate = now.AddDays(-11),
+                    BeginDate = now.AddDays(-11),
+                    ActualDate = now.AddDays(-9),
                     Color = ObjectColor.Gray,
                     Value = 100
                 });
@@ -63,7 +63,7 @@ namespace Zidium.Core.Single.Tests
                 {
                     ComponentId = component.Info.Id,
                     MetricTypeId = metric.MetricTypeId,
-                    BeginDate = now.AddDays(-11),
+                    BeginDate = now.AddDays(-9),
                     ActualDate = now,
                     Color = ObjectColor.Gray,
                     Value = 200
@@ -89,7 +89,7 @@ namespace Zidium.Core.Single.Tests
             Assert.Equal(2, metricHistory.Count);
 
             // Удалим старые значения
-            processor.Process(account.Id, component.Info.Id);
+            processor.Process(account.Id);
             Assert.Null(processor.DbProcessor.FirstException);
             Assert.Equal(1, processor.DeletedMetricValueCount);
 

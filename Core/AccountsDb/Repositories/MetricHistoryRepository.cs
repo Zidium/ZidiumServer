@@ -61,10 +61,10 @@ namespace Zidium.Core.AccountsDb
             return query;
         }
 
-        public int DeleteMetricsHistory(Guid componentId, int maxCount, DateTime toDate)
+        public int DeleteMetricsHistory(int maxCount, DateTime toDate)
         {
             var objectQuery = (ObjectQuery) ((IObjectContextAdapter) Context).ObjectContext.CreateObjectSet<MetricHistory>()
-                .Where(t => t.ComponentId == componentId && t.ActualDate < toDate).OrderBy(t => t.ActualDate).Select(t => t.Id).Take(maxCount);
+                .Where(t => t.BeginDate < toDate).OrderBy(t => t.BeginDate).Select(t => t.Id).Take(maxCount);
 
             using (var connection = Context.CreateConnection())
             {

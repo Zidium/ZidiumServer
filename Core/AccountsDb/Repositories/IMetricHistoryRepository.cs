@@ -27,6 +27,6 @@ namespace Zidium.Core.AccountsDb
 
         IQueryable<MetricHistory> QueryAllByMetricType(Guid componentId, Guid metricTypeId);
 
-        int DeleteMetricsHistory(Guid componentId, int maxCount, DateTime toDate);
+        int DeleteMetricsHistory(int maxCount, DateTime toDate);
     }
 }

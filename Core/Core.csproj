@@ -176,10 +176,18 @@
     <Compile Include="AccountsDb\MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.Designer.cs">
       <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
     </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.Designer.cs">
+      <DependentUpon>201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
       <DependentUpon>201805151013039_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.Designer.cs">
+      <DependentUpon>201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
     </Compile>
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbContext.cs" />
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
@@ -897,8 +905,14 @@
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.resx">
       <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.resx">
+      <DependentUpon>201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.resx">
       <DependentUpon>201805151013039_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.resx">
+      <DependentUpon>201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
