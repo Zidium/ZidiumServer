@@ -166,10 +166,18 @@ namespace Zidium.Core.AccountsDb
             {
                 throw new ParameterRequiredException("ComponentId");
             }
-            if (data.UnitTestTypeId == null)
+
+            if (!data.UnitTestTypeId.HasValue)
             {
-                throw new ParameterRequiredException("UnitTestTypeId");
+                var unittestTypeService = new UnitTestTypeService(Context);
+                var unittestType = unittestTypeService.GetOrCreateUnitTestType(accountId, new GetOrCreateUnitTestTypeRequestData()
+                {
+                    SystemName = "CustomUnitTestType",
+                    DisplayName = "Пользовательская проверка"
+                });
+                data.UnitTestTypeId = unittestType.Id;
             }
+
             var cache = new AccountCache(accountId);
             var componentId = data.ComponentId.Value;
             var systemName = data.SystemName;

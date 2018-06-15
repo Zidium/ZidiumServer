@@ -205,6 +205,8 @@
 
         GetOrCreateUnitTestTypeResponse GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequest request);
 
+        GetUnitTestTypeByIdResponse GetUnitTestTypeById(GetUnitTestTypeByIdRequest request);
+
         UpdateUnitTestTypeResponse UpdateUnitTestType(UpdateUnitTestTypeRequest request);
 
         DeleteUnitTestTypeResponse DeleteUnitTestType(DeleteUnitTestTypeRequest request);

@@ -148,6 +148,7 @@ namespace Zidium.Core.AccountsDb
 
             // срок годности ssl-сертификата
             RegisterUnitTestType(SystemUnitTestTypes.SslTestType);
+
         }
 
         protected void RegisterTariffLimit(TariffLimit limit)

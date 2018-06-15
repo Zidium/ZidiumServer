@@ -13,7 +13,7 @@ using Zidium.Core.Limits;
 namespace Zidium.Core
 {
     /// <summary>
-    /// Данный класс отвечает за перенаправление вызовов тем экземпплярам служб, который работают с нужной БД акканта
+    /// Данный класс отвечает за перенаправление вызовов тем экземплярам служб, который работают с нужной БД акканта
     /// </summary>
     public class DispatcherService : IDispatcherService
     {
@@ -1662,6 +1662,33 @@ namespace Zidium.Core
             }
         }
 
+        public GetUnitTestTypeByIdResponse GetUnitTestTypeById(GetUnitTestTypeByIdRequest request)
+        {
+            CheckRequest(request);
+            if (request.Data == null)
+            {
+                throw new ParameterRequiredException("Request.Data");
+            }
+            if (request.Data.Id == null)
+            {
+                throw new ParameterRequiredException("Request.Data.Id");
+            }
+
+            using (var context = GetDispatcherContext(request))
+            {
+                var accountId = request.Token.AccountId.Value;
+                var service = context.UnitTestTypeService;
+
+                var unitTestType = service.GetUnitTestTypeById(accountId, request.Data.Id.Value);
+                var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
+                return new GetUnitTestTypeByIdResponse()
+                {
+                    Code = Zidium.Api.ResponseCode.Success,
+                    InternalData = typeDto
+                };
+            }
+        }
+
         public UpdateUnitTestTypeResponse UpdateUnitTestType(UpdateUnitTestTypeRequest request)
         {
             CheckRequest(request);
@@ -1719,10 +1746,6 @@ namespace Zidium.Core
             if (request.Data == null)
             {
                 throw new ParameterRequiredException("Request.Data");
-            }
-            if (request.Data.UnitTestTypeId == null)
-            {
-                throw new ParameterRequiredException("Request.Data.UnitTestTypeId");
             }
             if (request.Data.ComponentId == null)
             {

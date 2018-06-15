@@ -446,6 +446,11 @@ namespace Zidium.Core.Api
             return ExecuteAction<GetOrCreateUnitTestTypeResponse>(request);
         }
 
+        public GetUnitTestTypeByIdResponse GetUnitTestTypeById(GetUnitTestTypeByIdRequest request)
+        {
+            return ExecuteAction<GetUnitTestTypeByIdResponse>(request);
+        }
+
         public UpdateUnitTestTypeResponse UpdateUnitTestType(UpdateUnitTestTypeRequest request)
         {
             return ExecuteAction<UpdateUnitTestTypeResponse>(request);

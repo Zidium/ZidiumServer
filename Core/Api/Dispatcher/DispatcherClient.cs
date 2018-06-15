@@ -244,6 +244,17 @@ namespace Zidium.Core.Api.Dispatcher
             return dispatcher.GetOrCreateUnitTest(request);
         }
 
+        public GetUnitTestTypeByIdResponse GetUnitTestTypeById(Guid accountId, Guid id)
+        {
+            var request = GetRequest<GetUnitTestTypeByIdRequest>(accountId);
+            request.Data = new GetUnitTestTypeByIdRequestData()
+            {
+                Id = id
+            };
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.GetUnitTestTypeById(request);
+        }
+
         public UpdateUnitTestResponse UpdateUnitTest(Guid accountId, UpdateUnitTestRequestData data)
         {
             var request = GetRequest<UpdateUnitTestRequest>(accountId);

@@ -395,6 +395,9 @@
     <Compile Include="Api\UnitTests\UpdateUnitTest\UpdateUnitTestRequest.cs" />
     <Compile Include="Api\UnitTests\UpdateUnitTest\UpdateUnitTestRequestData.cs" />
     <Compile Include="Api\UnitTests\UpdateUnitTest\UpdateUnitTestResponse.cs" />
+    <Compile Include="Api\UnitTestTypes\GetUnitTestTypeById\GetUnitTestTypeByIdRequest.cs" />
+    <Compile Include="Api\UnitTestTypes\GetUnitTestTypeById\GetUnitTestTypeByIdRequestData.cs" />
+    <Compile Include="Api\UnitTestTypes\GetUnitTestTypeById\GetUnitTestTypeByIdResponse.cs" />
     <Compile Include="Api\UnitTestTypes\UpdateUnitTestType\UpdateUnitTestTypeResponse.cs" />
     <Compile Include="Api\UnitTestTypes\UpdateUnitTestType\UpdateUnitTestTypeRequest.cs" />
     <Compile Include="Api\UnitTestTypes\UpdateUnitTestType\UpdateUnitTestTypeRequestData.cs" />

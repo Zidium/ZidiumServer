@@ -181,6 +181,7 @@
     <Compile Include="Dispatcher\EventsTests.cs" />
     <Compile Include="Dispatcher\ExtentionPropertyCollectionTests.cs" />
     <Compile Include="Dispatcher\SubscriptionsTests.cs" />
+    <Compile Include="Dispatcher\UnittestTests.cs" />
     <Compile Include="Dispatcher\UnitTestTypeTests.cs" />
     <Compile Include="ModuleInitializer.cs" />
     <Compile Include="Others\BannerHelperTests.cs" />

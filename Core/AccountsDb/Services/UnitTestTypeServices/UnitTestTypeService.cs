@@ -81,6 +81,17 @@ namespace Zidium.Core.AccountsDb
             }
         }
 
+        public IUnitTestTypeCacheReadObject GetUnitTestTypeById(Guid accountId, Guid id)
+        {
+            var unitTestTypeCache = AllCaches.UnitTestTypes.Read(new AccountCacheRequest()
+            {
+                AccountId = accountId,
+                ObjectId = id
+            });
+
+            return unitTestTypeCache;
+        }
+
         public IUnitTestTypeCacheReadObject UpdateUnitTestType(Guid accountId, UpdateUnitTestTypeRequestData data)
         {
             if (data == null)

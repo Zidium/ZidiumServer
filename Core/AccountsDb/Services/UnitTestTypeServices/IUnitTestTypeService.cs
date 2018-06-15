@@ -8,6 +8,8 @@ namespace Zidium.Core.AccountsDb
     {
         IUnitTestTypeCacheReadObject GetOrCreateUnitTestType(Guid accountId, GetOrCreateUnitTestTypeRequestData data);
 
+        IUnitTestTypeCacheReadObject GetUnitTestTypeById(Guid accountId, Guid id);
+
         IUnitTestTypeCacheReadObject UpdateUnitTestType(Guid accountId, UpdateUnitTestTypeRequestData data);
 
         void DeleteUnitTestType(Guid accountId, Guid unitTestTypeId);

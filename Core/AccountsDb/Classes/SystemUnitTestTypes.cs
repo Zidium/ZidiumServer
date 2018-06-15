@@ -50,10 +50,10 @@ namespace Zidium.Core.AccountsDb
 
         public static readonly Guid[] AllSystemTypesIds =
         {
-            HttpUnitTestType.Id, 
-            PingTestType.Id, 
-            SqlTestType.Id, 
-            DomainNameTestType.Id, 
+            HttpUnitTestType.Id,
+            PingTestType.Id,
+            SqlTestType.Id,
+            DomainNameTestType.Id,
             SslTestType.Id
         };
 

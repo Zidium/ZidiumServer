@@ -5,7 +5,6 @@ using NLog;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Core.Caching;
-using Zidium.Core.Common;
 using Zidium.Core.Common.TaskQueue;
 using Zidium.Core.Limits;
 
@@ -427,6 +426,11 @@ namespace Zidium.Core.Api
         public GetOrCreateUnitTestTypeResponse GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequest request)
         {
             return Execute(() => InternalService.GetOrCreateUnitTestType(request));
+        }
+
+        public GetUnitTestTypeByIdResponse GetUnitTestTypeById(GetUnitTestTypeByIdRequest request)
+        {
+            return Execute(() => InternalService.GetUnitTestTypeById(request));
         }
 
         public UpdateUnitTestTypeResponse UpdateUnitTestType(UpdateUnitTestTypeRequest request)
