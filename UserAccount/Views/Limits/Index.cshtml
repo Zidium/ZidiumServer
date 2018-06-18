@@ -38,7 +38,7 @@
 
         <div class="top15px">
             <h4>События</h4>
-            <p>Вызовы api событий за сегодня: @UsedAndMaxLimit(Model.Limits.UsedToday.EventRequests, Model.Limits.Soft.EventRequestsPerDay)</p>
+            <p>Отправлено событий за сегодня: @UsedAndMaxLimit(Model.Limits.UsedToday.EventRequests, Model.Limits.Soft.EventRequestsPerDay)</p>
             <p>Размер событий за сегодня: <strong>@GuiHelper.FormatSize(Model.Limits.UsedToday.EventsSize)</strong></p>
             <p>Сколько дней хранятся события: <strong>@Model.Limits.Soft.EventsMaxDays</strong></p>
         </div>
@@ -46,7 +46,7 @@
         <div class="top15px">
             <h4>Метрики</h4>
             <p>Метрики: @UsedAndMaxLimit(Model.Limits.UsedInstant.MetricsCount, Model.Limits.Soft.MetricsMax)</p>
-            <p>Вызовы api метрик за сегодня: @UsedAndMaxLimit(Model.Limits.UsedToday.MetricRequests, Model.Limits.Soft.MetricRequestsPerDay)</p>
+            <p>Отправлено метрик за сегодня: @UsedAndMaxLimit(Model.Limits.UsedToday.MetricRequests, Model.Limits.Soft.MetricRequestsPerDay)</p>
             <p>Размер метрик за сегодня: <strong>@GuiHelper.FormatSize(Model.Limits.UsedToday.MetricsSize)</strong></p>
             <p>Сколько дней хранятся метрики: <strong>@Model.Limits.Soft.MetricsMaxDays</strong></p>
         </div>
@@ -56,13 +56,13 @@
         </div>
         <div>
             <p>Всего: @UsedAndMaxLimit(Model.Limits.UsedInstant.UnitTestsCount, Model.Limits.Soft.UnitTestsMax)</p>
+            <p>Отправлено результатов за сегодня: @UsedAndMaxLimit(Model.Limits.UsedToday.UnitTestsRequests, Model.Limits.Soft.UnitTestsRequestsPerDay)</p>
             <p>Http-проверок без баннера: @UsedAndMaxLimit(Model.Limits.UsedInstant.HttpUnitTestsNoBannerCount, Model.Limits.Soft.HttpChecksMaxNoBanner)</p>
-            <p>Результаты проверок в день: @UsedAndMaxLimit(Model.Limits.UsedToday.UnitTestsRequests, Model.Limits.Soft.UnitTestsRequestsPerDay)</p>
         </div>
 
         <div class="top15px">
             <h4>Хранилище</h4>
-            <p>Общий размер данных: @UsedAndMaxSizeLimit(Model.Limits.UsedOverall.Total.StorageSize, Model.Limits.Soft.StorageSizeMax)</p>
+            <p>Всего получено данных: @UsedAndMaxSizeLimit(Model.Limits.UsedOverall.Total.StorageSize, Model.Limits.Soft.StorageSizeMax)</p>
         </div>
     </div>
     

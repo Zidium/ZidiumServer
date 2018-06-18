@@ -33,6 +33,10 @@ namespace Zidium.Core.Common.Helpers
 
         public static string GetDaysString(int days)
         {
+            if (days == 12 || days == 13 || days == 14)
+            {
+                return days + " дней";
+            }
             if (days%10 >= 2 && days%10 <= 4)
             {
                 return days + " дня";
