@@ -81,22 +81,28 @@ namespace Zidium.Core.AccountsDb
             var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
 
             var size = message.GetSize();
-            checker.CheckLogSizePerDay(accountDbContext, size);
 
-            // Проверим лимит размера хранилища
-            checker.CheckStorageSize(accountDbContext, size);
+            try
+            {
+                checker.CheckLogSizePerDay(accountDbContext, size);
 
-            // Получим компонент
-            var componentService = Context.ComponentService;
-            var component = componentService.GetComponentById(accountId, componentId);
+                // Проверим лимит размера хранилища
+                checker.CheckStorageSize(accountDbContext, size);
 
-            var logRepository = Context.DbContext.GetAccountDbContext(accountId).GetLogRepository();
-            var log = ApiConverter.GetLog(component.Id, message);
-            logRepository.Add(log);
+                // Получим компонент
+                var componentService = Context.ComponentService;
+                var component = componentService.GetComponentById(accountId, componentId);
 
-            Context.SaveChanges();
+                var logRepository = Context.DbContext.GetAccountDbContext(accountId).GetLogRepository();
+                var log = ApiConverter.GetLog(component.Id, message);
+                logRepository.Add(log);
 
-            checker.AddLogSizePerDay(accountDbContext, size);
+                Context.SaveChanges();
+            }
+            finally
+            {
+                checker.AddLogSizePerDay(accountDbContext, size);
+            }
         }
 
         public void SaveLogMessages(Guid accountId, SendLogData[] messages)
@@ -112,41 +118,47 @@ namespace Zidium.Core.AccountsDb
             var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
 
             var totalSize = messages.Sum(t => t.GetSize());
-            checker.CheckLogSizePerDay(accountDbContext, totalSize);
 
-            // Проверим лимит размера хранилища
-            checker.CheckStorageSize(accountDbContext, totalSize);
-
-            var componentService = Context.ComponentService;
-            var logRepository = Context.DbContext.GetAccountDbContext(accountId).GetLogRepository();
-
-            // Добавим все записи в одной транзакции
-            foreach (var message in messages)
+            try
             {
-                if (message.Message == null)
+                checker.CheckLogSizePerDay(accountDbContext, totalSize);
+
+                // Проверим лимит размера хранилища
+                checker.CheckStorageSize(accountDbContext, totalSize);
+
+                var componentService = Context.ComponentService;
+                var logRepository = Context.DbContext.GetAccountDbContext(accountId).GetLogRepository();
+
+                // Добавим все записи в одной транзакции
+                foreach (var message in messages)
                 {
-                    throw new ParameterRequiredException("Request.Message.Message"); //todo надо переименовать
+                    if (message.Message == null)
+                    {
+                        throw new ParameterRequiredException("Request.Message.Message"); //todo надо переименовать
+                    }
+
+                    if (message.Message.Length > 4000)
+                    {
+                        message.Message = message.Message.Substring(0, 4000);
+                    }
+
+                    if (message.Context != null && message.Context.Length > 255)
+                    {
+                        message.Context = message.Context.Substring(0, 255);
+                    }
+
+                    var component = componentService.GetComponentById(accountId, message.ComponentId.Value);
+
+                    var log = ApiConverter.GetLog(component.Id, message);
+                    logRepository.Add(log);
                 }
 
-                if (message.Message.Length > 4000)
-                {
-                    message.Message = message.Message.Substring(0, 4000);
-                }
-
-                if (message.Context != null && message.Context.Length > 255)
-                {
-                    message.Context = message.Context.Substring(0, 255);
-                }
-
-                var component = componentService.GetComponentById(accountId, message.ComponentId.Value);
-
-                var log = ApiConverter.GetLog(component.Id, message);
-                logRepository.Add(log);
+                Context.SaveChanges();
             }
-
-            Context.SaveChanges();
-
-            checker.AddLogSizePerDay(accountDbContext, totalSize);
+            finally
+            {
+                checker.AddLogSizePerDay(accountDbContext, totalSize);
+            }
         }
 
         public List<Log> GetLogs(Guid accountId, Guid componentId, GetLogsRequestData requestData)

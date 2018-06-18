@@ -388,85 +388,92 @@ namespace Zidium.Core.AccountsDb
                 throw new ResponseCodeException(Zidium.Api.ResponseCode.ObjectDisabled, "Компонент выключен");
             }
 
-            // проверка лимитов
             var accountDbContext = Context.GetAccountDbContext(accountId);
             var limitChecker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-            limitChecker.CheckEventsRequestsPerDay(accountDbContext);
-
-            // Проверим лимит размера хранилища
             var size = message.GetSize();
-            limitChecker.CheckStorageSize(accountDbContext, size);
 
-            // todo нет проверки обязательных параметров
-            FixEventMessageNames(message);
-            FixEventMessageTypeCode(message);
-            FixEventMessageJoinKey(message); // todo не уверен, что нужно менять ключ склейки при разных версиях (но склеивать с  разными версиями нельзя!)
-            FixEventMessageJoinInterval(message);
-
-            // категория
-            if (message.Category == null)
+            try
             {
-                message.Category = EventCategory.ComponentEvent;
-            }
+                // проверка лимитов
+                limitChecker.CheckEventsRequestsPerDay(accountDbContext);
 
-            // важность
-            message.Importance = GetEventImportance(message.Importance, message.Category.Value);
+                // Проверим лимит размера хранилища
+                limitChecker.CheckStorageSize(accountDbContext, size);
 
-            if (message.StartDate == null)
-            {
-                message.StartDate = DateTime.Now;
-            }
+                // todo нет проверки обязательных параметров
+                FixEventMessageNames(message);
+                FixEventMessageTypeCode(message);
+                FixEventMessageJoinKey(message); // todo не уверен, что нужно менять ключ склейки при разных версиях (но склеивать с  разными версиями нельзя!)
+                FixEventMessageJoinInterval(message);
 
-            var eventType = GetOrCreateEventType(
-                accountId,
-                message.Category.Value,
-                message.TypeSystemName,
-                message.TypeDisplayName,
-                component.ComponentTypeId,
-                message.TypeCode);
-
-            var joinTime = DataConverter.GetTimeSpanFromSeconds(message.JoinInterval);
-
-            var localEvent = CreateEvent(
-                accountId,
-                message.StartDate,
-                message.StartDate,
-                message.Count,
-                message.Version,
-                message.Importance,
-                TimeSpan.FromMinutes(1),
-                message.Message,
-                message.Properties,
-                eventType,
-                componentId,
-                message.JoinKey ?? 0);
-
-            // eventType.JoinInterval стоит на первом месте, чтобы можно было изменить поведение БЕЗ перекомпиляции кода
-            var joinInterval = eventType.JoinInterval ?? joinTime ?? TimeSpan.Zero;
-
-            if (!EventCategoryHelper.IsCustomerEventCategory(eventType.Category))
-                throw new Exception("Недопустимая категория события: " + eventType.Category);
-
-            var result = ProcessSimpleEvent(componentId, localEvent, null, joinInterval, accountId);
-            limitChecker.AddEventsRequestsPerDay(accountDbContext);
-            limitChecker.AddEventsSizePerDay(accountDbContext, size);
-
-            // если есть закрытый или тестируемый дефект и событие - новая ошибка, то переоткроем дефект
-            if (eventType.Defect != null)
-            {
-                var defectStatus = eventType.Defect.GetStatus();
-                if ((defectStatus == DefectStatus.Closed || defectStatus == DefectStatus.Testing) && !EventIsOld(eventType.OldVersion, result.Version))
+                // категория
+                if (message.Category == null)
                 {
-                    var defectService = accountDbContext.GetDefectService();
-                    defectService.AutoReopen(accountId, eventType.Defect);
-                    accountDbContext.SaveChanges();
+                    message.Category = EventCategory.ComponentEvent;
                 }
+
+                // важность
+                message.Importance = GetEventImportance(message.Importance, message.Category.Value);
+
+                if (message.StartDate == null)
+                {
+                    message.StartDate = DateTime.Now;
+                }
+
+                var eventType = GetOrCreateEventType(
+                    accountId,
+                    message.Category.Value,
+                    message.TypeSystemName,
+                    message.TypeDisplayName,
+                    component.ComponentTypeId,
+                    message.TypeCode);
+
+                var joinTime = DataConverter.GetTimeSpanFromSeconds(message.JoinInterval);
+
+                var localEvent = CreateEvent(
+                    accountId,
+                    message.StartDate,
+                    message.StartDate,
+                    message.Count,
+                    message.Version,
+                    message.Importance,
+                    TimeSpan.FromMinutes(1),
+                    message.Message,
+                    message.Properties,
+                    eventType,
+                    componentId,
+                    message.JoinKey ?? 0);
+
+                // eventType.JoinInterval стоит на первом месте, чтобы можно было изменить поведение БЕЗ перекомпиляции кода
+                var joinInterval = eventType.JoinInterval ?? joinTime ?? TimeSpan.Zero;
+
+                if (!EventCategoryHelper.IsCustomerEventCategory(eventType.Category))
+                    throw new Exception("Недопустимая категория события: " + eventType.Category);
+
+                var result = ProcessSimpleEvent(componentId, localEvent, null, joinInterval, accountId);
+
+                // если есть закрытый или тестируемый дефект и событие - новая ошибка, то переоткроем дефект
+                if (eventType.Defect != null)
+                {
+                    var defectStatus = eventType.Defect.GetStatus();
+                    if ((defectStatus == DefectStatus.Closed || defectStatus == DefectStatus.Testing) && !EventIsOld(eventType.OldVersion, result.Version))
+                    {
+                        var defectService = accountDbContext.GetDefectService();
+                        defectService.AutoReopen(accountId, eventType.Defect);
+                        accountDbContext.SaveChanges();
+                    }
+                }
+
+                // проверим "событие из будущего"
+                CheckEventStartDate(message, accountId, eventType.Id, result.Id);
+
+                return result;
             }
-
-            // проверим "событие из будущего"
-            CheckEventStartDate(message, accountId, eventType.Id, result.Id);
-
-            return result;
+            finally
+            {
+                limitChecker.AddEventsRequestsPerDay(accountDbContext);
+                limitChecker.AddEventsSizePerDay(accountDbContext, size);
+            }
         }
 
         protected IEventCacheReadObject ProcessSimpleEvent(

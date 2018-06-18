@@ -60,6 +60,10 @@
             <p>Результаты проверок в день: @UsedAndMaxLimit(Model.Limits.UsedToday.UnitTestsRequests, Model.Limits.Soft.UnitTestsRequestsPerDay)</p>
         </div>
 
+        <div class="top15px">
+            <h4>Хранилище</h4>
+            <p>Общий размер данных: @UsedAndMaxSizeLimit(Model.Limits.UsedOverall.Total.StorageSize, Model.Limits.Soft.StorageSizeMax)</p>
+        </div>
     </div>
     
     @if (Model.Limits.UsedToday.UnitTestsResults.Length > 0)
