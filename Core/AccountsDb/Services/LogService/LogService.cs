@@ -79,15 +79,15 @@ namespace Zidium.Core.AccountsDb
             // Проверим лимиты
             var accountDbContext = Context.GetAccountDbContext(accountId);
             var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-
             var size = message.GetSize();
 
+            bool canIncreaseSizeInStatictics = false;
             try
             {
                 checker.CheckLogSizePerDay(accountDbContext, size);
 
                 // Проверим лимит размера хранилища
-                checker.CheckStorageSize(accountDbContext, size);
+                checker.CheckStorageSize(accountDbContext, size, out canIncreaseSizeInStatictics);
 
                 // Получим компонент
                 var componentService = Context.ComponentService;
@@ -101,7 +101,8 @@ namespace Zidium.Core.AccountsDb
             }
             finally
             {
-                checker.AddLogSizePerDay(accountDbContext, size);
+                if (canIncreaseSizeInStatictics)
+                    checker.AddLogSizePerDay(accountDbContext, size);
             }
         }
 
@@ -116,15 +117,15 @@ namespace Zidium.Core.AccountsDb
             // Проверим лимиты
             var accountDbContext = Context.GetAccountDbContext(accountId);
             var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-
             var totalSize = messages.Sum(t => t.GetSize());
 
+            bool canIncreaseSizeInStatictics = false;
             try
             {
                 checker.CheckLogSizePerDay(accountDbContext, totalSize);
 
                 // Проверим лимит размера хранилища
-                checker.CheckStorageSize(accountDbContext, totalSize);
+                checker.CheckStorageSize(accountDbContext, totalSize, out canIncreaseSizeInStatictics);
 
                 var componentService = Context.ComponentService;
                 var logRepository = Context.DbContext.GetAccountDbContext(accountId).GetLogRepository();
@@ -157,7 +158,8 @@ namespace Zidium.Core.AccountsDb
             }
             finally
             {
-                checker.AddLogSizePerDay(accountDbContext, totalSize);
+                if (canIncreaseSizeInStatictics)
+                    checker.AddLogSizePerDay(accountDbContext, totalSize);
             }
         }
 

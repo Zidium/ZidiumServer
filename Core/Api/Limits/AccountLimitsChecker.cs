@@ -457,17 +457,20 @@ namespace Zidium.Core.Limits
 
         protected AccountUsedLimitsPerDayDataInfo OverallArchive;
 
-        public void CheckStorageSize(AccountDbContext context, Int64 size)
+        public void CheckStorageSize(AccountDbContext context, Int64 size, out bool canIncreaseSizeInStatistics)
         {
             CheckForNewCurrentDataRow(context);
 
-            var newSize = DataCurrent.StorageSize + DataTotal.StorageSize + OverallArchive.StorageSize + size;
+            var currentSize = DataCurrent.StorageSize + DataTotal.StorageSize + OverallArchive.StorageSize;
+            var newSize = currentSize + size;
 
             var softLimit = GetSoftTariffLimit(context);
             if (newSize > softLimit.StorageSizeMax)
                 SetAccountOverlimitSignal();
 
             var hardLimit = GetHardTariffLimit(context);
+            canIncreaseSizeInStatistics = currentSize <= hardLimit.StorageSizeMax;
+
             if (newSize > hardLimit.StorageSizeMax)
                 throw new OverLimitException("Достигнут лимит на размер хранилища (максимум " + hardLimit.StorageSizeMax + " байт)");
         }

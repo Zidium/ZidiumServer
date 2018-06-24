@@ -662,41 +662,39 @@ namespace Zidium.Core.AccountsDb
                     // Проверим лимит "Количество запросов в день"
                     checker.CheckUnitTestResultsPerDay(accountDbContext);
 
-                    // Проверим лимит размера хранилища
-                    checker.CheckStorageSize(accountDbContext, size);
-
-                    var resultEvent = CreateUnitTestResultEvent(unitTest, data, processDate);
-                    if (resultEvent.ActualDate < processDate)
-                    //todo это источник проблем из-за разного времени клиента и сервера
+                    var canIncreaseSizeInStatictics = true;
+                    try
                     {
-                        // код ниже никогда не выполнится, но пусть на всякий случай будет
-                        throw new ResponseCodeException(
-                            Zidium.Api.ResponseCode.ServerError,
-                            "Результат юнит-теста неактуален (date + actualInterval < now)");
+                        // Проверим лимит размера хранилища
+                        checker.CheckStorageSize(accountDbContext, size, out canIncreaseSizeInStatictics);
+
+                        var resultEvent = CreateUnitTestResultEvent(unitTest, data, processDate);
+                        if (resultEvent.ActualDate < processDate)
+                        //todo это источник проблем из-за разного времени клиента и сервера
+                        {
+                            // код ниже никогда не выполнится, но пусть на всякий случай будет
+                            throw new ResponseCodeException(
+                                Zidium.Api.ResponseCode.ServerError,
+                                "Результат юнит-теста неактуален (date + actualInterval < now)");
+                        }
+
+                        // сохраним результаты
+                        var result = SaveResultEvent(processDate, unitTest, resultEvent, data.AttempCount);
+
+                        return result;
                     }
-
-                    //if (resultEvent.ActualDate < unitTest.StatusData.EndDate)
-                    //{
-                    //    // код ниже никогда не выполнится, но пусть на всякий случай будет
-                    //    throw new ResponseCodeException(
-                    //        Zidium.Api.ResponseCode.ServerError,
-                    //        "Результат юнит-теста неактуален (actualDate < unitTest.StatusData.EndDate)");
-
-
-                    // сохраним результаты
-                    var result = SaveResultEvent(processDate, unitTest, resultEvent, data.AttempCount);
-
-                    return result;
+                    finally
+                    {
+                        if (canIncreaseSizeInStatictics)
+                            checker.AddUnitTestsSizePerDay(accountDbContext, size);
+                    }
                 }
                 finally
                 {
-                    // увеличим счетчик лимита проверки "Количество запросов в день"
-                    checker.AddUnitTestsSizePerDay(accountDbContext, size);
                     checker.AddUnitTestResultsPerDay(accountDbContext, unitTest.Id);
                 }
             }
         }
-
 
         protected IBulbCacheReadObject GetUnitTestResultInternal(
             IUnitTestCacheReadObject unitTest,

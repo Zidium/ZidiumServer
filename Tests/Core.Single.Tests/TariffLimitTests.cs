@@ -1153,7 +1153,7 @@ namespace Zidium.Core.Single.Tests
 
                 // Проверим, что лимит хранилища достигнут
                 var context = accountContext;
-                Assert.ThrowsAny<OverLimitException>(() => checker.CheckStorageSize(context, 1));
+                Assert.ThrowsAny<OverLimitException>(() => checker.CheckStorageSize(context, 1, out _));
 
                 // Получим использованные лимиты и проверим, что размер хранилища правильный
                 var usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
@@ -1175,28 +1175,28 @@ namespace Zidium.Core.Single.Tests
                 checker.NowOverride = now;
                 usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
                 Assert.Equal(111000, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 100);
+                checker.CheckStorageSize(accountContext, 100, out _);
 
                 // Проверим размер хранилища через 5 дней
                 now = now.AddDays(1);
                 checker.NowOverride = now;
                 usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
                 Assert.Equal(110000, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 1100);
+                checker.CheckStorageSize(accountContext, 1100, out _);
 
                 // Проверим размер хранилища через 6 дней
                 now = now.AddDays(1);
                 checker.NowOverride = now;
                 usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
                 Assert.Equal(100000, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 11100);
+                checker.CheckStorageSize(accountContext, 11100, out _);
 
                 // Проверим размер хранилища через 7 дней
                 now = now.AddDays(1);
                 checker.NowOverride = now;
                 usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
                 Assert.Equal(0, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 111100);
+                checker.CheckStorageSize(accountContext, 111100, out _);
             }
         }
 

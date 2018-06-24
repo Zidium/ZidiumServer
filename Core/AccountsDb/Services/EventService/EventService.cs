@@ -397,82 +397,90 @@ namespace Zidium.Core.AccountsDb
                 // проверка лимитов
                 limitChecker.CheckEventsRequestsPerDay(accountDbContext);
 
-                // Проверим лимит размера хранилища
-                limitChecker.CheckStorageSize(accountDbContext, size);
-
-                // todo нет проверки обязательных параметров
-                FixEventMessageNames(message);
-                FixEventMessageTypeCode(message);
-                FixEventMessageJoinKey(message); // todo не уверен, что нужно менять ключ склейки при разных версиях (но склеивать с  разными версиями нельзя!)
-                FixEventMessageJoinInterval(message);
-
-                // категория
-                if (message.Category == null)
+                var canIncreaseSizeInStatictics = true;
+                try
                 {
-                    message.Category = EventCategory.ComponentEvent;
-                }
+                    // Проверим лимит размера хранилища
+                    limitChecker.CheckStorageSize(accountDbContext, size, out canIncreaseSizeInStatictics);
 
-                // важность
-                message.Importance = GetEventImportance(message.Importance, message.Category.Value);
+                    // todo нет проверки обязательных параметров
+                    FixEventMessageNames(message);
+                    FixEventMessageTypeCode(message);
+                    FixEventMessageJoinKey(message); // todo не уверен, что нужно менять ключ склейки при разных версиях (но склеивать с  разными версиями нельзя!)
+                    FixEventMessageJoinInterval(message);
 
-                if (message.StartDate == null)
-                {
-                    message.StartDate = DateTime.Now;
-                }
-
-                var eventType = GetOrCreateEventType(
-                    accountId,
-                    message.Category.Value,
-                    message.TypeSystemName,
-                    message.TypeDisplayName,
-                    component.ComponentTypeId,
-                    message.TypeCode);
-
-                var joinTime = DataConverter.GetTimeSpanFromSeconds(message.JoinInterval);
-
-                var localEvent = CreateEvent(
-                    accountId,
-                    message.StartDate,
-                    message.StartDate,
-                    message.Count,
-                    message.Version,
-                    message.Importance,
-                    TimeSpan.FromMinutes(1),
-                    message.Message,
-                    message.Properties,
-                    eventType,
-                    componentId,
-                    message.JoinKey ?? 0);
-
-                // eventType.JoinInterval стоит на первом месте, чтобы можно было изменить поведение БЕЗ перекомпиляции кода
-                var joinInterval = eventType.JoinInterval ?? joinTime ?? TimeSpan.Zero;
-
-                if (!EventCategoryHelper.IsCustomerEventCategory(eventType.Category))
-                    throw new Exception("Недопустимая категория события: " + eventType.Category);
-
-                var result = ProcessSimpleEvent(componentId, localEvent, null, joinInterval, accountId);
-
-                // если есть закрытый или тестируемый дефект и событие - новая ошибка, то переоткроем дефект
-                if (eventType.Defect != null)
-                {
-                    var defectStatus = eventType.Defect.GetStatus();
-                    if ((defectStatus == DefectStatus.Closed || defectStatus == DefectStatus.Testing) && !EventIsOld(eventType.OldVersion, result.Version))
+                    // категория
+                    if (message.Category == null)
                     {
-                        var defectService = accountDbContext.GetDefectService();
-                        defectService.AutoReopen(accountId, eventType.Defect);
-                        accountDbContext.SaveChanges();
+                        message.Category = EventCategory.ComponentEvent;
                     }
+
+                    // важность
+                    message.Importance = GetEventImportance(message.Importance, message.Category.Value);
+
+                    if (message.StartDate == null)
+                    {
+                        message.StartDate = DateTime.Now;
+                    }
+
+                    var eventType = GetOrCreateEventType(
+                        accountId,
+                        message.Category.Value,
+                        message.TypeSystemName,
+                        message.TypeDisplayName,
+                        component.ComponentTypeId,
+                        message.TypeCode);
+
+                    var joinTime = DataConverter.GetTimeSpanFromSeconds(message.JoinInterval);
+
+                    var localEvent = CreateEvent(
+                        accountId,
+                        message.StartDate,
+                        message.StartDate,
+                        message.Count,
+                        message.Version,
+                        message.Importance,
+                        TimeSpan.FromMinutes(1),
+                        message.Message,
+                        message.Properties,
+                        eventType,
+                        componentId,
+                        message.JoinKey ?? 0);
+
+                    // eventType.JoinInterval стоит на первом месте, чтобы можно было изменить поведение БЕЗ перекомпиляции кода
+                    var joinInterval = eventType.JoinInterval ?? joinTime ?? TimeSpan.Zero;
+
+                    if (!EventCategoryHelper.IsCustomerEventCategory(eventType.Category))
+                        throw new Exception("Недопустимая категория события: " + eventType.Category);
+
+                    var result = ProcessSimpleEvent(componentId, localEvent, null, joinInterval, accountId);
+
+                    // если есть закрытый или тестируемый дефект и событие - новая ошибка, то переоткроем дефект
+                    if (eventType.Defect != null)
+                    {
+                        var defectStatus = eventType.Defect.GetStatus();
+                        if ((defectStatus == DefectStatus.Closed || defectStatus == DefectStatus.Testing) && !EventIsOld(eventType.OldVersion, result.Version))
+                        {
+                            var defectService = accountDbContext.GetDefectService();
+                            defectService.AutoReopen(accountId, eventType.Defect);
+                            accountDbContext.SaveChanges();
+                        }
+                    }
+
+                    // проверим "событие из будущего"
+                    CheckEventStartDate(message, accountId, eventType.Id, result.Id);
+
+                    return result;
                 }
-
-                // проверим "событие из будущего"
-                CheckEventStartDate(message, accountId, eventType.Id, result.Id);
-
-                return result;
+                finally
+                {
+                    if (canIncreaseSizeInStatictics)
+                        limitChecker.AddEventsSizePerDay(accountDbContext, size);
+                }
             }
             finally
             {
                 limitChecker.AddEventsRequestsPerDay(accountDbContext);
-                limitChecker.AddEventsSizePerDay(accountDbContext, size);
             }
         }
 
@@ -518,43 +526,51 @@ namespace Zidium.Core.AccountsDb
                 throw new ResponseCodeException(Zidium.Api.ResponseCode.ObjectDisabled, "Компонент выключен");
             }
 
-            // проверка лимитов
             var accountDbContext = Context.GetAccountDbContext(accountId);
             var limitChecker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+            var size = joinEventData.Message != null ? joinEventData.Message.Length * 2 : 0;
+
+            // проверка лимитов
             limitChecker.CheckEventsRequestsPerDay(accountDbContext);
 
-            // Проверим лимит размера хранилища
-            var size = joinEventData.Message != null ? joinEventData.Message.Length * 2 : 0;
-            limitChecker.CheckStorageSize(accountDbContext, size);
+            var canIncreaseSizeInStatictics = true;
+            try
+            {
+                // Проверим лимит размера хранилища
+                limitChecker.CheckStorageSize(accountDbContext, size, out canIncreaseSizeInStatictics);
 
-            var eventType = Context.EventTypeService.GetOneById(joinEventData.TypeId ?? Guid.Empty, accountId);
+                var eventType = Context.EventTypeService.GetOneById(joinEventData.TypeId ?? Guid.Empty, accountId);
 
-            // расчитаем важность
-            joinEventData.Importance = GetEventImportance(joinEventData.Importance, eventType.Category);
+                // расчитаем важность
+                joinEventData.Importance = GetEventImportance(joinEventData.Importance, eventType.Category);
 
-            var localEvent = CreateEvent(
-                accountId,
-                joinEventData.StartDate,
-                joinEventData.StartDate,
-                joinEventData.Count,
-                joinEventData.Version,
-                joinEventData.Importance,
-                TimeSpan.FromSeconds(joinEventData.JoinInterval ?? 0),
-                joinEventData.Message,
-                null,
-                eventType,
-                componentId,
-                joinEventData.JoinKey ?? 0);
+                var localEvent = CreateEvent(
+                    accountId,
+                    joinEventData.StartDate,
+                    joinEventData.StartDate,
+                    joinEventData.Count,
+                    joinEventData.Version,
+                    joinEventData.Importance,
+                    TimeSpan.FromSeconds(joinEventData.JoinInterval ?? 0),
+                    joinEventData.Message,
+                    null,
+                    eventType,
+                    componentId,
+                    joinEventData.JoinKey ?? 0);
 
-            var joinInterval = (joinEventData.JoinInterval.HasValue)
-                ? TimeSpan.FromSeconds(joinEventData.JoinInterval.Value)
-                : (eventType.JoinInterval ?? TimeSpan.Zero);
+                var joinInterval = (joinEventData.JoinInterval.HasValue)
+                    ? TimeSpan.FromSeconds(joinEventData.JoinInterval.Value)
+                    : (eventType.JoinInterval ?? TimeSpan.Zero);
 
-            var dbEvent = ProcessSimpleEvent(componentId, localEvent, joinEventData.EventId, joinInterval, accountId);
+                var dbEvent = ProcessSimpleEvent(componentId, localEvent, joinEventData.EventId, joinInterval, accountId);
 
-            limitChecker.AddEventsSizePerDay(accountDbContext, size);
-
-            return dbEvent;
+                return dbEvent;
+            }
+            finally
+            {
+                if (canIncreaseSizeInStatictics)
+                    limitChecker.AddEventsSizePerDay(accountDbContext, size);
+            }
         }
 
         public List<Event> GetEvents(Guid accountId, GetEventsRequestData filter)

@@ -696,86 +696,94 @@ namespace Zidium.Core.AccountsDb
                 // Проверим лимиты
                 limitChecker.CheckMetricsRequestsPerDay(accountDbContext);
 
-                // Проверим лимит размера хранилища
-                limitChecker.CheckStorageSize(accountDbContext, size);
-
-                // получим тип метрики
-                var metricType = GetOrCreateType(accountId, data.Name);
-
-                // получим метрику
-                var componentId = data.ComponentId.Value;
-                var metricInfo = FindMetric(accountId, componentId, metricType.Id);
-                if (metricInfo == null)
+                var canIncreaseSizeInStatictics = true;
+                try
                 {
-                    var createMetricLock = LockObject.ForComponent(componentId);
-                    lock (createMetricLock)
+                    // Проверим лимит размера хранилища
+                    limitChecker.CheckStorageSize(accountDbContext, size, out canIncreaseSizeInStatictics);
+
+                    // получим тип метрики
+                    var metricType = GetOrCreateType(accountId, data.Name);
+
+                    // получим метрику
+                    var componentId = data.ComponentId.Value;
+                    var metricInfo = FindMetric(accountId, componentId, metricType.Id);
+                    if (metricInfo == null)
                     {
-                        metricInfo = FindMetric(accountId, componentId, metricType.Id);
-                        if (metricInfo == null)
+                        var createMetricLock = LockObject.ForComponent(componentId);
+                        lock (createMetricLock)
                         {
-                            CreateMetric(accountId, componentId, metricType.Id);
                             metricInfo = FindMetric(accountId, componentId, metricType.Id);
                             if (metricInfo == null)
                             {
-                                throw new Exception("Не удалось создать метрику");
+                                CreateMetric(accountId, componentId, metricType.Id);
+                                metricInfo = FindMetric(accountId, componentId, metricType.Id);
+                                if (metricInfo == null)
+                                {
+                                    throw new Exception("Не удалось создать метрику");
+                                }
                             }
                         }
                     }
+
+                    using (var metric = AllCaches.Metrics.Write(metricInfo))
+                    {
+                        GetActualMetricInternal(metric, processDate);
+
+                        // если метрика выключена
+                        if (metric.CanProcess == false)
+                        {
+                            throw new ResponseCodeException(Zidium.Api.ResponseCode.ObjectDisabled, "Метрика выключена");
+                        }
+
+                        // Рассчитаем цвет
+                        ObjectColor color;
+                        string errorMessage = null;
+                        try
+                        {
+                            color = GetColor(metricType, metric, data.Value);
+                        }
+                        catch (Exception exception)
+                        {
+                            color = ObjectColor.Red;
+                            errorMessage = "Ошибка вычисления цвета метрики:" + exception.Message;
+                        }
+
+                        // Запишем метрику в хранилище
+                        var status = MonitoringStatusHelper.Get(color);
+
+                        // Время актуальности
+                        var actualInterval =
+                            metric.ActualTime
+                            ?? metricType.ActualTime
+                            ?? TimeSpanHelper.FromSeconds(data.ActualIntervalSecs)
+                            ?? TimeSpan.FromHours(1);
+
+                        DateTime actualDate;
+                        try
+                        {
+                            actualDate = processDate + actualInterval;
+                        }
+                        catch
+                        {
+                            actualDate = DateTimeHelper.InfiniteActualDate;
+                        }
+
+                        SetMetricValue(metricType, metric, data.Value, processDate, actualDate, status, errorMessage, true);
+
+                        metric.BeginSave();
+                        return metric;
+                    }
                 }
-
-                using (var metric = AllCaches.Metrics.Write(metricInfo))
+                finally
                 {
-                    GetActualMetricInternal(metric, processDate);
-
-                    // если метрика выключена
-                    if (metric.CanProcess == false)
-                    {
-                        throw new ResponseCodeException(Zidium.Api.ResponseCode.ObjectDisabled, "Метрика выключена");
-                    }
-
-                    // Рассчитаем цвет
-                    ObjectColor color;
-                    string errorMessage = null;
-                    try
-                    {
-                        color = GetColor(metricType, metric, data.Value);
-                    }
-                    catch (Exception exception)
-                    {
-                        color = ObjectColor.Red;
-                        errorMessage = "Ошибка вычисления цвета метрики:" + exception.Message;
-                    }
-
-                    // Запишем метрику в хранилище
-                    var status = MonitoringStatusHelper.Get(color);
-
-                    // Время актуальности
-                    var actualInterval =
-                        metric.ActualTime
-                        ?? metricType.ActualTime
-                        ?? TimeSpanHelper.FromSeconds(data.ActualIntervalSecs)
-                        ?? TimeSpan.FromHours(1);
-
-                    DateTime actualDate;
-                    try
-                    {
-                        actualDate = processDate + actualInterval;
-                    }
-                    catch
-                    {
-                        actualDate = DateTimeHelper.InfiniteActualDate;
-                    }
-
-                    SetMetricValue(metricType, metric, data.Value, processDate, actualDate, status, errorMessage, true);
-
-                    metric.BeginSave();
-                    return metric;
+                    if (canIncreaseSizeInStatictics)
+                        limitChecker.AddMetricsSizePerDay(accountDbContext, size);
                 }
             }
             finally
             {
                 limitChecker.AddMetricsRequestsPerDay(accountDbContext);
-                limitChecker.AddMetricsSizePerDay(accountDbContext, size);
             }
         }
 
