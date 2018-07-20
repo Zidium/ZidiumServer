@@ -16,7 +16,7 @@ namespace Zidium.Core.Tests.AgentTests
             pingResult = PingProcessor.Ping("ya2323.ru", TimeSpan.FromSeconds(5));
             Assert.Equal(PingErrorCode.UnknownDomain, pingResult.ErrorCode);
 
-            pingResult = PingProcessor.Ping("192.168.0.254", TimeSpan.FromSeconds(5));
+            pingResult = PingProcessor.Ping("192.168.254.254", TimeSpan.FromSeconds(5));
             Assert.Equal(PingErrorCode.Timeout, pingResult.ErrorCode);
         }
     }

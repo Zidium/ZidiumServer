@@ -26,6 +26,15 @@ namespace ApiTests_1._0.Logs
             var component = account.CreateRandomComponentControl();
             Assert.False(component.IsFake());
 
+            // настроим конфиг
+            component.Log.WebLogConfig.Enabled = true;
+            component.Log.WebLogConfig.IsTraceEnabled = true;
+            component.Log.WebLogConfig.IsDebugEnabled = true;
+            component.Log.WebLogConfig.IsInfoEnabled = true;
+            component.Log.WebLogConfig.IsWarningEnabled = true;
+            component.Log.WebLogConfig.IsErrorEnabled = true;
+            component.Log.WebLogConfig.IsFatalEnabled = true;
+
             var date = TestHelper.GetServerDateTime();
 
             component.Log.Debug("Debug 1");
@@ -123,7 +132,7 @@ namespace ApiTests_1._0.Logs
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
             var filter = new GetLogsFilter();
-            component.Log.Debug("no tag message");
+            component.Log.Info("no tag message");
             component.Log.Flush();
             var rows = component.GetLogs(filter).Data;
             Assert.Equal(1, rows.Count);
@@ -133,7 +142,7 @@ namespace ApiTests_1._0.Logs
 
             //запись с тегом
             component.Log.Context = "myTag";
-            component.Log.Debug("has tag message");
+            component.Log.Info("has tag message");
             component.Log.Flush();
             rows = component.GetLogs(filter).Data;
             Assert.Equal(1, rows.Count);
@@ -211,12 +220,12 @@ namespace ApiTests_1._0.Logs
             Assert.False(component.IsFake());
 
             // по умолчанию включены все уровни логов
-            Assert.True(component.WebLogConfig.IsTraceEnabled);
-            Assert.True(component.WebLogConfig.IsDebugEnabled);
-            Assert.True(component.Log.IsTraceEnabled);
-            Assert.True(component.Log.IsDebugEnabled);
-            component.Log.Trace("trace");
-            component.Log.Debug("debug");
+            Assert.True(component.WebLogConfig.IsInfoEnabled);
+            Assert.True(component.WebLogConfig.IsWarningEnabled);
+            Assert.True(component.Log.IsInfoEnabled);
+            Assert.True(component.Log.IsWarningEnabled);
+            component.Log.Info("info");
+            component.Log.Warning("warning");
             component.Log.Flush();
             var logs = component.GetLogs(new GetLogsFilter()).Data;
             Assert.Equal(2, logs.Count);
@@ -224,19 +233,19 @@ namespace ApiTests_1._0.Logs
             // будет делать попытку загрузить новые конфиги каждую секунду
             client.Config.Logs.WebLog.ReloadConfigsPeriod = TimeSpan.FromSeconds(1);
 
-            // в личном кабинете выключим trace
-            account.SetComponentLogConfigIsTraceEnabled(component.Info.Id, false);
+            // в личном кабинете выключим info
+            account.SetComponentLogConfigIsInfoEnabled(component.Info.Id, false);
 
             // подождем перезагрузки конфига
-            TestHelper.WaitTrue(() => component.WebLogConfig.IsTraceEnabled == false, TimeSpan.FromSeconds(10));
+            TestHelper.WaitTrue(() => component.WebLogConfig.IsInfoEnabled == false, TimeSpan.FromSeconds(10));
 
             // проверим, что на клиенте веб-конфиг обновился
-            Assert.False(component.WebLogConfig.IsTraceEnabled);
-            Assert.True(component.WebLogConfig.IsDebugEnabled);
-            Assert.False(component.Log.IsTraceEnabled);
-            Assert.True(component.Log.IsDebugEnabled);
-            component.Log.Trace("trace");
-            component.Log.Debug("debug");
+            Assert.False(component.WebLogConfig.IsInfoEnabled);
+            Assert.True(component.WebLogConfig.IsWarningEnabled);
+            Assert.False(component.Log.IsInfoEnabled);
+            Assert.True(component.Log.IsWarningEnabled);
+            component.Log.Info("info");
+            component.Log.Warning("warning");
             component.Log.Flush();
             logs = component.GetLogs(new GetLogsFilter()).Data;
             Assert.Equal(3, logs.Count);

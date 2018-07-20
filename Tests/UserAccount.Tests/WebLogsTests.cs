@@ -953,16 +953,21 @@ namespace Zidium.UserAccount.Tests
                 model = Assert.IsType<EditLogModel>(result.Model);
             }
 
-            Assert.True(model.IsTraceEnabled);
-            Assert.True(model.IsDebugEnabled);
-            Assert.True(model.IsInfoEnabled);
-            Assert.True(model.IsWarningEnabled);
-            Assert.True(model.IsErrorEnabled);
-            Assert.True(model.IsFatalEnabled);
+            Assert.Equal(component.WebLogConfig.IsTraceEnabled, model.IsTraceEnabled);
+            Assert.Equal(component.WebLogConfig.IsDebugEnabled, model.IsDebugEnabled);
+            Assert.Equal(component.WebLogConfig.IsInfoEnabled, model.IsInfoEnabled);
+            Assert.Equal(component.WebLogConfig.IsWarningEnabled, model.IsWarningEnabled);
+            Assert.Equal(component.WebLogConfig.IsErrorEnabled, model.IsErrorEnabled);
+            Assert.Equal(component.WebLogConfig.IsFatalEnabled, model.IsFatalEnabled);
+
 
             // Заполним модель
             model.IsTraceEnabled = false;
             model.IsDebugEnabled = false;
+            model.IsInfoEnabled = false;
+            model.IsWarningEnabled = false;
+            model.IsErrorEnabled = false;
+            model.IsFatalEnabled = false;
 
             // Отправим данные
             JsonResult jsonResult;
@@ -981,10 +986,10 @@ namespace Zidium.UserAccount.Tests
                 var config = repository.GetByComponentId(component.Info.Id);
                 Assert.False(config.IsTraceEnabled);
                 Assert.False(config.IsDebugEnabled);
-                Assert.True(config.IsInfoEnabled);
-                Assert.True(config.IsWarningEnabled);
-                Assert.True(config.IsErrorEnabled);
-                Assert.True(config.IsFatalEnabled);
+                Assert.False(config.IsInfoEnabled);
+                Assert.False(config.IsWarningEnabled);
+                Assert.False(config.IsErrorEnabled);
+                Assert.False(config.IsFatalEnabled);
             }
         }
 

@@ -28,8 +28,14 @@ namespace ApiTests_1._0.Logs
                 messages.Add(tempMessage);
             };
 
-            // отключим ненужные логи
+            // настроим конфиг
             component.Log.WebLogConfig.Enabled = true;
+            component.Log.WebLogConfig.IsTraceEnabled = true;
+            component.Log.WebLogConfig.IsDebugEnabled = true;
+            component.Log.WebLogConfig.IsInfoEnabled = true;
+            component.Log.WebLogConfig.IsWarningEnabled = true;
+            component.Log.WebLogConfig.IsErrorEnabled = true;
+            component.Log.WebLogConfig.IsFatalEnabled = true;
 
             var parameters = new Dictionary<string, object>()
             {

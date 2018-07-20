@@ -718,8 +718,8 @@ namespace Zidium.Core.AccountsDb
                 IsErrorEnabled = true,
                 IsWarningEnabled = true,
                 IsInfoEnabled = true,
-                IsDebugEnabled = true,
-                IsTraceEnabled = true,
+                IsDebugEnabled = false,
+                IsTraceEnabled = false,
                 LastUpdateDate = component.CreatedDate
             };
             var accountDbContext = Context.GetAccountDbContext(accountId);
@@ -1005,14 +1005,16 @@ namespace Zidium.Core.AccountsDb
             {
                 var repository = accountDbContext.GetLogConfigRepository();
                 var config = repository.GetByComponentId(componentId);
+                // Конфиг лога всегда создаётся вместе с компонентом
+                /*
                 if (config == null)
                 {
                     config = new LogConfig()
                     {
                         Enabled = true,
                         ComponentId = componentId,
-                        IsDebugEnabled = true,
-                        IsTraceEnabled = true,
+                        IsDebugEnabled = false,
+                        IsTraceEnabled = false,
                         IsInfoEnabled = true,
                         IsWarningEnabled = true,
                         IsErrorEnabled = true,
@@ -1020,6 +1022,7 @@ namespace Zidium.Core.AccountsDb
                     };
                     repository.Add(config);
                 }
+                */
                 return config;
             }
         }

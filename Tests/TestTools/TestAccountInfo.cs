@@ -179,12 +179,12 @@ namespace Zidium.TestTools
             }
         }
 
-        public void SetComponentLogConfigIsTraceEnabled(Guid componentId, bool value)
+        public void SetComponentLogConfigIsInfoEnabled(Guid componentId, bool value)
         {
             using (var accountDbContext = CreateAccountDbContext())
             {
                 var componentRow = accountDbContext.Components.First(x => x.Id == componentId);
-                componentRow.LogConfig.IsTraceEnabled = value;
+                componentRow.LogConfig.IsInfoEnabled = value;
                 componentRow.LogConfig.LastUpdateDate = componentRow.LogConfig.LastUpdateDate.AddSeconds(2);
                 accountDbContext.SaveChanges();
             }

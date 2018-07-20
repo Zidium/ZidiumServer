@@ -202,5 +202,31 @@ namespace Zidium.Core.Tests.Dispatcher
             }
         }
 
+        [Fact]
+        public void DefaultWebLogLevelsTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var dispatcher = TestHelper.GetDispatcherClient();
+
+            // Создадим компонент
+            var systemName = "Component." + Guid.NewGuid();
+            var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
+            {
+                TypeId = SystemComponentTypes.WebSite.Id,
+                SystemName = systemName,
+                DisplayName = systemName,
+                ParentComponentId = account.RootId
+            });
+            var component = getOrCreateComponentResponse.Data;
+
+            // Проверим, что у ногого компонента выключены уровни лога Debug и Trace
+            Assert.True(component.WebLogConfig.IsFatalEnabled);
+            Assert.True(component.WebLogConfig.IsErrorEnabled);
+            Assert.True(component.WebLogConfig.IsWarningEnabled);
+            Assert.True(component.WebLogConfig.IsInfoEnabled);
+            Assert.False(component.WebLogConfig.IsDebugEnabled);
+            Assert.False(component.WebLogConfig.IsTraceEnabled);
+        }
+
     }
 }
