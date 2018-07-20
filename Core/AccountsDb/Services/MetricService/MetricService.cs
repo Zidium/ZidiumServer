@@ -77,7 +77,7 @@ namespace Zidium.Core.AccountsDb
                     AccountId = metric.AccountId,
                     ObjectId = metric.MetricTypeId
                 });
-                processDate = metricWrite.ActualDate; // чтобы НЕ было пробела
+                processDate = data.ActualDate; // чтобы НЕ было пробела
                 var actualDate = DateTimeHelper.InfiniteActualDate;
                 var noSignalColor = metricWrite.NoSignalColor ?? metricType.NoSignalColor ?? ObjectColor.Red;
                 var status = MonitoringStatusHelper.Get(noSignalColor);
