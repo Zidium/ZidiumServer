@@ -222,14 +222,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config" />
-    <None Include="App.Release.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
-    <None Include="Properties\app.manifest" />
     <None Include="Zidium.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

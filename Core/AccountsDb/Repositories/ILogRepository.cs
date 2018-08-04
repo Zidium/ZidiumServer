@@ -84,9 +84,9 @@ namespace Zidium.Core
             string context,
             int maxCount);
 
-        int DeleteLogProperties(Guid componentId, int maxCount, DateTime toDate);
+        int DeleteLogProperties(int maxCount, DateTime toDate);
 
-        int DeleteLogs(Guid componentId, int maxCount, DateTime toDate);
+        int DeleteLogs(int maxCount, DateTime toDate);
 
         IQueryable<Log> QueryAll(Guid[] componentIds);
         

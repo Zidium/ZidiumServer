@@ -220,7 +220,7 @@ namespace Zidium.Core.Common
                 component.Id,
                 component.SystemName);
 
-                var logger = LogManager.GetLogger(Logger.Name + "." + component.SystemName);
+                var logger = LogManager.GetLogger(Logger.Name + "." + account.SystemName + "." + component.SystemName);
                 using (var data = new ForEachComponentData(
                     logger,
                     CancellationToken,

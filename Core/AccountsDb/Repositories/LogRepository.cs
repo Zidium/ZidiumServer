@@ -5,13 +5,10 @@ using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 
 namespace Zidium.Core.AccountsDb
 {
-    /// <summary>
-    /// Репозиторий работы с логами
-    /// </summary>
+    /// <inheritdoc />
     public class LogRepository : ILogRepository
     {
         protected AccountDbContext Context;
@@ -274,10 +271,10 @@ namespace Zidium.Core.AccountsDb
             return result;
         }
 
-        public int DeleteLogProperties(Guid componentId, int maxCount, DateTime toDate)
+        public int DeleteLogProperties(int maxCount, DateTime toDate)
         {
             var subQuery = Context.Logs
-                .Where(t => t.ComponentId == componentId && t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount);
+                .Where(t => t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount);
 
             var objectQuery = (ObjectQuery) ((IObjectContextAdapter) Context).ObjectContext.CreateObjectSet<LogProperty>()
                 .Where(t => subQuery.Contains(t.LogId)).OrderBy(t => t.Id).Select(t => t.Id).Take(maxCount);
@@ -306,10 +303,10 @@ namespace Zidium.Core.AccountsDb
             }
         }
 
-        public int DeleteLogs(Guid componentId, int maxCount, DateTime toDate)
+        public int DeleteLogs(int maxCount, DateTime toDate)
         {
             var objectQuery = (ObjectQuery)((IObjectContextAdapter)Context).ObjectContext.CreateObjectSet<Log>()
-                .Where(t => t.ComponentId == componentId && t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount);
+                .Where(t => t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount);
 
             using (var connection = Context.CreateConnection())
             {

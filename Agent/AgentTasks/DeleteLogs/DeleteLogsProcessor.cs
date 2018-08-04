@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using NLog;
-using Zidium.Api;
 using Zidium.Core;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
@@ -32,30 +32,31 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
             };
         }
 
-        public void Process(DateTime? date = null, Guid? accountId = null, Guid? componentId = null)
+        public void Process(Guid? accountId = null)
         {
+            var stopWatch = Stopwatch.StartNew();
+
             DeletedLogsCount = 0;
             DeletedPropertiesCount = 0;
-            
-            if (!accountId.HasValue)
-                DbProcessor.ForEachComponent(data => ProcessComponent(date, data), true);
-            else
-                DbProcessor.ForEachAccountComponents(accountId.Value, data =>
-                {
-                    if (!componentId.HasValue || componentId.Value == data.Component.Id)
-                        ProcessComponent(date, data);
-                }, true);
+
+            DbProcessor.ForEachAccount(data =>
+            {
+                if (!accountId.HasValue || accountId.Value == data.Account.Id)
+                    ProcessAccount(data);
+            });
+
+            stopWatch.Stop();
 
             if (DeletedLogsCount > 0)
-                Logger.Info("Удалено записей лога: " + DeletedLogsCount);
+                Logger.Info($"Удалено записей лога во всех аккаунтах: {DeletedLogsCount} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
         }
 
-        protected void DeleteProperties(ILogger logger, ILogRepository repository, Guid componentId, DateTime date, int maxCount)
+        protected void DeleteProperties(ILogger logger, ILogRepository repository, Guid accountId, DateTime date, int maxCount)
         {
             while (true)
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
-                var count = repository.DeleteLogProperties(componentId, maxCount, date);
+                var count = repository.DeleteLogProperties(maxCount, date);
                 logger.Trace("Удалено строк свойств лога: {0}", count);
                 DeletedPropertiesCount += count;
                 if (count == 0)
@@ -65,18 +66,20 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
         protected int DeleteLogs(ILogger logger, ILogRepository repository, Guid componentId, DateTime date, int maxCount)
         {
-            var count = repository.DeleteLogs(componentId, maxCount, date);
+            var count = repository.DeleteLogs(maxCount, date);
             logger.Trace("Удалено строк лога: {0}", count);
             Interlocked.Add(ref DeletedLogsCount, count);
 
             return count;
         }
 
-        public void ProcessComponent(DateTime? date, ForEachComponentData data)
+        public void ProcessAccount(ForEachAccountData data)
         {
+            var stopWatch = Stopwatch.StartNew();
+
             var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
             var tarifLimit = accountTariffRepository.GetHardTariffLimit();
-            var date2 = date ?? DateTimeHelper.TrimMs(DateTime.Now.AddDays(-tarifLimit.LogMaxDays));
+            var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-tarifLimit.LogMaxDays));
 
             var logRepository = data.AccountDbContext.GetLogRepository();
 
@@ -88,15 +91,15 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
                 DeleteProperties(
                     data.Logger,
                     logRepository,
-                    data.Component.Id,
-                    date2,
+                    data.Account.Id,
+                    date,
                     MaxDeleteCount);
 
                 var result = DeleteLogs(
                     data.Logger,
                     logRepository,
-                    data.Component.Id,
-                    date2,
+                    data.Account.Id,
+                    date,
                     MaxDeleteCount);
 
                 count += result;
@@ -105,8 +108,10 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
                     break;
             }
 
+            stopWatch.Stop();
+
             if (count > 0)
-                data.Logger.Debug("Удалено логов: " + count + " по компоненту " + data.Component.Id);
+                data.Logger.Debug($"Удалено логов: {count} в аккаунте {data.Account.SystemName} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
         }
     }
 }

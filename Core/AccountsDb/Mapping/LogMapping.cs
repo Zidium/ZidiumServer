@@ -16,7 +16,11 @@ namespace Zidium.Core.AccountsDb.Mapping
             HasRequired(t => t.Component).WithMany().HasForeignKey(t => t.ComponentId);
             
             Property(t => t.ComponentId).HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_ComponentBased", 1)));
-            Property(t => t.Date).HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_ComponentBased", 2)));
+            Property(t => t.Date).HasColumnAnnotation("Index", new IndexAnnotation(new []
+            {
+                new IndexAttribute("IX_ComponentBased", 2),
+                new IndexAttribute("IX_Date", 1)
+            }));
             Property(t => t.Order).HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_ComponentBased", 3)));
             Property(t => t.Level).HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_ComponentBased", 4)));
             Property(t => t.Context).HasColumnAnnotation("Index", new IndexAnnotation(new IndexAttribute("IX_ComponentBased", 5)));

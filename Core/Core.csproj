@@ -180,6 +180,10 @@
     <Compile Include="AccountsDb\MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.Designer.cs">
       <DependentUpon>201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
     </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201808041420268_DateIndexForLog.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201808041420268_DateIndexForLog.Designer.cs">
+      <DependentUpon>201808041420268_DateIndexForLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
@@ -188,6 +192,10 @@
     <Compile Include="AccountsDb\PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.Designer.cs">
       <DependentUpon>201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201808041508405_DateIndexForLogs.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201808041508405_DateIndexForLogs.Designer.cs">
+      <DependentUpon>201808041508405_DateIndexForLogs.cs</DependentUpon>
     </Compile>
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbContext.cs" />
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
@@ -911,11 +919,17 @@
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.resx">
       <DependentUpon>201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201808041420268_DateIndexForLog.resx">
+      <DependentUpon>201808041420268_DateIndexForLog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.resx">
       <DependentUpon>201805151013039_Initial.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.resx">
       <DependentUpon>201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201808041508405_DateIndexForLogs.resx">
+      <DependentUpon>201808041508405_DateIndexForLogs.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -40,7 +40,7 @@ namespace Zidium.Core.Single.Tests
 
             // Выполним предварительную очистку лога
             var processor = new DeleteLogsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
-            processor.Process(accountId: account.Id, componentId: component.Info.Id);
+            processor.Process(account.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Добавим одну старую и одну новую запись лога
@@ -88,7 +88,7 @@ namespace Zidium.Core.Single.Tests
             account.SaveAllCaches();
 
             // Удалим старые записи лога
-            processor.Process(accountId: account.Id, componentId: component.Info.Id);
+            processor.Process(account.Id);
 
             // Проверим, что нет ошибок и удалена 1 запись
 

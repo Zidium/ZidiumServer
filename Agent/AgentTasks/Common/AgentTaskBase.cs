@@ -24,9 +24,9 @@ namespace Zidium.Agent.AgentTasks
         /// <summary>
         /// Максимально допустимый период отсутствия сигналов от задач
         /// </summary>
-        private TimeSpan _maximumOfflineInterval;
+        private readonly TimeSpan _maximumOfflineInterval;
 
-        private IComponentControl _componentControl;
+        private readonly IComponentControl _componentControl;
 
         protected CancellationToken CancellationToken;
 
