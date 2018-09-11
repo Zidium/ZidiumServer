@@ -76,6 +76,34 @@ namespace Zidium.TestTools
             }
         }
 
+        // TODO Сделать нормальный способ управления настройками лога
+        public void SetComponentLogConfigIsInfoEnabled(Guid componentId, bool value)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = "UPDATE [dbo].[LogConfigs] SET [IsInfoEnabled] = @IsInfoEnabled, [LastUpdateDate] = GetDate() WHERE [ComponentId] = @ComponentId";
+
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "IsInfoEnabled";
+                    parameter.DbType = DbType.Boolean;
+                    parameter.Value = value;
+                    command.Parameters.Add(parameter);
+
+                    parameter = command.CreateParameter();
+                    parameter.ParameterName = "ComponentId";
+                    parameter.DbType = DbType.Guid;
+                    parameter.Value = componentId;
+                    command.Parameters.Add(parameter);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
         public static string ConnectionString
         {
             get

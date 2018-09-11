@@ -207,6 +207,9 @@
         <Compile Include="..\..\Api\Client\UnitTests\Others\SendUnitTestResultData.cs">
             <Link>Client\UnitTests\Others\SendUnitTestResultData.cs</Link>
         </Compile>
+        <Compile Include="..\..\Api\Client\UnitTests\Others\SendUnitTestResultsData.cs">
+            <Link>Client\UnitTests\Others\SendUnitTestResultsData.cs</Link>
+        </Compile>
         <Compile Include="..\..\Api\Client\UnitTests\Others\UnitTestInfo.cs">
             <Link>Client\UnitTests\Others\UnitTestInfo.cs</Link>
         </Compile>
@@ -485,6 +488,9 @@
         </Compile>
         <Compile Include="..\..\Api\Dao\UnitTests\SendUnitTestResult\SendUnitTestResultResponse.cs">
             <Link>Dao\UnitTests\SendUnitTestResult\SendUnitTestResultResponse.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dao\UnitTests\SendUnitTestResults\SendUnitTestResultsResponse.cs">
+            <Link>Dao\UnitTests\SendUnitTestResults\SendUnitTestResultsResponse.cs</Link>
         </Compile>
         <Compile Include="..\..\Api\Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs">
             <Link>Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs</Link>
@@ -878,6 +884,12 @@
         </Compile>
         <Compile Include="..\..\Api\Dto\UnitTests\SendUnitTestResult\SendUnitTestResultResponseDto.cs">
             <Link>Dto\UnitTests\SendUnitTestResult\SendUnitTestResultResponseDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SendUnitTestResults\SendUnitTestResultsRequestDto.cs">
+            <Link>Dto\UnitTests\SendUnitTestResults\SendUnitTestResultsRequestDto.cs</Link>
+        </Compile>
+        <Compile Include="..\..\Api\Dto\UnitTests\SendUnitTestResults\SendUnitTestResultsResponseDto.cs">
+            <Link>Dto\UnitTests\SendUnitTestResults\SendUnitTestResultsResponseDto.cs</Link>
         </Compile>
         <Compile Include="..\..\Api\Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDto.cs">
             <Link>Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDto.cs</Link>
