@@ -394,6 +394,11 @@ namespace Zidium.Api.Common
             };
         }
 
+        public static SendUnitTestResultRequestDtoData[] GetSendUnitTestResultsRequestDtoData(SendUnitTestResultsData[] data)
+        {
+            return data.Select(t => GetSendUnitTestResultRequestDtoData(t.UnitTestId, t)).ToArray();
+        }
+
         public static UpdateComponentRequestDtoData GetUpdateComponentRequestDtoData(Guid componentId, UpdateComponentData data)
         {
             if (data == null)

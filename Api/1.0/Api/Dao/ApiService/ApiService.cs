@@ -456,6 +456,20 @@ namespace Zidium.Api
             return response;
         }
 
+        public SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsData[] data)
+        {
+            var dataDto = DataConverter.GetSendUnitTestResultsRequestDtoData(data);
+            var request = new SendUnitTestResultsRequestDto()
+            {
+                Data = dataDto,
+                Token = GetAccessTokenDto()
+            };
+            var responseDto = DtoService.SendUnitTestResults(request);
+            var response = CreateResponse<SendUnitTestResultsResponse>(responseDto);
+            response.InternalData = responseDto.Data;
+            return response;
+        }
+
         public GetUnitTestStateResponse GetUnitTestState(Guid unitTestId)
         {
             var dataDto = new GetUnitTestStateRequestDtoData()

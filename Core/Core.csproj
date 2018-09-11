@@ -387,6 +387,8 @@
     <Compile Include="Api\UnitTests\Checks\AddPingUnitTest\AddPingUnitTestRequestData.cs" />
     <Compile Include="Api\UnitTests\Checks\AddPingUnitTest\AddPingUnitTestResponseData.cs" />
     <Compile Include="Api\UnitTests\SendHttpUnitTestBanner\SendHttpUnitTestBannerResponseData.cs" />
+    <Compile Include="Api\UnitTests\SendUnitTestResults\SendUnitTestResultsRequest.cs" />
+    <Compile Include="Api\UnitTests\SendUnitTestResults\SendUnitTestResultsResponse.cs" />
     <Compile Include="Api\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequest.cs" />
     <Compile Include="Api\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs" />
     <Compile Include="Api\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponse.cs" />
@@ -812,7 +814,7 @@
     <Compile Include="Api\Subscriptions\CreateSubscription\CreateSubscriptionResponse.cs" />
     <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultData.cs" />
     <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultRequest.cs" />
-    <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultResponce.cs" />
+    <Compile Include="Api\UnitTests\SendUnitTestResult\SendUnitTestResultResponse.cs" />
     <Compile Include="Api\UnitTests\UnitTestResultStatus.cs" />
     <Compile Include="Common\Helpers\EventImportanceHelper.cs" />
     <Compile Include="Common\Helpers\ImportanceHelper.cs" />

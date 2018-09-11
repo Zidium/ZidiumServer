@@ -328,6 +328,11 @@ namespace Zidium.Core.Api
             return Execute(() => InternalService.SendUnitTestResult(request));
         }
 
+        public SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsRequest request)
+        {
+            return Execute(() => InternalService.SendUnitTestResults(request));
+        }
+
         public GetUnitTestStateResponse GetUnitTestState(GetUnitTestStateRequest request)
         {
             return Execute(() => InternalService.GetUnitTestState(request));

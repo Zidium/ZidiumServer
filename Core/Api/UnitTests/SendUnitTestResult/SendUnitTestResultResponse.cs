@@ -1,4 +1,4 @@
-﻿namespace Zidium.Core.Api
+namespace Zidium.Core.Api
 {
     public class SendUnitTestResultResponse : ResponseT<string>
     {

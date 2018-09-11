@@ -143,13 +143,15 @@ namespace Zidium.Api
 
         #endregion
 
-        #region Юнит-тесты
+        #region Проверки
 
         GetOrCreateUnitTestResponse GetOrCreateUnitTest(Guid componentId, GetOrCreateUnitTestData data);
 
         GetOrCreateUnitTestTypeResponse GetOrCreateUnitTestType(GetOrCreateUnitTestTypeData data);
 
         SendUnitTestResultResponse SendUnitTestResult(Guid unitTestId, SendUnitTestResultData data);
+
+        SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsData[] data);
 
         GetUnitTestStateResponse GetUnitTestState(Guid unitTestId);
 

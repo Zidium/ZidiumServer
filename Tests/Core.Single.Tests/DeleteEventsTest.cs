@@ -74,7 +74,7 @@ namespace Zidium.Core.Single.Tests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unittest = TestHelper.GetTestUnitTest(account.Id, component.Info.Id);
+            var unittest = TestHelper.CreateTestUnitTest(account.Id, component.Info.Id);
             var eventType = TestHelper.GetTestEventType(account.Id);
 
             // Установим время хранения проверок 30 дней

@@ -379,6 +379,18 @@ namespace ApiAdapter
             return response;
         }
 
+        public SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultsRequestDto request)
+        {
+            var coreRequest = GetCoreRequest<Zidium.Core.Api.SendUnitTestResultsRequest>(request);
+            coreRequest.Data = AdapterDataConverter.ConvertToCore(request.Data);
+
+            var coreResponse = Dispatcher.SendUnitTestResults(coreRequest);
+
+            var response = GetApiResponse<SendUnitTestResultsResponseDto>(coreResponse);
+            response.Data = coreResponse.InternalData;
+            return response;
+        }
+
         public GetUnitTestStateResponseDto GetUnitTestState(GetUnitTestStateRequestDto request)
         {
             var coreRequest = GetCoreRequest<Zidium.Core.Api.GetUnitTestStateRequest>(request);

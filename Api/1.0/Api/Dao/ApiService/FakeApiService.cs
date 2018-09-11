@@ -179,6 +179,11 @@ namespace Zidium.Api
             return GetResponse<SendUnitTestResultResponse>();
         }
 
+        public SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsData[] data)
+        {
+            return GetResponse<SendUnitTestResultsResponse>();
+        }
+
         public GetUnitTestStateResponse GetUnitTestState(Guid unitTestId)
         {
             return GetResponse<GetUnitTestStateResponse>();

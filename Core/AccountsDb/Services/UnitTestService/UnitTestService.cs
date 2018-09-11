@@ -696,6 +696,14 @@ namespace Zidium.Core.AccountsDb
             }
         }
 
+        public void SendUnitTestResults(Guid accountId, SendUnitTestResultRequestData[] data)
+        {
+            foreach (var item in data)
+            {
+                SendUnitTestResult(accountId, item);
+            }
+        }
+
         protected IBulbCacheReadObject GetUnitTestResultInternal(
             IUnitTestCacheReadObject unitTest,
             DateTime processDate)

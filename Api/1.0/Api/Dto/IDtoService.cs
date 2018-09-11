@@ -200,6 +200,13 @@
         SendUnitTestResultResponseDto SendUnitTestResult(SendUnitTestResultRequestDto request);
 
         /// <summary>
+        /// Отправка набора результатов проверок
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultsRequestDto request);
+
+        /// <summary>
         /// Получение состояния проверки
         /// </summary>
         /// <param name="request"></param>

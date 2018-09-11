@@ -234,6 +234,11 @@ namespace Zidium.Api
             return Execute("SendUnitTestResult", () => ApiServiceInternal.SendUnitTestResult(unitTestId, data));
         }
 
+        public SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsData[] data)
+        {
+            return Execute("SendUnitTestResults", () => ApiServiceInternal.SendUnitTestResults(data));
+        }
+
         public GetUnitTestStateResponse GetUnitTestState(Guid unitTestId)
         {
             return Execute("GetUnitTestState", () => ApiServiceInternal.GetUnitTestState(unitTestId));

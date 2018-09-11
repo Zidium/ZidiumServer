@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
 
@@ -19,7 +20,7 @@ namespace Zidium.Core.AccountsDb
         UnitTest AddHttpUnitTest(Guid accountId, AddHttpUnitTestRequestData data);
 
         /// <summary>
-        /// Отправляет результат юнит-теста
+        /// Отправляет результат проверки
         /// </summary>
         /// <param name="accountId"></param>
         /// <param name="data"></param>
@@ -29,7 +30,15 @@ namespace Zidium.Core.AccountsDb
             SendUnitTestResultRequestData data);
 
         /// <summary>
-        /// Получает результат юнит-теста
+        /// Отправляет набор результатов проверок
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="data"></param>
+        void SendUnitTestResults(Guid accountId,
+            SendUnitTestResultRequestData[] data);
+
+        /// <summary>
+        /// Получает результат проверки
         /// </summary>
         /// <param name="accountId"></param>
         /// <param name="unitTestId"></param>

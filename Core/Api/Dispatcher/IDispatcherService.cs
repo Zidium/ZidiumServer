@@ -219,6 +219,8 @@
 
         SendUnitTestResultResponse SendUnitTestResult(SendUnitTestResultRequest request);
 
+        SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsRequest request);
+
         GetUnitTestStateResponse GetUnitTestState(GetUnitTestStateRequest request);
 
         SendHttpUnitTestBannerResponse SendHttpUnitTestBanner(SendHttpUnitTestBannerRequest request);

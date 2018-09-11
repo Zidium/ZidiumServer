@@ -657,6 +657,11 @@ namespace ApiAdapter
             };
         }
 
+        public static Zidium.Core.Api.SendUnitTestResultRequestData[] ConvertToCore(SendUnitTestResultRequestDtoData[] messages)
+        {
+            return messages.Select(ConvertToCore).ToArray();
+        }
+
         public static Zidium.Core.Api.GetUnitTestStateRequestData ConvertToCore(GetUnitTestStateRequestDtoData data)
         {
             if (data == null)

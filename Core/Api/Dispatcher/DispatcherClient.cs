@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Api.Dispatcher
@@ -325,6 +326,16 @@ namespace Zidium.Core.Api.Dispatcher
             request.Data = data;
             var dispatcher = DispatcherHelper.GetDispatcherService();
             return dispatcher.SendUnitTestResult(request);
+        }
+
+        public SendUnitTestResultsResponse SendUnitTestResults(
+            Guid accountId,
+            SendUnitTestResultRequestData[] data)
+        {
+            var request = GetRequest<SendUnitTestResultsRequest>(accountId);
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.SendUnitTestResults(request);
         }
 
         public SendHttpUnitTestBannerResponse SendHttpUnitTestBanner(Guid accountId, Guid unitTestId, bool hasBanner)

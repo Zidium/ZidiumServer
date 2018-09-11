@@ -13,7 +13,7 @@ using Zidium.Core.Limits;
 namespace Zidium.Core
 {
     /// <summary>
-    /// Данный класс отвечает за перенаправление вызовов тем экземплярам служб, который работают с нужной БД акканта
+    /// Данный класс отвечает за перенаправление вызовов тем экземплярам служб, который работают с нужной БД аккаунта
     /// </summary>
     public class DispatcherService : IDispatcherService
     {
@@ -1829,6 +1829,27 @@ namespace Zidium.Core
                 var service = context.UnitTestService;
                 service.SendUnitTestResult(accountId, request.Data);
                 return new SendUnitTestResultResponse()
+                {
+                    Code = Zidium.Api.ResponseCode.Success,
+                    InternalData = null
+                };
+            }
+        }
+
+        public SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsRequest request)
+        {
+            CheckRequest(request);
+            if (request.Data == null)
+            {
+                throw new ParameterRequiredException("Request.Data");
+            }
+
+            using (var context = GetDispatcherContext(request))
+            {
+                var accountId = request.Token.AccountId.Value;
+                var service = context.UnitTestService;
+                service.SendUnitTestResults(accountId, request.Data);
+                return new SendUnitTestResultsResponse()
                 {
                     Code = Zidium.Api.ResponseCode.Success,
                     InternalData = null

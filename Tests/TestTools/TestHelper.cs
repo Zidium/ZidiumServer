@@ -696,7 +696,7 @@ namespace Zidium.TestTools
             }
         }
 
-        public static GetOrCreateUnitTestResponseData GetTestUnitTest(Guid accountId, Guid componentId)
+        public static GetOrCreateUnitTestResponseData CreateTestUnitTest(Guid accountId, Guid componentId)
         {
             var unitTestType = CreateTestUnitTestType(accountId);
             var client = GetDispatcherClient();

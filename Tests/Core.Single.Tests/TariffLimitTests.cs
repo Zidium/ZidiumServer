@@ -535,7 +535,7 @@ namespace Zidium.Core.Single.Tests
                 }
             });
 
-            var unitTest = TestHelper.GetTestUnitTest(account.Id, component.Id);
+            var unitTest = TestHelper.CreateTestUnitTest(account.Id, component.Id);
 
             // Проверим, что можно отправлять результаты до лимита
             for (var i = 0; i < unitTestsRequestsPerDay; i++)
@@ -568,7 +568,7 @@ namespace Zidium.Core.Single.Tests
             Assert.Equal(Zidium.Api.ResponseCode.OverLimit, response2.Code);
 
             // Проверим, что нельзя отправить результат другой проверки
-            var unitTest2 = TestHelper.GetTestUnitTest(account.Id, component.Id);
+            var unitTest2 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
             request2 = new SendUnitTestResultRequest()
             {
                 Token = account.GetCoreToken(),
@@ -969,7 +969,7 @@ namespace Zidium.Core.Single.Tests
             var account = TestHelper.GetTestAccount();
             var dispatcher = DispatcherHelper.GetDispatcherService();
             var component = account.CreateTestApplicationComponent();
-            var unitTest = TestHelper.GetTestUnitTest(account.Id, component.Id);
+            var unitTest = TestHelper.CreateTestUnitTest(account.Id, component.Id);
 
             // Подготовим по одному запросу: проверка, событие, лог, метрика
 
@@ -1243,8 +1243,8 @@ namespace Zidium.Core.Single.Tests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateTestApplicationComponent();
-            var unitTest1 = TestHelper.GetTestUnitTest(account.Id, component.Id);
-            var unitTest2 = TestHelper.GetTestUnitTest(account.Id, component.Id);
+            var unitTest1 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
+            var unitTest2 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
 
             // Выровняем сдвиг времени по границе N минут
             var now = DateTime.Now.Date.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
@@ -1308,8 +1308,8 @@ namespace Zidium.Core.Single.Tests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateTestApplicationComponent();
-            var unitTest1 = TestHelper.GetTestUnitTest(account.Id, component.Id);
-            var unitTest2 = TestHelper.GetTestUnitTest(account.Id, component.Id);
+            var unitTest1 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
+            var unitTest2 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
 
             // Запомним количество строк в истории
             int limitDatasCount;

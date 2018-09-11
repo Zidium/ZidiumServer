@@ -944,7 +944,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.True(subscriptionResponse.Success);
 
             // Отправим красную проверку
-            var unittest = TestHelper.GetTestUnitTest(account.Id, component.Id);
+            var unittest = TestHelper.CreateTestUnitTest(account.Id, component.Id);
             var sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Core.Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,

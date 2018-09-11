@@ -82,6 +82,7 @@
     <Compile Include="Client\ComponentTypeControl\FakeComponentTypeControl.cs" />
     <Compile Include="Client\Logs\Common\WebLogConfig.cs" />
     <Compile Include="Client\UnitTests\Controls\FakeUnitTestControl.cs" />
+    <Compile Include="Client\UnitTests\Others\SendUnitTestResultsData.cs" />
     <Compile Include="Client\XmlConfig\AutoCreateEventsElement.cs" />
     <Compile Include="Client\XmlConfig\DefaultComponentElement.cs" />
     <Compile Include="Dao\ApiService\ApiService.cs" />
@@ -160,6 +161,7 @@
     <Compile Include="Client\UnitTests\Controls\UnitTestControlWrapper.cs" />
     <Compile Include="Client\UnitTests\Others\UnitTestInfo.cs" />
     <Compile Include="Dao\UnitTests\GetUnitTestState\GetUnitTestStateResponse.cs" />
+    <Compile Include="Dao\UnitTests\SendUnitTestResults\SendUnitTestResultsResponse.cs" />
     <Compile Include="Dao\UnitTests\SendUnitTestResult\SendUnitTestResultRequestData.cs" />
     <Compile Include="Dao\UnitTests\SendUnitTestResult\SendUnitTestResultResponse.cs" />
     <Compile Include="Dao\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestData.cs" />
@@ -194,6 +196,8 @@
     <Compile Include="Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsRequestDto.cs" />
     <Compile Include="Dto\Logs\GetChangedWebLogConfigs\GetChangedWebLogConfigsResponseDto.cs" />
     <Compile Include="Dto\Logs\GetLogConfig\WebLogConfigDto.cs" />
+    <Compile Include="Dto\UnitTests\SendUnitTestResults\SendUnitTestResultsRequestDto.cs" />
+    <Compile Include="Dto\UnitTests\SendUnitTestResults\SendUnitTestResultsResponseDto.cs" />
     <Compile Include="Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDto.cs" />
     <Compile Include="Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableRequestDtoData.cs" />
     <Compile Include="Dto\UnitTests\SetUnitTestDisable\SetUnitTestDisableResponseDto.cs" />

@@ -26,7 +26,7 @@ namespace ApiTests_1._0.UnitTests
         /// Проверяет, что данные проверок успешно отправляются
         /// </summary>
         [Fact]
-        public void SendResultsTest()
+        public void SendResultTest()
         {
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
@@ -312,6 +312,37 @@ namespace ApiTests_1._0.UnitTests
 
             var state = unitTest.GetState().Data;
             Assert.Equal(2050, state.ActualDate.Year);
+        }
+
+        [Fact]
+        public void SendResultsTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var component = account.CreateRandomComponentControl();
+            var unitTest1 = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+            var unitTest2 = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+
+            var data = new []
+            {
+                new SendUnitTestResultsData()
+                {
+                    UnitTestId = unitTest1.Info.Id,
+                    Result = UnitTestResult.Success
+                },
+                new SendUnitTestResultsData()
+                {
+                    UnitTestId = unitTest2.Info.Id,
+                    Result = UnitTestResult.Warning
+                }
+            };
+
+            account.GetClient().ApiService.SendUnitTestResults(data);
+
+            var status1 = unitTest1.GetState().Data.Status;
+            var status2 = unitTest2.GetState().Data.Status;
+
+            Assert.Equal(MonitoringStatus.Success, status1);
+            Assert.Equal(MonitoringStatus.Warning, status2);
         }
     }
 }

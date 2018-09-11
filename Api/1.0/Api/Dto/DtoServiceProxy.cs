@@ -310,6 +310,11 @@ namespace Zidium.Api.Dto
             return ExecuteAction<SendUnitTestResultResponseDto>("SendUnitTestResult", request);
         }
 
+        public SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultsRequestDto request)
+        {
+            return ExecuteAction<SendUnitTestResultsResponseDto>("SendUnitTestResults", request);
+        }
+
         public GetUnitTestStateResponseDto GetUnitTestState(GetUnitTestStateRequestDto request)
         {
             return ExecuteAction<GetUnitTestStateResponseDto>("GetUnitTestState", request);
