@@ -2,7 +2,8 @@
 <root>
     <acceSS accountName="test-account-name"
             SecretKey="my secret 777"
-            waitOnErrorSeconds="34"/>
+            waitOnErrorSeconds="34"
+            uRL="myserver"/>
     <dEfaultComponenT id="3b1377df-0caf-48c8-baa9-7a61be6b8f22" />
     <loGS>
         <WEBLog disable="TRUE"

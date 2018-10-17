@@ -5,7 +5,7 @@
         <AssemblyName>Zidium.Api.NetCore</AssemblyName>
         <RootNamespace>Zidium.Api</RootNamespace>
         <Authors>Zidium</Authors>
-        <Version>1.0.18</Version>
+        <Version>1.0.19</Version>
         <Company>Zidium</Company>
         <Description>This is an official .Net Core Api library for Zidium monitoring system</Description>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -13,8 +13,8 @@
         <PackageProjectUrl>http://zidium.net</PackageProjectUrl>
         <PackageTags>Zidium monitoring events unittests metrics log core</PackageTags>
         <Title>Zidium Api for .Net Core</Title>
-        <FileVersion>1.0.18.0</FileVersion>
-        <AssemblyVersion>1.0.18.0</AssemblyVersion>
+        <FileVersion>1.0.19.0</FileVersion>
+        <AssemblyVersion>1.0.19.0</AssemblyVersion>
     </PropertyGroup>
 
     <ItemGroup>

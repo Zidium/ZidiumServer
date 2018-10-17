@@ -7,7 +7,7 @@ namespace Zidium.Api
     {
         public static void Load(this XmlDocument document, string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open))
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 document.Load(stream);
             }
