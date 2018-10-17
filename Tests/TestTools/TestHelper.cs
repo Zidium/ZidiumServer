@@ -672,10 +672,10 @@ namespace Zidium.TestTools
                 var eventType = new EventType()
                 {
                     Category = Core.Api.EventCategory.ComponentEvent,
-                    DisplayName = "Тестовый тип события " + DateTime.Now.ToString("yyyy-MM-dd HH"),
+                    DisplayName = "Тестовый тип события " + Guid.NewGuid(),
                     ImportanceForNew = Core.Api.EventImportance.Success,
                     JoinIntervalSeconds = 5,
-                    SystemName = "EventType.Test " + DateTime.Now.ToString("yyyy-MM-dd HH")
+                    SystemName = "EventType.Test " + Guid.NewGuid()
                 };
                 eventType = eventTypeRepository.GetOrCreate(eventType);
                 return eventType;

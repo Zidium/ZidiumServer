@@ -60,5 +60,7 @@ namespace Zidium.Core.AccountsDb
         IBulbCacheReadObject Enable(Guid accountId, Guid unitTestId);
 
         int RecalcUnitTestsResults(Guid accountId, int maxCount);
+
+        void UpdateNoSignalColor(IUnitTestCacheReadObject unitTest);
     }
 }

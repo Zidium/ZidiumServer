@@ -323,7 +323,7 @@ namespace Zidium.Core.AccountsDb
 
             if (data.ComponentId.HasValue)
             {
-                //получим компонент, чтобы убедится, что он принадлежит аккаунту
+                //получим компонент, чтобы убедиться, что он принадлежит аккаунту
                 var req = new AccountCacheRequest()
                 {
                     AccountId = accountId,
@@ -343,6 +343,7 @@ namespace Zidium.Core.AccountsDb
             };
 
             // сохраним изменения
+            var noSignalColorChanged = false;
             IUnitTestCacheReadObject unitTestCache = null;
             using (var unitTest = AllCaches.UnitTests.Write(request))
             {
@@ -365,6 +366,8 @@ namespace Zidium.Core.AccountsDb
                     unitTest.NextDate = DateTime.Now;
                 }
 
+                noSignalColorChanged = data.NoSignalColor != unitTest.NoSignalColor;
+
                 unitTest.DisplayName = data.DisplayName ?? unitTest.DisplayName;
                 unitTest.ComponentId = data.ComponentId ?? unitTest.ComponentId;
                 unitTest.ErrorColor = data.ErrorColor ?? unitTest.ErrorColor;
@@ -378,6 +381,24 @@ namespace Zidium.Core.AccountsDb
 
             // ждем сохранения в кэше
             unitTestCache.WaitSaveChanges();
+
+            // при изменении "Цвет если нет сигнала" нужно обновить цвет
+            if (noSignalColorChanged)
+            {
+                UpdateNoSignalColor(unitTestCache);
+            }
+        }
+
+        public void UpdateNoSignalColor(IUnitTestCacheReadObject unitTest)
+        {
+            var statusService = Context.BulbService;
+            var statusData = statusService.GetRaw(unitTest.AccountId, unitTest.StatusDataId);
+            if (!statusData.HasSignal)
+            {
+                var now = DateTime.Now;
+                var noSignalEvent = GetNoSignalEvent(unitTest, now, now);
+                SaveResultEvent(now, unitTest, noSignalEvent);
+            }
         }
 
         public void Delete(Guid accountId, Guid unitTestId)
@@ -749,7 +770,13 @@ namespace Zidium.Core.AccountsDb
 
             // значение неактуальное
             // сохраняем пробел (событие результата теста)
+            var noSignalEvent = GetNoSignalEvent(unitTest, processDate, data.ActualDate);
 
+            return SaveResultEvent(processDate, unitTest, noSignalEvent);
+        }
+
+        private Event GetNoSignalEvent(IUnitTestCacheReadObject unitTest, DateTime processDate, DateTime startDate)
+        {
             var cache = new AccountCache(unitTest.AccountId);
             var unittestType = cache.UnitTestTypes.Read(unitTest.TypeId);
 
@@ -759,7 +786,7 @@ namespace Zidium.Core.AccountsDb
                   ImportanceHelper.Get(unittestType.NoSignalColor) ??
                   EventImportance.Alarm;
 
-            var noSignalEvent = new Event()
+            return new Event()
             {
                 Id = Guid.NewGuid(),
                 Message = "Нет сигнала",
@@ -769,14 +796,12 @@ namespace Zidium.Core.AccountsDb
                 Count = 1,
                 CreateDate = processDate,
                 LastUpdateDate = processDate,
-                StartDate = data.ActualDate,
+                StartDate = startDate,
                 EndDate = processDate,
                 IsSpace = true,
                 EventTypeId = SystemEventType.UnitTestResult.Id,
                 Importance = noSignalImportance
             };
-
-            return SaveResultEvent(processDate, unitTest, noSignalEvent);
         }
 
         public IBulbCacheReadObject GetUnitTestResult(Guid accountId, Guid unitTestId)

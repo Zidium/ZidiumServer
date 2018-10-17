@@ -19,19 +19,23 @@ namespace Zidium.Core.Tests.AgentTests
 
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("recursion.ru");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
-            Assert.Equal(new DateTime(2018, 8, 29), result.Date.Value);
+            Assert.True(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("aps-market.com");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("stackoverflow.com");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("microsoft.com");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("anekdotov.net");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("recursion2.ru");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.FreeDomain, result.Code);
@@ -47,6 +51,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("doc.alcospot.ru");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.FreeDomain, result.Code);
+            Assert.False(result.Date.HasValue);
         }
 
         [Fact]
@@ -54,6 +59,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("stelladent.ru");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         [Fact]
@@ -61,6 +67,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("example.com");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         [Fact]
@@ -68,6 +75,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("zidium.net");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         [Fact]
@@ -75,8 +83,11 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("aps-tender.com.ua");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
+
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("azu.kiev.ua");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         [Fact]
@@ -84,6 +95,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("БЛАГОВЕСТ-МОСКВА.РФ");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         [Fact]
@@ -91,6 +103,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("БЛАГОВЕСТ.МОСКВА");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         [Fact]
@@ -98,6 +111,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("http://free-seminars.ru/");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
         }
 
         /// <summary>

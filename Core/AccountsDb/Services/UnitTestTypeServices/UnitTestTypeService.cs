@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
 using Zidium.Core.Common;
@@ -123,8 +124,10 @@ namespace Zidium.Core.AccountsDb
                         throw new ArgumentException("Тип проверки с таким системным именем уже существует");
                 }
 
+                var noSignalColorChanged = false;
                 using (var unitTestTypeWrite = AllCaches.UnitTestTypes.Write(request))
                 {
+                    noSignalColorChanged = data.NoSignalColor != unitTestTypeWrite.NoSignalColor;
                     unitTestTypeWrite.SystemName = data.SystemName;
                     unitTestTypeWrite.DisplayName = data.DisplayName;
                     unitTestTypeWrite.ActualTimeSecs = data.ActualTimeSecs;
@@ -133,8 +136,26 @@ namespace Zidium.Core.AccountsDb
                     unitTestTypeWrite.WaitSaveChanges();
                 }
 
-                return AllCaches.UnitTestTypes.Read(request);
+                // при изменении "Цвет если нет сигнала" нужно обновить цвет всех проверок этого типа
+                if (noSignalColorChanged)
+                {
+                    var unitTestRepository = Context.GetAccountDbContext(accountId).GetUnitTestRepository();
+                    var unitTests = unitTestRepository.QueryForGui(null, null, unitTestType.Id, null).Select(t => t.Id).ToArray();
 
+                    var unitTestService = Context.UnitTestService;
+                    foreach (var unitTestId in unitTests)
+                    {
+                        var unitTestRequest = new AccountCacheRequest()
+                        {
+                            AccountId = accountId,
+                            ObjectId = unitTestId
+                        };
+                        var unitTestCacheReadObject = AllCaches.UnitTests.Read(unitTestRequest);
+                        unitTestService.UpdateNoSignalColor(unitTestCacheReadObject);
+                    }
+                }
+
+                return AllCaches.UnitTestTypes.Read(request);
             }
         }
 
