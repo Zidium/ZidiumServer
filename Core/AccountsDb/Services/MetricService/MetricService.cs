@@ -70,6 +70,13 @@ namespace Zidium.Core.AccountsDb
 
             // значение метрики не актуальное
             // сохраняем пробел
+            SaveNoSignalColor(metric, data.ActualDate);
+
+            return metric;
+        }
+
+        private void SaveNoSignalColor(IMetricCacheReadObject metric, DateTime processDate)
+        {
             using (var metricWrite = AllCaches.Metrics.Write(metric))
             {
                 var metricType = AllCaches.MetricTypes.Read(new AccountCacheRequest()
@@ -77,13 +84,12 @@ namespace Zidium.Core.AccountsDb
                     AccountId = metric.AccountId,
                     ObjectId = metric.MetricTypeId
                 });
-                processDate = data.ActualDate; // чтобы НЕ было пробела
+
                 var actualDate = DateTimeHelper.InfiniteActualDate;
                 var noSignalColor = metricWrite.NoSignalColor ?? metricType.NoSignalColor ?? ObjectColor.Red;
                 var status = MonitoringStatusHelper.Get(noSignalColor);
                 SetMetricValue(metricType, metricWrite, null, processDate, actualDate, status, "Нет сигнала", false);
                 metricWrite.BeginSave();
-                return metric;
             }
         }
 
@@ -503,20 +509,37 @@ namespace Zidium.Core.AccountsDb
             {
                 data.DisplayName = data.SystemName;
             }
+
+            bool noSignalColorChanged;
             var cache = new AccountCache(accountId);
-            using (var metricType = cache.MetricTypes.Write(data.MetricTypeId))
+            using (var metricTypeWrite = cache.MetricTypes.Write(data.MetricTypeId))
             {
-                metricType.SystemName = data.SystemName;
-                metricType.DisplayName = data.DisplayName;
-                metricType.ConditionRed = data.AlarmCondition;
-                metricType.ConditionYellow = data.WarningCondition;
-                metricType.ConditionGreen = data.SuccessCondition;
-                metricType.ElseColor = data.ElseColor;
-                metricType.NoSignalColor = data.NoSignalColor;
-                metricType.ActualTime = TimeSpanHelper.FromSeconds(data.ActualTimeSecs);
-                metricType.BeginSave();
+                noSignalColorChanged = metricTypeWrite.NoSignalColor != data.NoSignalColor;
+                metricTypeWrite.SystemName = data.SystemName;
+                metricTypeWrite.DisplayName = data.DisplayName;
+                metricTypeWrite.ConditionRed = data.AlarmCondition;
+                metricTypeWrite.ConditionYellow = data.WarningCondition;
+                metricTypeWrite.ConditionGreen = data.SuccessCondition;
+                metricTypeWrite.ElseColor = data.ElseColor;
+                metricTypeWrite.NoSignalColor = data.NoSignalColor;
+                metricTypeWrite.ActualTime = TimeSpanHelper.FromSeconds(data.ActualTimeSecs);
+                metricTypeWrite.BeginSave();
             }
-            cache.MetricTypes.Read(data.MetricTypeId).WaitSaveChanges();
+            var metricType = cache.MetricTypes.Read(data.MetricTypeId);
+            metricType.WaitSaveChanges();
+
+            // При изменении "Цвет если нет сигнала" нужно обновить цвет всех метрик этого типа
+            if (noSignalColorChanged)
+            {
+                var metricRepository = Context.GetAccountDbContext(accountId).GetMetricRepository();
+                var metrics = metricRepository.QueryAll().Where(t => t.MetricTypeId == metricType.Id).Select(t => t.Id).ToArray();
+
+                foreach (var metricId in metrics)
+                {
+                    var metric = cache.Metrics.Read(metricId);
+                    UpdateNoSignalColor(metric);
+                }
+            }
         }
 
         public IMetricTypeCacheReadObject CreateMetricType(Guid accountId, CreateMetricTypeRequestData data)
@@ -552,18 +575,38 @@ namespace Zidium.Core.AccountsDb
 
         public void UpdateMetric(Guid accountId, UpdateMetricRequestData data)
         {
+            var noSignalcolorChanged = false;
             var cache = new AccountCache(accountId);
-            using (var metric = cache.Metrics.Write(data.MetricId))
+            using (var metricWrite = cache.Metrics.Write(data.MetricId))
             {
-                metric.ConditionRed = data.AlarmCondition;
-                metric.ConditionYellow = data.WarningCondition;
-                metric.ConditionGreen = data.SuccessCondition;
-                metric.ElseColor = data.ElseColor;
-                metric.ActualTime = TimeSpanHelper.FromSeconds(data.ActualTimeSecs);
-                metric.NoSignalColor = data.NoSignalColor;
-                metric.BeginSave();
+                noSignalcolorChanged = metricWrite.NoSignalColor != data.NoSignalColor;
+                metricWrite.ConditionRed = data.AlarmCondition;
+                metricWrite.ConditionYellow = data.WarningCondition;
+                metricWrite.ConditionGreen = data.SuccessCondition;
+                metricWrite.ElseColor = data.ElseColor;
+                metricWrite.ActualTime = TimeSpanHelper.FromSeconds(data.ActualTimeSecs);
+                metricWrite.NoSignalColor = data.NoSignalColor;
+                metricWrite.BeginSave();
             }
-            cache.Metrics.Read(data.MetricId).WaitSaveChanges();
+
+            var metric = cache.Metrics.Read(data.MetricId);
+            metric.WaitSaveChanges();
+
+            // При изменении "Цвет если нет сигнала" нужно обновить цвет метрики
+            if (noSignalcolorChanged)
+            {
+                UpdateNoSignalColor(metric);
+            }
+        }
+
+        public void UpdateNoSignalColor(IMetricCacheReadObject metric)
+        {
+            var statusService = Context.BulbService;
+            var statusData = statusService.GetRaw(metric.AccountId, metric.StatusDataId);
+            if (!statusData.HasSignal)
+            {
+                SaveNoSignalColor(metric, DateTime.Now);
+            }
         }
 
         public Guid CreateMetric(Guid accountId, Guid componentId, Guid metricTypeId)

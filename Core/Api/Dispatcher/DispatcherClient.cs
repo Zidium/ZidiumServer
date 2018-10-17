@@ -404,6 +404,18 @@ namespace Zidium.Core.Api.Dispatcher
 
         #region Метрики
 
+        public GetMetricResponse GetMetric(Guid accountId, Guid componentId, string name)
+        {
+            var request = GetRequest<GetMetricRequest>(accountId);
+            request.Data = new GetMetricRequestData()
+            {
+                ComponentId = componentId,
+                Name = name
+            };
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.GetMetric(request);
+        }
+
         public GetMetricsResponse GetMetrics(Guid accountId, Guid componentId)
         {
             var request = GetRequest<GetMetricsRequest>(accountId);

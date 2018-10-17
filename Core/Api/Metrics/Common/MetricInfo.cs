@@ -4,6 +4,8 @@ namespace Zidium.Core.Api
 {
     public class MetricInfo
     {
+        public Guid Id { get; set; }
+
         public Guid ComponentId { get; set; }
 
         public string SystemName { get; set; }

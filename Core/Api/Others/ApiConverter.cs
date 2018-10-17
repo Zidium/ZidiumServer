@@ -296,6 +296,7 @@ namespace Zidium.Core
             }
             return new MetricInfo()
             {
+                Id = metric.Id,
                 ComponentId = metric.ComponentId,
                 SystemName = metricType.SystemName,
                 Value = metric.Value,

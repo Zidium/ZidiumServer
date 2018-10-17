@@ -175,9 +175,10 @@
     <Compile Include="Dispatcher\ChecksTests.cs" />
     <Compile Include="Dispatcher\ComponentsTests.cs" />
     <Compile Include="Dispatcher\DefectsTests.cs" />
+    <Compile Include="Dispatcher\MetricTypesTests.cs" />
     <Compile Include="Dispatcher\ProcessEventsTests.cs" />
     <Compile Include="Dispatcher\TsdFixEventsTests.cs" />
-    <Compile Include="Dispatcher\MetricsRulesTests.cs" />
+    <Compile Include="Dispatcher\MetricsTests.cs" />
     <Compile Include="Dispatcher\EventsTests.cs" />
     <Compile Include="Dispatcher\ExtentionPropertyCollectionTests.cs" />
     <Compile Include="Dispatcher\SubscriptionsTests.cs" />

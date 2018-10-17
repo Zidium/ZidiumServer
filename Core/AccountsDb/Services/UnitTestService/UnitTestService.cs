@@ -343,8 +343,8 @@ namespace Zidium.Core.AccountsDb
             };
 
             // сохраним изменения
-            var noSignalColorChanged = false;
-            IUnitTestCacheReadObject unitTestCache = null;
+            bool noSignalColorChanged;
+            IUnitTestCacheReadObject unitTestCache;
             using (var unitTest = AllCaches.UnitTests.Write(request))
             {
                 unitTestCache = unitTest;
@@ -382,7 +382,7 @@ namespace Zidium.Core.AccountsDb
             // ждем сохранения в кэше
             unitTestCache.WaitSaveChanges();
 
-            // при изменении "Цвет если нет сигнала" нужно обновить цвет
+            // при изменении "Цвет если нет сигнала" нужно обновить цвет проверки
             if (noSignalColorChanged)
             {
                 UpdateNoSignalColor(unitTestCache);

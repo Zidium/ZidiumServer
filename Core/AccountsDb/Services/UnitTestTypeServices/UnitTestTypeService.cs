@@ -108,13 +108,8 @@ namespace Zidium.Core.AccountsDb
 
             lock (lockObject)
             {
-                var request = new AccountCacheRequest()
-                {
-                    AccountId = accountId,
-                    ObjectId = data.UnitTestTypeId.Value
-                };
-
-                var unitTestType = AllCaches.UnitTestTypes.Read(request);
+                var cache = new AccountCache(accountId);
+                var unitTestType = cache.UnitTestTypes.Read(data.UnitTestTypeId.Value);
 
                 // Если поменялось системное имя, то проверим, что нет другого типа проверки с таким системным именем
                 if (!string.Equals(unitTestType.SystemName, data.SystemName, StringComparison.OrdinalIgnoreCase))
@@ -124,8 +119,8 @@ namespace Zidium.Core.AccountsDb
                         throw new ArgumentException("Тип проверки с таким системным именем уже существует");
                 }
 
-                var noSignalColorChanged = false;
-                using (var unitTestTypeWrite = AllCaches.UnitTestTypes.Write(request))
+                bool noSignalColorChanged;
+                using (var unitTestTypeWrite = cache.UnitTestTypes.Write(unitTestType))
                 {
                     noSignalColorChanged = data.NoSignalColor != unitTestTypeWrite.NoSignalColor;
                     unitTestTypeWrite.SystemName = data.SystemName;
@@ -145,17 +140,12 @@ namespace Zidium.Core.AccountsDb
                     var unitTestService = Context.UnitTestService;
                     foreach (var unitTestId in unitTests)
                     {
-                        var unitTestRequest = new AccountCacheRequest()
-                        {
-                            AccountId = accountId,
-                            ObjectId = unitTestId
-                        };
-                        var unitTestCacheReadObject = AllCaches.UnitTests.Read(unitTestRequest);
+                        var unitTestCacheReadObject = cache.UnitTests.Read(unitTestId);
                         unitTestService.UpdateNoSignalColor(unitTestCacheReadObject);
                     }
                 }
 
-                return AllCaches.UnitTestTypes.Read(request);
+                return cache.UnitTestTypes.Read(unitTestType.Id);
             }
         }
 
