@@ -1,7 +1,7 @@
 ﻿--- Для MSSQL ---
 
 Создание миграции
-Add-Migration Fix -configuration "MsSqlAccountDbMConfiguration" -ProjectName "Core" -StartUpProjectName "Core"
+Add-Migration <Migrations-Name> -configuration "MsSqlAccountDbMConfiguration" -ProjectName "Core" -StartUpProjectName "Core"
 
 Обновление
 Update-Database -configuration "MsSqlAccountDbMConfiguration" -Verbose -ProjectName "Core" -StartUpProjectName "Core" 

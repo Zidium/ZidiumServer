@@ -87,6 +87,24 @@ namespace Zidium.UserAccount.Controllers
             DateTime now,
             string[] expandedItems)
         {
+            // Загружаем необходимые данные
+            if (!component.ItemModelInternalDataLoaded)
+            {
+                var componentRepository = CurrentAccountDbContext.GetComponentRepository();
+                var dbComponent = componentRepository.GetById(component.Id);
+
+                component.ExternalStatus = new SimplifiedStatusData()
+                {
+                    Status = dbComponent.ExternalStatus.Status,
+                    StartDate = dbComponent.ExternalStatus.StartDate,
+                    ActualDate = dbComponent.ExternalStatus.ActualDate,
+                    FirstEventId = null,
+                    Message = null
+                };
+
+                component.ItemModelInternalDataLoaded = true;
+            }
+
             var result = new ComponentsTreeItemModel()
             {
                 Id = component.Id,
@@ -173,6 +191,34 @@ namespace Zidium.UserAccount.Controllers
             DateTime now,
             string[] expandedItems)
         {
+
+            // Загружаем необходимые данные
+            var childIds = component.Childs.Select(t => t.Id).ToArray();
+            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
+            var dbChildStatuses = componentRepository
+                .QueryAll()
+                .Where(t => childIds.Contains(t.Id))
+                .Include(t => t.ExternalStatus)
+                .Select(t => new
+                {
+                    Id = t.Id,
+                    ExternalStatus = new SimplifiedStatusData()
+                    {
+                        Status = t.ExternalStatus.Status,
+                        StartDate = t.ExternalStatus.StartDate,
+                        ActualDate = t.ExternalStatus.ActualDate,
+                        FirstEventId = null,
+                        Message = null
+                    }
+                })
+                .ToDictionary(a => a.Id, b => b.ExternalStatus);
+
+            foreach (var child in component.Childs)
+            {
+                child.ExternalStatus = dbChildStatuses[child.Id];
+                child.ItemModelInternalDataLoaded = true;
+            }
+
             var result = new ComponentsTreeItemContentModel()
             {
                 Childs = component.Childs
@@ -186,6 +232,68 @@ namespace Zidium.UserAccount.Controllers
 
         protected ComponentsTreeItemDetailsModel GetTreeItemDetailsModel(SimplifiedComponent component, DateTime now, string[] expandedItems)
         {
+            // Загружаем необходимые данные
+            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
+            var dbComponent = componentRepository.GetById(component.Id);
+
+            component.EventsStatus = new SimplifiedStatusData()
+            {
+                Status = dbComponent.EventsStatus.Status,
+                StartDate = dbComponent.EventsStatus.StartDate,
+                ActualDate = dbComponent.EventsStatus.ActualDate,
+                FirstEventId = dbComponent.EventsStatus.FirstEventId,
+                Message = null
+            };
+
+            component.UnitTestsStatus = new SimplifiedStatusData()
+            {
+                Status = dbComponent.UnitTestsStatus.Status,
+                StartDate = dbComponent.UnitTestsStatus.StartDate,
+                ActualDate = dbComponent.UnitTestsStatus.ActualDate,
+                FirstEventId = null,
+                Message = null
+            };
+
+            component.MetricsStatus = new SimplifiedStatusData()
+            {
+                Status = dbComponent.MetricsStatus.Status,
+                StartDate = dbComponent.MetricsStatus.StartDate,
+                ActualDate = dbComponent.MetricsStatus.ActualDate,
+                FirstEventId = null,
+                Message = null
+            };
+
+            component.Unittests = dbComponent.UnitTests.Where(a => a.IsDeleted == false).Select(x =>
+                new SimplifiedUnittest()
+                {
+                    Id = x.Id,
+                    DisplayName = x.DisplayName,
+                    StatusData = new SimplifiedStatusData()
+                    {
+                        Status = x.Bulb.Status,
+                        StartDate = x.Bulb.StartDate,
+                        ActualDate = x.Bulb.ActualDate,
+                        FirstEventId = null,
+                        Message = x.Bulb.Message
+                    }
+                });
+
+            component.Metrics = dbComponent.Metrics.Where(a => a.IsDeleted == false && a.MetricType.IsDeleted == false)
+                .Select(x => new SimplifiedMetric()
+                {
+                    Id = x.Id,
+                    DisplayName = x.MetricType.DisplayName,
+                    StatusData = new SimplifiedStatusData()
+                    {
+                        Status = x.Bulb.Status,
+                        StartDate = x.Bulb.StartDate,
+                        ActualDate = x.Bulb.ActualDate,
+                        FirstEventId = null,
+                        Message = null
+                    },
+                    Value = x.Value
+                });
+
             var result = new ComponentsTreeItemDetailsModel()
             {
                 Id = component.Id,
@@ -312,17 +420,13 @@ namespace Zidium.UserAccount.Controllers
 
         protected SimplifiedComponent[] GetSimplifiedComponentList()
         {
-            // Одним запросом получаем все нужные данные
-            // Это быстрее, чем загружать данные компонентов по необходимости
+            // Получаем всё дерево одним запросом
+            // Детализация по каждому компоненту загружается отдельно
 
             var componentRepository = CurrentAccountDbContext.GetComponentRepository();
             var allComponents = componentRepository.QueryAll();
 
             var query = allComponents
-                .Include("ExternalStatus")
-                .Include("EventsStatus")
-                .Include("UnitTestsStatus")
-                .Include("MetricsStatus")
                 .Select(t => new SimplifiedComponent()
                 {
                     Id = t.Id,
@@ -330,84 +434,19 @@ namespace Zidium.UserAccount.Controllers
                     SystemName = t.SystemName,
                     ComponentTypeId = t.ComponentTypeId,
                     ParentId = t.ParentId,
-
-                    ExternalStatus = new SimplifiedStatusData()
-                    {
-                        Status = t.ExternalStatus.Status,
-                        StartDate = t.ExternalStatus.StartDate,
-                        ActualDate = t.ExternalStatus.ActualDate,
-                        FirstEventId = null,
-                        Message = null
-                    },
-
-                    EventsStatus = new SimplifiedStatusData()
-                    {
-                        Status = t.EventsStatus.Status,
-                        StartDate = t.EventsStatus.StartDate,
-                        ActualDate = t.EventsStatus.ActualDate,
-                        FirstEventId = t.EventsStatus.FirstEventId,
-                        Message = null
-                    },
-
-                    UnitTestsStatus = new SimplifiedStatusData()
-                    {
-                        Status = t.UnitTestsStatus.Status,
-                        StartDate = t.UnitTestsStatus.StartDate,
-                        ActualDate = t.UnitTestsStatus.ActualDate,
-                        FirstEventId = null,
-                        Message = null
-                    },
-
-                    MetricsStatus = new SimplifiedStatusData()
-                    {
-                        Status = t.MetricsStatus.Status,
-                        StartDate = t.MetricsStatus.StartDate,
-                        ActualDate = t.MetricsStatus.ActualDate,
-                        FirstEventId = null,
-                        Message = null
-                    },
-
-                    Unittests = t.UnitTests.Where(a => a.IsDeleted == false).Select(x => new SimplifiedUnittest()
-                    {
-                        Id = x.Id,
-                        DisplayName = x.DisplayName,
-                        StatusData = new SimplifiedStatusData()
-                        {
-                            Status = x.Bulb.Status,
-                            StartDate = x.Bulb.StartDate,
-                            ActualDate = x.Bulb.ActualDate,
-                            FirstEventId = null,
-                            Message = x.Bulb.Message
-                        }
-                    }),
-
-                    Metrics = t.Metrics.Where(a => a.IsDeleted == false && a.MetricType.IsDeleted == false).Select(x => new SimplifiedMetric()
-                    {
-                        Id = x.Id,
-                        DisplayName = x.MetricType.DisplayName,
-                        StatusData = new SimplifiedStatusData()
-                        {
-                            Status = x.Bulb.Status,
-                            StartDate = x.Bulb.StartDate,
-                            ActualDate = x.Bulb.ActualDate,
-                            FirstEventId = null,
-                            Message = null
-                        },
-                        Value = x.Value
-                    })
                 });
 
-            var list = query.ToList();
+            var tempComponents = query.ToDictionary(a => a.Id, b => b);
 
             // Проставим ссылки на родителя и детей
-            foreach (var component in list.ToArray())
+            foreach (var component in tempComponents.Values.ToArray())
             {
                 if (component.ParentId.HasValue)
                 {
-                    var parent = list.FirstOrDefault(t => t.Id == component.ParentId.Value);
+                    tempComponents.TryGetValue(component.ParentId.Value, out var parent);
                     if (parent != null)
                     {
-                        component.Parent = list.First(t => t.Id == component.ParentId.Value);
+                        component.Parent = parent;
                         component.Parent.Childs.Add(component);
                     }
                     else
@@ -415,12 +454,12 @@ namespace Zidium.UserAccount.Controllers
                         // Если не нашли родителя, значит, он удалён, выбросим компонент из дерева
                         // Вообще такого не должно быть, потому что компонент удаляется вместе с детьми
                         // Но иногда всё равно бывает
-                        list.Remove(component);
+                        tempComponents.Remove(component.Id);
                     }
                 }
             }
 
-            var result = list.ToArray();
+            var result = tempComponents.Values.ToArray();
 
             return result;
         }

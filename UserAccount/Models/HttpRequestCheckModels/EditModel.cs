@@ -44,6 +44,11 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
         [Display(Name = "Метод")]
         public HttpRequestMethod Method { get; set; }
 
+        [Display(Name = "Тело запроса (только для POST)")]
+        [MaxLength(4000)]
+        [AllowHtml]
+        public string Body { get; set; }
+
         [Display(Name = "Код ответа")]
         public int ResponseCode { get; set; }
 
@@ -131,6 +136,7 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
             if (rule != null)
             {
                 Method = rule.Method;
+                Body = rule.Body;
                 TimeOutSeconds = rule.TimeoutSeconds ?? 10;
                 Url = rule.Url;
                 SuccessHtml = rule.SuccessHtml;
@@ -175,6 +181,7 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
             rule.SortNumber = 0;
             rule.TimeoutSeconds = TimeOutSeconds;
             rule.Method = Method;
+            rule.Body = Body;
             rule.Url = new Uri(Url).AbsoluteUri;
             rule.ResponseCode = ResponseCode;
             rule.SuccessHtml = SuccessHtml;

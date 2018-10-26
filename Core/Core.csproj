@@ -184,6 +184,10 @@
     <Compile Include="AccountsDb\MsSql\Migrations\201808041420268_DateIndexForLog.Designer.cs">
       <DependentUpon>201808041420268_DateIndexForLog.cs</DependentUpon>
     </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.Designer.cs">
+      <DependentUpon>201810260859442_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
@@ -196,6 +200,10 @@
     <Compile Include="AccountsDb\PostgreSql\Migrations\201808041508405_DateIndexForLogs.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201808041508405_DateIndexForLogs.Designer.cs">
       <DependentUpon>201808041508405_DateIndexForLogs.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.Designer.cs">
+      <DependentUpon>201810260942307_AddedBodyToHttpUnittest.cs</DependentUpon>
     </Compile>
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbContext.cs" />
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
@@ -924,6 +932,9 @@
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201808041420268_DateIndexForLog.resx">
       <DependentUpon>201808041420268_DateIndexForLog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.resx">
+      <DependentUpon>201810260859442_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.resx">
       <DependentUpon>201805151013039_Initial.cs</DependentUpon>
     </EmbeddedResource>
@@ -932,6 +943,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201808041508405_DateIndexForLogs.resx">
       <DependentUpon>201808041508405_DateIndexForLogs.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.resx">
+      <DependentUpon>201810260942307_AddedBodyToHttpUnittest.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

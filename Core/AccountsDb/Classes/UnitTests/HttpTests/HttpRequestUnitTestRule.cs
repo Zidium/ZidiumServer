@@ -51,6 +51,11 @@ namespace Zidium.Core.AccountsDb
         public HttpRequestMethod Method { get; set; }
 
         /// <summary>
+        /// Содержимое Body для POST-запроса
+        /// </summary>
+        public string Body { get; set; }
+
+        /// <summary>
         /// Код ответа, который должен быть
         /// </summary>
         public int? ResponseCode { get; set; }

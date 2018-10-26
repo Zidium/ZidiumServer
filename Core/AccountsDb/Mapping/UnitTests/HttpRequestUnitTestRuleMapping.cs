@@ -14,6 +14,7 @@ namespace Zidium.Core.AccountsDb.Mapping
             Property(t => t.DisplayName).HasColumnName("DisplayName").IsRequired().HasMaxLength(255);
             Property(t => t.Url).HasColumnName("Url").IsRequired().HasMaxLength(255);
             Property(t => t.Method).HasColumnName("Method").IsRequired();
+            Property(t => t.Body).HasMaxLength(4000);
             Property(t => t.ResponseCode).HasColumnName("ResponseCode");
             Property(t => t.SuccessHtml).HasColumnName("SuccessHtml").HasMaxLength(255);
             Property(t => t.ErrorHtml).HasColumnName("ErrorHtml").HasMaxLength(255);

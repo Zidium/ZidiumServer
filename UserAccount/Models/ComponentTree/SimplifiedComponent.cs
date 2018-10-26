@@ -31,6 +31,8 @@ namespace Zidium.UserAccount.Models.ComponentTree
 
         public IEnumerable<SimplifiedMetric> Metrics;
 
+        public bool ItemModelInternalDataLoaded;
+
         public SimplifiedComponent()
         {
             Childs = new List<SimplifiedComponent>();
