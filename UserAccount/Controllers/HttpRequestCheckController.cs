@@ -5,7 +5,6 @@ using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
-using Zidium.Core.Common;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
@@ -266,8 +265,6 @@ namespace Zidium.UserAccount.Controllers
         /// <summary>
         /// Для unit-тестов
         /// </summary>
-        /// <param name="accountId"></param>
-        /// <param name="userId"></param>
         public HttpRequestCheckController(Guid accountId, Guid userId) : base(accountId, userId) { }
 
         public HttpRequestCheckController() { }

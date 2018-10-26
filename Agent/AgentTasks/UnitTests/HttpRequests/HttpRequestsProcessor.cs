@@ -339,7 +339,11 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 // добавим заголовки HTTP
                 foreach (var header in requestHeaders)
                 {
-                    if (string.Equals("User-Agent", header.Key, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals("Content-Type", header.Key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        request.ContentType = header.Value;
+                    }
+                    else if (string.Equals("User-Agent", header.Key, StringComparison.OrdinalIgnoreCase))
                     {
                         request.UserAgent = header.Value;
                     }
@@ -362,19 +366,31 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 }
 
                 // добавим данные веб-формы
-                var postData = "";
                 if (rule.Method == HttpRequestMethod.Post)
                 {
                     request.Method = "POST";
-                    request.ContentType = "application/x-www-form-urlencoded";
-                    var httpValueCollection = HttpUtility.ParseQueryString(string.Empty);
-                    foreach (var formData in formDatas)
+
+                    string postData;
+                    if (!string.IsNullOrEmpty(rule.Body))
                     {
-                        httpValueCollection.Add(formData.Key, formData.Value);
+                        request.ContentType = request.ContentType ?? "text/utf-8";
+                        postData = rule.Body;
                     }
-                    postData = httpValueCollection.ToString(); // данный метод внутри кодирует спец символы
+                    else
+                    {
+                        request.ContentType = "application/x-www-form-urlencoded";
+                        var httpValueCollection = HttpUtility.ParseQueryString(string.Empty);
+                        foreach (var formData in formDatas)
+                        {
+                            httpValueCollection.Add(formData.Key, formData.Value);
+                        }
+
+                        postData = httpValueCollection.ToString();
+                    }
+
                     var data = Encoding.UTF8.GetBytes(postData);
                     request.ContentLength = postData.Length;
+
                     using (var dataStream = request.GetRequestStream())
                     {
                         dataStream.Write(data, 0, data.Length);

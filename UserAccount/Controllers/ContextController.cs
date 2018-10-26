@@ -187,16 +187,19 @@ namespace Zidium.UserAccount.Controllers
                 var fullContext = new FullRequestContext(this);
                 FullRequestContext.Current = fullContext;
             }
+
             DbContext = FullRequestContext.Current.DbContext;
 
             if (Request.IsAuthenticated && !CurrentUser.IsSwitched)
             {
                 // не будем логировать действия системных пользователей
                 // а то когда смотришь лог, в самых актуальных записях видишь свои же запросы
-                if (!string.Equals(CurrentUser.AccountName, SystemAccountHelper.SystemAccountName, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(CurrentUser.AccountName, SystemAccountHelper.SystemAccountName,
+                    StringComparison.OrdinalIgnoreCase))
                 {
                     var uri = filterContext.HttpContext.Request.Url;
-                    if (uri != null && !filterContext.IsChildAction && !filterContext.HttpContext.Request.IsAjaxRequest())
+                    if (uri != null && !filterContext.IsChildAction &&
+                        !filterContext.HttpContext.Request.IsAjaxRequest())
                     {
                         var actionName = filterContext.ActionDescriptor.ActionName;
                         var controllerName = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName;
@@ -221,6 +224,7 @@ namespace Zidium.UserAccount.Controllers
                     .SetProperty("IP", FullRequestContext.Current.Ip)
                     .Add();
             }
+
         }
 
         /// <summary>
@@ -279,6 +283,10 @@ namespace Zidium.UserAccount.Controllers
                 TempData = filterContext.Controller.TempData
             };
             result.ViewBag.IsChildAction = filterContext.IsChildAction;
+
+            var fullContext = new FullRequestContext(this);
+            FullRequestContext.Current = fullContext;
+            DbContext = FullRequestContext.Current.DbContext;
 
             filterContext.Result = result;
         }

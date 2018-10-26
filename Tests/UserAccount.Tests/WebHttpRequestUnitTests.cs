@@ -37,6 +37,7 @@ namespace Zidium.UserAccount.Tests
 
             model.CheckName = "Test_" + Guid.NewGuid();
             model.Method = HttpRequestMethod.Get;
+            model.Body = "Body";
             model.ResponseCode = 200;
             model.Url = "http://recursion.ru";
 
@@ -64,6 +65,7 @@ namespace Zidium.UserAccount.Tests
                 var rule = unitTest.HttpRequestUnitTest.Rules.Single();
                 Assert.NotNull(rule);
                 Assert.NotNull(rule.Url);
+                Assert.Equal("Body", rule.Body);
                 unittestId = unitTest.Id;
             }
 
