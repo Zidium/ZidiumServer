@@ -213,6 +213,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             // Проверим, что проверка стала красной
             Assert.Equal(MonitoringStatus.Alarm, response.Data.Status);
+            Assert.False(response.Data.HasSignal);
         }
 
         [Fact]

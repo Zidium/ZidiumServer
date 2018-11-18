@@ -1,31 +1,44 @@
 ﻿@using Zidium.Core.AccountsDb
 @using Zidium.Core.Common.Helpers
+@using Zidium.Core.Common
 @model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsSettingsModel
 
-<p>
-    <span class="simple-text-header">Тип проверки</span><br />
-    <span class="simple-text-value">@Model.TypeName</span>
-</p>
+<div class="row">
+    <div class="col-sm-6">
+        <p>
+            <span class="simple-text-header">Тип проверки</span><br />
+            <span class="simple-text-value">@Model.TypeName</span>
+        </p>
 
-<p>
-    <span class="simple-text-header">Название</span><br />
-    <span class="simple-text-value">@Model.Name</span>
-</p>
+        <p>
+            <span class="simple-text-header">Название</span><br />
+            <span class="simple-text-value">@Model.Name</span>
+        </p>
+    </div>
+    <div class="col-sm-6">
+        @if (Model.IsSystem)
+        {
+            <p>
+                <span class="simple-text-header">Период опроса</span><br />
+                <span class="simple-text-value">@(Model.ExecutionInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ExecutionInterval.Value) : "нет")</span>
+            </p>
+        }
+        else
+        {
+            <p>
+                <span class="simple-text-header">Интервал актуальности</span><br />
+                <span class="simple-text-value">@(Model.ActualInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ActualInterval.Value) : "нет")</span>
+            </p>
+        }
+            <p>
+                <span class="simple-text-header">Цвет, если нет сигнала</span><br />
+                @Html.ObjectColorIcon(Model.NoSignalColor)
+            </p>        
+    </div>
+</div>
 
-@if (Model.IsSystem)
-{
-    <p>
-        <span class="simple-text-header">Период опроса</span><br />
-        <span class="simple-text-value">@(Model.ExecutionInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ExecutionInterval.Value) : "нет")</span>
-</p>
-}
-else
-{
-    <p>
-        <span class="simple-text-header">Интервал актуальности</span><br />
-        <span class="simple-text-value">@(Model.ActualInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ActualInterval.Value) : "нет")</span>
-</p>
-}
+
+
 
 @if (Model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
 {

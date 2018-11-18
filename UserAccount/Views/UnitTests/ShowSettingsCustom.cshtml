@@ -1,0 +1,31 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Api
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.UnitTests
+@using Zidium.UserAccount.Models.Controls;
+@model ShowSettingsCustomModel
+@{
+    string periodText = GuiHelper.TimeSpanAsString(Model.ActualTime);
+}
+
+<div class="col-md-8 tiles-column">
+    <div class="tiles-box" style="display: flex; flex-direction:column;">
+        <div style="flex: 1 0 auto;">
+            <div class="tiles-box-header1">Пользовательская проверка</div>
+            <div class="tiles-box-content">
+                <p>
+                    <span class="simple-text-header">Время актуальности</span>
+                    <br />
+                    <span class="simple-text-value">@periodText</span>
+                </p>
+                <p>
+                    <span class="simple-text-header">Если нет сигнала</span>
+                    <br />
+                    <span class="simple-text-value">@Model.NoSignalColor</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

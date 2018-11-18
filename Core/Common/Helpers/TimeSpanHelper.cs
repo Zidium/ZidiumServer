@@ -22,6 +22,15 @@ namespace Zidium.Core.Common.Helpers
             return TimeSpan.FromSeconds(seconds.Value);
         }
 
+        public static TimeSpan? FromMilliseconds(double? ms)
+        {
+            if (ms == null)
+            {
+                return null;
+            }
+            return TimeSpan.FromMilliseconds(ms.Value);
+        }
+
         public static int? GetSeconds(TimeSpan? time)
         {
             if (time == null)

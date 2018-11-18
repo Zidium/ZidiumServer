@@ -16,86 +16,85 @@
     </a>
 </div>
 
-<hr />
+<hr class="object-details-hr" />
 
-<div id="component-details-accordion" class="accordion">
-    <div class="accordion-group" id="component-details-state">
-        <div class="accordion-group-caption">
-            <a href="#">Текущее состояние</a>
+<div id="metric-details-container" class="tree-details-container">
+    <div class="tree-details-menu">
+        <div class="tree-details-menu-item" data-group="component-state">
+            <a href="#" title="Текущее состояние">
+                <span class="glyphicon glyphicon-info-sign"></span>
+            </a>
         </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-menu-item" data-group="component-history">
+            <a href="#" title="История">
+                <span class="glyphicon glyphicon-signal"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-unittests">
+            <a href="#" title="Проверки">
+                <span class="glyphicon glyphicon-check"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-events">
+            <a href="#" title="Ошибки">
+                <span class="glyphicon glyphicon-fire"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-metrics">
+            <a href="#" title="Метрики">
+                <span class="glyphicon glyphicon-scale"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-log">
+            <a href="#" title="Лог">
+                <span class="glyphicon glyphicon-list"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-subscriptions">
+            <a href="#" title="Подписки">
+                <span class="glyphicon glyphicon-star-empty"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-info">
+            <a href="#" title="Информация">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="tree-details-main-area">
+        <div class="tree-details-content collapse" data-group="component-state">
+            <div class="tree-details-content-caption">Текущее состояние</div>
             <div class="smart-block" data-url="@Url.Action("ComponentDetailsState", new { id = Model.Id })"></div>
         </div>
-    </div>
-
-    <div class="accordion-group" id="component-details-history">
-        <div class="accordion-group-caption">
-            <a href="#">История</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="component-history">
+            <div class="tree-details-content-caption">История</div>
             <div class="smart-block" data-url="@Url.Action("ComponentDetailsHistory", new { id = Model.Id })"></div>
         </div>
-    </div>
-
-    <div class="accordion-group" id="component-details-unittests">
-        <div class="accordion-group-caption">
-            <a href="#">Проверки</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="component-unittests">
+            <div class="tree-details-content-caption">Проверки</div>
             <div class="smart-block" data-url="@Url.Action("ComponentDetailsUnittests", new { id = Model.Id })"></div>
         </div>
-    </div>
-
-    <div class="accordion-group" id="component-details-events">
-        <div class="accordion-group-caption">
-            <a href="#">Ошибки</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="component-events">
+            <div class="tree-details-content-caption">Ошибки</div>
             <div class="smart-block" data-url="@Url.Action("ComponentDetailsEvents", new { id = Model.Id })"></div>
         </div>
-    </div>
-
-    <div class="accordion-group" id="component-details-metrics">
-        <div class="accordion-group-caption">
-            <a href="#">Метрики</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="component-metrics">
+            <div class="tree-details-content-caption">Метрики</div>
             <div class="smart-block" data-url="@Url.Action("ComponentDetailsMetrics", new { id = Model.Id })"></div>
         </div>
-    </div>
+        <div class="tree-details-content collapse" data-group="component-log">
+            <div class="tree-details-content-caption">Лог</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsLog", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-subscriptions">
+            <div class="tree-details-content-caption">Подписки</div>
+            <div class="smart-block" data-config="component-subscriptions" data-url="@Url.Action("ShowComponentSubscriptions", "Subscriptions", new {ComponentId = Model.Id})"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-info">
+            <div class="tree-details-content-caption">Информация</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsInfo", new { id = Model.Id })"></div>
+        </div>
 
-    <div class="accordion-group" id="component-details-logs">
-        <div class="accordion-group-caption">
-            <a href="#">Лог</a>
-        </div>
-        <div class="accordion-group-content collapse">
-            <div class="smart-block"
-                 data-config="component-details-log"
-                 data-url="@Url.Action("ComponentDetailsLog", new { id = Model.Id })"></div>
-        </div>
     </div>
-
-    <div class="accordion-group" id="component-details-subscriptions">
-        <div class="accordion-group-caption">
-            <a href="#">Подписки</a>
-        </div>
-        <div class="accordion-group-content collapse">
-            <div class="smart-block"
-                 data-config="component-subscriptions"
-                 data-url="@Url.Action("ShowComponentSubscriptions", "Subscriptions", new {ComponentId = Model.Id})">
-            </div>
-        </div>
-    </div>
-
-    <div class="accordion-group" id="component-details-info">
-        <div class="accordion-group-caption">
-            <a href="#">Информация</a>
-        </div>
-        <div class="accordion-group-content collapse">
-            <div class="smart-block"
-                 data-url="@Url.Action("ComponentDetailsInfo", new {id = Model.Id})">
-            </div>
-        </div>
-    </div>
-
 </div>

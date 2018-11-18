@@ -1,0 +1,40 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Models.UnitTests
+@model OverviewLastResultModel
+@{ 
+    string textCss = GuiHelper.GetComponentStatusTextCssClass(Model.Status);
+}
+
+<div class="tiles-box" style="display: flex; flex-direction:column;">
+    <div style="flex: 1 0 auto;">
+        <div class="tiles-box-header1">Последнее выполнение</div>
+        <div class="tiles-box-content">
+            <p>@DateTimeHelper.GetRussianDateTime(Model.ExecutionTime)</p>
+            <p class="@textCss big-font">@Model.Message</p>
+        </div>
+    </div>
+    @if (Model.ShowRunButton)
+    {
+        <div style="flex: 0 0 auto;">
+            <div class="tiles-box-content">
+                <div class="btn-group" role="group" aria-label="...">
+                    <button id="execute-unittest-btn" type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-play" aria-hidden="true" style="margin-right: 10px;"></span>Выполнить сейчас
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    $('#execute-unittest-btn').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var url = '@Url.Action("RunNowAjax", "Unittests", new { id = Model.UnitTestId })';      
+        smartButtons.beginAction(me);
+        smartBlocks.doAjax(url, 'POST');
+    });
+</script>
+

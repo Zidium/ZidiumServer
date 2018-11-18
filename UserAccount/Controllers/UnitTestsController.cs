@@ -2,11 +2,13 @@
 using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
+using Zidium.UserAccount.Models.UnitTests;
 
 namespace Zidium.UserAccount.Controllers
 {
@@ -169,11 +171,145 @@ namespace Zidium.UserAccount.Controllers
             return View(model);
         }
 
+        private Event GetUnitTestLastResultEvent(UnitTest unitTest)
+        {
+            var statusId = unitTest.Bulb.StatusEventId;
+            if (statusId != Guid.Empty)
+            {
+                var status = GetEventById(statusId);
+                if (status != null)
+                {
+                    if (status.FirstReasonEventId != null)
+                    {
+                        var firstReason = CurrentAccountDbContext.Events
+                        .Where(x => x.OwnerId == unitTest.Id
+                            && x.LastStatusEventId == status.Id)
+                        .OrderByDescending(x => x.StartDate)
+                        .FirstOrDefault();
+
+                        return firstReason;
+                    }                    
+                }
+            }
+            return null;
+        }
+
         public ActionResult ResultDetails(Guid id)
         {
-            var model = new UnitTestResultModel();
-            model.Init(id, CurrentAccountDbContext);
-            return View(model);
+            var unitTest = GetUnitTestById(id);
+            var model = new UnitTestResult2Model();
+
+            // статусы
+            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var events = eventRepository.QueryAll(id, EventCategory.UnitTestStatus, null, null, null, null, null, 20);
+            var statuses = events.ToArray();
+
+            model.Init(unitTest, statuses);
+
+            return View("ResultDetails2", model);
+        }
+
+        public ActionResult OverviewCurrentStatus(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewCurrentStatusModel.Create(unitTest);
+            return PartialView("OverviewCurrentStatus", model);
+        }
+
+        public ActionResult OverviewLastResult(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            
+            // последний результат
+            var statusId = unitTest.Bulb.StatusEventId;
+            Event lastResult = GetUnitTestLastResultEvent(unitTest);
+
+            var model = OverviewLastResultModel.Create(unitTest, lastResult);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewSettingsHttp(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsHttpModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewSettingsPing(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsPingModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewSettingsDomain(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsDomainModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewSettingsSsl(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsSslModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewSettingsSql(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsSqlModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewSettingsCustom(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsCustomModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult OverviewStatusDiagram(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewStatusDiagramModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettings(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettingsHttp(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsHttpModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettingsPing(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsPingModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettingsDomain(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsDomainModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettingsCustom(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsCustomModel.Create(unitTest);
+            return PartialView(model);
         }
 
         [CanEditAllData]

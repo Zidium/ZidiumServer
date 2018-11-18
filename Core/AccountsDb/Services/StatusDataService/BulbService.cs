@@ -660,7 +660,8 @@ namespace Zidium.Core.AccountsDb
             Guid accountId, 
             DateTime createDate, 
             EventCategory eventCategory,
-            Guid ownerId)
+            Guid ownerId,
+            string statusMessage)
         {
             var result = new Bulb()
             {
@@ -672,7 +673,7 @@ namespace Zidium.Core.AccountsDb
                 Count = 1,
                 HasSignal = false,
                 Status = MonitoringStatus.Unknown,
-                Message = "Нет данных",
+                Message = statusMessage,
                 UpTimeStartDate = createDate,
                 CreateDate = createDate,
                 StatusEventId = Guid.Empty

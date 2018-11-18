@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Core.Common;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.ComponentTreeDetails;
 using Zidium.UserAccount.Models.ExtentionProperties;
@@ -390,16 +391,18 @@ namespace Zidium.UserAccount.Controllers
         {
             var repository = CurrentAccountDbContext.GetUnitTestRepository();
             var unittest = repository.GetById(id);
+            var unitTestType = unittest.Type;
 
             var model = new UnittestDetailsSettingsModel()
             {
                 Id = unittest.Id,
-                TypeName = unittest.Type.DisplayName,
+                TypeName = unitTestType.DisplayName,
                 Name = unittest.DisplayName,
                 IsSystem = unittest.IsSystemType,
                 ExecutionInterval = unittest.PeriodSeconds != null ? TimeSpan.FromSeconds(unittest.PeriodSeconds.Value) : (TimeSpan?)null,
                 ActualInterval = unittest.ActualTimeSecs != null ? TimeSpan.FromSeconds(unittest.ActualTimeSecs.Value) : (TimeSpan?)null,
                 TypeId = unittest.TypeId,
+                NoSignalColor = unittest.NoSignalColor ?? unitTestType.NoSignalColor ?? ObjectColor.Red
             };
 
             if (model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)

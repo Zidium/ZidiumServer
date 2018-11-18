@@ -29,5 +29,26 @@ namespace Zidium.Core.Common.Helpers
             }
             throw new Exception("Неизвестный MonitoringStatus " + status);
         }
+
+        public static ObjectColor Get(UnitTestResult result)
+        {
+            if (result == UnitTestResult.Alarm)
+            {
+                return ObjectColor.Red;
+            }
+            if (result == UnitTestResult.Warning)
+            {
+                return ObjectColor.Yellow;
+            }
+            if (result == UnitTestResult.Success)
+            {
+                return ObjectColor.Green;
+            }
+            if (result == UnitTestResult.Unknown)
+            {
+                return ObjectColor.Gray;
+            }
+            throw new Exception("Неизвестный UnitTestResult " + result);
+        }
     }
 }

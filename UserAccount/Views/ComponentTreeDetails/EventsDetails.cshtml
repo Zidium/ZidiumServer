@@ -3,20 +3,26 @@
 
 <div id="object-details-caption">
     События
-    
-    <a href="#"id="update-panel-link" class="text-muted" title="Обновить данные">
+
+    <a href="#" id="update-panel-link" class="text-muted" title="Обновить данные">
         <span class="glyphicon glyphicon-refresh"></span>
     </a>
 </div>
 
-<hr />
+<hr class="object-details-hr" />
 
-<div id="events-details-accordion" class="accordion">
-    <div class="accordion-group" id="events-details-history">
-        <div class="accordion-group-caption">
-            <a href="#">История</a>
+<div id="metric-details-container" class="tree-details-container">
+    <div class="tree-details-menu">
+        <div class="tree-details-menu-item" data-group="events-history">
+            <a href="#" title="История">
+                <span class="glyphicon glyphicon-signal"></span>
+            </a>
         </div>
-        <div class="accordion-group-content collapse">
+    </div>
+
+    <div class="tree-details-main-area">
+        <div class="tree-details-content collapse" data-group="events-history">
+            <div class="tree-details-content-caption">История</div>
             <div class="smart-block" data-url="@Url.Action("EventsDetailsHistory", new { id = Model.Id })"></div>
         </div>
     </div>

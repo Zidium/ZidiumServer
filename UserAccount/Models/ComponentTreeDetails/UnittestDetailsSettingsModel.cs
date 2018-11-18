@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Core.Common;
 
 namespace Zidium.UserAccount.Models.ComponentTreeDetails
 {
@@ -17,6 +18,11 @@ namespace Zidium.UserAccount.Models.ComponentTreeDetails
         public bool IsSystem { get; set; }
 
         public Guid TypeId { get; set; }
+
+        /// <summary>
+        /// Цвет проверки, если нет сигнала
+        /// </summary>
+        public ObjectColor NoSignalColor { get; set; }
 
         public string HttpUrl { get; set; }
 

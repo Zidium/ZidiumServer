@@ -32,6 +32,7 @@ namespace Zidium.Core.AccountsDb
             Guid accountId,
             DateTime createDate,
             EventCategory eventCategory,
-            Guid ownerId);
+            Guid ownerId,
+            string statusMessage);
     }
 }

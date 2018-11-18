@@ -44,6 +44,13 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <div class="col-sm-12">
+                    @Html.LabelFor(x => x.Body)
+                    @Html.TextAreaFor(x => x.Body, new { @class = "form-control" })
+                </div>
+            </div>
+
             <div style="margin-top: 20px;">
                 @Html.KeyValueTable(x => x.RequestHeaders, "Добавить HTTP-заголовок")
             </div>

@@ -183,6 +183,11 @@ namespace Zidium.Core.AccountsDb
         /// </summary>
         public int AttempMax { get; set; }
 
+        public static TimeSpan GetDefaultActualTime()
+        {
+            return TimeSpan.FromMinutes(5); // по умолчанию 5 мин
+        }
+
         public string GetFullDisplayName()
         {
             return Component.GetFullDisplayName() + " / " + DisplayName;

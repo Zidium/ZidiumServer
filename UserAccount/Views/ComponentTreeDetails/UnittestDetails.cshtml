@@ -2,57 +2,62 @@
 @model UnittestDetailsModel
 
 <div id="object-details-caption">
-    <a href="@Url.Action("ResultDetails", "Unittests", new { id = Model.Id })" target="_blank" class="text-normal">@Model.Name</a> 
-    
+    <a href="@Url.Action("ResultDetails", "Unittests", new { id = Model.Id })" target="_blank" class="text-normal">@Model.Name</a>
+
     @if (Model.CanEdit)
     {
         <a href="@Url.Action("Edit", "Checks", new {id = Model.Id})" target="_blank" class="text-muted" id="edit-object-link" title="Настроить проверку">
             <span class="glyphicon glyphicon-edit"></span>
         </a>
-    }      
-    
+    }
+
     <a href="#" id="update-panel-link" class="text-muted" title="Обновить данные">
         <span class="glyphicon glyphicon-refresh"></span>
     </a>
 </div>
 
-<hr />
+<hr class="object-details-hr" />
 
-<div id="unittest-details-accordion" class="accordion">
-    <div class="accordion-group" id="unittest-details-state">
-        <div class="accordion-group-caption">
-            <a href="#">Текущее состояние</a>
+<div id="metric-details-container" class="tree-details-container">
+    <div class="tree-details-menu">
+        <div class="tree-details-menu-item" data-group="unittest-state">
+            <a href="#" title="Текущее состояние">
+                <span class="glyphicon glyphicon-info-sign"></span>
+            </a>
         </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-menu-item" data-group="unittest-settings">
+            <a href="#" title="Настройки">
+                <span class="glyphicon glyphicon-cog"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="unittest-history">
+            <a href="#" title="История">
+                <span class="glyphicon glyphicon-signal"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="unittest-results">
+            <a href="#" title="Результаты">
+                <span class="glyphicon glyphicon-list"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="tree-details-main-area">
+        <div class="tree-details-content collapse" data-group="unittest-state">
+            <div class="tree-details-content-caption">Текущее состояние</div>
             <div class="smart-block" data-url="@Url.Action("UnittestDetailsState", new { id = Model.Id })"></div>
         </div>
-    </div>
-          
-    <div class="accordion-group" id="unittest-details-settings">
-        <div class="accordion-group-caption">
-            <a href="#">Настройки</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="unittest-settings">
+            <div class="tree-details-content-caption">Настройки</div>
             <div class="smart-block" data-url="@Url.Action("UnittestDetailsSettings", new { id = Model.Id })"></div>
         </div>
-    </div>
-
-    <div class="accordion-group" id="unittest-details-history">
-        <div class="accordion-group-caption">
-            <a href="#">История</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="unittest-history">
+            <div class="tree-details-content-caption">История</div>
             <div class="smart-block" data-url="@Url.Action("UnittestDetailsHistory", new { id = Model.Id })"></div>
         </div>
-    </div>
-    
-    <div class="accordion-group" id="unittest-details-results">
-        <div class="accordion-group-caption">
-            <a href="#">Результаты</a>
-        </div>
-        <div class="accordion-group-content collapse">
+        <div class="tree-details-content collapse" data-group="unittest-results">
+            <div class="tree-details-content-caption">Результаты</div>
             <div class="smart-block" data-url="@Url.Action("UnittestDetailsResults", new { id = Model.Id })"></div>
         </div>
     </div>
-
 </div>

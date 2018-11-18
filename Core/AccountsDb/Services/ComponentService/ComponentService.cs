@@ -657,7 +657,8 @@ namespace Zidium.Core.AccountsDb
                 accountId,
                 component.CreatedDate,
                 eventCategory,
-                component.Id);
+                component.Id,
+                "Нет данных");
         }
 
         protected Component Add(Component component, Guid accountId)

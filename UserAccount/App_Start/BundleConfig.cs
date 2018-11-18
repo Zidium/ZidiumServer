@@ -56,7 +56,8 @@ namespace Zidium.UserAccount
                 "~/Scripts/dialogs.js",
                 "~/Scripts/fixed-header.js",
                 "~/Scripts/floatThead/jquery.floatThead.js",
-                "~/Scripts/global.js"
+                "~/Scripts/global.js",
+                "~/Scripts/reloaded-tiles.js"
                ));
 
             bundles.Add(new ScriptBundle("~/Scripts/AllControls").Include(

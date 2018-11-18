@@ -1,5 +1,6 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
+@using Zidium.Core
 
 <!DOCTYPE html>
 <html>
@@ -70,8 +71,11 @@
                         </td>
                     </tr>
                 </table>
-            </footer>
-            
+                @if (DebugHelper.IsDebugMode)
+                {
+                    <p>@Html.ActionLink("GuiExamples", "Index", "GuiExamples")</p>                                       
+                }
+            </footer>            
             @Html.Action("FooterPartial", "AddIn")
         </div>
     </div>

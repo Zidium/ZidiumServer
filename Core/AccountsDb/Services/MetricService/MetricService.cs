@@ -639,7 +639,8 @@ namespace Zidium.Core.AccountsDb
                         accountId,
                         processDate,
                         EventCategory.MetricStatus,
-                        metricId);
+                        metricId,
+                        "Метрика создана, отправьте значение метрики");
 
                     // загрузим в новый контекст
                     statusData = accountDbContext.Bulbs.Find(statusData.Id);

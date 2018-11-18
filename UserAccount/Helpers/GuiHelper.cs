@@ -315,6 +315,23 @@ namespace Zidium.UserAccount.Helpers
             return htmlHelper.Partial("~/Views/Controls/KeyValueTable.cshtml", model);
         }
 
+        public static MvcHtmlString ShowKeyValueTable<TModel, TProperty>(
+            this HtmlHelper<TModel> htmlHelper,
+            Expression<Func<TModel, TProperty>> expression)
+            where TProperty : IEnumerable<KeyValueRowModel>
+        {
+            var name = ExpressionHelper.GetExpressionText(expression);
+            var value = GetExpressionValue(htmlHelper, expression);
+            var rows = value != null ? value.ToList() : new List<KeyValueRowModel>();
+            rows.ForEach(x => x.CollectionName = name);
+            var model = new KeyValueTableModel()
+            {
+                CollectionName = name,
+                Rows = rows
+            };
+            return htmlHelper.Partial("~/Views/Controls/ShowKeyValueTable.cshtml", model);
+        }
+
         public static MvcHtmlString ColorStatusSelector<TModel, TProperty>(
             this HtmlHelper<TModel> htmlHelper,
             Expression<Func<TModel, TProperty>> expression)

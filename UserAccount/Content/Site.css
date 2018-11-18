@@ -589,3 +589,53 @@ span.expand-icon {
     font-size: 20px;
     vertical-align: bottom;
 }
+
+/* Плиточная разметка */
+.tiles-row {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0 !important;
+    background-color: #f8f8f8;
+}
+
+.tiles-column {
+    padding: 20px;
+    margin: 0;
+    border: 0px solid black;
+    flex-direction: column;
+    display: flex !important;
+}
+
+.tiles-box {
+    margin: 0px;
+    border: 1px solid #eee;
+    background-color: white;
+    height: 100%;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    position: relative;
+}
+
+.tiles-box-header1 {
+    padding: 10px 20px;
+    font-size: 24px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.tiles-box-header2 {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.tiles-box-content {
+    padding: 20px 20px;
+    height: auto;
+    position: relative;
+}

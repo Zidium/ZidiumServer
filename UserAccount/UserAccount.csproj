@@ -158,9 +158,11 @@
     <Compile Include="Controllers\DebugController.cs" />
     <Compile Include="Controllers\DefectsController.cs" />
     <Compile Include="Controllers\ExtentionPropertiesController.cs" />
+    <Compile Include="Controllers\GuiExamplesController.cs" />
     <Compile Include="Controllers\MetricsController.cs" />
     <Compile Include="Controllers\LimitsController.cs" />
     <Compile Include="Controllers\MetricTypesController.cs" />
+    <Compile Include="Controllers\ReloadedTilesController.cs" />
     <Compile Include="Controllers\SelfTestController.cs" />
     <Compile Include="Controllers\SimpleCheckBaseController.cs" />
     <Compile Include="Helpers\ActionXmlFileResult.cs" />
@@ -168,6 +170,8 @@
     <Compile Include="Attributes\PermissionAttribute.cs" />
     <Compile Include="Helpers\ColorLinkHelper.cs" />
     <Compile Include="Helpers\CommonHelper.cs" />
+    <Compile Include="Helpers\ControllerActionUrlData.cs" />
+    <Compile Include="Helpers\ControllerActionUrlParser.cs" />
     <Compile Include="Helpers\Controls\ComponentSelectorHelper.cs" />
     <Compile Include="Helpers\Controls\EventImportanceIconHelper.cs" />
     <Compile Include="Helpers\Controls\HighlightControl.cs" />
@@ -184,6 +188,8 @@
     <Compile Include="Helpers\MyJsonHelper.cs" />
     <Compile Include="Helpers\PermissionsHelper.cs" />
     <Compile Include="Helpers\RazorHelper.cs" />
+    <Compile Include="Helpers\ReloadedTileHelper.cs" />
+    <Compile Include="Helpers\ReloadedTileRenderedHtmlData.cs" />
     <Compile Include="Helpers\SmartBlocksHelper.cs" />
     <Compile Include="Helpers\SubscriptionIconHelper.cs" />
     <Compile Include="Helpers\UserHelper.cs" />
@@ -240,6 +246,7 @@
     <Compile Include="Models\EventTypes\EventTypeShowModel.cs" />
     <Compile Include="Models\ExtentionProperties\ExtentionPropertyBinaryFile.cs" />
     <Compile Include="Models\ExtentionProperties\ExtentionPropertyOwner.cs" />
+    <Compile Include="Models\GuiExamplesModels\ReloadedSampleModel.cs" />
     <Compile Include="Models\Home\LostPasswordModel.cs" />
     <Compile Include="Models\Home\SetPasswordModel.cs" />
     <Compile Include="Models\Logs\LogFiltersModel.cs" />
@@ -291,6 +298,9 @@
     <Compile Include="Models\Metrics\SetActualValueModel.cs" />
     <Compile Include="Models\Others\UserInfo.cs" />
     <Compile Include="Models\Others\UserInfoRole.cs" />
+    <Compile Include="Models\ReloadedTileModels\GetChangedModel.cs" />
+    <Compile Include="Models\ReloadedTileModels\GetChangedModelRow.cs" />
+    <Compile Include="Models\ReloadedTileModels\RenderModel.cs" />
     <Compile Include="Models\Subscriptions\EditComponentSubscriptionsModel.cs" />
     <Compile Include="Models\Subscriptions\ShowComponentSubscriptionsModel.cs" />
     <Compile Include="Models\Subscriptions\DeleteSubscriptionModel.cs" />
@@ -442,8 +452,24 @@
     <Compile Include="Models\Subscriptions\SubscriptionEditModel.cs" />
     <Compile Include="Models\Timeline\TimelineItemModel.cs" />
     <Compile Include="Models\Timeline\TimelineModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewCurrentStatusModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewLastResultModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsCustomModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsDomainModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsHttpModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsCustomModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsDomainModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsPingModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsPingModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsSqlModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsSslModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewStatusDiagramModel.cs" />
+    <Compile Include="Models\UnitTests\ResultDetailsComonRowModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsHttpModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestAddModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestEditModel.cs" />
+    <Compile Include="Models\UnitTests\UnitTestResult2Model.cs" />
     <Compile Include="Models\UnitTests\UnitTestResultModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestSetResultModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestsListItemLevel2Model.cs" />
@@ -588,6 +614,7 @@
     <Content Include="Scripts\smart-blocks\smart-blocks.js" />
     <Content Include="Scripts\smart-blocks\smart-buttons.js" />
     <Content Include="Scripts\smart-blocks\smart-config.js" />
+    <Content Include="Scripts\reloaded-tiles.js" />
     <Content Include="Views\UnitTests\SetResult.cshtml" />
     <Content Include="Views\Logs\Add.cshtml" />
     <Content Include="Views\Events\Add.cshtml" />
@@ -822,6 +849,27 @@
     <Content Include="Views\Home\PasswordRestored.cshtml" />
     <Content Include="Views\Home\PasswordChanged.cshtml" />
     <Content Include="Views\Home\SetPassword.cshtml" />
+    <Content Include="Views\UnitTests\ResultDetails2.cshtml" />
+    <Content Include="Views\GuiExamples\Tiles.cshtml" />
+    <Content Include="Views\GuiExamples\Index.cshtml" />
+    <Content Include="Views\UnitTests\OverviewCurrentStatus.cshtml" />
+    <Content Include="Views\UnitTests\OverviewLastResult.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsHttp.cshtml" />
+    <Content Include="Views\UnitTests\OverviewStatusDiagram.cshtml" />
+    <Content Include="Views\ReloadedTiles\Render.cshtml" />
+    <Content Include="Views\GuiExamples\ReloadedTiles.cshtml" />
+    <Content Include="Views\GuiExamples\CounterValue.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsPing.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsDomain.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsSsl.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsSql.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsCustom.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettings.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsHttp.cshtml" />
+    <Content Include="Views\Controls\ShowKeyValueTable.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsPing.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsDomain.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsCustom.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Errors\UserFriendlyError.cshtml" />
@@ -895,9 +943,6 @@
     <Content Include="Views\Components\ComponentsMiniList.cshtml" />
     <Content Include="Views\EventTypes\EventTypesMiniList.cshtml" />
     <Content Include="Views\ComponentTreeDetails\ComponentDetails.cshtml" />
-    <None Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

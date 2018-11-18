@@ -1,11 +1,11 @@
 ﻿var componentTreeDetails = (function () {
 
     // тип вьюшки детализации (детализация компонента или детализация юнит-теста)
-    var _detailsType = "unknown";
+    var detailsType = "unknown";
 
     // у каждой вьюшки детализации свой конфиг
     function getConfig() {
-        var config = smartConfig.getOrCreate("components-tree-details-panel/" + _detailsType);
+        var config = smartConfig.getOrCreate("components-tree-details-panel/" + detailsType);
         return config;
     }
 
@@ -23,21 +23,28 @@
 
     function accordionLoadGroup(element) {
         var smartBlock = $('.smart-block', element);
-        smartBlock.html('<p><img src="/Content/Icons/ajax-loader-white.gif" /></p>');
-        smartBlocks.load({ elements: smartBlock });
+        //smartBlock.html('<p><img src="/Content/Icons/ajax-loader-white.gif" /></p>');
+        showLoader();
+        smartBlocks.load({
+            elements: smartBlock,
+            onComplete: function () {
+                hideLoader();
+            }
+        });
     }
 
     function accordionReloadCurrentGroup(element) {
-        var accordionGroupContent;
+        var groupContent;
         if (element != null)
-            accordionGroupContent = element.closest('.accordion-group-content');
+            groupContent = element.closest('.tree-details-content');
         else {
-            var id = getLastTabId();
-            accordionGroupContent = $('.accordion-group-content', $('#' + id));
+            var container = getDetailsContainer();
+            var group = getLastTabId();
+            groupContent = getContentByGroup(container, group);
         }
 
-        if (accordionGroupContent != null)
-            accordionLoadGroup(accordionGroupContent);
+        if (groupContent != null)
+            accordionLoadGroup(groupContent);
     }
 
     function getDetailsContainer() {
@@ -52,8 +59,8 @@
         $("#details-panel-loader").hide();
     }
 
-    function load(detailsType, url, data) {
-        _detailsType = detailsType;
+    function load(aDetailsType, url, data) {
+        detailsType = aDetailsType;
         showLoader();
         var tempDetails = $("<div class='smart-block'></div>");
         var emptyHtml = tempDetails[0].outerHTML;
@@ -62,88 +69,102 @@
             var html = tempDetails.html();
             var container = getDetailsContainer();
             container.html(html);
+
+            // Выберем элемент меню
+            var lastTab = getLastTabId();
+            selectMenuItem(lastTab);
+
             hideLoader();
         }
+
         var onComplete = function () {
             setTimeout(function () {
                 var newHtml = tempDetails[0].outerHTML;
                 if (newHtml !== emptyHtml) {
-                    // значит контент загружен успешно
+                    // Контент загружен успешно
                     var lastTab = getLastTabId();
+
+                    // Проверим, что такой раздел существует
+                    var tab = getContentByGroup(tempDetails, lastTab);
+                    if (tab.length === 0) {
+                        lastTab = null;
+                    }
+
+                    // Если раздела нет, или он не выбирался, возьмём первый из списка
                     if (!lastTab) {
-                        lastTab = $(".accordion-group", tempDetails).attr("id");
+                        lastTab = $(".tree-details-content", tempDetails).data("group");
                         setLastTabId(lastTab);
                     }
-                    if (lastTab) {
-                        var tab = $("#" + lastTab, tempDetails);
-                        if (tab.length === 1) {
-                            var smartTab = $(".smart-block", tab);
-                            smartBlocks.load({
-                                elements: smartTab,
-                                onComplete: function () {
-                                    setTimeout(function () {
-                                        var tabGroup = $("#" + lastTab + " .accordion-group-content", tempDetails);
-                                        //tabGroup.removeClass("collapse");
-                                        tabGroup.addClass("in");
-                                        tabGroup.attr("data-loaded", "true"); //data('loaded', 'true');
-                                        replaceDetails();
-                                    },
-                                        1);
-                                }
-                            });
-                        } else {
-                            replaceDetails();
-                        }
+
+                    tab = getContentByGroup(tempDetails, lastTab);
+                    if (tab.length === 1) {
+                        var smartTab = $(".smart-block", tab);
+                        smartBlocks.load({
+                            elements: smartTab,
+                            onComplete: function () {
+                                setTimeout(function () {
+                                    //var tabGroup = $('tree-details-content[data-group="' + lastTab + '"]', tempDetails);
+                                    tab.removeClass("collapse");
+                                    //tabGroup.addClass("in");
+                                    tab.attr("data-loaded", "true"); //data('loaded', 'true');
+                                    replaceDetails();
+                                },
+                                    1);
+                            }
+                        });
                     } else {
                         replaceDetails();
                     }
+
                 } else {
                     hideLoader();
                 }
             }, 1);
         }
+
         smartBlocks.doSubmit(url, data, tempDetails, onComplete);
+    }
+
+    function onContextShown() {
+        var me = $(this);
+        var loaded = me.data('loaded');
+        if (!loaded) {
+            // Загрузим содержимое
+            accordionLoadGroup(me);
+
+            // Поставим признак загрузки, чтобы не загружать при повторном открытии
+            me.data('loaded', 'true');
+        }
+
+        // Запомним выбранный элемент
+        var group = me.data('group');
+        setLastTabId(group);
+
+        // Выберем элемент меню
+        selectMenuItem(group);
+    }
+
+    function getContentByGroup(container, group) {
+        return $('.tree-details-content[data-group="' + group + '"]', container);
+    }
+
+    function selectMenuItem(group) {
+        var container = getDetailsContainer();
+        $('.tree-details-menu-item', container).removeClass('selected');
+        $('.tree-details-menu-item[data-group="' + group + '"]', container).addClass('selected');
     }
 
     function init() {
 
-        // Обработчик клика по названию раздела
-        $('body').on('click', '.accordion .accordion-group-caption > a', function (event) {
+        // Обработчик клика по картинке раздела
+        $('body').on('click', '.tree-details-container .tree-details-menu-item > a', function (event) {
             event.preventDefault();
-            var accordion = $(this).closest('.accordion');
-            $('.accordion-group-content', accordion).collapse('hide');
-            $('.accordion-group-content', $(this).closest('.accordion-group')).collapse('show');
+            var container = $(this).closest('.tree-details-container');
+            $('.tree-details-content', container).hide();
+            var group = $(this).closest('.tree-details-menu-item').data('group');
+            getContentByGroup(container, group).show(0, onContextShown);
         });
 
-        // Обработчик открытия раздела
-        $('body').on('show.bs.collapse', '.accordion .accordion-group-content', function () {
-            var me = $(this);
-            var loaded = me.data('loaded');
-            if (!loaded) {
-                // Загрузим содержимое
-                accordionLoadGroup(me);
-
-                // Поставим признак загрузки, чтобы не загружать при повторном открытии
-                me.data('loaded', 'true');
-            }
-
-            // Запомним выбранный элемент
-            var id = me.closest('.accordion-group').attr('id');
-            setLastTabId(id);
-
-        });
-
-        // Обработчик загрузки accordion
-        $('body').on('accordion.loaded', '.accordion', function () {
-            var me = $(this);
-            var id = getLastTabId();
-
-            if (!id) {
-                id = $('.accordion-group', me).first().attr('id');
-            }
-
-            $('.accordion-group-content', $('#' + id)).collapse('show');
-        });
     }
 
     init();

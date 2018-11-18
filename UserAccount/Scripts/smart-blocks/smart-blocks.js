@@ -306,12 +306,12 @@
                     onComplete = function() {};
                 }
                 method = method || "get";
-                doSubmin(url, data, element, onComplete, method);
+                doSubmit(url, data, element, onComplete, method);
             }
         });
     }
 
-    function doSubmin(url, data, element, onComplete, method) {
+    function doSubmit(url, data, element, onComplete, method) {
         doAjaxSubmit(url, method || 'get', data, element, onComplete);
     }
 
@@ -355,7 +355,7 @@
     return {
         onFormSubmit: onFormSubmit,
         setGlobalErrorCallback: setGlobalErrorCallback,
-        doSubmit: doSubmin,
+        doSubmit: doSubmit,
         doAjax: doAjax,
         onSmartButtonClick: onSmartButtonClick,
         getFormDataForPost: getFormDataForPost,

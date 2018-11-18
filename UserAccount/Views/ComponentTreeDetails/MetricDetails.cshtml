@@ -16,34 +16,39 @@
     </a>
 </div>
 
-<hr />
+<hr class="object-details-hr" />
 
-<div id="metric-details-accordion" class="accordion">
-    <div class="accordion-group" id="metric-details-state">
-        <div class="accordion-group-caption">
-            <a href="#">Текущее состояние</a>
+<div id="metric-details-container" class="tree-details-container">
+    <div class="tree-details-menu">
+        <div class="tree-details-menu-item" data-group="metric-state">
+            <a href="#" title="Текущее состояние">
+                <span class="glyphicon glyphicon-info-sign"></span>
+            </a>
         </div>
-        <div class="accordion-group-content collapse">
-            <div class="smart-block" data-url="@Url.Action("MetricDetailsState", new { id = Model.Id })"></div>
+        <div class="tree-details-menu-item" data-group="metric-history">
+            <a href="#" title="История">
+                <span class="glyphicon glyphicon-signal"></span>
+            </a>
         </div>
-    </div>
-          
-    <div class="accordion-group" id="metric-details-history">
-        <div class="accordion-group-caption">
-            <a href="#">История</a>
-        </div>
-        <div class="accordion-group-content collapse">
-            <div class="smart-block" data-url="@Url.Action("MetricDetailsHistory", new { id = Model.Id })"></div>
+        <div class="tree-details-menu-item" data-group="metric-values">
+            <a href="#" title="Значения">
+                <span class="glyphicon glyphicon-list"></span>
+            </a>
         </div>
     </div>
     
-    <div class="accordion-group" id="metric-details-values">
-        <div class="accordion-group-caption">
-            <a href="#">Значения</a>
+    <div class="tree-details-main-area">
+        <div class="tree-details-content collapse" data-group="metric-state">
+            <div class="tree-details-content-caption">Текущее состояние</div>
+            <div class="smart-block" data-url="@Url.Action("MetricDetailsState", new {id = Model.Id})"></div>
         </div>
-        <div class="accordion-group-content collapse">
-            <div class="smart-block" data-url="@Url.Action("MetricDetailsValues", new { id = Model.Id })"></div>
+        <div class="tree-details-content collapse" data-group="metric-history">
+            <div class="tree-details-content-caption">История</div>
+            <div class="smart-block" data-url="@Url.Action("MetricDetailsHistory", new {id = Model.Id})"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="metric-values">
+            <div class="tree-details-content-caption">Значения</div>
+            <div class="smart-block" data-url="@Url.Action("MetricDetailsValues", new {id = Model.Id})"></div>
         </div>
     </div>
-
 </div>

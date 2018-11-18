@@ -1,0 +1,66 @@
+﻿@using Zidium.UserAccount.Models.UnitTests
+@using Zidium.UserAccount.Models
+@using Zidium.Core.Api
+@model OverviewStatusDiagramModel
+
+<div class="tiles-box">
+    <div class="tiles-box-content">
+        <div class="bottom10px">
+            <span class="space-right" style="font-size: 24px;">Состояние за</span>
+            <div class="btn-group space-right" data-toggle="buttons">
+                <label class="btn btn-default" id="btn-stats-hour">
+                    <input type="radio" autocomplete="off">
+                    Час
+                </label>
+                <label class="btn btn-default active" id="btn-stats-day">
+                    <input type="radio" autocomplete="off" checked>
+                    День
+                </label>
+                <label class="btn btn-default" id="btn-stats-week">
+                    <input type="radio" autocomplete="off">
+                    Неделя
+                </label>
+                <label class="btn btn-default" id="btn-stats-month">
+                    <input type="radio" autocomplete="off">
+                    Месяц
+                </label>
+            </div>
+            <span id="timelines-loader" class="collapse">
+                <img src="~/Content/Icons/ajax-loader-white.gif" />
+            </span>
+        </div>
+
+        <div id="timeline-status">
+            <img src="~/Content/Icons/ajax-loader-white.gif" />
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    function init() {
+        $('#btn-stats-hour').click(function () { loadStats('@TimelineInterval.Hour'); });
+        $('#btn-stats-day').click(function () { loadStats('@TimelineInterval.Day'); });
+        $('#btn-stats-week').click(function () { loadStats('@TimelineInterval.Week'); });
+        $('#btn-stats-month').click(function () { loadStats('@TimelineInterval.Month'); });
+        $('#btn-stats-day').click();
+    }
+
+    function loadStats(interval) {
+        $('#timelines-loader').show();
+
+        var url = '@Html.Raw(Url.Action("ForUnitTestByInterval", "Timeline", new { id = Model.UnitTestId, category = EventCategory.UnitTestStatus }))';
+        var params = { interval: interval };
+
+        $('#timeline-status')
+            .load(url,
+                params,
+                function () {
+                    $('#timelines-loader').hide();
+                });
+    }
+
+    init();
+
+</script>

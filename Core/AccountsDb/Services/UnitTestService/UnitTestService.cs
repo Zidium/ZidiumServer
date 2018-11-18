@@ -48,7 +48,7 @@ namespace Zidium.Core.AccountsDb
             var actualInterval = unitTest.ActualTime  // сначала берем из настроек проверки в ЛК
                 ?? TimeSpanHelper.FromSeconds(unittestType.ActualTimeSecs) // потом из настроек типа проверки в ЛК
                 ?? TimeSpanHelper.FromSeconds(data.ActualIntervalSeconds) // потом из сообщения
-                ?? TimeSpan.FromMinutes(5); // по умолчанию 5 мин
+                ?? UnitTest.GetDefaultActualTime();
 
             DateTime actualDate;
             try
@@ -105,7 +105,8 @@ namespace Zidium.Core.AccountsDb
                     accountId,
                     now,
                     EventCategory.UnitTestStatus,
-                    unitTestId);
+                    unitTestId,
+                    "Проверка создана, ждем результата выполнения");
 
                 var unitTest = new UnitTest()
                 {

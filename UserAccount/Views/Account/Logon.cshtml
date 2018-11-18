@@ -1,5 +1,7 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
+@using Zidium.Core
+
 @model LogonModel
 
 @{
@@ -20,13 +22,22 @@
     @Html.HiddenFor(m => m.ReturnUrl)
 
     <div class="smart-container">
-        
+
         @if (Model.ErrorMessage != null)
         {
             <div class="smart-row">
                 <div class="smart-col-labels smart-col-empty"></div>
                 <div class="smart-col-fields">
                     @Model.ErrorMessage
+                </div>
+            </div>
+        }
+        @if (DebugHelper.IsDebugMode)
+        {
+            <div class="smart-row">
+                <div class="smart-col-labels smart-col-empty"></div>
+                <div class="smart-col-fields">
+                    <div style="color: gray; margin-top: 20px;">admin@zidium.net root</div>
                 </div>
             </div>
         }
@@ -39,22 +50,22 @@
         </div>
 
         @*@if (HttpContext.Current.Request.Url.Scheme == "http")
+        {
+            var uriBuilder = new UriBuilder(HttpContext.Current.Request.Url)
             {
-                var uriBuilder = new UriBuilder(HttpContext.Current.Request.Url)
-                {
-                    Scheme = Uri.UriSchemeHttps,
-                    Port = -1 // default port for scheme
-                };
-                <div class="smart-row">
-                    <div class="smart-col-labels smart-col-empty"></div>
-                    <div class="smart-col-fields">
-                        <a href="@uriBuilder.Uri.AbsoluteUri" class="text-success">
-                            Использовать безопасное соединение (https)
-                        </a>
-                    </div>
+                Scheme = Uri.UriSchemeHttps,
+                Port = -1 // default port for scheme
+            };
+            <div class="smart-row">
+                <div class="smart-col-labels smart-col-empty"></div>
+                <div class="smart-col-fields">
+                    <a href="@uriBuilder.Uri.AbsoluteUri" class="text-success">
+                        Использовать безопасное соединение (https)
+                    </a>
                 </div>
-            }*@
-        
+            </div>
+        }*@
+
 
         @Html.EditorFor(x => x.UserName, "SmartEdit")
         @Html.EditorFor(x => x.Password, "SmartEdit")
