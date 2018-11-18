@@ -1,4 +1,4 @@
-using System.Data.Entity.Migrations;
+Ôªøusing System.Data.Entity.Migrations;
 using Zidium.Core.Common;
 
 namespace Zidium.Core.AccountsDb.Migrations.PostgreSql
@@ -11,7 +11,7 @@ namespace Zidium.Core.AccountsDb.Migrations.PostgreSql
             MigrationsDirectory = @"AccountsDb\PostgreSql\Migrations";
             CodeGenerator = new NonClusteredPrimaryKeyCSharpMigrationCodeGenerator();
             SetSqlGenerator("Npgsql", new NonClusteredPrimaryKeyPostgreSqlMigrationSqlGenerator());
-            CommandTimeout = 600; // 10 ÏËÌÛÚ
+            CommandTimeout = 600; // 10 –º–∏–Ω—É—Ç
             AutomaticMigrationDataLossAllowed = true;
         }
     }
