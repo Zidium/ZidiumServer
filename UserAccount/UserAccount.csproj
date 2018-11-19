@@ -943,6 +943,9 @@
     <Content Include="Views\Components\ComponentsMiniList.cshtml" />
     <Content Include="Views\EventTypes\EventTypesMiniList.cshtml" />
     <Content Include="Views\ComponentTreeDetails\ComponentDetails.cshtml" />
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
