@@ -2,7 +2,6 @@
 using System.Data.Common;
 using System.Data.Entity;
 using System.Data.Entity.ModelConfiguration.Conventions;
-using System.Linq;
 using Zidium.Core.AccountsDb.Classes;
 using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
 using Zidium.Core.AccountsDb.Mapping;
@@ -231,16 +230,6 @@ namespace Zidium.Core.AccountsDb
             return provider.DbContext(connectionString);
         }
 
-        public static AccountDbContext CreateFromDataBase(DatabaseInfo database)
-        {
-            if (database == null)
-            {
-                throw new ArgumentNullException("database");
-            }
-            var provider = Provider.Current();
-            return provider.DbContext(database.ConnectionString);
-        }
-
         public static AccountDbContext CreateFromDatabaseId(Guid databaseId)
         {
             var client = DispatcherHelper.GetDispatcherClient();
@@ -424,35 +413,12 @@ namespace Zidium.Core.AccountsDb
         /// <summary>
         /// Проверка доступности базы
         /// </summary>
-        /// <returns></returns>
-        public bool CheckIsAlive()
-        {
-            try
-            {
-                Database.ExecuteSqlCommand("SELECT NULL;");
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         public override void Check()
         {
-            // попробуем загрузить основные сущности
-            var component = Components.Take(1).FirstOrDefault();
-            var unitTest = UnitTests.Take(1).FirstOrDefault();
-            var statusData = Bulbs.Take(1).FirstOrDefault();
+            Database.ExecuteSqlCommand("SELECT NULL;");
         }
 
         public abstract AccountDbContext Clone();
-
-        public AccountDbContext DisposeAndClone()
-        {
-            Dispose();
-            return Clone();
-        }
 
         public static void DisableMigrations()
         {

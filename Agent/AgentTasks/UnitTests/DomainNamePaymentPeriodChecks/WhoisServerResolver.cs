@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -184,8 +184,8 @@ namespace Zidium.Agent.AgentTasks
             {"xxx", "whois.nic.xxx"},
             {"yu", "whois.ripe.net"},
             {"za.com", "whois.centralnic.com"},
-            {"Ù", "whois.tcinet.ru"},
-            {"ÏÓÒÍ‚‡", "whois.nic.ru"}
+            {"—Ä—Ñ", "whois.tcinet.ru"},
+            {"–º–æ—Å–∫–≤–∞", "whois.nic.ru"}
         };
 
         public static string GetWhoisServerName(string domainName)

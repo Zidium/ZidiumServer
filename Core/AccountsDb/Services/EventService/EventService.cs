@@ -132,16 +132,11 @@ namespace Zidium.Core.AccountsDb
 
 
             // Создадим новое
-            {
-                var accountDbContext = Context.DbContext.GetAccountDbContext(accountId);
-                var eventRepository = accountDbContext.GetEventRepository();
-                isEventNew = true;
-                eventRepository.Add(eventObj);
-                accountDbContext.SaveChanges();
-                var wEvent = EventCacheWriteObject.CreateForUpdate(eventObj, accountId);
-                AllCaches.Events.AddOrGet(wEvent);
-                return wEvent;
-            }
+            isEventNew = true;
+            Add(accountId, eventObj);
+            var wEvent = EventCacheWriteObject.CreateForUpdate(eventObj, accountId);
+            AllCaches.Events.AddOrGet(wEvent);
+            return wEvent;
         }
 
         public IEventCacheReadObject GetEventCacheOrNullById(Guid accountId, Guid eventId)
@@ -647,9 +642,7 @@ namespace Zidium.Core.AccountsDb
         public void Add(Guid accountId, Event eventObj)
         {
             var accountDbContext = Context.GetAccountDbContext(accountId);
-            var repository = accountDbContext.GetEventRepository();
-            repository.Add(eventObj);
-            accountDbContext.SaveChanges();
+            accountDbContext.GetEventRepository().AddInNewContext(eventObj);
         }
     }
 }

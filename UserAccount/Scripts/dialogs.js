@@ -74,6 +74,22 @@
         );
     }
 
+    function info(message, callback) {
+        bootbox.dialog({
+                title: "Сообщение",
+                message: "<p class='alert alert-info' style='margin-bottom: 0;'>" + message + "</p>",
+                buttons: {
+                    ok: {
+                        label: "Закрыть",
+                        className: "btn-default",
+                        callback: callback
+                    }
+                },
+                onEscape: true
+            }
+        );
+    }
+
     function error(message, callback) {
         bootbox.dialog({
             title: "Ошибка",
@@ -106,6 +122,7 @@
     return {
         showModal: showModal,
         confirmDelete: confirmDelete,
+        info: info,
         error: error,
         common : commonDialogs // коллекция общий диалогов
     };

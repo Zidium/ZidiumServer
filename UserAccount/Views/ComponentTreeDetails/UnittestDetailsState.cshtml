@@ -85,7 +85,7 @@
 }
 
 <script>
-    $('#unittest-details-state #unittest-details-run-unittest').click(function() {
+    $('#unittest-details-run-unittest').click(function() {
         var me = $(this);
         var url = '@Url.Action("RunNowAjax", "Unittests")';
         var id = me.data('id');
@@ -99,7 +99,7 @@
         });
     });
 
-    $('#unittest-details-state #unittest-details-enable-unittest').click(function() {
+    $('#unittest-details-enable-unittest').click(function() {
         var me = $(this);
         var url = '@Url.Action("EnableAjax", "Unittests")';
         var id = me.data('id');
@@ -113,7 +113,7 @@
         });
     });
 
-    $('#unittest-details-state #unittest-details-disable-unittest').click(function() {
+    $('#unittest-details-disable-unittest').click(function() {
         var me = $(this);
         var url = '@Url.Action("DisableAjax", "Unittests")';
         var id = me.data('id');
@@ -124,7 +124,7 @@
         }, data);
     });
 
-    $('#unittest-details-state #unittest-details-delete-unittest').click(function() {
+    $('#unittest-details-delete-unittest').click(function() {
         var me = $(this);
         var url = '@Url.Action("DeleteAjax", "Unittests")';
         var id = me.data('id');

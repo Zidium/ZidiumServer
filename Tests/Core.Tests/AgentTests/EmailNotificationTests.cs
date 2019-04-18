@@ -57,8 +57,6 @@ namespace Zidium.Core.Tests.AgentTests
             // Запустим обработку
             var processor = new EmailNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
             processor.Process(account.Id, component.Id);
-            Assert.Null(processor.DbProcessor.FirstException);
-            Assert.Equal(1, processor.CreatedNotificationsCount);
 
             // Должно появиться письмо
             using (var context = account.CreateAccountDbContext())

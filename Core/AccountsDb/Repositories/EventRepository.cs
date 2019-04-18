@@ -106,6 +106,18 @@ namespace Zidium.Core.AccountsDb
             return eventObj;
         }
 
+        public Event AddInNewContext(Event eventObj)
+        {
+            using (var tempContext = Context.Clone())
+            {
+                var tempRepository = tempContext.GetEventRepository();
+                tempRepository.Add(eventObj);
+                tempContext.SaveChanges();
+            }
+
+            return eventObj;
+        }
+
         public Event GetByHashKey(long joinKeyHash, Guid componentId)
         {
             return Context.Events.SingleOrDefault(t => t.OwnerId == componentId && t.JoinKeyHash == joinKeyHash);

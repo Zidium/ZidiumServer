@@ -1,4 +1,4 @@
-using Zidium.Core.Api;
+﻿using Zidium.Core.Api;
 
 namespace Zidium.Agent.AgentTasks
 {

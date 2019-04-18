@@ -117,11 +117,17 @@ namespace Zidium.UserAccount.Controllers
             this.SetTempMessage(TempMessageType.Success, string.Format("Добавлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("ResultDetails", new { id = unitTest.Id })));
             return RedirectToAction("Index");
         }
-
+        
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
             var unitTest = GetUnitTestById(id);
+            
+            // данная страница должна редактировать только пользовательские проверки
+            if (SystemUnitTestTypes.IsSystem(unitTest.TypeId))
+            {
+                throw new Exception("Проверка не является пользовательской");
+            }
 
             var model = new UnitTestEditModel()
             {
@@ -134,10 +140,9 @@ namespace Zidium.UserAccount.Controllers
                 PeriodSeconds = unitTest.PeriodSeconds,
                 ActualTime = TimeSpanHelper.FromSeconds(unitTest.ActualTimeSecs),
                 NoSignalColor = ColorStatusSelectorValue.FromColor(unitTest.NoSignalColor),
-                Status = unitTest.Bulb.Status,
-                UnitTestType = unitTest.Type,
-                UnitTest = unitTest
+                Status = unitTest.Bulb.Status
             };
+            model.InitReadOnlyValues(unitTest);
             return View(model);
         }
 
@@ -146,10 +151,11 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(UnitTestEditModel model)
         {
-            model.UnitTest = GetUnitTestById(model.Id);
+            var unitTest = GetUnitTestById(model.Id);
+            model.InitReadOnlyValues(unitTest);
 
             if (!ModelState.IsValid)
-                View(model);
+                return View(model);
 
             var updateData = new UpdateUnitTestRequestData()
             {
@@ -169,6 +175,24 @@ namespace Zidium.UserAccount.Controllers
             }
             SetCommonError(response.ErrorMessage);
             return View(model);
+        }
+
+        [CanEditAllData]
+        [HttpPost]
+        public JsonResult Enable(Guid id)
+        {
+            try
+            {
+                var client = GetDispatcherClient();
+                var response = client.SetUnitTestEnable(CurrentUser.AccountId, id);
+                response.Check();
+                return GetSuccessJsonResponse();
+            }
+            catch (Exception exception)
+            {
+                MvcApplication.HandleException(exception);
+                return GetErrorJsonResponse(exception);
+            }
         }
 
         private Event GetUnitTestLastResultEvent(UnitTest unitTest)
@@ -312,6 +336,37 @@ namespace Zidium.UserAccount.Controllers
             return PartialView(model);
         }
 
+        public ActionResult ShowExecutionResults(Guid id)
+        {
+            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
+            var unitTest = unitTestRepository.GetById(id);
+
+            var model = new ShowExecutionResultsModel()
+            {
+                UnitTestId = unitTest.Id,
+                MaxCount = 20
+            };
+
+            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var resultEvents = eventRepository
+                .QueryAll(unitTest.Id)
+                .Where(t => t.Category == EventCategory.UnitTestResult)
+                .OrderByDescending(t => t.StartDate)
+                .Take(model.MaxCount)
+                .ToArray();
+
+            model.ExecutionResults = resultEvents.Select(t => new UnitTestResultEventDto
+            {
+                Date = t.StartDate,
+                Importance = t.Importance,
+                Message = t.GetUnitTestMessage(),
+                Id = t.Id,
+                UnitTestId = unitTest.Id
+            }).ToArray();
+
+            return PartialView(model);
+        }
+
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
@@ -341,23 +396,6 @@ namespace Zidium.UserAccount.Controllers
             }
         }
 
-        [CanEditAllData]
-        [HttpPost]
-        public JsonResult Enable(Guid id)
-        {
-            try
-            {
-                var client = GetDispatcherClient();
-                var response = client.SetUnitTestEnable(CurrentUser.AccountId, id);
-                response.Check();
-                return GetSuccessJsonResponse();
-            }
-            catch (Exception exception)
-            {
-                MvcApplication.HandleException(exception);
-                return GetErrorJsonResponse(exception);
-            }
-        }
 
         [CanEditAllData]
         public ActionResult Disable(Guid id)

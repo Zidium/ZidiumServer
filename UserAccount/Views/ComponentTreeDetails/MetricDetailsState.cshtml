@@ -30,7 +30,7 @@
 </p>
     
 <script>
-    $('#metric-details-state #metric-details-enable-metric').click(function() {
+    $('#metric-details-enable-metric').click(function() {
         var me = $(this);
         var url = '@Url.Action("EnableAjax", "Metrics")';
         var id = me.data('id');
@@ -44,7 +44,7 @@
         });
     });
 
-    $('#metric-details-state #metric-details-disable-metric').click(function() {
+    $('#metric-details-disable-metric').click(function() {
         var me = $(this);
         var url = '@Url.Action("DisableAjax", "Metrics")';
         var id = me.data('id');
@@ -55,7 +55,7 @@
         }, data);
     });
 
-    $('#metric-details-state #metric-details-delete-metric').click(function() {
+    $('#metric-details-delete-metric').click(function() {
         var me = $(this);
         var url = '@Url.Action("DeleteAjax", "Metrics")';
         var id = me.data('id');

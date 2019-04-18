@@ -157,8 +157,9 @@
     <Compile Include="Controllers\ContextController.cs" />
     <Compile Include="Controllers\DebugController.cs" />
     <Compile Include="Controllers\DefectsController.cs" />
+    <Compile Include="Controllers\Examples\SmartExamplesController.cs" />
     <Compile Include="Controllers\ExtentionPropertiesController.cs" />
-    <Compile Include="Controllers\GuiExamplesController.cs" />
+    <Compile Include="Controllers\Examples\TilesExamplesController.cs" />
     <Compile Include="Controllers\MetricsController.cs" />
     <Compile Include="Controllers\LimitsController.cs" />
     <Compile Include="Controllers\MetricTypesController.cs" />
@@ -244,9 +245,12 @@
     <Compile Include="Models\Dialogs\SimpleModalDialogLayoutModel.cs" />
     <Compile Include="Models\EventTypes\EventTypeLastEventModel.cs" />
     <Compile Include="Models\EventTypes\EventTypeShowModel.cs" />
+    <Compile Include="Models\Examples\Smart\Example1PartialModel.cs" />
+    <Compile Include="Models\Examples\Smart\Example2FiltersModel.cs" />
+    <Compile Include="Models\Examples\Smart\Example2PartialModel.cs" />
     <Compile Include="Models\ExtentionProperties\ExtentionPropertyBinaryFile.cs" />
     <Compile Include="Models\ExtentionProperties\ExtentionPropertyOwner.cs" />
-    <Compile Include="Models\GuiExamplesModels\ReloadedSampleModel.cs" />
+    <Compile Include="Models\Examples\Tiles\ReloadedSampleModel.cs" />
     <Compile Include="Models\Home\LostPasswordModel.cs" />
     <Compile Include="Models\Home\SetPasswordModel.cs" />
     <Compile Include="Models\Logs\LogFiltersModel.cs" />
@@ -457,6 +461,7 @@
     <Compile Include="Models\UnitTests\OverviewSettingsCustomModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsDomainModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsHttpModel.cs" />
+    <Compile Include="Models\UnitTests\ShowExecutionResultsModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsCustomModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsDomainModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsPingModel.cs" />
@@ -470,6 +475,7 @@
     <Compile Include="Models\UnitTests\UnitTestAddModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestEditModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestResult2Model.cs" />
+    <Compile Include="Models\UnitTests\UnitTestResultEventDto.cs" />
     <Compile Include="Models\UnitTests\UnitTestResultModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestSetResultModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestsListItemLevel2Model.cs" />
@@ -477,6 +483,7 @@
     <Compile Include="Models\UnitTests\UnitTestsListModel.cs" />
     <Compile Include="Models\UnitTestTypes\UnitTestTypeEditModel.cs" />
     <Compile Include="Models\UnitTestTypes\UnitTestTypeListModel.cs" />
+    <Compile Include="Models\UnitTestTypes\UnitTestTypeShowModel.cs" />
     <Compile Include="Models\Users\AddUserModel.cs" />
     <Compile Include="Models\Users\ChangePasswordEndModel.cs" />
     <Compile Include="Models\Users\ChangePasswordModel.cs" />
@@ -566,11 +573,6 @@
     <Content Include="Content\bootstrap.css.map" />
     <Compile Include="Models\Controls\OneLineSausageCharModel.cs" />
     <Content Include="NLog.config" />
-    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
-    <None Include="Properties\PublishProfiles\FTP - Test.pubxml" />
-    <None Include="Properties\PublishProfiles\FTP - Work.pubxml" />
-    <None Include="Properties\PublishProfiles\ggg.pubxml" />
-    <None Include="Properties\PublishProfiles\WebDeploy - Work.pubxml" />
     <None Include="Scripts\jquery-2.2.0.intellisense.js" />
     <Content Include="Scripts\Controls\DefectControl.js" />
     <Content Include="Scripts\errors.js" />
@@ -850,15 +852,15 @@
     <Content Include="Views\Home\PasswordChanged.cshtml" />
     <Content Include="Views\Home\SetPassword.cshtml" />
     <Content Include="Views\UnitTests\ResultDetails2.cshtml" />
-    <Content Include="Views\GuiExamples\Tiles.cshtml" />
-    <Content Include="Views\GuiExamples\Index.cshtml" />
+    <Content Include="Views\TilesExamples\Tiles.cshtml" />
+    <Content Include="Views\TilesExamples\Index.cshtml" />
     <Content Include="Views\UnitTests\OverviewCurrentStatus.cshtml" />
     <Content Include="Views\UnitTests\OverviewLastResult.cshtml" />
     <Content Include="Views\UnitTests\OverviewSettingsHttp.cshtml" />
     <Content Include="Views\UnitTests\OverviewStatusDiagram.cshtml" />
     <Content Include="Views\ReloadedTiles\Render.cshtml" />
-    <Content Include="Views\GuiExamples\ReloadedTiles.cshtml" />
-    <Content Include="Views\GuiExamples\CounterValue.cshtml" />
+    <Content Include="Views\TilesExamples\ReloadedTiles.cshtml" />
+    <Content Include="Views\TilesExamples\CounterValue.cshtml" />
     <Content Include="Views\UnitTests\OverviewSettingsPing.cshtml" />
     <Content Include="Views\UnitTests\OverviewSettingsDomain.cshtml" />
     <Content Include="Views\UnitTests\OverviewSettingsSsl.cshtml" />
@@ -870,6 +872,13 @@
     <Content Include="Views\UnitTests\ShowSettingsPing.cshtml" />
     <Content Include="Views\UnitTests\ShowSettingsDomain.cshtml" />
     <Content Include="Views\UnitTests\ShowSettingsCustom.cshtml" />
+    <Content Include="Views\UnitTests\ShowExecutionResults.cshtml" />
+    <Content Include="Views\SmartExamples\Example1Partial.cshtml" />
+    <Content Include="Views\SmartExamples\Example1.cshtml" />
+    <Content Include="Views\SmartExamples\Example2.cshtml" />
+    <Content Include="Views\SmartExamples\Example2Partial.cshtml" />
+    <Content Include="Views\SmartExamples\Example3.cshtml" />
+    <Content Include="Views\SmartExamples\Example4.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Errors\UserFriendlyError.cshtml" />
@@ -1034,7 +1043,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>16997</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>

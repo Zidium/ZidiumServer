@@ -7,6 +7,7 @@ using System.Threading;
 using NLog;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.SendSms
 {
@@ -38,9 +39,9 @@ namespace Zidium.Agent.AgentTasks.SendSms
         {
             DbProcessor.ForEachAccount(data =>
             {
-                if (accountId == null)
+                if (accountId == null && data.Account.Type != AccountType.Test)
                     ProcessAccount(data);
-                else if (accountId == data.Account.Id)
+                else if (accountId != null && accountId.Value == data.Account.Id)
                     ProcessAccount(data, smsId);
             });
         }

@@ -4,6 +4,7 @@ using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -111,7 +112,11 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         public void Process()
         {
-            DbProcessor.ForEachAccount(data => ProcessAccount(data));
+            DbProcessor.ForEachAccount(data =>
+            {
+                if (data.Account.Type != AccountType.Test)
+                    ProcessAccount(data);
+            });
             if (CreatedNotificationsCount > 0)
                 Logger.Info("Обработано уведомлений: " + CreatedNotificationsCount);
 

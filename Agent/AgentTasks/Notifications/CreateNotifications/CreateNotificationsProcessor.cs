@@ -9,6 +9,7 @@ using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Core.ConfigDb;
 using EventCategory = Zidium.Core.Api.EventCategory;
 using EventImportance = Zidium.Core.Api.EventImportance;
 
@@ -101,10 +102,14 @@ namespace Zidium.Agent.AgentTasks.Notifications
         public void ProcessAll()
         {
             DbProcessor.ForEachAccount(
-                data => ProcessAccount(
-                    data.Account.Id,
-                    data.AccountDbContext,
-                    data.Logger));
+                data =>
+                {
+                    if (data.Account.Type != AccountType.Test)
+                        ProcessAccount(
+                            data.Account.Id,
+                            data.AccountDbContext,
+                            data.Logger);
+                });
 
             if (CreatedNotificationsCount > 0)
                 Logger.Info("Создано уведомлений: {0}", CreatedNotificationsCount);
@@ -344,7 +349,6 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                             accountId,
                                             new CreateUserDefaultSubscriptionRequestData()
                                             {
-                                                Channel = channel,
                                                 UserId = user.Id
                                             });
 
@@ -539,7 +543,6 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         var response = dispatcherClient.CreateUserDefaultSubscription(accountId,
                             new CreateUserDefaultSubscriptionRequestData()
                             {
-                                Channel = SubscriptionChannel.Email,
                                 UserId = user.Id
                             });
                         response.Check();

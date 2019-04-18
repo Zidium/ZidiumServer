@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
+using Zidium.Core.Common;
+using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models
@@ -27,9 +29,19 @@ namespace Zidium.UserAccount.Models
         [Display(Name = "Интервал актуальности")]
         public TimeSpan? ActualTime { get; set; }
 
+        public TimeSpan ActualTimeDefault { get; set; }
+
         [Display(Name = "Цвет, если нет сигнала")]
         public ColorStatusSelectorValue NoSignalColor { get; set; }
 
+        public ObjectColor NoSignalColorDefault { get; set; }
+
         public bool IsDeleted { get; set; }
+
+        public void InitReadOnlyData()
+        {
+            NoSignalColorDefault = ObjectColor.Red;
+            ActualTimeDefault = UnitTestHelper.GetDefaultActualTime();
+        }
     }
 }

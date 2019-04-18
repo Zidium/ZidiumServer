@@ -104,7 +104,7 @@
 </table>
 
 <script>
-    $('#component-details-state #component-details-enable-component').click(function() {
+    $('#component-details-enable-component').click(function() {
         var me = $(this);
         var url = '@Url.Action("EnableAjax", "Components")';
         var id = me.data('id');
@@ -118,7 +118,7 @@
         });
     });
 
-    $('#component-details-state #component-details-disable-component').click(function() {
+    $('#component-details-disable-component').click(function() {
         var me = $(this);
         var url = '@Url.Action("DisableAjax", "Components")';
         var id = me.data('id');
@@ -129,7 +129,7 @@
         }, data);
     });
 
-    $('#component-details-state #component-details-delete-component').click(function() {
+    $('#component-details-delete-component').click(function() {
         var me = $(this);
         var url = '@Url.Action("DeleteAjax", "Components")';
         var id = me.data('id');

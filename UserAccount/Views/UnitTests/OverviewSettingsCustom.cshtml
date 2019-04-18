@@ -18,7 +18,12 @@
                 <span class="simple-text-header">Если нет сигнала</span>
                 <br />
                 <span class="simple-text-value">@Model.NoSignalColor</span>
-            </p>           
+            </p>   
+            <p>
+                <span class="simple-text-header">Тип проверки</span>
+                <br />
+                <a href="@Url.Action("Show", "UnitTestTypes", new {id = Model.TypeId})">@Model.TypeDisplayName</a>
+            </p>
         </div>
     </div>
     <div style="flex: 0 0 auto;">

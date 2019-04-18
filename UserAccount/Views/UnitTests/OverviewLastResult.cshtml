@@ -10,8 +10,25 @@
     <div style="flex: 1 0 auto;">
         <div class="tiles-box-header1">Последнее выполнение</div>
         <div class="tiles-box-content">
-            <p>@DateTimeHelper.GetRussianDateTime(Model.ExecutionTime)</p>
-            <p class="@textCss big-font">@Model.Message</p>
+            @if (Model.HasExecution)
+            {
+                <p>@DateTimeHelper.GetRussianDateTime(Model.ExecutionTime)</p>
+                <p class="@textCss big-font">@Model.Message</p>
+            }
+            else
+            {
+                // не было выполнений
+                if (Model.IsCustom)
+                {
+                    // пользовательская проверка
+                    <p>Нет выполнений</p>
+                    <p>Отправьте результат выполнения через API</p>
+                }
+                else
+                {
+                    <p>Ожидает выполнения...</p>
+                }
+            }
         </div>
     </div>
     @if (Model.ShowRunButton)

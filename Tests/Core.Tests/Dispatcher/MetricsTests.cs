@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,7 +25,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricTypeRules(account.Id, metricInfo.Id);
 
-            // Проверим красный цвет
+            // РџСЂРѕРІРµСЂРёРј РєСЂР°СЃРЅС‹Р№ С†РІРµС‚
             var date = DateTime.Now;
             var responseSend = client.ApiService.SendMetrics(component.Id, new List<SendMetricData>()
             {
@@ -50,7 +50,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricTypeRules(account.Id, metricInfo.Id);
 
-            // Проверим жёлтый цвет
+            // РџСЂРѕРІРµСЂРёРј Р¶С‘Р»С‚С‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(new SendMetricData()
             {
                 Name = metricInfo.SystemName,
@@ -71,7 +71,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricTypeRules(account.Id, metricInfo.Id);
 
-            // Проверим зелёный цвет
+            // РџСЂРѕРІРµСЂРёРј Р·РµР»С‘РЅС‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(
                 new SendMetricData()
                 {
@@ -93,7 +93,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricTypeRules(account.Id, metricInfo.Id);
 
-            // Проверим серый цвет
+            // РџСЂРѕРІРµСЂРёРј СЃРµСЂС‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(new SendMetricData()
             {
                 Name = metricInfo.SystemName,
@@ -115,7 +115,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricRules(account.Id, metric.Id);
 
-            // Проверим красный цвет
+            // РџСЂРѕРІРµСЂРёРј РєСЂР°СЃРЅС‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(
                 new SendMetricData()
                 {
@@ -138,7 +138,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricRules(account.Id, metric.Id);
 
-            // Проверим красный цвет
+            // РџСЂРѕРІРµСЂРёРј РєСЂР°СЃРЅС‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(new SendMetricData()
             {
                 Name = metricType.SystemName,
@@ -160,7 +160,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricRules(account.Id, metric.Id);
 
-            // Проверим зеленый цвет
+            // РџСЂРѕРІРµСЂРёРј Р·РµР»РµРЅС‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(
                 new SendMetricData()
                 {
@@ -183,7 +183,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricRules(account.Id, metric.Id);
 
-            // Проверим серый цвет
+            // РџСЂРѕРІРµСЂРёРј СЃРµСЂС‹Р№ С†РІРµС‚
             var responseSend = component.SendMetric(new SendMetricData()
             {
                 Name = metricType.SystemName,
@@ -203,7 +203,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             InitMetricTypeRules(account.Id, metricType.Id);
 
-            // Отправим метрику с актуальностью 5 секунд
+            // РћС‚РїСЂР°РІРёРј РјРµС‚СЂРёРєСѓ СЃ Р°РєС‚СѓР°Р»СЊРЅРѕСЃС‚СЊСЋ 5 СЃРµРєСѓРЅРґ
             var responseSend = component.SendMetric(
                 new SendMetricData()
                 {
@@ -213,16 +213,16 @@ namespace Zidium.Core.Tests.Dispatcher
                 });
             Assert.True(responseSend.Success);
 
-            // Проверим, что метрика зелёная
+            // РџСЂРѕРІРµСЂРёРј, С‡С‚Рѕ РјРµС‚СЂРёРєР° Р·РµР»С‘РЅР°СЏ
             var getMetricResponse = component.GetMetric(metricType.SystemName);
             Assert.True(getMetricResponse.Success);
             Assert.NotNull(getMetricResponse.Data);
             Assert.Equal(MonitoringStatus.Success, getMetricResponse.Data.Status);
 
-            // Подождём 10 секунд
+            // РџРѕРґРѕР¶РґС‘Рј 10 СЃРµРєСѓРЅРґ
             Thread.Sleep(10 * 1000);
 
-            // Теперь метрика должна стать красной
+            // РўРµРїРµСЂСЊ РјРµС‚СЂРёРєР° РґРѕР»Р¶РЅР° СЃС‚Р°С‚СЊ РєСЂР°СЃРЅРѕР№
             getMetricResponse = component.GetMetric(metricType.SystemName);
             Assert.True(getMetricResponse.Success);
             Assert.NotNull(getMetricResponse.Data);
@@ -231,7 +231,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
         protected void InitMetricTypeRules(Guid accountId, Guid metricTypeId)
         {
-            // Получим тип метрики и заполним ее правила
+            // РџРѕР»СѓС‡РёРј С‚РёРї РјРµС‚СЂРёРєРё Рё Р·Р°РїРѕР»РЅРёРј РµРµ РїСЂР°РІРёР»Р°
             using (var accountContext = AccountDbContext.CreateFromAccountId(accountId))
             {
                 var metricTypeRepository = accountContext.GetMetricTypeRepository();
@@ -253,10 +253,10 @@ namespace Zidium.Core.Tests.Dispatcher
 
         protected void InitMetricRules(Guid accountId, Guid metricId)
         {
-            // Получим метрику и заполним ее правила
+            // РџРѕР»СѓС‡РёРј РјРµС‚СЂРёРєСѓ Рё Р·Р°РїРѕР»РЅРёРј РµРµ РїСЂР°РІРёР»Р°
             using (var accountContext = AccountDbContext.CreateFromAccountId(accountId))
             {
-                // Заполним правила метрики
+                // Р—Р°РїРѕР»РЅРёРј РїСЂР°РІРёР»Р° РјРµС‚СЂРёРєРё
                 var metricRepository = accountContext.GetMetricRepository();
                 var metric = metricRepository.GetById(metricId);
                 var metricType = metric.MetricType;
@@ -267,7 +267,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 metricType.ConditionElseColor = Core.Common.ObjectColor.Red;
                 accountContext.SaveChanges();
 
-                // Перекроем их правилами метрики компонента
+                // РџРµСЂРµРєСЂРѕРµРј РёС… РїСЂР°РІРёР»Р°РјРё РјРµС‚СЂРёРєРё РєРѕРјРїРѕРЅРµРЅС‚Р°
                 metric.ConditionAlarm = "value <= 10";
                 metric.ConditionWarning= "value <= 100";
                 metric.ConditionSuccess = "value <= 1000";
@@ -289,7 +289,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
         protected void CheckMetricColor(IClient client, Guid componentId, string metricName, MonitoringStatus status)
         {
-            // Проверим цвет в истории
+            // РџСЂРѕРІРµСЂРёРј С†РІРµС‚ РІ РёСЃС‚РѕСЂРёРё
             var historyResponse = client.ApiService.GetMetricsHistory(componentId, new GetMetricsHistoryFilter()
             {
                 MaxCount = 100
@@ -299,7 +299,7 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.NotNull(history);
             Assert.Equal(status, history.Status);
 
-            // Проверим цвет текущего значения
+            // РџСЂРѕРІРµСЂРёРј С†РІРµС‚ С‚РµРєСѓС‰РµРіРѕ Р·РЅР°С‡РµРЅРёСЏ
             var getMetricResponse = client.ApiService.GetMetric(componentId, metricName);
             Assert.True(getMetricResponse.Success);
             Assert.NotNull(getMetricResponse.Data);
@@ -318,7 +318,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = account.CreateRandomComponentControl();
             var dispatcher = TestHelper.GetDispatcherClient();
 
-            // Отправим метрику с актуальностью 1 секунду
+            // РћС‚РїСЂР°РІРёРј РјРµС‚СЂРёРєСѓ СЃ Р°РєС‚СѓР°Р»СЊРЅРѕСЃС‚СЊСЋ 1 СЃРµРєСѓРЅРґСѓ
             var responseSend = component.SendMetric(
                 new SendMetricData()
                 {
@@ -328,10 +328,10 @@ namespace Zidium.Core.Tests.Dispatcher
                 });
             Assert.True(responseSend.Success);
 
-            // Подождём 2 секунды
+            // РџРѕРґРѕР¶РґС‘Рј 2 СЃРµРєСѓРЅРґС‹
             Thread.Sleep(2 * 1000);
 
-            // Проверим, что метрика красная
+            // РџСЂРѕРІРµСЂРёРј, С‡С‚Рѕ РјРµС‚СЂРёРєР° РєСЂР°СЃРЅР°СЏ
             var getMetricResponse = component.GetMetric(metricType.SystemName);
             Assert.True(getMetricResponse.Success);
             Assert.NotNull(getMetricResponse.Data);
@@ -339,14 +339,14 @@ namespace Zidium.Core.Tests.Dispatcher
 
             var metric = dispatcher.GetMetric(account.Id, component.Info.Id, metricType.SystemName).Data;
 
-            // Изменим "Цвет если нет сигнала" на жёлтый
+            // РР·РјРµРЅРёРј "Р¦РІРµС‚ РµСЃР»Рё РЅРµС‚ СЃРёРіРЅР°Р»Р°" РЅР° Р¶С‘Р»С‚С‹Р№
             dispatcher.UpdateMetric(account.Id, new UpdateMetricRequestData()
             {
                 MetricId = metric.Id,
                 NoSignalColor = ObjectColor.Yellow
             }).Check();
 
-            // Проверим, что метрика стала жёлтой
+            // РџСЂРѕРІРµСЂРёРј, С‡С‚Рѕ РјРµС‚СЂРёРєР° СЃС‚Р°Р»Р° Р¶С‘Р»С‚РѕР№
             getMetricResponse = component.GetMetric(metricType.SystemName);
             Assert.True(getMetricResponse.Success);
             Assert.NotNull(getMetricResponse.Data);

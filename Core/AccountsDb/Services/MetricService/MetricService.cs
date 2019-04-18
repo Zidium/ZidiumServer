@@ -267,7 +267,7 @@ namespace Zidium.Core.AccountsDb
             bool hasSignal)
         {
             // Обновим текущие значения
-            var equal = (value == null && metric.Value == null) || (value == metric.Value);
+            var equal = (value == null && metric.Value == null) || (value != null && metric.Value != null && Math.Abs(value.Value - metric.Value.Value) <= double.Epsilon);
             if (!equal)
             {
                 metric.BeginDate = processDate;

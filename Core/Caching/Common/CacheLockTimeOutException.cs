@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Caching
 {
@@ -16,6 +17,11 @@ namespace Zidium.Core.Caching
                 throw new ArgumentNullException("lockObj");
             }
             Lock = lockObj;
+            
+            Data.Add("Lock object Count", lockObj.Count);
+            Data.Add("Lock object Index", lockObj.Index);
+            Data.Add("Locker Thread Stack", ThreadHelper.GetStackText(lockObj.Thread));
+            Data.Add("Locker Thread State", lockObj.Thread.ThreadState.ToString());
         }
     }
 }

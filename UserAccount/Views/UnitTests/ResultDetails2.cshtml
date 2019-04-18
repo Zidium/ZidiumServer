@@ -84,8 +84,8 @@ else
     <ul class="nav nav-tabs" role="tablist" style="margin-top: 20px; margin-bottom: 20px;">
         <li role="presentation" class="active"><a href="#overview" aria-controls="overview" role="tab" data-toggle="tab">Обзор</a></li>
         <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Настройки</a></li>
-        @*<li role="presentation"><a href="#statuses">Статусы</a></li>*@
-        <li role="presentation"><a href="#execution-results" aria-controls="settings" role="tab" data-toggle="tab">Статусы</a></li>
+        <li role="presentation"><a href="#statuses" aria-controls="statuses" role="tab" data-toggle="tab">Статусы</a></li>
+        <li role="presentation"><a href="#execution-results" aria-controls="settings" role="tab" data-toggle="tab">Результаты выполнений</a></li>
     </ul>
 
     <!-- Tab panes -->
@@ -134,8 +134,8 @@ else
             </div>            
         </div>
 
-        <!-- Вкладка - результаты выполнения -->
-        <div role="tabpanel" class="tab-pane" id="execution-results">
+        <!-- Вкладка - статусы -->
+        <div role="tabpanel" class="tab-pane" id="statuses">
 
             <span class="pageHeader1" id="last-statuses-caption">Последние @UnitTestResultModel.LastStatusesMaxCount статусов</span>
             <a href="@Url.Action("Index", "Events", new { category = EventCategory.UnitTestStatus, unitTestId = Model.UnitTest.Id })" class="btn btn-default">Все статусы</a>
@@ -182,10 +182,9 @@ else
             }
         </div>
 
-        <!-- Вкладка - история статусов -->
-        <div role="tabpanel" class="tab-pane" id="statuses">
-
-           
+        <!-- Вкладка - результаты выполнений -->
+        <div role="tabpanel" class="tab-pane" id="execution-results">
+            @Html.PartialReloadedTile(Url.Action("ShowExecutionResults", new { id = Model.UnitTest.Id }))
         </div>
 
         <!-- Вкладка настройки -->

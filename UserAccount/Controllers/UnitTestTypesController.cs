@@ -36,13 +36,15 @@ namespace Zidium.UserAccount.Controllers
             var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
             var unitTestType = repository.GetById(id);
 
-            var model = new UnitTestTypeEditModel()
+            var model = new UnitTestTypeShowModel()
             {
                 Id = unitTestType.Id,
                 DisplayName = unitTestType.DisplayName,
                 SystemName = unitTestType.SystemName,
                 ActualTime = TimeSpanHelper.FromSeconds(unitTestType.ActualTimeSecs),
-                NoSignalColor = ColorStatusSelectorValue.FromColor(unitTestType.NoSignalColor),
+                ActualTimeDefault = UnitTestHelper.GetDefaultActualTime(),
+                NoSignalColor = unitTestType.NoSignalColor,
+                NoSignalColorDefault = ObjectColor.Red,
                 IsDeleted = unitTestType.IsDeleted,
                 IsSystem = unitTestType.IsSystem
             };
@@ -53,6 +55,7 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Add()
         {
             var model = new UnitTestTypeEditModel();
+            model.InitReadOnlyData();
             return View(model);
         }
 
@@ -61,6 +64,8 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Add(UnitTestTypeEditModel model)
         {
+            model.InitReadOnlyData();
+
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -69,6 +74,8 @@ namespace Zidium.UserAccount.Controllers
             {
                 SystemName = model.SystemName,
                 DisplayName = model.DisplayName,
+                ActualTimeSecs = TimeSpanHelper.GetSeconds(model.ActualTime),
+                NoSignalColor = model.NoSignalColor?.GetSelectedOne()
             });
 
             response.Check();
@@ -96,6 +103,7 @@ namespace Zidium.UserAccount.Controllers
                 IsDeleted = unitTestType.IsDeleted,
                 IsSystem = unitTestType.IsSystem
             };
+            model.InitReadOnlyData();
 
             return View(model);
         }
@@ -105,6 +113,8 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(UnitTestTypeEditModel model)
         {
+            model.InitReadOnlyData();
+
             if (!ModelState.IsValid)
                 return View(model);
 

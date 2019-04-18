@@ -6,6 +6,7 @@ using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -41,12 +42,18 @@ namespace Zidium.Agent.AgentTasks
         {
             ResetCounters();
 
-            DbProcessor.ForEachAccount(x => ProcessAccount(
-                x.Account.Id,
-                x.AccountDbContext,
-                x.Logger,
-                x.Account.DisplayName,
-                x.CancellationToken));
+            DbProcessor.ForEachAccount(x =>
+            {
+                if (x.Account.Type != AccountType.Test)
+                {
+                    ProcessAccount(
+                      x.Account.Id,
+                      x.AccountDbContext,
+                      x.Logger,
+                      x.Account.DisplayName,
+                      x.CancellationToken);
+                }
+            });
         }
 
         public void ProcessAccount(Guid accountId, Guid unitTestId)

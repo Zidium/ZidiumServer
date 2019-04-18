@@ -526,6 +526,7 @@
 
     .tree-details-container > .tree-details-main-area {
         margin-left: 10px;
+        min-width: 0;
     }
 
         .tree-details-container > .tree-details-main-area > .tree-details-content {

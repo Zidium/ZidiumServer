@@ -1,0 +1,33 @@
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.UnitTests
+@model ShowExecutionResultsModel
+
+@if (Model.ExecutionResults.Length > 0)
+{
+    <p>Последние @Model.MaxCount результатов</p>
+    <table class="table simpleTableClear table-condensed table-fixed" id="unittest-details-results-table">
+        <thead>
+            <tr>
+                <th class="column-date">Дата</th>
+                <th class="th-result">Результат</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var result in Model.ExecutionResults)
+            {
+                var color = GuiHelper.GetStrongFgColor(result.Importance);
+                <tr style="color: @color">
+                    <td>@DateTimeHelper.GetRussianDateTime(result.Date)</td>
+                    <td>
+                        <a href="@Url.Action("Show", "Events", new { id = result.Id })" title="@result.Message" target="_blank">@result.Message</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Нет результатов выполнения</p>
+}

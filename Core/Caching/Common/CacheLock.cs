@@ -69,7 +69,7 @@ namespace Zidium.Core.Caching
 
         public void Enter()
         {
-            if (TryEnter(TimeOut)==false)
+            if (TryEnter(TimeOut) == false)
             {
                 throw new CacheLockTimeOutException(this);
             }
@@ -77,15 +77,16 @@ namespace Zidium.Core.Caching
 
         public bool IsEntered()
         {
-            return Monitor.IsEntered(_lock); 
+            return Monitor.IsEntered(_lock);
         }
 
         public void Exit()
         {
             if (Monitor.IsEntered(_lock))
             {
-                Monitor.Exit(_lock);
+                Thread = null;
                 Interlocked.Decrement(ref _lockCount);
+                Monitor.Exit(_lock);
                 if (_lockCount < 0)
                 {
                     throw new Exception("_lockCount < 0");

@@ -88,7 +88,7 @@ namespace Zidium.UserAccount.Tests
             using (var controller = new UnitTestTypesController(account.Id, user.Id))
             {
                 var result = (ViewResultBase)controller.Show(unitTestType.Id);
-                var model = (UnitTestTypeEditModel)result.Model;
+                var model = (UnitTestTypeShowModel)result.Model;
                 Assert.Equal(unitTestType.Id, model.Id);
                 Assert.Equal(unitTestType.DisplayName, model.DisplayName);
                 Assert.Equal(unitTestType.SystemName, model.SystemName);

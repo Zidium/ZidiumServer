@@ -9,6 +9,7 @@ using NLog;
 using Zidium.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.SendEMails
 {
@@ -60,9 +61,9 @@ namespace Zidium.Agent.AgentTasks.SendEMails
         {
             DbProcessor.ForEachAccount(data =>
             {
-                if (accountId == null)
+                if (accountId == null && data.Account.Type != AccountType.Test)
                     ProcessAccount(data);
-                else if (accountId.Value == data.Account.Id)
+                else if (accountId != null && accountId.Value == data.Account.Id)
                     ProcessAccount(data, emailId);
             });
         }

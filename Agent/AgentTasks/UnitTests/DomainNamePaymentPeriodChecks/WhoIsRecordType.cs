@@ -1,4 +1,4 @@
-namespace Zidium.Agent.AgentTasks
+﻿namespace Zidium.Agent.AgentTasks
 {
     public enum WhoIsRecordType
     {

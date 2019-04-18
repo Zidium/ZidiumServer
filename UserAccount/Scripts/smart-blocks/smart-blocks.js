@@ -15,13 +15,23 @@
         var url = form.attr('action');
         var method = form.attr('method');
         var isPost = method != null && method.toLowerCase() === "post";
-        var data = isPost ? new FormData(form[0]) : form.serializeArray();
+        var data = isPost ? new FormData(form[0]) : (collectFormData(form) || form.serializeArray());
 
         doAjaxSubmit(url, method, data, form);
 
         return false;
     }
-    
+
+    function collectFormData(form) {
+        var collectFunctionName = form.data('smart-block-collect-data');
+        if (collectFunctionName != null) {
+            var collectFunction = getFunction(collectFunctionName);
+            if (collectFunction != null) {
+                return collectFunction.call(form, form);
+            }
+        }
+        return null;
+    }
 
     function doAjaxSubmit(url, method, data, element, onComplete) {
         var isPost = method != null && method.toLowerCase() === "post";
@@ -239,7 +249,7 @@
                     });
                     beginFunction.call(container, $.param(params));
                 }
-            }            
+            }
         }
     }
 
@@ -301,12 +311,11 @@
             var element = $(elem);
             var url = params.url || element.data("url");
             if (url) {
-                var data = null;
                 if (!onComplete) {
-                    onComplete = function() {};
+                    onComplete = function () { };
                 }
                 method = method || "get";
-                doSubmit(url, data, element, onComplete, method);
+                doSubmit(url, null, element, onComplete, method);
             }
         });
     }
@@ -370,5 +379,42 @@ $(function () {
 
     // Save submit initiator in form data for use later in onSubmit event
     $(document).on('click', 'button[type=submit].smart-block-button', smartBlocks.onSmartButtonClick);
+
+    $.extend($.fn,
+        {
+            smartBlocks: function () {
+                if (!this.length)
+                    return;
+
+                var me = $(this);
+
+                if (me.hasClass('smart-block-auto-load')) {
+                    var url = me.data('url');
+                    smartBlocks.doSubmit(url, null, me);
+                }
+
+                $('.smart-block-auto-load', me).each(function (index, element) {
+                    var url = $(element).data('url');
+                    smartBlocks.doSubmit(url, null, $(element));
+                });
+
+                if (me.hasClass('smart-block-auto-refresh')) {
+                    var url = me.data('url');
+                    var interval = parseInt(me.data('interval'));
+                    setInterval(function () {
+                        smartBlocks.doSubmit(url, null, me);
+                    }, interval * 1000);
+                }
+
+                $('.smart-block-auto-refresh', me).each(function (index, element) {
+                    var url = $(element).data('url');
+                    var interval = parseInt($(element).data('interval'));
+                    setInterval(function () {
+                        smartBlocks.doSubmit(url, null, $(element));
+                    }, interval * 1000);
+                });
+
+            }
+        });
 
 });

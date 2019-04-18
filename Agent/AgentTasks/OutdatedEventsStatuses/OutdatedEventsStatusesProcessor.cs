@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using NLog;
 using Zidium.Core.Common;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.OutdatedEventsStatuses
 {
@@ -21,7 +22,11 @@ namespace Zidium.Agent.AgentTasks.OutdatedEventsStatuses
         public void Process()
         {
             Count = 0;
-            DbProcessor.ForEachAccount(ProcessAccount);
+            DbProcessor.ForEachAccount(data =>
+            {
+                if (data.Account.Type != AccountType.Test)
+                    ProcessAccount(data);
+            });
             if (Count > 0)
                 Logger.Info("Обновлено {0} статусов событий", Count);
         }

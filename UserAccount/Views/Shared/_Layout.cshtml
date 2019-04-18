@@ -56,7 +56,7 @@
             @Html.Partial("_TempMessage")
             @Html.Partial("~/Views/Errors/ErrorPartial.cshtml")
             @RenderBody()
-            <hr style="margin-top: 30px;" />
+            <hr style="margin-top: 40px;" />
             
             <footer>
                 <table style="width: 100%; margin-bottom: 40px;">
@@ -73,7 +73,7 @@
                 </table>
                 @if (DebugHelper.IsDebugMode)
                 {
-                    <p>@Html.ActionLink("GuiExamples", "Index", "GuiExamples")</p>                                       
+                    <p>@Html.ActionLink("GuiExamples", "Index", "TilesExamples")</p>                                       
                 }
             </footer>            
             @Html.Action("FooterPartial", "AddIn")

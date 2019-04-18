@@ -6,12 +6,12 @@ namespace Zidium.UserAccount.Models.UnitTests
 {
     public class OverviewLastResultModel
     {
-        private const string ParamName = "eventObj";
-
         public Guid UnitTestId { get; set; }
         public MonitoringStatus Status { get; set; }
         public string Message { get; set; }
         public DateTime? ExecutionTime { get; set; }
+        public bool IsCustom { get; set; }
+        public bool HasExecution => ExecutionTime != null;
 
         /// <summary>
         /// Если проверка выключена, то нельзя выполнить проверку
@@ -24,14 +24,25 @@ namespace Zidium.UserAccount.Models.UnitTests
             {
                 UnitTestId = unitTest.Id,
                 Status = unitTest.Bulb.Status,
-                ShowRunButton = unitTest.Bulb.Status != Core.Api.MonitoringStatus.Disabled
+                ShowRunButton = true,
+                IsCustom = SystemUnitTestTypes.IsSystem(unitTest.TypeId)==false
             };
+            if (unitTest.Bulb.Status== Core.Api.MonitoringStatus.Disabled)
+            {
+                model.ShowRunButton = false;
+            }
+            if (SystemUnitTestTypes.IsSystem(unitTest.TypeId) == false)
+            {
+                model.ShowRunButton = false;
+            }
             if (eventObj == null)
             {
-                model.Message = "<Нет выполнений>";
+                // не было выполнений
+                model.ShowRunButton = false;
             }
             else
             {
+                // были выполнения
                 model.ExecutionTime = eventObj.StartDate;
                 model.Message = eventObj.Message;
                 if (model.Message == null)

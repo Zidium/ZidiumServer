@@ -200,7 +200,10 @@ namespace Zidium.Core.AccountsDb
 
         public Subscription CreateDefaultForUser(Guid accountId, Guid userId)
         {
-            var subscription = new Subscription()
+            var accountDbContext = Context.GetAccountDbContext(accountId);
+            var repository = accountDbContext.GetSubscriptionRepository();
+
+            var defaultForUser = new Subscription()
             {
                 UserId = userId,
                 ComponentTypeId = null,
@@ -208,15 +211,36 @@ namespace Zidium.Core.AccountsDb
                 Object = SubscriptionObject.Default,
                 IsEnabled = true,
                 Importance = EventImportance.Alarm,
-                DurationMinimumInSeconds = null,
-                ResendTimeInSeconds = null,
+                DurationMinimumInSeconds = 10 * 60,
+                ResendTimeInSeconds = 24 * 60 * 60,
                 NotifyBetterStatus = false,
                 LastUpdated = DateTime.Now
             };
-            var accountDbContext = Context.GetAccountDbContext(accountId);
-            var repository = accountDbContext.GetSubscriptionRepository();
-            repository.Add(subscription);
-            return subscription;
+            repository.Add(defaultForUser);
+
+            var forRoot = new Subscription()
+            {
+                UserId = userId,
+                Channel = SubscriptionChannel.Email,
+                Object = SubscriptionObject.ComponentType,
+                ComponentTypeId = SystemComponentTypes.Root.Id,
+                IsEnabled = false,
+                LastUpdated = DateTime.Now
+            };
+            repository.Add(forRoot);
+
+            var forFolder = new Subscription()
+            {
+                UserId = userId,
+                Channel = SubscriptionChannel.Email,
+                Object = SubscriptionObject.ComponentType,
+                ComponentTypeId = SystemComponentTypes.Folder.Id,
+                IsEnabled = false,
+                LastUpdated = DateTime.Now
+            };
+            repository.Add(forFolder);
+
+            return defaultForUser;
         }
 
         public SubscriptionChannel[] GetAvailableChannelsForAccount(Guid accountId)

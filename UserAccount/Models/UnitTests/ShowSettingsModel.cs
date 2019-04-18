@@ -55,7 +55,7 @@ namespace Zidium.UserAccount.Models.UnitTests
             }
             else
             {
-                model.ActualTime = UnitTest.GetDefaultActualTime();
+                model.ActualTime = UnitTestHelper.GetDefaultActualTime();
             }
             return model;
         }

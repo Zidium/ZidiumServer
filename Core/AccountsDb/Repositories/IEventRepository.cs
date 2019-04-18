@@ -72,6 +72,8 @@ namespace Zidium.Core.AccountsDb
 
         Event Add(Event eventObj);
 
+        Event AddInNewContext(Event eventObj);
+
         Event GetById(Guid eventId);
 
         Event GetByIdOrNull(Guid eventId);

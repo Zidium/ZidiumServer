@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Zidium.Core.Common.Helpers
 {
@@ -97,6 +98,36 @@ namespace Zidium.Core.Common.Helpers
                 return GetMinutesString(timeSpan.Minutes);
             }
             return GetSecondsString(timeSpan.Seconds);
+        }
+
+        public static string GetFriendlyText(TimeSpan timeSpan)
+        {
+            if (timeSpan == TimeSpan.Zero)
+            {
+                return "0";
+            }
+            List<string> units = new List<string>();
+            int value = timeSpan.Days;
+            if (value > 0)
+            {
+                units.Add(GetDaysString(value));
+            }
+            value = timeSpan.Hours;
+            if (value > 0)
+            {
+                units.Add(GetHoursString(value));
+            }
+            value = timeSpan.Minutes;
+            if (value > 0)
+            {
+                units.Add(GetMinutesString(value));
+            }
+            value = timeSpan.Seconds;
+            if (value > 0)
+            {
+                units.Add(GetSecondsString(value));
+            }
+            return string.Join(" ", units);
         }
 
         public static string Get2UnitsString(TimeSpan timeSpan)

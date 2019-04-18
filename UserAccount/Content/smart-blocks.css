@@ -1,16 +1,13 @@
 ﻿/* Форма */
 .smart-block-form {
-    
 }
 
 /* Контейнер */
 .smart-block {
-    
 }
 
 /* Кнопка */
 .smart-block-button {
-    
 }
 
 /* Серый фон загрузки данных */
@@ -23,3 +20,10 @@
     background-repeat: no-repeat;
     background-position: center center;
 }
+
+/* Автозагружаемый контейнер */
+.smart-block-auto-load {
+}
+
+/* Автообновляемый контейнер */
+.smart-block-auto-refresh {}

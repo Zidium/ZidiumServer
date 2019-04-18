@@ -4,6 +4,7 @@ using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.ComponentStatuses
 {
@@ -24,7 +25,11 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
         public void Process()
         {
             UpdateStatesCount = 0;
-            DbProcessor.ForEachAccount(data => ProcessAccount(data.Account.Id, data.AccountDbContext, data.Logger));
+            DbProcessor.ForEachAccount(data =>
+            {
+                if (data.Account.Type != AccountType.Test)
+                    ProcessAccount(data.Account.Id, data.AccountDbContext, data.Logger);
+            });
             if (UpdateStatesCount > 0)
                 Logger.Info("Обновлено статусов: {0}", UpdateStatesCount);
         }

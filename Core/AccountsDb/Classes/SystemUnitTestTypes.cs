@@ -62,6 +62,11 @@ namespace Zidium.Core.AccountsDb
             return AllSystemTypesIds.Contains(unitTestTypeId);
         }
 
+        public static bool IsCustom(Guid unitTestTypeId)
+        {
+            return IsSystem(unitTestTypeId)==false;
+        }
+
         public static bool CanEditPeriod(Guid unitTestTypeId)
         {
             return unitTestTypeId != DomainNameTestType.Id && unitTestTypeId != SslTestType.Id;

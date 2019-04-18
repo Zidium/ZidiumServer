@@ -1,4 +1,4 @@
-using System.Linq;
+ï»¿using System.Linq;
 using Xunit;
 using Zidium.TestTools;
 
@@ -12,19 +12,19 @@ namespace ApiTests_1._0.Components
             var account = TestHelper.GetTestAccount();
             var root = account.GetClient().GetRootComponentControl();
 
-            // Ñîçäàäèì íîâûé êîìïîíåíò è óäàëèì åãî
+            // Ð¡Ð¾Ð·Ð´Ð°Ð´Ð¸Ð¼ Ð½Ð¾Ð²Ñ‹Ð¹ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ð¸ ÑƒÐ´Ð°Ð»Ð¸Ð¼ ÐµÐ³Ð¾
             var component = account.CreateRandomComponentControl();
             Assert.False(component.IsFake());
             component.Delete();
 
-            // Ïîëó÷èì êîìïîíåíò ïî åãî èìåíè
+            // ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ð¼ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚ Ð¿Ð¾ ÐµÐ³Ð¾ Ð¸Ð¼ÐµÐ½Ð¸
             var newComponent = root.GetOrCreateChildComponentControl(component.Info.Type.SystemName, component.Info.SystemName);
             Assert.False(newComponent.IsFake());
 
-            // Ïðîâåðèì, ÷òî ýòî íîâûé êîìïîíåíò, ñ äðóãèì Id
+            // ÐŸÑ€Ð¾Ð²ÐµÑ€Ð¸Ð¼, Ñ‡Ñ‚Ð¾ ÑÑ‚Ð¾ Ð½Ð¾Ð²Ñ‹Ð¹ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚, Ñ Ð´Ñ€ÑƒÐ³Ð¸Ð¼ Id
             Assert.NotEqual(component.Info.Id, newComponent.Info.Id);
 
-            // Ïðîâåðèì, ÷òî â ñïèñêå äî÷åðíèõ óäàë¸ííîãî íåò
+            // ÐŸÑ€Ð¾Ð²ÐµÑ€Ð¸Ð¼, Ñ‡Ñ‚Ð¾ Ð² ÑÐ¿Ð¸ÑÐºÐµ Ð´Ð¾Ñ‡ÐµÑ€Ð½Ð¸Ñ… ÑƒÐ´Ð°Ð»Ñ‘Ð½Ð½Ð¾Ð³Ð¾ Ð½ÐµÑ‚
             var childs = root.GetChildComponents().Data;
             Assert.Empty(childs.Where(t => t.Id == component.Info.Id));
             Assert.NotEmpty(childs.Where(t => t.Id == newComponent.Info.Id));

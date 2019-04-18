@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Linq;
 using System.Threading;
 using Xunit;
@@ -68,7 +68,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = account.CreateTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
 
-            // Создадим новый тип проверки и новую проверку
+            // РЎРѕР·РґР°РґРёРј РЅРѕРІС‹Р№ С‚РёРї РїСЂРѕРІРµСЂРєРё Рё РЅРѕРІСѓСЋ РїСЂРѕРІРµСЂРєСѓ
             var unitTestType = dispatcher.GetOrCreateUnitTestType(account.Id, new GetOrCreateUnitTestTypeRequestData()
             {
                 SystemName = "UnitTestType." + Guid.NewGuid()
@@ -81,7 +81,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 SystemName = "UnitTest." + Guid.NewGuid()
             }).Data;
 
-            // Отправим зелёную проверку, актуальную 1 секунду
+            // РћС‚РїСЂР°РІРёРј Р·РµР»С‘РЅСѓСЋ РїСЂРѕРІРµСЂРєСѓ, Р°РєС‚СѓР°Р»СЊРЅСѓСЋ 1 СЃРµРєСѓРЅРґСѓ
             dispatcher.SendUnitTestResult(account.Id, new SendUnitTestResultRequestData()
             {
                 UnitTestId = unitTest.Id,
@@ -89,17 +89,17 @@ namespace Zidium.Core.Tests.Dispatcher
                 ActualIntervalSeconds = 1
             }).Check();
 
-            // Подождём 2 секунды
+            // РџРѕРґРѕР¶РґС‘Рј 2 СЃРµРєСѓРЅРґС‹
             Thread.Sleep(2000);
 
-            // Получим цвет проверки
+            // РџРѕР»СѓС‡РёРј С†РІРµС‚ РїСЂРѕРІРµСЂРєРё
             var response = dispatcher.GetUnitTestState(account.Id, component.Id, unitTest.Id);
             response.Check();
 
-            // Проверим, что проверка стала красной
+            // РџСЂРѕРІРµСЂРёРј, С‡С‚Рѕ РїСЂРѕРІРµСЂРєР° СЃС‚Р°Р»Р° РєСЂР°СЃРЅРѕР№
             Assert.Equal(MonitoringStatus.Alarm, response.Data.Status);
 
-            // Поменяем "Цвет если нет сигнала" на жёлтый
+            // РџРѕРјРµРЅСЏРµРј "Р¦РІРµС‚ РµСЃР»Рё РЅРµС‚ СЃРёРіРЅР°Р»Р°" РЅР° Р¶С‘Р»С‚С‹Р№
             dispatcher.UpdateUnitTest(account.Id, new UpdateUnitTestRequestData()
             {
                 UnitTestId = unitTest.Id,
@@ -107,11 +107,11 @@ namespace Zidium.Core.Tests.Dispatcher
                 NoSignalColor = ObjectColor.Yellow
             }).Check();
 
-            // Получим цвет проверки
+            // РџРѕР»СѓС‡РёРј С†РІРµС‚ РїСЂРѕРІРµСЂРєРё
             response = dispatcher.GetUnitTestState(account.Id, component.Id, unitTest.Id);
             response.Check();
 
-            // Проверим, что проверка стала жёлтой
+            // РџСЂРѕРІРµСЂРёРј, С‡С‚Рѕ РїСЂРѕРІРµСЂРєР° СЃС‚Р°Р»Р° Р¶С‘Р»С‚РѕР№
             Assert.Equal(MonitoringStatus.Warning, response.Data.Status);
             Assert.False(response.Data.HasSignal);
         }

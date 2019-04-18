@@ -71,7 +71,7 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid id)
         {
             var repository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = repository.GetById(id);
+            var unitTest = repository.GetById(id);            
 
             var editAction = unitTest.SimpleMode ? "EditSimple" : "Edit";
 

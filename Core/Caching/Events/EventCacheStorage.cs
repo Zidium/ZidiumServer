@@ -81,7 +81,7 @@ namespace Zidium.Core.Caching
             }
             var dbEvent = new Event();
             UpdateEntity(dbEvent, eventObj, checkAdd);
-            repository.Add(dbEvent);
+            repository.AddInNewContext(dbEvent);
         }
 
         protected override void SetResponseSaved(EventCacheWriteObject writeObject)
@@ -118,7 +118,11 @@ namespace Zidium.Core.Caching
                 {
                     // загрузим из БД, чтобы получить актуальные данные
                     var repository = accountDbContext.GetEventRepository();
-                    dbEvent = repository.GetById(eventObj.Id);
+                    dbEvent = repository.GetByIdOrNull(eventObj.Id);
+
+                    // событие могли уже удалить
+                    if (dbEvent == null)
+                        return;
                 }
                 else
                 {

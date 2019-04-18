@@ -25,6 +25,11 @@
                     <br />
                     <span class="simple-text-value">@Model.NoSignalColor</span>
                 </p>
+                <p>
+                    <span class="simple-text-header">Тип проверки</span>
+                    <br />
+                    <a href="@Url.Action("Show", "UnitTestTypes", new {id = Model.TypeId})">@Model.TypeDisplayName</a>
+                </p>
             </div>
         </div>
     </div>

@@ -2,6 +2,7 @@
 using System.Threading;
 using NLog;
 using Zidium.Core.Common;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.OutdatedMetrics
 {
@@ -22,7 +23,11 @@ namespace Zidium.Agent.AgentTasks.OutdatedMetrics
         public void Process()
         {
             Count = 0;
-            DbProcessor.ForEachAccount(ProcessAccount);
+            DbProcessor.ForEachAccount(data =>
+            {
+                if (data.Account.Type != AccountType.Test)
+                    ProcessAccount(data);
+            });
             if (Count > 0)
                 Logger.Info("Обновлено {0} статусов метрик", Count);
         }

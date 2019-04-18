@@ -5,6 +5,7 @@ using NLog;
 using Zidium.Core;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.DeleteLogs
 {
@@ -41,7 +42,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
             DbProcessor.ForEachAccount(data =>
             {
-                if (!accountId.HasValue || accountId.Value == data.Account.Id)
+                if ((!accountId.HasValue && data.Account.Type != AccountType.Test) || (accountId.HasValue && accountId.Value == data.Account.Id))
                     ProcessAccount(data);
             });
 

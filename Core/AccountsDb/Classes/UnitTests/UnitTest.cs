@@ -181,12 +181,7 @@ namespace Zidium.Core.AccountsDb
         /// <summary>
         /// Максимальное количество неуспешных попыток, после которого проверка провалится
         /// </summary>
-        public int AttempMax { get; set; }
-
-        public static TimeSpan GetDefaultActualTime()
-        {
-            return TimeSpan.FromMinutes(5); // по умолчанию 5 мин
-        }
+        public int AttempMax { get; set; }        
 
         public string GetFullDisplayName()
         {

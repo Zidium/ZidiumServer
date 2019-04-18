@@ -7,6 +7,7 @@ using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks.DeleteEvents
 {
@@ -50,7 +51,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
             DbProcessor.ForEachAccount(data =>
             {
-                if (!accountId.HasValue || accountId.Value == data.Account.Id)
+                if ((!accountId.HasValue && data.Account.Type != AccountType.Test) || (accountId.HasValue && accountId.Value == data.Account.Id))
                     ProcessAccount(data);
             });
 

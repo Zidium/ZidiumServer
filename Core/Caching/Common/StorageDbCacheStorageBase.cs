@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -11,7 +13,7 @@ namespace Zidium.Core.Caching
     public abstract class StorageDbCacheStorageBase<TResponse, TReadObject, TWriteObject>
         : CacheStorageBaseT<AccountCacheRequest, TResponse, TReadObject, TWriteObject>
         where TReadObject : class, IAccountDbCacheReadObject
-        where TWriteObject: class, TReadObject, ICacheWriteObjectT<TResponse, TWriteObject> 
+        where TWriteObject : class, TReadObject, ICacheWriteObjectT<TResponse, TWriteObject>
         where TResponse : CacheResponse<AccountCacheRequest, TResponse, TReadObject, TWriteObject>, new()
     {
         protected override AccountCacheRequest GetRequest(TReadObject cacheReadObject)
@@ -97,9 +99,18 @@ namespace Zidium.Core.Caching
                 // storageDbContext.Configuration.AutoDetectChangesEnabled = false;
                 accountDbContext.Configuration.ValidateOnSaveEnabled = false;
 
+                Exception lastException = null;
                 foreach (var cacheObject in cacheObjects)
                 {
-                    UpdateBatchObject(accountDbContext, cacheObject, useCheck);
+                    try
+                    {
+                        UpdateBatchObject(accountDbContext, cacheObject, useCheck);
+                    }
+                    catch (Exception exception)
+                    {
+                        // Запомним ошибку, чтобы вызвать в конце
+                        lastException = exception;
+                    }
                 }
 
                 var saveTimer = new Stopwatch();
@@ -109,14 +120,19 @@ namespace Zidium.Core.Caching
                 // перенесено в MyDataContext
                 // storageDbContext.Configuration.AutoDetectChangesEnabled = true;
                 accountDbContext.SaveChanges();
+
                 accountDbContext.Database.ExecuteSqlCommand("SELECT 'cache-update-batch-end'");
 
                 saveTimer.Stop();
                 batchTimer.Stop();
 
                 ComponentControl.Log.Debug("UpdateBatch " + cacheObjects.Count + " штук за " +
-                    (int) batchTimer.ElapsedMilliseconds + " мс / SaveChanges за " +
-                    (int) saveTimer.ElapsedMilliseconds + " мс");
+                    (int)batchTimer.ElapsedMilliseconds + " мс / SaveChanges за " +
+                    (int)saveTimer.ElapsedMilliseconds + " мс");
+
+                // Сохраняем что удастся, но ошибку всё равно вызываем
+                if (lastException != null)
+                    throw lastException;
             }
         }
 
@@ -126,12 +142,12 @@ namespace Zidium.Core.Caching
             foreach (var accountGroup in accountGroups)
             {
                 var accountId = accountGroup.Key;
-                
+
                 int batchCount = 100;
 
                 // получим пачки
                 var batchGroups = accountGroup
-                    .OrderBy(x=>x.SaveOrder)
+                    .OrderBy(x => x.SaveOrder)
                     .Select((x, index) => new
                     {
                         Batch = index / batchCount,
@@ -142,7 +158,7 @@ namespace Zidium.Core.Caching
                 foreach (var batchGroup in batchGroups)
                 {
                     var batchItems = batchGroup.ToList();
-                    
+
                     var batch = batchItems
                         .Select(x => x.WriteObject)
                         .ToList();
@@ -207,7 +223,7 @@ namespace Zidium.Core.Caching
 
                 // получим пачки
                 var batchGroups = accountGroup
-                    .OrderBy(x=>x.SaveOrder)
+                    .OrderBy(x => x.SaveOrder)
                     .Select((x, index) => new
                     {
                         Batch = index / batchCount,
@@ -269,7 +285,7 @@ namespace Zidium.Core.Caching
                                 {
                                     throw;
                                 }
-                                ComponentControl.Log.Error("Ошибка UpdateBatch. Попытка " + attemps, exception);
+                                ComponentControl.Log.Warning("Ошибка UpdateBatch. Попытка " + attemps, exception);
                                 Thread.Sleep(TimeSpan.FromSeconds(10));
                             }
                         }

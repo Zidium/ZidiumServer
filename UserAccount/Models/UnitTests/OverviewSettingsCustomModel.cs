@@ -10,6 +10,8 @@ namespace Zidium.UserAccount.Models.UnitTests
         public Guid UnitTestId { get; set; }
         public TimeSpan ActualTime { get; set; }
         public ObjectColor NoSignalColor { get; set; }
+        public Guid TypeId { get; set; }
+        public string TypeDisplayName { get; set; }
 
         public static OverviewSettingsCustomModel Create(UnitTest unitTest)
         {
@@ -20,8 +22,10 @@ namespace Zidium.UserAccount.Models.UnitTests
             var model = new OverviewSettingsCustomModel()
             {
                 UnitTestId = unitTest.Id,
+                TypeId = unitTest.TypeId,
                 NoSignalColor = unitTest.NoSignalColor ?? unitTest.Type.NoSignalColor ?? ObjectColor.Red
             };
+            model.TypeDisplayName = unitTest.Type.DisplayName;
             if (unitTest.ActualTimeSecs.HasValue)
             {
                 model.ActualTime = TimeSpanHelper.FromSeconds(unitTest.ActualTimeSecs).Value;
@@ -32,7 +36,7 @@ namespace Zidium.UserAccount.Models.UnitTests
             }
             else
             {
-                model.ActualTime = UnitTest.GetDefaultActualTime();
+                model.ActualTime = UnitTestHelper.GetDefaultActualTime();
             }
             return model;
         }
