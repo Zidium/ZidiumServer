@@ -46,7 +46,7 @@ namespace ApiTests_1._0.Components
         /// Тест проверяет, что ссылки на контроль компонента НЕ кэшируются клиентом
         /// </summary>
         [Fact]
-        public void ReferenceEquals()
+        public void TestReferenceEquals()
         {
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();

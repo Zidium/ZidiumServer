@@ -75,13 +75,15 @@ namespace Zidium.Api
             {
                 return;
             }
+
+            var now = DateTime.Now;
             var webLogs = new WebLogMessage()
             {
                 Attemps = 0,
                 ComponentControl = componentControl,
-                CreateDate = DateTime.Now,
+                CreateDate = now,
                 Order = Order,
-                Date = logMessage.Date,
+                Date = logMessage.Date ?? Client.ToServerTime(now),
                 Level = logMessage.Level,
                 Message = logMessage.Message,
                 Context = logMessage.Context,

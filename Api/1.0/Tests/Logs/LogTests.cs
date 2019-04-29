@@ -86,7 +86,7 @@ namespace ApiTests_1._0.Logs
             });
             component.Log.Flush();
 
-            var endDate = TestHelper.GetServerDateTime().AddSeconds(1);
+            var endDate = TestHelper.GetServerDateTime().AddSeconds(2);
 
             // проверим, что все отправленное записалось в БД
             var findMessage = new GetLogsFilter()
