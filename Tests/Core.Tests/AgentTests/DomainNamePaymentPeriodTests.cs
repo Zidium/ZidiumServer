@@ -22,8 +22,8 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.True(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("aps-market.com");
-            Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
-            Assert.True(result.Date.HasValue);
+            Assert.Equal(DomainNamePaymentPeriodErrorCode.FreeDomain, result.Code);
+            Assert.False(result.Date.HasValue);
 
             result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("stackoverflow.com");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);

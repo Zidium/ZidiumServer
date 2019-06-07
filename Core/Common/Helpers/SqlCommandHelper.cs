@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 using System.Data.SqlClient;
 
 namespace Zidium.Core
@@ -7,14 +8,25 @@ namespace Zidium.Core
     {
         public static int ExecuteNonQuery(DbCommand command)
         {
-            try
+            var tryCount = 10;
+            while (true)
             {
-                return command.ExecuteNonQuery();
+                try
+                {
+                    return command.ExecuteNonQuery();
+                }
+                catch (SqlException exception)
+                {
+                    tryCount--;
+                    if (!CanRerun(exception.Message) || tryCount == 0)
+                      throw new SqlExtendedException(exception, command);
+                }
             }
-            catch (SqlException exception)
-            {
-                throw new SqlExtendedException(exception, command);
-            }
+        }
+
+        public static bool CanRerun(string message)
+        {
+            return message.IndexOf("Rerun the transaction.", StringComparison.InvariantCultureIgnoreCase) >= 0;
         }
     }
 }

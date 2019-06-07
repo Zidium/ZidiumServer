@@ -131,6 +131,7 @@ namespace Zidium.Core.AccountsDb
                 var logRepository = Context.DbContext.GetAccountDbContext(accountId).GetLogRepository();
 
                 // Добавим все записи в одной транзакции
+                accountDbContext.Configuration.AutoDetectChangesEnabled = false;
                 foreach (var message in messages)
                 {
                     if (message.Message == null)
@@ -153,11 +154,13 @@ namespace Zidium.Core.AccountsDb
                     var log = ApiConverter.GetLog(component.Id, message);
                     logRepository.Add(log);
                 }
+                accountDbContext.ChangeTracker.DetectChanges();
 
                 Context.SaveChanges();
             }
             finally
             {
+                accountDbContext.Configuration.AutoDetectChangesEnabled = true;
                 if (canIncreaseSizeInStatictics)
                     checker.AddLogSizePerDay(accountDbContext, totalSize);
             }

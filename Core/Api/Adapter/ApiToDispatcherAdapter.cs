@@ -11,12 +11,10 @@ namespace ApiAdapter
         public string Ip { get; protected set; }
 
         public string AccountName { get; set; }
-
-        public Guid RequestId { get; protected set; }
         
         #region Служебные
 
-        protected Zidium.Core.Api.IDispatcherService Dispatcher = null;
+        protected Zidium.Core.Api.IDispatcherService Dispatcher;
 
         public ApiToDispatcherAdapter(
             Zidium.Core.Api.IDispatcherService dispatcher,
@@ -40,8 +38,7 @@ namespace ApiAdapter
                 request.ProgramName = request.Token.ProgramName;
                 request.Token.AccountName = AccountName;
             }
-            RequestId = Guid.NewGuid();
-            request.RequestId = RequestId;
+            request.RequestId = Guid.NewGuid();
         }
 
         protected TRequest GetCoreRequest<TRequest>(Request request)

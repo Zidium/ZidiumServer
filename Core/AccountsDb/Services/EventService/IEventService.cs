@@ -38,5 +38,7 @@ namespace Zidium.Core.AccountsDb
         Event Update(Guid accountId, Event _event);
 
         void Add(Guid accountId, Event eventObj);
+
+        void AddInNewContext(Guid accountId, Event eventObj);
     }
 }

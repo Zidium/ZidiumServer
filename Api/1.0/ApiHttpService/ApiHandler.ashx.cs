@@ -31,9 +31,10 @@ namespace Zidium.ApiHttpService
 
         public static ApiToDispatcherAdapter CreateAdapter(string ip, string accountName)
         {
-            var dispatcher = DispatcherHelper.GetDispatcherService();
-            return new ApiToDispatcherAdapter(dispatcher, ip, accountName);
+            return new ApiToDispatcherAdapter(Dispatcher, ip, accountName);
         }
+
+        private static readonly IDispatcherService Dispatcher;
 
         public static IComponentControl ComponentControl { get; private set; }
         private static ComponentSelfTest SelfTest { get; set; }
@@ -103,8 +104,13 @@ namespace Zidium.ApiHttpService
             base.ProcessRequest(httpContext, out action);
 
             timer.Stop();
-            AddRequestDuration((int)(timer.Elapsed).TotalMilliseconds);
-            UpdateCounters();
+
+            // Считаем статистику только по корректным названиям action
+            if (!string.IsNullOrEmpty(action))
+            {
+                AddRequestDuration((long)timer.Elapsed.TotalMilliseconds);
+                UpdateCounters();
+            }
         }
 
         #region Метрики
@@ -119,17 +125,14 @@ namespace Zidium.ApiHttpService
 
         protected static void UpdateCounters()
         {
-            if (RequestsDuration == 0)
-            {
-                return;
-            }
             lock (CounterLockObject)
             {
                 RequestsCount++;
                 if (CounterTimer.Elapsed.TotalMinutes >= 1)
                 {
                     var avgRequestDuration = RequestsDuration / (RequestsCount > 0 ? RequestsCount : 1);
-                    var selfPercent = (RequestsDuration - InvokeDuration) * 100 / RequestsDuration;
+                    var selfPercent = (RequestsDuration - InvokeDuration) * 100 / (RequestsDuration > 0 ? RequestsDuration : 1);
+                    var avgInvokeDuration = InvokeDuration / (RequestsCount > 0 ? RequestsCount : 1);
 
                     if (ComponentControl != null)
                     {
@@ -137,6 +140,7 @@ namespace Zidium.ApiHttpService
                         ComponentControl.SendMetric("Запросов в минуту", RequestsCount, actualInterval);
                         ComponentControl.SendMetric("Мс на запрос", avgRequestDuration, actualInterval);
                         ComponentControl.SendMetric("Процент собственных действий", selfPercent, actualInterval);
+                        ComponentControl.SendMetric("Мс на обработку", avgInvokeDuration, actualInterval);
                     }
 
                     RequestsCount = 0;
@@ -148,7 +152,7 @@ namespace Zidium.ApiHttpService
             }
         }
 
-        protected static void AddRequestDuration(int ms)
+        protected static void AddRequestDuration(long ms)
         {
             lock (CounterLockObject)
             {
@@ -200,6 +204,7 @@ namespace Zidium.ApiHttpService
 
         static ApiHandler()
         {
+            Dispatcher = DispatcherHelper.GetDispatcherService();
             CounterTimer.Start();
         }
     }

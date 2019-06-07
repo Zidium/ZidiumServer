@@ -180,12 +180,12 @@ namespace Zidium.Core.Common
 
         protected void ForEachAccountWrapper(AccountInfo account, Action<ForEachAccountData> method)
         {
+            var accountLogger = LogManager.GetLogger(Logger.Name + "." + account.SystemName);
             try
             {
                 CancellationToken.ThrowIfCancellationRequested();
                 Logger.Trace("Начинаем обработку аккаунта; ID:{0}; Name:{1}", account.Id, account.DisplayName);
-                var logger = LogManager.GetLogger(Logger.Name + "." + account.SystemName);
-                using (var data = new ForEachAccountData(logger, CancellationToken, account))
+                using (var data = new ForEachAccountData(accountLogger, CancellationToken, account))
                 {
                     method(data);
                 }
@@ -196,7 +196,7 @@ namespace Zidium.Core.Common
             {
                 SetException(exception);
                 Tools.HandleOutOfMemoryException(exception);
-                Logger.Error(exception);
+                accountLogger.Error(exception);
             }
             finally
             {

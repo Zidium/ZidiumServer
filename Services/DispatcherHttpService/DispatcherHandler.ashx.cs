@@ -105,7 +105,7 @@ namespace Zidium.DispatcherHttpService
             foreach (var cache in AllCaches.All)
             {
                 output.AppendLine("--- " + cache.GetType() + " ---");
-                output.AppendLine("Count: " + cache.Count);
+                output.AppendLine("Count: " + cache.Count + " / " + cache.MaxCount);
                 output.AppendLine("Size: " + DataSizeHelper.GetSizeText(cache.GetSize()));
                 output.AppendLine("Changed: " + cache.GetChangedCount());
                 output.AppendLine("LastSaveChangesDate: " + cache.GetLastSaveChangesDate());
@@ -153,7 +153,7 @@ namespace Zidium.DispatcherHttpService
             // Считаем статистику только по корректным названиям action
             if (!string.IsNullOrEmpty(action))
             {
-                UpdateCounters((int)timer.Elapsed.TotalMilliseconds, action);
+                UpdateCounters((long)timer.Elapsed.TotalMilliseconds, action);
             }
         }
 
@@ -178,7 +178,7 @@ namespace Zidium.DispatcherHttpService
         private static void SendCacheMetrics()
         {
             var control = AllCaches.Events.ComponentControl;
-            if (control != null && control.IsFake() == false)
+            if (control != null && !control.IsFake())
             {
                 var changed = AllCaches.Events.GetChangedCount();
 
@@ -191,6 +191,9 @@ namespace Zidium.DispatcherHttpService
                 var oldUpdate = _updateCacheCountLast;
                 _updateCacheCountLast = AllCaches.Events.UpdateCacheCount;
                 var update = _updateCacheCountLast - oldUpdate;
+
+                // самый долгий цикл
+                var updateStats = AllCaches.Events.GetUpdateStatsAndReset();
 
                 // отправляем метрики
                 var actualInterval = TimeSpan.FromMinutes(10);
@@ -213,6 +216,18 @@ namespace Zidium.DispatcherHttpService
                         ActualInterval = actualInterval,
                         Name = "UpdateCacheByInterval",
                         Value = update
+                    },
+                    new SendMetricData()
+                    {
+                        ActualInterval = actualInterval,
+                        Name = "MaxUpdateCount",
+                        Value = updateStats.MaxCount
+                    },
+                    new SendMetricData()
+                    {
+                        ActualInterval = actualInterval,
+                        Name = "MaxUpdateDurationSec",
+                        Value = updateStats.MaxDuration
                     }
                 });
             }
@@ -231,15 +246,14 @@ namespace Zidium.DispatcherHttpService
 
         protected static object CounterLockObject = new object();
 
-        protected static void UpdateCounters(int ms, string action)
+        protected static void UpdateCounters(long ms, string action)
         {
             lock (CounterLockObject)
             {
                 RequestsCount++;
                 RequestsDuration += ms;
 
-                ActionStats actionsStats;
-                ActionsStats.TryGetValue(action, out actionsStats);
+                ActionsStats.TryGetValue(action, out var actionsStats);
                 if (actionsStats == null)
                 {
                     actionsStats = new ActionStats()
@@ -273,11 +287,13 @@ namespace Zidium.DispatcherHttpService
 
                 var avgRequestDuration = RequestsDuration / (RequestsCount > 0 ? RequestsCount : 1);
                 var selfPercent = (RequestsDuration - InvokeDuration) * 100 / (RequestsDuration > 0 ? RequestsDuration : 1);
+                var avgInvokeDuration = InvokeDuration / (RequestsCount > 0 ? RequestsCount : 1);
 
                 var actualInterval = TimeSpan.FromDays(365);
                 ComponentControl.SendMetric("Запросов в минуту", RequestsCount, actualInterval);
                 ComponentControl.SendMetric("Мс на запрос", avgRequestDuration, actualInterval);
                 ComponentControl.SendMetric("Процент собственных действий", selfPercent, actualInterval);
+                ComponentControl.SendMetric("Мс на обработку", avgInvokeDuration, actualInterval);
 
                 var stats = ActionsStats.Values.ToArray();
                 foreach (var stat in stats)

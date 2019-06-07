@@ -32,7 +32,7 @@ namespace Zidium.Core.AccountsDb
         public Guid EventTypeId { get; set; }
 
         /// <summary>
-        /// Тпи события
+        /// Тип события
         /// </summary>
         public virtual EventType EventType { get; set; }
 

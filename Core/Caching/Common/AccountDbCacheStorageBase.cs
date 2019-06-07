@@ -40,10 +40,13 @@ namespace Zidium.Core.Caching
             }
             using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
             {
+                accountDbContext.Configuration.AutoDetectChangesEnabled = false;
+                accountDbContext.Configuration.ValidateOnSaveEnabled = false;
                 foreach (var cacheObject in cacheObjects)
                 {
                     AddBatchObject(accountDbContext, cacheObject);
                 }
+                accountDbContext.ChangeTracker.DetectChanges();
                 accountDbContext.SaveChanges();
             }
         }
@@ -66,10 +69,13 @@ namespace Zidium.Core.Caching
             }
             using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
             {
+                accountDbContext.Configuration.AutoDetectChangesEnabled = false;
+                accountDbContext.Configuration.ValidateOnSaveEnabled = false;
                 foreach (var cacheObject in cacheObjects)
                 {
                     UpdateBatchObject(accountDbContext, cacheObject, useCheck);
                 }
+                accountDbContext.ChangeTracker.DetectChanges();
                 accountDbContext.SaveChanges();
             }
         }
@@ -157,21 +163,13 @@ namespace Zidium.Core.Caching
                         {
                             UpdateBatch(accountId, batch, useCheck);
                             _updateDataBaseCount += batch.Count;
-
-                            // отправим событие
-                            var saveEvent = ComponentControl.CreateComponentEvent("UpdateBatch");
-                            saveEvent.SetImportance(Zidium.Api.EventImportance.Success);
-                            saveEvent.SetJoinInterval(TimeSpan.FromMinutes(1));
-                            saveEvent.Add();
-
                             break;
                         }
                         catch (Exception exception)
                         {
                             // отправим событие
                             var errorEvent = ComponentControl.CreateApplicationError("UpdateBatchError", exception);
-                            errorEvent.SetImportance(Zidium.Api.EventImportance.Alarm);
-                            errorEvent.SetJoinInterval(TimeSpan.FromMinutes(1));
+                            errorEvent.SetImportance(Zidium.Api.EventImportance.Warning);
                             errorEvent.Add();
 
                             useCheck = true;
@@ -179,7 +177,7 @@ namespace Zidium.Core.Caching
                             {
                                 throw;
                             }
-                            ComponentControl.Log.Error("Ошибка UpdateBatch. Попытка " + attemps, exception);
+                            ComponentControl.Log.Warning("Ошибка UpdateBatch. Попытка " + attemps, exception);
                             Thread.Sleep(TimeSpan.FromSeconds(10));
                         }
                     }

@@ -31,3 +31,15 @@ else
 {
     <p>Нет результатов выполнения</p>
 }
+
+@if (UserHelper.CurrentUser.CanEditCommonData())
+{
+    <div class="top10px">
+        @Html.ActionLink("Установить новый результат", "SetResult", "UnitTests", new { id = Model.UnitTestId }, new { @class = "btn btn-default", id = "set-result-link" })
+    </div>
+    <script>
+        $(function() {
+            ziCreateModalDialog("#set-result-link");
+        });
+    </script>
+}

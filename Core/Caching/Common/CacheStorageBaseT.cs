@@ -11,8 +11,8 @@ namespace Zidium.Core.Caching
 {
     public abstract class CacheStorageBaseT<TRequest, TResponse, TReadObject, TWriteObject> : ICacheStorageT<TRequest, TResponse, TReadObject, TWriteObject>
         where TRequest : class, ICacheRequest
-        where TReadObject: class
-        where TWriteObject: class, TReadObject, ICacheWriteObjectT<TResponse, TWriteObject> 
+        where TReadObject : class
+        where TWriteObject : class, TReadObject, ICacheWriteObjectT<TResponse, TWriteObject>
         where TResponse : CacheResponse<TRequest, TResponse, TReadObject, TWriteObject>, new()
     {
         private ConcurrentDictionary<Guid, TResponse> _dictionary = new ConcurrentDictionary<Guid, TResponse>();
@@ -63,6 +63,8 @@ namespace Zidium.Core.Caching
         private int _beginUnloadCount;
         private int _stopUnloadCount;
 
+        private UpdateStats _updateStats = new UpdateStats();
+
         protected CacheStorageBaseT()
         {
             _maxCount = 20 * 1000;
@@ -105,7 +107,7 @@ namespace Zidium.Core.Caching
 
         protected virtual void BeginUnload(TWriteObject obj)
         {
-            
+
         }
 
         /// <summary>
@@ -122,14 +124,14 @@ namespace Zidium.Core.Caching
 
             // сортируем по полезности, первые самые безполезные
             var sortedResponses = allResponses
-                .Select(x=>new
+                .Select(x => new
                 {
-                    r = x, 
+                    r = x,
                     getCount = x.GetCount
                 })
                 .OrderBy(x => x.getCount) // меньше всех использовались
                 .ThenBy(x => x.r.LastGetDate) // дольше всех не использовались
-                .ToList(); 
+                .ToList();
 
             foreach (var res in sortedResponses)
             {
@@ -163,7 +165,7 @@ namespace Zidium.Core.Caching
                     if (processed)
                     {
                         // еще раз проверим состояние
-                        if (response.Unloaded == false 
+                        if (response.Unloaded == false
                             && response.HasChanges == false)
                         {
                             BeginUnload(response.CurrentData);
@@ -286,8 +288,8 @@ namespace Zidium.Core.Caching
         }
 
         protected TResponse GetOrLoadResponse(
-            TRequest request, 
-            TWriteObject wObject = null, 
+            TRequest request,
+            TWriteObject wObject = null,
             bool preloaded = false)
         {
             if (request == null)
@@ -295,7 +297,7 @@ namespace Zidium.Core.Caching
                 throw new ArgumentNullException("request");
             }
 
-            if (_unloadDataLoopWorker.IsWorking==false && Count >= BeginUnloadCount)
+            if (_unloadDataLoopWorker.IsWorking == false && Count >= BeginUnloadCount)
             {
                 TryBeginUnloadDataLoop();
             }
@@ -444,7 +446,7 @@ namespace Zidium.Core.Caching
                     response.Lock.Exit();
                     continue;
                 }
-                
+
                 // если это первое вхождение в блокировку, то запомним копию
                 if (response.LockedData == null || response.LockedData.DataVersion == response.CurrentData.DataVersion)
                 {
@@ -538,7 +540,7 @@ namespace Zidium.Core.Caching
         {
             return _dictionary.Values
                 .Where(x => x.HasChanges)
-                .Select(x=>x.CurrentData)
+                .Select(x => x.CurrentData)
                 .ToList();
         }
 
@@ -574,14 +576,25 @@ namespace Zidium.Core.Caching
                     // выгруженные объекты сохранять НЕ нужно,
                     // потому что их могли изменить синхронно
                     var responses = oldUpdateChangesObjects.Values
-                        .Where(x=>x.Response.Unloaded==false)
+                        .Where(x => !x.Response.Unloaded)
                         .ToList();
 
                     UpdateList(responses);
                     timer.Stop();
+                    var count = oldUpdateChangesObjects.Count;
                     var sec = Math.Round(timer.Elapsed.TotalSeconds, 1);
-                    int speed = (int)(oldUpdateChangesObjects.Count / timer.Elapsed.TotalSeconds);
-                    ComponentControl.Log.Info("Завершили обновлять " + oldUpdateChangesObjects.Count + " за " + sec + " сек, скорость = " + speed + "/сек");
+                    var speed = (int)(count / timer.Elapsed.TotalSeconds);
+                    ComponentControl.Log.Info("Завершили обновлять " + count + " за " + sec + " сек, скорость = " + speed + " в сек");
+
+                    // сохраняем статистику по максимальному времени и количеству в очереди
+                    lock (_updateStats)
+                    {
+                        if (count > _updateStats.MaxCount)
+                            _updateStats.MaxCount = count;
+
+                        if (sec > _updateStats.MaxDuration)
+                            _updateStats.MaxDuration = sec;
+                    }
                 }
 
                 return oldUpdateChangesObjects.Count;
@@ -654,6 +667,22 @@ namespace Zidium.Core.Caching
             var request = GetRequest(obj);
             var response = GetOrLoadResponse(request, obj, true);
             return response.CurrentData;
+        }
+
+        public UpdateStats GetUpdateStatsAndReset()
+        {
+            lock (_updateStats)
+            {
+                var result = _updateStats;
+                _updateStats = new UpdateStats();
+                return result;
+            }
+        }
+
+        public class UpdateStats
+        {
+            public int MaxCount;
+            public double MaxDuration;
         }
     }
 }

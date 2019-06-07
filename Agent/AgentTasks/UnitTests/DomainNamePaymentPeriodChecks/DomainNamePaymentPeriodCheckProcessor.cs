@@ -352,7 +352,8 @@ namespace Zidium.Agent.AgentTasks
                 };
             }
 
-            if (info.Any(t => t == "No entries found for the selected source(s)."))
+            if (info.Any(t => t == "No entries found for the selected source(s)."
+                              || t.StartsWith("No match for ")))
             {
                 return new DomainNamePaymentPeriodCheckResult()
                 {

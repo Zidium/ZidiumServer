@@ -37,41 +37,51 @@ namespace Zidium.Core.Common.TaskQueue
 
         protected void SearchDeadLock(object obj)
         {
-            TimeSpan maxDuration = TimeSpan.Zero;
-            foreach (var threadInfo in _threads.Values)
+            try
             {
-                var duration = DateTime.Now - threadInfo.StartDate;
-
-                /*
-                if (duration > TimeSpan.FromSeconds(10))
-                {
-                    var stack = ThreadHelper.GetStackText(threadInfo.Thread);
-                    var exception = new DeadLockException("DEADLOCK " + threadInfo.Name, stack);
-                    _control.Log.Fatal(exception);
-                }
-                */
-
-                if (duration > maxDuration)
-                    maxDuration = duration;
-            }
-
-            //_control.Log.Debug("DeadLockHunter Max Thread Duration: " + maxDuration + ", ThreadCount: " + _threads.Count);
-
-            // Если хоть один поток завис, то выводим стеки всех зависших потоков, для анализа
-            if (maxDuration > TimeSpan.FromSeconds(30))
-            {
-                var exception = new Exception("Long request");
-                var properties = new Dictionary<string, object>();
-                foreach (var threadInfo in _threads.Values.OrderBy(t => t.StartDate))
+                TimeSpan maxDuration = TimeSpan.Zero;
+                foreach (var threadInfo in _threads.Values)
                 {
                     var duration = DateTime.Now - threadInfo.StartDate;
-                    if (duration > TimeSpan.FromSeconds(30))
+
+                    /*
+                    if (duration > TimeSpan.FromSeconds(10))
                     {
                         var stack = ThreadHelper.GetStackText(threadInfo.Thread);
-                        properties.Add("Stack " + threadInfo.Thread.ManagedThreadId, threadInfo.Name + ": " + stack);
+                        var exception = new DeadLockException("DEADLOCK " + threadInfo.Name, stack);
+                        _control.Log.Fatal(exception);
                     }
+                    */
+
+                    if (duration > maxDuration)
+                        maxDuration = duration;
                 }
-                _control.Log.Warning(exception.Message, exception, properties);
+
+                //_control.Log.Debug("DeadLockHunter Max Thread Duration: " + maxDuration + ", ThreadCount: " + _threads.Count);
+
+                // Если хоть один поток завис, то выводим стеки всех зависших потоков, для анализа
+                if (maxDuration > TimeSpan.FromSeconds(30))
+                {
+                    var exception = new Exception("Long request");
+                    var properties = new Dictionary<string, object>();
+                    foreach (var threadInfo in _threads.Values.OrderBy(t => t.StartDate))
+                    {
+                        var duration = DateTime.Now - threadInfo.StartDate;
+                        if (duration > TimeSpan.FromSeconds(30))
+                        {
+                            var stack = ThreadHelper.GetStackText(threadInfo.Thread);
+                            var name = "Stack " + threadInfo.Thread.ManagedThreadId;
+                            if (!properties.ContainsKey(name))
+                                properties.Add(name, threadInfo.Name + ": " + stack);
+                        }
+                    }
+
+                    _control.Log.Warning(exception.Message, exception, properties);
+                }
+            }
+            catch (Exception exception)
+            {
+                _control.Log.Error(exception);
             }
         }
 

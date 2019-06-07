@@ -36,18 +36,22 @@ namespace Zidium.Core.Common
         {
             if (string.Equals(context.Request.ContentType, "application/xml", StringComparison.InvariantCultureIgnoreCase))
             {
-                return new XmlSerializer();
+                return XmlSerializer;
             }
             if (string.Equals(context.Request.ContentType, "application/octet-stream", StringComparison.InvariantCultureIgnoreCase))
             {
-                return new XmlDeflateSerializer();
+                return XmlDeflateSerializer;
             }
             if (string.Equals(context.Request.ContentType, "application/json", StringComparison.InvariantCultureIgnoreCase))
             {
-                return new JsonSerializer();
+                return JsonSerializer;
             }
             throw new WrongContentTypeException(context.Request.ContentType);
         }
+
+        private static readonly XmlSerializer XmlSerializer = new XmlSerializer();
+        private static readonly XmlDeflateSerializer XmlDeflateSerializer = new XmlDeflateSerializer();
+        private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
         public string GetAction(HttpContext context)
         {
@@ -285,7 +289,7 @@ namespace Zidium.Core.Common
                 response = InvokeMethod(handler, method, requestPackage);
 
                 timer.Stop();
-                AddInvokeDuration((int)(timer.Elapsed).TotalMilliseconds);
+                AddInvokeDuration((long)timer.Elapsed.TotalMilliseconds);
             }
             catch (ThreadAbortException) { }
             catch (Exception exception)
@@ -327,7 +331,7 @@ namespace Zidium.Core.Common
 
         //protected static object CounterLockObject = new object();
 
-        protected static void AddInvokeDuration(int ms)
+        protected static void AddInvokeDuration(long ms)
         {
             Interlocked.Add(ref InvokeDuration, ms);
         }

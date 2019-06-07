@@ -6,6 +6,7 @@ using Zidium.Api;
 using Xunit;
 using Zidium.Core.AccountsDb;
 using Zidium.TestTools;
+using EventCategory = Zidium.Core.Api.EventCategory;
 
 namespace Zidium.Core.Tests.Statuses
 {
@@ -372,6 +373,10 @@ namespace Zidium.Core.Tests.Statuses
                                 continue;
                             }
                             if (eventObj.Message == "Объект выключен")
+                            {
+                                continue;
+                            }
+                            if (eventObj.Category == EventCategory.ComponentExternalStatus)
                             {
                                 continue;
                             }

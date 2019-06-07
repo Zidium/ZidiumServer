@@ -54,7 +54,6 @@ namespace Zidium.Core.Caching
         {
             Response.CacheStorage.Unload(Response.Request);
         }
-        
 
         /// <summary>
         /// Ждем когда данная версия данных будет сохранена
@@ -93,7 +92,12 @@ namespace Zidium.Core.Caching
                 var duration = DateTime.Now - startTime;
                 if (duration > timeOut)
                 {
-                    throw new Exception("Превышен таймаут ожидания сохранения изменений");
+                    var exception = new Exception("Превышен таймаут ожидания сохранения изменений");
+                    exception.Data.Add("Id", Response.CurrentData?.Id);
+                    exception.Data.Add("LastSaveDate", Response.LastSaveDate);
+                    exception.Data.Add("LastChangeDate", Response.LastChangeDate);
+                    exception.Data.Add("Now", DateTime.Now);
+                    throw exception;
                 }
                 Thread.Sleep(50);
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using NLog;
 using Zidium.Core.Common;
@@ -45,6 +46,9 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
 
         public void ProcessAccount(ForEachAccountData data)
         {
+            data.AccountDbContext.Database.CommandTimeout = 0;
+            var stopWatch = Stopwatch.StartNew();
+
             var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
             var tariffLimit = accountTariffRepository.GetHardTariffLimit();
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-tariffLimit.MetricsMaxDays));
@@ -56,6 +60,8 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
 
+                var innerStopWatch = Stopwatch.StartNew();
+
                 var count = metricHistoryRepository.DeleteMetricsHistory(MaxDeleteCount, date);
                 data.Logger.Trace("Удалено строк истории метрик: {0}", count);
                 Interlocked.Add(ref DeletedMetricValueCount, count);
@@ -63,11 +69,19 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
                 if (count == 0)
                     break;
 
+                innerStopWatch.Stop();
+                data.Logger.Debug("Удален пакет из {0} значений метрик за {1}", count, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
+
                 deletedCount += count;
+
+                // чтобы не сильно нагружать SQL
+                Thread.Sleep(1000);
             }
 
+            stopWatch.Stop();
+
             if (deletedCount > 0)
-                data.Logger.Debug("Удалено значений метрик: " + deletedCount);
+                data.Logger.Debug($"Удалено значений метрик: {deletedCount} в аккаунте {data.Account.SystemName} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
 
         }
     }

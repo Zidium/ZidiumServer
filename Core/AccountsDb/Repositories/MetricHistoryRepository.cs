@@ -85,7 +85,7 @@ namespace Zidium.Core.AccountsDb
                         command.Parameters.Add(parameter);
                     }
 
-                    return command.ExecuteNonQuery();
+                    return SqlCommandHelper.ExecuteNonQuery(command);
                 }
             }
         }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -55,11 +53,12 @@ namespace Zidium.Core.Caching
                     AddBatchObject(accountDbContext, cacheObject, checkAdd);
                 }
 
+                accountDbContext.ChangeTracker.DetectChanges();
+
                 var saveTimer = new Stopwatch();
                 saveTimer.Start();
 
                 //storageDbContext.Database.ExecuteSqlCommand("SELECT 'cache-add-batch-begin'");
-                accountDbContext.ChangeTracker.DetectChanges();
                 accountDbContext.SaveChanges();
                 //storageDbContext.Database.ExecuteSqlCommand("SELECT 'cache-add-batch-end'");
 
@@ -95,9 +94,8 @@ namespace Zidium.Core.Caching
 
             using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
             {
-                // перенесено в MyDataContext
-                // storageDbContext.Configuration.AutoDetectChangesEnabled = false;
                 accountDbContext.Configuration.ValidateOnSaveEnabled = false;
+                accountDbContext.Configuration.AutoDetectChangesEnabled = false;
 
                 Exception lastException = null;
                 foreach (var cacheObject in cacheObjects)
@@ -113,22 +111,21 @@ namespace Zidium.Core.Caching
                     }
                 }
 
+                accountDbContext.ChangeTracker.DetectChanges();
+
                 var saveTimer = new Stopwatch();
                 saveTimer.Start();
 
-                accountDbContext.Database.ExecuteSqlCommand("SELECT 'cache-update-batch-begin'");
-                // перенесено в MyDataContext
-                // storageDbContext.Configuration.AutoDetectChangesEnabled = true;
+                // accountDbContext.Database.ExecuteSqlCommand("SELECT 'cache-update-batch-begin'");
                 accountDbContext.SaveChanges();
-
-                accountDbContext.Database.ExecuteSqlCommand("SELECT 'cache-update-batch-end'");
+                // accountDbContext.Database.ExecuteSqlCommand("SELECT 'cache-update-batch-end'");
 
                 saveTimer.Stop();
                 batchTimer.Stop();
 
                 ComponentControl.Log.Debug("UpdateBatch " + cacheObjects.Count + " штук за " +
                     (int)batchTimer.ElapsedMilliseconds + " мс / SaveChanges за " +
-                    (int)saveTimer.ElapsedMilliseconds + " мс");
+                    (int)saveTimer.ElapsedMilliseconds + " мс, AccountId = " + accountId);
 
                 // Сохраняем что удастся, но ошибку всё равно вызываем
                 if (lastException != null)
@@ -165,7 +162,7 @@ namespace Zidium.Core.Caching
 
                     // делаем N попыток
                     int attemps = 0;
-                    bool chackAdd = false; // не проверять сущществование объектов перед вставкой
+                    bool chackAdd = false; // не проверять существование объектов перед вставкой
                     while (true)
                     {
                         attemps++;
@@ -173,21 +170,13 @@ namespace Zidium.Core.Caching
                         {
                             AddBatch(accountId, batch, chackAdd);
                             _addDataBaseCount += batch.Count;
-
-                            // отправим событие
-                            var saveEvent = ComponentControl.CreateComponentEvent("AddBatch");
-                            saveEvent.SetImportance(EventImportance.Success);
-                            saveEvent.SetJoinInterval(TimeSpan.FromMinutes(1));
-                            saveEvent.Add();
-
                             break;
                         }
                         catch (Exception exception)
                         {
                             // отправим событие
                             var errorEvent = ComponentControl.CreateApplicationError("AddBatchError", exception);
-                            errorEvent.SetImportance(EventImportance.Alarm);
-                            errorEvent.SetJoinInterval(TimeSpan.FromMinutes(1));
+                            errorEvent.SetImportance(EventImportance.Warning);
                             errorEvent.Add();
 
                             if (attemps >= 100)
@@ -195,7 +184,7 @@ namespace Zidium.Core.Caching
                                 throw;
                             }
                             chackAdd = true;
-                            ComponentControl.Log.Error("Ошибка AddBatch. Попытка " + attemps, exception);
+                            ComponentControl.Log.Warning("Ошибка AddBatch. Попытка " + attemps, exception);
                             Thread.Sleep(TimeSpan.FromSeconds(10));
                         }
                     }
@@ -263,21 +252,13 @@ namespace Zidium.Core.Caching
                             {
                                 UpdateBatch(accountId, batch, useCheck);
                                 _updateDataBaseCount += batch.Count;
-
-                                // отправим событие
-                                var saveEvent = ComponentControl.CreateComponentEvent("UpdateBatch");
-                                saveEvent.SetImportance(EventImportance.Success);
-                                saveEvent.SetJoinInterval(TimeSpan.FromMinutes(1));
-                                saveEvent.Add();
-
                                 break;
                             }
                             catch (Exception exception)
                             {
                                 // отправим событие
                                 var errorEvent = ComponentControl.CreateApplicationError("UpdateBatchError", exception);
-                                errorEvent.SetImportance(EventImportance.Alarm);
-                                errorEvent.SetJoinInterval(TimeSpan.FromMinutes(1));
+                                errorEvent.SetImportance(EventImportance.Warning);
                                 errorEvent.Add();
 
                                 useCheck = true;

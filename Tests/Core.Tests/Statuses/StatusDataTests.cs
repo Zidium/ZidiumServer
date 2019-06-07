@@ -20,8 +20,9 @@ namespace Zidium.Core.Tests.Statuses
         public void Statuses()
         {
             var account = TestHelper.GetTestAccount();
-            var componentControl = account.CreateRandomComponentControl();
-            Assert.False(componentControl.IsFake());
+            var parentComponentControl = account.CreateRandomComponentControl();
+            Assert.False(parentComponentControl.IsFake());
+            var componentControl = account.CreateRandomComponentControl(parentComponentControl);
             account.SaveAllCaches();
 
             var error = componentControl.CreateApplicationError("Error", "error msg")
@@ -48,28 +49,28 @@ namespace Zidium.Core.Tests.Statuses
                 Assert.Equal(1, eventObj.StatusEvents.Count);
 
                 // колбаса ошибок
-                var eventsStatus = component.EventsStatus;
-                Assert.Equal(eventsStatus.FirstEventId, eventId);
-                Assert.Equal(eventsStatus.LastEventId, eventId);
-                Assert.Equal(eventsStatus.StatusEventId, eventObj.LastStatusEventId);
-                var eventsStatusEvent = accountDbContext.Events.Single(x => x.Id == eventsStatus.StatusEventId);
-                Assert.Equal(1, eventsStatusEvent.StatusEvents.Count);
-                Assert.Equal(eventsStatusEvent.StatusEvents.First().Category, Core.Api.EventCategory.ComponentInternalStatus);
-                Assert.Equal(eventsStatusEvent.ReasonEvents.First().Category, Core.Api.EventCategory.ApplicationError);
-                Assert.Equal(eventsStatus.FirstEventId, eventsStatusEvent.ReasonEvents.First().Id);
-                Assert.True(eventsStatusEvent.FirstReasonEventId.HasValue);
-                Assert.True(eventsStatus.FirstEventId.HasValue);
-                Assert.Equal(eventsStatusEvent.FirstReasonEventId.Value, eventsStatus.FirstEventId.Value);
-                CheckReasonAndStatusEvents(eventObj, eventsStatusEvent);
+                var eventsBulb = component.EventsStatus;
+                Assert.Equal(eventsBulb.FirstEventId, eventId);
+                Assert.Equal(eventsBulb.LastEventId, eventId);
+                Assert.Equal(eventsBulb.StatusEventId, eventObj.LastStatusEventId);
+                var eventsBulbStatus = accountDbContext.Events.Single(x => x.Id == eventsBulb.StatusEventId);
+                Assert.Equal(1, eventsBulbStatus.StatusEvents.Count);
+                Assert.Equal(eventsBulbStatus.StatusEvents.First().Category, Core.Api.EventCategory.ComponentInternalStatus);
+                Assert.Equal(eventsBulbStatus.ReasonEvents.First().Category, Core.Api.EventCategory.ApplicationError);
+                Assert.Equal(eventsBulb.FirstEventId, eventsBulbStatus.ReasonEvents.First().Id);
+                Assert.True(eventsBulbStatus.FirstReasonEventId.HasValue);
+                Assert.True(eventsBulb.FirstEventId.HasValue);
+                Assert.Equal(eventsBulbStatus.FirstReasonEventId.Value, eventsBulb.FirstEventId.Value);
+                CheckReasonAndStatusEvents(eventObj, eventsBulbStatus);
 
                 // колбаса внутреннего статуса
                 var internalStatus = component.InternalStatus;
-                Assert.Equal(internalStatus.FirstEventId, eventsStatusEvent.Id);
-                Assert.Equal(internalStatus.LastEventId, eventsStatusEvent.Id);
-                Assert.Equal(internalStatus.StatusEventId, eventsStatusEvent.LastStatusEventId);
+                Assert.Equal(internalStatus.FirstEventId, eventsBulbStatus.Id);
+                Assert.Equal(internalStatus.LastEventId, eventsBulbStatus.Id);
+                Assert.Equal(internalStatus.StatusEventId, eventsBulbStatus.LastStatusEventId);
                 var internalStatusEvent = accountDbContext.Events.Single(x => x.Id == internalStatus.StatusEventId);
                 Assert.Equal(1, internalStatusEvent.StatusEvents.Count);
-                CheckReasonAndStatusEvents(eventsStatusEvent, internalStatusEvent);
+                CheckReasonAndStatusEvents(eventsBulbStatus, internalStatusEvent);
 
                 // колбаса внешнего статуса
                 var externalStatus = component.ExternalStatus;

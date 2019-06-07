@@ -83,10 +83,11 @@ namespace Zidium.Core.AccountsDb
             {
                 newStatus.FirstReasonEventId = data.FirstEventId;
             }
-            Context.EventService.Add(accountId, newStatus);
+            //Context.EventService.Add(accountId, newStatus);
+            var eventRepository = accountDbContext.GetEventRepository();
+            eventRepository.Add(newStatus);
 
             // обновим старый статус
-            var eventRepository = accountDbContext.GetEventRepository();
             var oldStatus = eventRepository.GetByIdOrNull(data.StatusEventId);
             if (oldStatus != null)
             {

@@ -21,7 +21,7 @@ namespace Zidium.Core.Caching
             Data.Add("Lock object Count", lockObj.Count);
             Data.Add("Lock object Index", lockObj.Index);
             Data.Add("Locker Thread Stack", ThreadHelper.GetStackText(lockObj.Thread));
-            Data.Add("Locker Thread State", lockObj.Thread.ThreadState.ToString());
+            Data.Add("Locker Thread State", lockObj.Thread?.ThreadState.ToString());
         }
     }
 }

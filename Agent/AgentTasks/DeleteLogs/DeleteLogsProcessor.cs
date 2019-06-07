@@ -76,6 +76,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
         public void ProcessAccount(ForEachAccountData data)
         {
+            data.AccountDbContext.Database.CommandTimeout = 0;
             var stopWatch = Stopwatch.StartNew();
 
             var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
@@ -88,6 +89,8 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
             while (true)
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
+
+                var innerStopWatch = Stopwatch.StartNew();
 
                 DeleteProperties(
                     data.Logger,
@@ -103,10 +106,17 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
                     date,
                     MaxDeleteCount);
 
+                innerStopWatch.Stop();
+                if (result > 0)
+                    data.Logger.Debug("Удален пакет из {0} записей лога за {1}", result, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
+
                 count += result;
 
                 if (result == 0)
                     break;
+
+                // чтобы не сильно нагружать SQL
+                Thread.Sleep(1000);
             }
 
             stopWatch.Stop();

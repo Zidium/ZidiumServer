@@ -14,7 +14,7 @@ namespace Zidium.Core.AccountsDb
             {
                 typeFromDb = Context
                     .EventTypes
-                    .SingleOrDefault(t =>
+                    .FirstOrDefault(t =>
                         t.Category == eventType.Category &&
                         t.SystemName == eventType.SystemName);
             }
@@ -22,7 +22,7 @@ namespace Zidium.Core.AccountsDb
             {
                 typeFromDb = Context
                     .EventTypes
-                    .SingleOrDefault(t =>
+                    .FirstOrDefault(t =>
                         t.Category == eventType.Category &&
                         t.Id == eventType.Id);
             }
@@ -51,7 +51,7 @@ namespace Zidium.Core.AccountsDb
 
         public EventType GetOneOrNullBySystemName(string systemName)
         {
-            return QueryAll().SingleOrDefault(t => t.SystemName == systemName);
+            return QueryAll().FirstOrDefault(t => t.SystemName == systemName);
         }
 
         public EventType Add(EventType entity)

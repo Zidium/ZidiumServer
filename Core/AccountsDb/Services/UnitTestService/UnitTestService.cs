@@ -608,7 +608,7 @@ namespace Zidium.Core.AccountsDb
 
                 // синхронная вставка
                 // асинхронное создание объектов сильно усложняет код, поэтому будет создавать всё синхронно
-                eventService.Add(unitTest.AccountId, newEvent);
+                eventService.AddInNewContext(unitTest.AccountId, newEvent);
 
                 // асинхронная вставка
                 //var newEventCache = EventCacheWriteObject.CreateForAdd(newEvent);
