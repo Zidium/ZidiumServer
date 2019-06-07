@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 #if PocketPC
@@ -229,5 +230,17 @@ namespace Zidium.Api
         }
 
         private static string _apiVersion;
+
+        public static Assembly[] GetAllAssemblies()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().Where(t =>
+            {
+                var attributeData = (AssemblyProductAttribute)t.GetCustomAttributes(typeof(AssemblyProductAttribute), false).FirstOrDefault();
+                if (attributeData == null)
+                    return true;
+                return !attributeData.Product.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase);
+            }).ToArray();
+        }
+
     }
 }

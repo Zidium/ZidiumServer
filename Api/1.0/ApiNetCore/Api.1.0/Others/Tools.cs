@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.DependencyModel;
 
 namespace Zidium.Api
 {
@@ -167,5 +168,33 @@ namespace Zidium.Api
         }
 
         private static string _apiVersion;
+
+        public static Assembly[] GetAllAssemblies()
+        {
+            var assemblyNames = DependencyContext.Default.CompileLibraries.Select(t => t.Name)
+                .Where(t => !t.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) && !t.StartsWith("System.", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            return assemblyNames.Select(t =>
+                {
+                    try
+                    {
+                        return Assembly.Load(new AssemblyName(t));
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                })
+                .Where(t => t != null)
+                .Where(t =>
+                {
+                    var attributeData = t.GetCustomAttributes<AssemblyProductAttribute>().FirstOrDefault();
+                    if (attributeData == null)
+                        return true;
+                    return !attributeData.Product.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase);
+                })
+                .ToArray();
+        }
+
     }
 }

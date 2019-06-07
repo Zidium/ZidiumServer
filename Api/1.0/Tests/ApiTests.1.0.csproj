@@ -148,6 +148,7 @@
     <Compile Include="Events\Common\PrepareEventTests.cs" />
     <Compile Include="EventTypes\CreateFromOthersComponentTypes.cs" />
     <Compile Include="ModuleInitializer.cs" />
+    <Compile Include="Others\ConfigHelperTests.cs" />
     <Compile Include="UnitTests\FakeUnitTestTests.cs" />
     <Compile Include="UnitTestTypes\UnitTestTypeTests.cs" />
     <Compile Include="UnitTests\UnitTestTests.cs" />
@@ -169,6 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="Files\zidium-resource.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

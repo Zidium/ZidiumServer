@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -145,6 +145,9 @@
         <Compile Include="..\..\Tests\Others\ConfigTests.cs">
             <Link>Others\ConfigTests.cs</Link>
         </Compile>
+        <Compile Include="..\..\Tests\Others\ConfigHelperTests.cs">
+            <Link>Others\ConfigHelperTests.cs</Link>
+        </Compile>
         <Compile Include="..\..\Tests\Others\DateTimeTests.cs">
             <Link>Others\DateTimeTests.cs</Link>
         </Compile>
@@ -178,6 +181,9 @@
         <None Include="..\..\Tests\Files\MiniConfig.xml" Link="Files\MiniConfig.xml">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <EmbeddedResource Include="..\..\Tests\Files\zidium-resource.config" Link="Files\zidium-resource.config">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
         <Content Include="Files\Responses\ErrorResponse.xml">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>

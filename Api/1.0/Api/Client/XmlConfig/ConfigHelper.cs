@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
 
@@ -44,7 +45,7 @@ namespace Zidium.Api.XmlConfig
             }
             try
             {
-                return (LogLevel) Enum.Parse(typeof (LogLevel), value, true);
+                return (LogLevel)Enum.Parse(typeof(LogLevel), value, true);
             }
             catch (Exception)
             {
@@ -347,6 +348,48 @@ namespace Zidium.Api.XmlConfig
         {
             var doc = new XmlDocument();
             doc.Load(path);
+            return LoadFromXmlDocument(doc);
+        }
+
+        public static Config LoadFromResource(string resourceName)
+        {
+            var assemblies = Tools.GetAllAssemblies();
+
+            foreach (var assembly in assemblies)
+            {
+                string[] resourceNames;
+                try
+                {
+                    resourceNames = assembly.GetManifestResourceNames();
+                }
+                catch
+                {
+                    continue;
+                }
+                var fullResourceName = resourceNames.FirstOrDefault(t => t.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
+
+                if (fullResourceName == null)
+                    continue;
+
+                using (var resourceStream = assembly.GetManifestResourceStream(fullResourceName))
+                {
+                    if (resourceStream == null)
+                        continue;
+
+                    using (var reader = new StreamReader(resourceStream))
+                    {
+                        var doc = new XmlDocument();
+                        doc.Load(reader);
+                        return LoadFromXmlDocument(doc);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static Config LoadFromXmlDocument(XmlDocument doc)
+        {
             var root = doc.DocumentElement;
 
             var config = new Config();
@@ -371,28 +414,33 @@ namespace Zidium.Api.XmlConfig
         }
 
         /// <summary>
-        /// Загружает конфиг из XML файла, если не получится, то вернет конфиг по умолчанию.
+        /// Загружает конфиг из XML файла или embedded ресурса, если не получится, то вернет конфиг по умолчанию.
         /// </summary>
-        /// <returns></returns>
         public static Config LoadFromXmlOrGetDefault()
         {
             try
             {
-                string dir = Tools.GetApplicationDir();
-                var files = new[] { "Zidium.xml", "Zidium.config" };
-                foreach (var file in files)
+                var dir = Tools.GetApplicationDir();
+                var names = new[] { "Zidium.xml", "Zidium.config" };
+                foreach (var name in names)
                 {
-                    string path = Path.Combine(dir, file);
+                    var path = Path.Combine(dir, name);
                     if (File.Exists(path))
                     {
-                        var config = Load(path);
-                        return config;
+                        var configFromFile = Load(path);
+                        return configFromFile;
                     }
+
+                    var configFromResource = LoadFromResource(name);
+                    if (configFromResource != null)
+                    {
+                        return configFromResource;
+                    } 
                 }
             }
             catch
             {
-                
+
             }
             return new Config();
         }
