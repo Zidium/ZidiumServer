@@ -420,27 +420,24 @@ namespace Zidium.Api.XmlConfig
         {
             try
             {
+                // Сначала пытаемся загрузить из файла
                 var dir = Tools.GetApplicationDir();
-                var names = new[] { "Zidium.xml", "Zidium.config" };
-                foreach (var name in names)
+                var path = Path.Combine(dir, "Zidium.config");
+                if (File.Exists(path))
                 {
-                    var path = Path.Combine(dir, name);
-                    if (File.Exists(path))
-                    {
-                        var configFromFile = Load(path);
-                        return configFromFile;
-                    }
+                    var configFromFile = Load(path);
+                    return configFromFile;
+                }
 
-                    var configFromResource = LoadFromResource(name);
-                    if (configFromResource != null)
-                    {
-                        return configFromResource;
-                    } 
+                // Если файла нет, пытаемся загрузить из ресурса
+                var configFromResource = LoadFromResource("Zidium.config");
+                if (configFromResource != null)
+                {
+                    return configFromResource;
                 }
             }
             catch
             {
-
             }
             return new Config();
         }
