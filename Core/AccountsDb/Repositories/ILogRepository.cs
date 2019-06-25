@@ -27,14 +27,16 @@ namespace Zidium.Core
         /// <param name="toDate">Поиск будет выполняется до указанной даты (НЕ ВКЛЮЧИТЕЛЬНО)</param>
         /// <param name="importanceLevels">Уровни важности сообщений. Если список пустой или null, по фильтрация по уровню не выполняется.</param>
         /// <param name="context">Контекст</param>
+        /// <param name="message"></param>
+        /// <param name="propertyName"></param>
+        /// <param name="propertyValue"></param>
         /// <returns>записи лога, удовлетворяющие поисковому запросу</returns>
-        List<Log> Find(
-            int maxCount, 
-            Guid componentId, 
-            DateTime? fromDate, 
-            DateTime? toDate, 
+        List<Log> Find(int maxCount,
+            Guid componentId,
+            DateTime? fromDate,
+            DateTime? toDate,
             IEnumerable<LogLevel> importanceLevels,
-            string context);
+            string context, string message, string propertyName, string propertyValue);
 
         IQueryable<Log> GetFirstRecords(
             Guid componentId,

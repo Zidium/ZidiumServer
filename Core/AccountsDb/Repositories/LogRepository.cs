@@ -34,20 +34,22 @@ namespace Zidium.Core.AccountsDb
             return logs;
         }
 
-        public List<Log> Find(
-            int maxCount,
+        public List<Log> Find(int maxCount,
             Guid componentId,
             DateTime? fromDate,
             DateTime? toDate,
             IEnumerable<LogLevel> importanceLevels,
-            string context)
+            string context,
+            string message,
+            string propertyName, 
+            string propertyValue)
         {
             if (importanceLevels == null)
             {
                 importanceLevels = new LogLevel[0];
             }
 
-            var query = GetRecordsQuery(componentId, fromDate, toDate, importanceLevels.ToArray(), context);
+            var query = GetRecordsQuery(componentId, fromDate, toDate, importanceLevels.ToArray(), context, message, propertyName, propertyValue);
 
             if (maxCount < 1 || maxCount > 1000)
             {
@@ -62,14 +64,14 @@ namespace Zidium.Core.AccountsDb
 
         public IQueryable<Log> GetFirstRecords(Guid componentId, DateTime? fromDate, LogLevel[] importanceLevels, string context, int maxCount)
         {
-            var query = GetRecordsQuery(componentId, fromDate, null, importanceLevels, context);
+            var query = GetRecordsQuery(componentId, fromDate, null, importanceLevels, context, null, null, null);
             query = query.OrderBy(t => t.Date).ThenBy(t => t.Order).Take(maxCount);
             return query;
         }
 
         public IQueryable<Log> GetLastRecords(Guid componentId, DateTime? toDate, LogLevel[] importanceLevels, string context, int maxCount)
         {
-            var query = GetRecordsQuery(componentId, null, toDate, importanceLevels, context);
+            var query = GetRecordsQuery(componentId, null, toDate, importanceLevels, context, null, null, null);
             query = query.OrderByDescending(t => t.Date).ThenByDescending(t => t.Order).Take(maxCount);
             query = query.OrderBy(t => t.Date).ThenBy(t => t.Order);
             return query;
@@ -77,7 +79,7 @@ namespace Zidium.Core.AccountsDb
 
         public IQueryable<Log> GetPreviousRecords(Guid componentId, DateTime date, int order, LogLevel[] importanceLevels, string context, int maxCount)
         {
-            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context);
+            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context, null, null, null);
             var sameDateQuery = query.Where(t => t.Date == date && t.Order < order).OrderByDescending(t => t.Date).ThenByDescending(t => t.Order).Take(maxCount);
             var prevDateQuery = query.Where(t => t.Date < date).OrderByDescending(t => t.Date).ThenByDescending(t => t.Order).Take(maxCount);
             var result = sameDateQuery.Concat(prevDateQuery);
@@ -88,7 +90,7 @@ namespace Zidium.Core.AccountsDb
 
         public IQueryable<Log> GetNextRecords(Guid componentId, DateTime date, int order, LogLevel[] importanceLevels, string context, int maxCount)
         {
-            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context);
+            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context, null, null, null);
             var sameDateQuery = query.Where(t => t.Date == date && t.Order > order).OrderBy(t => t.Date).ThenBy(t => t.Order).Take(maxCount);
             var nextDateQuery = query.Where(t => t.Date > date).OrderBy(t => t.Date).ThenBy(t => t.Order).Take(maxCount);
             var result = sameDateQuery.Concat(nextDateQuery);
@@ -103,7 +105,7 @@ namespace Zidium.Core.AccountsDb
             // Сначала поищем в рамках текущей секунды, но с меньшим Order
             // Это быстро, поэтому top не нужен
 
-            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context);
+            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context, null, null, null);
             var result = query
                 .Include("Parameters")
                 .Where(t => t.Date == date && t.Order < order && 
@@ -171,7 +173,7 @@ namespace Zidium.Core.AccountsDb
             // Сначала поищем в рамках текущей секунды, но с большим Order
             // Это быстро, поэтому top не нужен
 
-            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context);
+            var query = GetRecordsQuery(componentId, null, null, importanceLevels, context, null, null, null);
             var result = query
                 .Include("Parameters")
                 .Where(t => t.Date == date && t.Order > order &&
@@ -234,7 +236,7 @@ namespace Zidium.Core.AccountsDb
             };
         }
 
-        private IQueryable<Log> GetRecordsQuery(Guid componentId, DateTime? fromDate, DateTime? toDate, LogLevel[] importanceLevels, string context)
+        private IQueryable<Log> GetRecordsQuery(Guid componentId, DateTime? fromDate, DateTime? toDate, LogLevel[] importanceLevels, string context, string message, string propertyName, string propertyValue)
         {
             var query = Context.Logs.Where(x => x.ComponentId == componentId);
 
@@ -256,6 +258,23 @@ namespace Zidium.Core.AccountsDb
             if (!string.IsNullOrEmpty(context))
             {
                 query = query.Where(x => x.Context.StartsWith(context));
+            }
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                query = query.Where(x => x.Message.Contains(message));
+            }
+
+            if (!string.IsNullOrEmpty(propertyName) && string.IsNullOrEmpty(propertyValue))
+            {
+                query = query.Where(x => x.Parameters.Any(t => t.Name.Contains(propertyName)));
+            }
+            else if (!string.IsNullOrEmpty(propertyValue) && string.IsNullOrEmpty(propertyName))
+            {
+                query = query.Where(x => x.Parameters.Any(t => t.Value.Contains(propertyValue)));
+            } else if (!string.IsNullOrEmpty(propertyName) && !string.IsNullOrEmpty(propertyValue))
+            {
+                query = query.Where(x => x.Parameters.Any(t => t.Name.Contains(propertyName) && t.Value.Contains(propertyValue)));
             }
 
             return query;

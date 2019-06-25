@@ -552,6 +552,14 @@ namespace Zidium.Core.Api.Dispatcher
             return dispatcher.SendLog(request);
         }
 
+        public GetLogsResponse GetLogs(Guid accountId, GetLogsRequestData data)
+        {
+            var request = GetRequest<GetLogsRequest>(accountId);
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.GetLogs(request);
+        }
+
         #endregion
 
         #region Limits

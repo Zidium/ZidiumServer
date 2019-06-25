@@ -173,7 +173,7 @@ namespace Zidium.Core.AccountsDb
 
             var accountDbContext = Context.GetAccountDbContext(accountId);
             var logRepository = accountDbContext.GetLogRepository();
-            int maxCount = requestData.MaxCount ?? 1000;
+            var maxCount = requestData.MaxCount ?? 1000;
             if (maxCount > 1000)
             {
                 maxCount = 1000;
@@ -189,7 +189,10 @@ namespace Zidium.Core.AccountsDb
                 requestData.From,
                 requestData.To,
                 requestData.Levels,
-                requestData.Context);
+                requestData.Context, 
+                requestData.Message, 
+                requestData.PropertyName, 
+                requestData.PropertyValue);
 
             return rows;
         }

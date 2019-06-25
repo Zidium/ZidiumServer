@@ -750,7 +750,10 @@ namespace Zidium.Api.Common
                 To = data.To,
                 Context = data.Context,
                 MaxCount = data.MaxCount,
-                Levels = data.Levels
+                Levels = data.Levels,
+                Message = data.Message,
+                PropertyName = data.PropertyName,
+                PropertyValue = data.PropertyValue
             };
         }
 

@@ -175,6 +175,7 @@
     <Compile Include="Dispatcher\ChecksTests.cs" />
     <Compile Include="Dispatcher\ComponentsTests.cs" />
     <Compile Include="Dispatcher\DefectsTests.cs" />
+    <Compile Include="Dispatcher\LogTests.cs" />
     <Compile Include="Dispatcher\MetricTypesTests.cs" />
     <Compile Include="Dispatcher\ProcessEventsTests.cs" />
     <Compile Include="Dispatcher\TsdFixEventsTests.cs" />

@@ -29,6 +29,21 @@ namespace Zidium.Api
         public string Context { get; set; }
 
         /// <summary>
+        /// Текст сообщения (подстрока)
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// Название свойства (подстрока)
+        /// </summary>
+        public string PropertyName { get; set; }
+
+        /// <summary>
+        /// Текст свойства (подстрока)
+        /// </summary>
+        public string PropertyValue { get; set; }
+
+        /// <summary>
         /// Максимальное количество записей в ответе.
         /// Не может быть больше 1000.
         /// </summary>

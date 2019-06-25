@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using Zidium.Api;
 
 namespace Zidium.Core.Common.Helpers
 {
