@@ -311,7 +311,7 @@ namespace ApiTests_1._0.Logs
             {
                 exception = e;
             }
-            
+
             exception.Properties.Set("bytes", new byte[] { 1, 2, 3 });
             exception.Properties.Set("string", "fff");
             exception.Properties.Set("guid", Guid.NewGuid());
@@ -461,6 +461,25 @@ namespace ApiTests_1._0.Logs
             Assert.NotNull(row2);
 
             Assert.True(row2.Order > row1.Order);
+        }
+
+        [Fact]
+        public void GetLogsByMessageTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var component = account.CreateRandomComponentControl();
+            Assert.False(component.IsFake());
+
+            component.Log.Info("Message 1");
+            component.Log.Info("Message 2");
+            component.Log.Info("Message 3");
+            component.Log.Flush();
+
+            var logs = component.GetLogs(new GetLogsFilter() { Message = "Message 2" }).Data;
+
+            Assert.Equal(1, logs.Count);
+            var log = logs[0];
+            Assert.Equal("Message 2", log.Message);
         }
     }
 }

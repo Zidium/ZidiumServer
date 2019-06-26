@@ -14,7 +14,7 @@ namespace ApiAdapter
             {
                 return null;
             }
-            return importances.Select(x => ConvertToCore(x).Value).ToList();
+            return importances.Select(x => ConvertToCore(x).GetValueOrDefault()).ToList();
         }
 
         public static Zidium.Core.Api.GetEventsRequestData ConvertToCore(GetEventsRequestDtoData filter)
@@ -24,7 +24,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetEventsRequestData()
-            {   
+            {
                 OwnerId = filter.OwnerId,
                 From = filter.From,
                 Importance = ConvertToCore(filter.Importance),
@@ -43,7 +43,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.AccessToken()
-            {   
+            {
                 AccountId = accessToken.AccountId,
                 SecretKey = accessToken.SecretKey,
                 ProgramName = accessToken.Program,
@@ -58,7 +58,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.JoinEventData()
-            {   
+            {
                 EventId = data.EventId,
                 ComponentId = data.ComponentId,
                 JoinKey = data.JoinKey,
@@ -239,7 +239,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.SetComponentDisableRequestData()
-            {   
+            {
                 ComponentId = data.ComponentId,
                 Comment = data.Comment,
                 ToDate = data.ToDate
@@ -253,7 +253,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetComponentTotalStateRequestData()
-            {   
+            {
                 ComponentId = data.ComponentId,
                 Recalc = data.Recalc
             };
@@ -266,7 +266,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetComponentInternalStateRequestData()
-            {   
+            {
                 ComponentId = data.ComponentId,
                 Recalc = data.Recalc
             };
@@ -280,7 +280,7 @@ namespace ApiAdapter
             }
             var type = ParseCoreDataType(property.Type);
             return new Zidium.Core.Api.ExtentionPropertyDto()
-            {   
+            {
                 Name = property.Name,
                 Value = property.Value,
                 Type = type
@@ -294,7 +294,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetComponentBySystemNameRequestData()
-            {   
+            {
                 SystemName = data.SystemName,
                 ParentId = data.ParentId
             };
@@ -307,7 +307,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetChildComponentsRequestData()
-            {   
+            {
                 ComponentId = data.ComponentId
             };
         }
@@ -374,7 +374,7 @@ namespace ApiAdapter
                 return null;
             }
             return new ExtentionPropertyDto()
-            {   
+            {
                 Value = property.Value,
                 Name = property.Name,
                 Type = property.Type.ToString()
@@ -388,7 +388,7 @@ namespace ApiAdapter
                 return null;
             }
             return properties.Select(ConvertToApi).ToList();
-        } 
+        }
 
         public static List<EventDto> ConvertToApi(List<Zidium.Core.Api.EventInfo> eventInfos)
         {
@@ -406,7 +406,7 @@ namespace ApiAdapter
                 return null;
             }
             return new SendEventResponseDtoData()
-            {  
+            {
                 EventId = data.EventId,
                 EventTypeId = data.EventTypeId
             };
@@ -419,7 +419,7 @@ namespace ApiAdapter
                 return null;
             }
             return new EventDto()
-            {   
+            {
                 Id = info.Id,
                 OwnerId = info.OwnerId,
                 Count = info.Count,
@@ -446,7 +446,7 @@ namespace ApiAdapter
                 return null;
             }
             var result = new ComponentDto
-            {   
+            {
                 CreatedDate = info.CreatedDate,
                 DisplayName = info.DisplayName,
                 Id = info.Id,
@@ -476,7 +476,7 @@ namespace ApiAdapter
                 return null;
             }
             var newMessage = new Zidium.Core.Api.GetOrCreateComponentRequestData
-            {   
+            {
                 ParentComponentId = data.ParentComponentId,
                 DisplayName = data.DisplayName,
                 SystemName = data.SystemName,
@@ -494,7 +494,7 @@ namespace ApiAdapter
                 return null;
             }
             var newMessage = new Zidium.Core.Api.GetOrCreateComponentRequestData
-            {   
+            {
                 ParentComponentId = data.ParentComponentId,
                 DisplayName = data.DisplayName,
                 SystemName = data.SystemName,
@@ -524,7 +524,7 @@ namespace ApiAdapter
                 return null;
             }
             var newMessage = new Zidium.Core.Api.UpdateComponentRequestData
-            {   
+            {
                 Id = data.Id,
                 ParentId = data.ParentId,
                 Version = data.Version,
@@ -556,7 +556,7 @@ namespace ApiAdapter
                 return null;
             }
             return new ComponentControlDataDto()
-            {   
+            {
                 Component = ConvertToApi(controlData.Component),
                 WebLogConfig = ConvertToApi(controlData.WebLogConfig)
             };
@@ -647,7 +647,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.SendUnitTestResultRequestData()
-            {  
+            {
                 UnitTestId = message.UnitTestId,
                 ActualIntervalSeconds = message.ActualIntervalSeconds,
                 Message = message.Message,
@@ -681,7 +681,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetOrCreateUnitTestRequestData()
-            {    
+            {
                 ComponentId = data.ComponentId,
                 SystemName = data.SystemName,
                 DisplayName = data.DisplayName,
@@ -708,7 +708,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.SetUnitTestDisableRequestData()
-            {   
+            {
                 UnitTestId = data.UnitTestId,
                 Comment = data.Comment,
                 ToDate = data.ToDate
@@ -722,7 +722,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.GetOrCreateUnitTestTypeRequestData()
-            {   
+            {
                 SystemName = message.SystemName,
                 DisplayName = message.DisplayName
             };
@@ -747,7 +747,7 @@ namespace ApiAdapter
                 return null;
             }
             return new UnitTestDto()
-            {   
+            {
                 Id = data.Id,
                 TypeId = data.TypeId,
                 SystemName = data.SystemName,
@@ -762,7 +762,7 @@ namespace ApiAdapter
                 return null;
             }
             return new StateDataDto()
-            {   
+            {
                 Id = info.Id,
                 OwnerId = info.OwnerId,
                 ActualDate = info.ActualDate,
@@ -783,7 +783,7 @@ namespace ApiAdapter
                 return null;
             }
             return new UnitTestTypeDto()
-            {   
+            {
                 Id = type.Id,
                 DisplayName = type.DisplayName,
                 SystemName = type.SystemName,
@@ -892,7 +892,7 @@ namespace ApiAdapter
                 return null;
             }
             return new Zidium.Core.Api.SendLogData()
-            {   
+            {
                 ComponentId = message.ComponentId,
                 Date = message.Date,
                 Order = message.Order,
@@ -910,7 +910,7 @@ namespace ApiAdapter
                 return null;
             }
             return new WebLogConfigDto()
-            {   
+            {
                 ComponentId = config.ComponentId,
                 LastUpdateDate = config.LastUpdateDate,
                 Enabled = config.Enabled,
@@ -956,7 +956,7 @@ namespace ApiAdapter
             {
                 return null;
             }
-            return levels.Select(x=>ConvertToCore(x).Value).ToList();
+            return levels.Select(x => ConvertToCore(x).GetValueOrDefault()).ToList();
         }
 
         public static Zidium.Core.Api.GetLogsRequestData ConvertToCore(GetLogsRequestDtoData filter)
@@ -972,7 +972,10 @@ namespace ApiAdapter
                 To = filter.To,
                 MaxCount = filter.MaxCount,
                 Context = filter.Context,
-                Levels = ConvertToCore(filter.Levels)
+                Levels = ConvertToCore(filter.Levels),
+                Message = filter.Message,
+                PropertyName = filter.PropertyName,
+                PropertyValue = filter.PropertyValue
             };
             return result;
         }
