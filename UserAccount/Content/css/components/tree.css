@@ -91,6 +91,10 @@ div.components-tree-item-content {
     display: inline;
 }
 
+#tree-header-restore-icon {
+    font-size: 16px;
+}
+
 #tree-header-minimize {
     display: inline-block;
     width: 34px;

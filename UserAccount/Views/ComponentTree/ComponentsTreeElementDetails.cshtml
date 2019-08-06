@@ -32,9 +32,10 @@
 
             <label for='@Model.Unittests.HtmlId'></label>
 
-            <div style="display: table-cell; padding-left: 15px;">
-                <a href='@Url.Action("Index", "UnitTests", new { componentId = Model.Id })'
-                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Unittests.Status)" target="_blank">
+            <div style="display: table-cell; padding-left: 15px;" class="highlight-container">
+                <a href='@Url.Action("Index", "UnitTests", new {componentId = Model.Id})'
+                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Unittests.Status) unittests-link"
+                   data-id="@Model.Id">
                     Проверки
                 </a>
 
@@ -54,7 +55,7 @@
                             {
                                 <span style="color:#999">: @unittest.Message</span>
                             }
-                        
+
                             @if (UserHelper.CurrentUser.CanEditCommonData())
                             {
                                 <a href="#" class="text-muted tree-item-menu-button tree-item-unittest-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>
@@ -75,9 +76,10 @@
 
             <label for='@Model.Metrics.HtmlId'></label>
 
-            <div style="display: table-cell; padding-left: 15px;">
+            <div style="display: table-cell; padding-left: 15px;" class="highlight-container">
                 <a href='@Url.Action("Values", "Metrics", new { componentId = Model.Id })'
-                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Metrics.Status)" target="_blank">
+                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Metrics.Status) metrics-link" 
+                   data-id="@Model.Id">
                     Метрики
                 </a>
 
@@ -92,8 +94,8 @@
                             <a href='@Url.Action("Show", "Metrics", new { id = metric.Id })'
                                class="@GuiHelper.GetComponentStatusTextCssClass(metric.Status) metric-name-link">
                                 @(metric.DisplayName): @(metric.Value.HasValue ? metric.Value.ToString() : "нет сигнала")
-                            </a>   
-                        
+                            </a>
+
                             @if (UserHelper.CurrentUser.CanEditCommonData())
                             {
                                 <a href="#" class="text-muted tree-item-menu-button tree-item-metric-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>

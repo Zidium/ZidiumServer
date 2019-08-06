@@ -35,7 +35,7 @@
 
     function accordionReloadCurrentGroup(element) {
         var groupContent;
-        if (element != null)
+        if (element !== null)
             groupContent = element.closest('.tree-details-content');
         else {
             var container = getDetailsContainer();
@@ -43,8 +43,13 @@
             groupContent = getContentByGroup(container, group);
         }
 
-        if (groupContent != null)
+        if (groupContent !== null)
             accordionLoadGroup(groupContent);
+    }
+
+    function showGroup(groupName) {
+        var link = $('.tree-details-container .tree-details-menu-item[data-group="' + groupName + '"] > a');
+        link.click();
     }
 
     function getDetailsContainer() {
@@ -59,7 +64,7 @@
         $("#details-panel-loader").hide();
     }
 
-    function load(aDetailsType, url, data) {
+    function load(aDetailsType, url, data, onLoad) {
         detailsType = aDetailsType;
         showLoader();
         var tempDetails = $("<div class='smart-block'></div>");
@@ -75,7 +80,7 @@
             selectMenuItem(lastTab);
 
             hideLoader();
-        }
+        };
 
         var onComplete = function () {
             setTimeout(function () {
@@ -108,19 +113,30 @@
                                     //tabGroup.addClass("in");
                                     tab.attr("data-loaded", "true"); //data('loaded', 'true');
                                     replaceDetails();
-                                },
-                                    1);
+
+                                    if (onLoad) {
+                                        onLoad();
+                                    }
+                                }, 1);
                             }
                         });
                     } else {
                         replaceDetails();
+
+                        if (onLoad) {
+                            onLoad();
+                        }
                     }
 
                 } else {
                     hideLoader();
+
+                    if (onLoad) {
+                        onLoad();
+                    }
                 }
             }, 1);
-        }
+        };
 
         smartBlocks.doSubmit(url, data, tempDetails, onComplete);
     }
@@ -171,6 +187,7 @@
 
     return {
         load: load,
+        showGroup: showGroup,
         accordionReloadCurrentGroup: accordionReloadCurrentGroup
     };
 })();

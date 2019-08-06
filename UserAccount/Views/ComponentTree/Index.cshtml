@@ -108,7 +108,9 @@
     <div class="submenu-title">
         @ViewBag.Title
         <div id="tree-header-container-mini">
-            <a id="tree-header-restore" href="#" class="text-muted">Показать фильтры</a>
+            <a id="tree-header-restore" href="#" class="text-muted">
+                <span class="glyphicon glyphicon-filter" id="tree-header-restore-icon" title="Показать фильтры"></span>
+            </a>
         </div>
     </div>
     <hr class="submenu" />
@@ -291,6 +293,12 @@
 
         // Обработчик клика по событиям
         $('#components-tree').on('click', '.events-link', onEventsClick);
+
+        // Обработчик клика по проверкам
+        $('#components-tree').on('click', '.unittests-link', onUnittestsClick);
+
+        // Обработчик клика по метрикам
+        $('#components-tree').on('click', '.metrics-link', onMetricsClick);
 
         // Обработчик кнопки скрытия детализации
         $('#details-panel-close-button').click(function () { hideDetailsPanel()});
@@ -516,6 +524,36 @@
 
         var url = '@Url.Action("EventsDetails", "ComponentTreeDetails")';
         componentTreeDetails.load("events", url, { id : id });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по проверкам
+    function onUnittestsClick(event) {
+        event.preventDefault();
+
+        var id = $(this).data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("ComponentDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("component", url, { id: id }, function () {
+            componentTreeDetails.showGroup('component-unittests');
+        });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по метрикам
+    function onMetricsClick(event) {
+        event.preventDefault();
+
+        var id = $(this).data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("ComponentDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("component", url, { id: id }, function () {
+            componentTreeDetails.showGroup('component-metrics');
+        });
 
         highlightOn($(this));
     }

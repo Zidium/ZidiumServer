@@ -13,13 +13,13 @@ namespace Zidium.Core.AccountsDb
             EventRequestsPerDay = 2000,
             EventsMaxDays = 30,
 
-            UnitTestsRequestsPerDay = 2000,
+            UnitTestsRequestsPerDay = 50 * 6 * 24, // 50 проверок раз в 10 минут
             UnitTestsMaxDays = 30,
 
             LogSizePerDay = 200 * 1024 * 1024,
             LogMaxDays = 7,
 
-            MetricRequestsPerDay = 2000,
+            MetricRequestsPerDay = 50 * 6 * 24, // 50 метрик раз в 10 минут
             MetricsMaxDays = 30,
 
             ComponentsMax = 100,

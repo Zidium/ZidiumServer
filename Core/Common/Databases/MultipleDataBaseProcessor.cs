@@ -184,10 +184,17 @@ namespace Zidium.Core.Common
             try
             {
                 CancellationToken.ThrowIfCancellationRequested();
-                Logger.Trace("Начинаем обработку аккаунта; ID:{0}; Name:{1}", account.Id, account.DisplayName);
                 using (var data = new ForEachAccountData(accountLogger, CancellationToken, account))
                 {
-                    method(data);
+                    data.Logger.Trace("Начинаем обработку аккаунта; ID:{0}; Name:{1}", account.Id, account.DisplayName);
+                    try
+                    {
+                        method(data);
+                    }
+                    finally
+                    {
+                        data.Logger.Trace("Обработка аккаунта завершена; ID:{0}; Name:{1}", account.Id, account.DisplayName);
+                    }
                 }
             }
             catch (ThreadAbortException) { }
@@ -197,10 +204,6 @@ namespace Zidium.Core.Common
                 SetException(exception);
                 Tools.HandleOutOfMemoryException(exception);
                 accountLogger.Error(exception);
-            }
-            finally
-            {
-                Logger.Trace("Обработка аккаунта завершена; ID:{0}; Name:{1}", account.Id, account.DisplayName);
             }
         }
 
