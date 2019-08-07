@@ -16,43 +16,60 @@
     ViewBag.ActiveMenuItems = "Metrics";
     var metricTypesItems = DropDownListHelper.GetMetricTypes(Model.MetricTypeId, true);
     var hasMetricTypes = metricTypesItems.Count > 1;
+    var isSmartBlocks = HttpContext.Current.Request.IsSmartBlocksRequest();
+    if (isSmartBlocks)
+    {
+        Layout = null;
+    }
 }
 
-<p class="submenu-title">@ViewBag.Title</p>
-@if (Model.Metric != null)
+@if (!isSmartBlocks)
 {
-    <div class="zi-bread-crumbs">
-        @Html.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", Model.Metric)
-    </div>
+    <p class="submenu-title">@ViewBag.Title</p>
+
+    if (Model.Metric != null)
+    {
+        <div class="zi-bread-crumbs">
+            @Html.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", Model.Metric)
+        </div>
+    }
+    <hr class="submenu" />
 }
-<hr class="submenu" />
 
 @if (!hasMetricTypes)
 {
     <div class="alert alert-warning">
-        Чтобы создать метрику необходимо указать ее тип. Сейчас в системе нет ни одного типа метрики. 
+        Чтобы создать метрику необходимо указать ее тип. Сейчас в системе нет ни одного типа метрики.
         Создайте сначала тип метрики.
-        @Html.ActionLink("Создать", "Edit", "MetricTypes", null, new{@class="btn btn-warning"})
+        @Html.ActionLink("Создать", "Edit", "MetricTypes", null, new { @class = "btn btn-warning" })
     </div>
 }
 
-@{Html.BeginForm();}
+@{Html.BeginForm(null, null, FormMethod.Post, new { @class = isSmartBlocks ? " smart-block-form" : "" });}
 
 @Html.AntiForgeryToken()
 @Html.HiddenFor(model => model.Id)
 
 <div class="smart-container">
-    
-    @Html.EditorFor(m => m.ComponentId, "SmartEdit")
+
+    @if (!isSmartBlocks)
+    {
+        @Html.EditorFor(m => m.ComponentId, "SmartEdit")
+    }
+    else
+    {
+        @Html.HiddenFor(m => m.ComponentId)
+    }
+
     @if (Model.Id == null)
     {
         <div class="smart-row">
             <div class="smart-col-labels">
-                @Html.LabelFor(x => x.MetricTypeId, new {@class = "control-label"})
+                @Html.LabelFor(x => x.MetricTypeId, new { @class = "control-label" })
             </div>
             <div class="smart-col-fields">
                 <div class="smart-subcol">
-                    @Html.DropDownListFor(x => x.MetricTypeId, metricTypesItems, new {@class = "form-control"})
+                    @Html.DropDownListFor(x => x.MetricTypeId, metricTypesItems, new { @class = "form-control" })
                 </div>
                 <div>
                     @Html.ValidationMessageFor(x => x.MetricTypeId, null, null, "p")
@@ -63,7 +80,7 @@
     else
     {
         <text>
-            @Html.HiddenFor(x => x.MetricTypeId) 
+            @Html.HiddenFor(x => x.MetricTypeId)
             @Html.DisplayFor(x => x.MetricType, "SmartDisplay")
         </text>
     }
@@ -75,10 +92,10 @@
             </p>
         </div>
     </div>
-    
+
     @Html.EditorFor(x => x.ActualTime, "SmartEdit")
     @Html.EditorFor(x => x.NoSignalColor, "SmartEdit")
-    
+
     <div class="smart-row">
         <div class="smart-col-labels smart-col-empty"></div>
         <div class="smart-col-fields">
@@ -93,15 +110,31 @@
     @Html.EditorFor(m => m.ConditionGreen, "SmartEdit")
     @Html.EditorFor(m => m.ElseColor, "SmartEdit")
 
-    <div class="smart-row">
-        <div class="smart-col-labels smart-col-empty"></div>
-        <div class="smart-col-fields" style="text-align: left">
-            <div>
-                <input type="submit" value='@(Model.Id.HasValue ? "Сохранить" : "Добавить")' class="btn btn-primary smart-button" />
+    @if (!isSmartBlocks)
+    {
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields" style="text-align: left">
+                <div>
+                    <input type="submit" value='@(Model.Id.HasValue ? "Сохранить" : "Добавить")' class="btn btn-primary smart-button" />
+                </div>
             </div>
         </div>
-    </div>
+    }
 </div>
+
+@if (isSmartBlocks)
+{
+    <hr />
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">
+            @(Model.Id.HasValue ? "Сохранить" : "Добавить")
+        </button>
+        <button type="button" class="btn btn-default smart-button" data-dismiss="modal">
+            Отмена
+        </button>
+    </div>
+}
 
 @{Html.EndForm();}
 

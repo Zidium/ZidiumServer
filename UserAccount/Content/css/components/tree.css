@@ -53,6 +53,8 @@ div.components-tree-item-content {
 
 #components-tree .tree-item-component-menu-button {}
 #components-tree .tree-item-unittest-menu-button {}
+#components-tree .tree-item-unittests-menu-button {}
+#components-tree .tree-item-metrics-menu-button {}
 #components-tree .tree-item-metric-menu-button {}
 .components-tree-item-checkbox {}
 .components-tree-item-checkbox-component {}

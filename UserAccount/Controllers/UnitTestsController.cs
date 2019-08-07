@@ -114,8 +114,13 @@ namespace Zidium.UserAccount.Controllers
             var response = client.GetOrCreateUnitTest(CurrentUser.AccountId, data);
             var unitTest = response.Data;
 
-            this.SetTempMessage(TempMessageType.Success, string.Format("Добавлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("ResultDetails", new { id = unitTest.Id })));
-            return RedirectToAction("Index");
+            if (!Request.IsSmartBlocksRequest())
+            {
+                this.SetTempMessage(TempMessageType.Success, string.Format("Добавлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("ResultDetails", new {id = unitTest.Id})));
+                return RedirectToAction("Index");
+            }
+
+            return GetSuccessJsonResponse(unitTest.Id);
         }
         
         [CanEditAllData]

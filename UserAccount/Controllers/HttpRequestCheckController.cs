@@ -125,7 +125,12 @@ namespace Zidium.UserAccount.Controllers
 
             var unitTest = SaveSimpleCheck(model);
 
-            return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+            if (!Request.IsSmartBlocksRequest())
+            {
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+            }
+
+            return GetSuccessJsonResponse(unitTest.Id);
         }
 
         protected override UnitTest FindSimpleCheck(EditSimpleModel model)

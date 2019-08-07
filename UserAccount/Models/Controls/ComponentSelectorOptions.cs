@@ -14,7 +14,7 @@ namespace Zidium.UserAccount.Models.Controls
 
         public bool AllowEmpty { get; set; }
 
-        public bool ShowCreateButton { get; protected set; }
+        public bool ShowCreateButton { get; set; }
 
         public string NewComponentFolderSystemName { get; protected set; }
 

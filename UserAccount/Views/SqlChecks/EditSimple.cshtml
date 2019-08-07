@@ -3,15 +3,21 @@
 @{
     ViewBag.Title = (Model.Id.HasValue ? "Настройка" : "Добавление") + " Sql-проверки";
     ViewBag.ActiveMenuItems = "UnitTests";
+    var isSmartBlocks = HttpContext.Current.Request.IsSmartBlocksRequest();
+    if (isSmartBlocks)
+    {
+        Layout = null;
+    }
 }
 
-@section styles {
-    <link href="~/Content/Checks/sql-check-simple.css" rel="stylesheet" />
+<link href="~/Content/Checks/sql-check-simple.css" rel="stylesheet" />
+
+@if (!isSmartBlocks)
+{
+    @Html.Partial("_PageTitle")
 }
 
-@Html.Partial("_PageTitle")
-
-@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" + (isSmartBlocks ? " smart-block-form" : "") }))
 {
     @Html.AntiForgeryToken()
     @Html.HiddenFor(m => m.Id)
@@ -34,26 +40,49 @@
                 }
 
                 @Html.EditorFor(m => m.Name, "SmartEdit", new { HorizontalForm = true })
-                @Html.EditorFor(m => m.Period, "SmartEdit", new { HorizontalForm = true })          
+                @Html.EditorFor(m => m.Period, "SmartEdit", new { HorizontalForm = true })
                 @Html.EditorFor(m => m.Provider, "SmartEdit", new { HorizontalForm = true })
                 @Html.EditorFor(m => m.ConnectionString, "SmartEdit", new { HorizontalForm = true })
                 @Html.EditorFor(m => m.Query, "SmartEdit", new { HorizontalForm = true })
 
-                <div class="smart-row">
-                    <div class="smart-col-labels smart-col-empty"></div>
-                    <div class="smart-col-fields">
-                        <div>
-                            <input type="submit" value='@(Model.Id.HasValue ? "Сохранить" : "Добавить")' class="btn btn-primary" />
+                @if (!isSmartBlocks)
+                {
+                    <div class="smart-row">
+                        <div class="smart-col-labels smart-col-empty"></div>
+                        <div class="smart-col-fields">
+                            <div>
+                                <input type="submit" value='@(Model.Id.HasValue ? "Сохранить" : "Добавить")' class="btn btn-primary" />
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             </div>
         </div>
 
-        <div class="table-cell-sm">
-            @Html.ActionLink("Расширенные настройки", "Edit", null, new { id = Model.Id }, new { @class = "btn btn-default" })
-        </div>
+        @if (!isSmartBlocks)
+        {
+            <div class="table-cell-sm">
+                @Html.ActionLink("Расширенные настройки", "Edit", null, new { id = Model.Id }, new { @class = "btn btn-default" })
+            </div>
+        }
+        else
+        {
+            <div style="display: table-cell; padding-left: 1px"></div>
+        }
     </div>
+
+    if (isSmartBlocks)
+    {
+        <hr />
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">
+                @(Model.Id.HasValue ? "Сохранить" : "Добавить")
+            </button>
+            <button type="button" class="btn btn-default smart-button" data-dismiss="modal">
+                Отмена
+            </button>
+        </div>
+    }
 }
 
 <hr />

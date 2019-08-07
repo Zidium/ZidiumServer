@@ -166,48 +166,61 @@
     </div>
 }
 
-<div id="relative-container">
+    <div id="relative-container">
 
-    <div id="components-tree" class="css-treeview smart-block" data-smart-block-begin="onBegin">
-        @{ Html.RenderAction("GetComponentsTree", new { color = Model.Color, componentTypeId = Model.ComponentTypeId, search = Model.Search }); }
-    </div>
-
-    <div id="details-panel" class="collapse">
-        <div id="details-panel-close">
-            <button type="button" id="details-panel-close-button" class="close" aria-hidden="true">×</button>
+        <div id="components-tree" class="css-treeview smart-block" data-smart-block-begin="onBegin">
+            @{ Html.RenderAction("GetComponentsTree", new { color = Model.Color, componentTypeId = Model.ComponentTypeId, search = Model.Search }); }
         </div>
 
-        <div>
-            <div id="details-panel-container" class="smart-block" data-smart-block-loader="details-panel-loader">
+        <div id="details-panel" class="collapse">
+            <div id="details-panel-close">
+                <button type="button" id="details-panel-close-button" class="close" aria-hidden="true">×</button>
             </div>
 
-            <div id="details-panel-loader" class="collapse overlapped-loader">
-                <div class="loader-container">
-                    <div class="loader-caption">
-                        <div class="loader-caption-container">
-                            <img src="~/Content/Icons/ajax-loader.gif" />
-                            <span>Обновление...</span>
+            <div>
+                <div id="details-panel-container" class="smart-block" data-smart-block-loader="details-panel-loader">
+                </div>
+
+                <div id="details-panel-loader" class="collapse overlapped-loader">
+                    <div class="loader-container">
+                        <div class="loader-caption">
+                            <div class="loader-caption-container">
+                                <img src="~/Content/Icons/ajax-loader.gif" />
+                                <span>Обновление...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
-
         </div>
+
+        <ul class="dropdown-menu collapse" id="menu-component">
+            <li><a href="#" id="menu-component-add">Добавить дочерний компонент</a></li>
+            <li><a href="#" id="menu-component-delete">Удалить</a></li>
+        </ul>
+
+        <ul class="dropdown-menu collapse" id="menu-unittest">
+            <li><a href="#" id="menu-unittest-delete">Удалить</a></li>
+        </ul>
+
+        <ul class="dropdown-menu collapse" id="menu-metric">
+            <li><a href="#" id="menu-metric-delete">Удалить</a></li>
+        </ul>
+
+        <ul class="dropdown-menu collapse" id="menu-unittests">
+            <li><a href="#" id="menu-unittests-add-http">Добавить Http-проверку</a></li>
+            <li><a href="#" id="menu-unittests-add-ping">Добавить Ping-проверку</a></li>
+            <li><a href="#" id="menu-unittests-add-domain">Добавить проверку оплаты домена</a></li>
+            <li><a href="#" id="menu-unittests-add-ssl">Добавить проверку Ssl-сертификата</a></li>
+            <li><a href="#" id="menu-unittests-add-sql">Добавить Sql-проверку</a></li>
+            <li><a href="#" id="menu-unittests-add-custom">Добавить пользовательскую проверку</a></li>
+        </ul>
+
+        <ul class="dropdown-menu collapse" id="menu-metrics">
+            <li><a href="#" id="menu-metrics-add">Добавить метрику</a></li>
+        </ul>
     </div>
-
-    <ul class="dropdown-menu collapse" id="menu-component">
-        <li><a href="#" id="menu-component-add">Добавить дочерний компонент</a></li>
-        <li><a href="#" id="menu-component-delete">Удалить</a></li>
-    </ul>
-
-    <ul class="dropdown-menu collapse" id="menu-unittest">
-        <li><a href="#" id="menu-unittest-delete">Удалить</a></li>
-    </ul>
-
-    <ul class="dropdown-menu collapse" id="menu-metric">
-        <li><a href="#" id="menu-metric-delete">Удалить</a></li>
-    </ul>
-</div>
 
 <div id="loader" class="collapse overlapped-loader">
     <div class="loader-container">
@@ -348,21 +361,57 @@
             $('#components-tree').on('click', hideAllContextMenus);
         });
 
+        // Обработчик вызова меню по разделу проверок
+        $('#components-tree').on('click', '.tree-item-unittests-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-unittests')
+                .data('id', me.closest('li').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
+        // Обработчик вызова меню по разделу метрик
+        $('#components-tree').on('click', '.tree-item-metrics-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-metrics')
+                .data('id', me.closest('li').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
         // Скрытие меню компонента при выборе любого пункта
         $('#menu-component').on('click', 'li > a', hideAllContextMenus);
 
         // Скрытие меню проверки при выборе любого пункта
         $('#menu-unittest').on('click', 'li > a', hideAllContextMenus);
 
+        // Скрытие меню раздела проверок при выборе любого пункта
+        $('#menu-unittests').on('click', 'li > a', hideAllContextMenus);
+
         // Скрытие меню метрики при выборе любого пункта
         $('#menu-metric').on('click', 'li > a', hideAllContextMenus);
+
+        // Скрытие меню раздела метрик при выборе любого пункта
+        $('#menu-metrics').on('click', 'li > a', hideAllContextMenus);
 
         // Скрытие меню при клике вне меню
         function hideAllContextMenus() {
             $('#components-tree').off('click', hideAllContextMenus);
             $('#menu-component').hide();
             $('#menu-unittest').hide();
+            $('#menu-unittests').hide();
             $('#menu-metric').hide();
+            $('#menu-metrics').hide();
         }
 
         // Меню компонента - Добавить
@@ -414,6 +463,97 @@
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
+        });
+
+        // Меню раздела проверок - Добавить Http-проверку
+        $('#menu-unittests #menu-unittests-add-http').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("EditSimple", "HttpRequestCheck")';
+            var id = $('#menu-unittests').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление Http-проверки', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела проверок - Добавить Ping-проверку
+        $('#menu-unittests #menu-unittests-add-ping').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("EditSimple", "PingChecks")';
+            var id = $('#menu-unittests').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление Ping-проверки', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела проверок - Добавить проверку домена
+        $('#menu-unittests #menu-unittests-add-domain').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")';
+            var id = $('#menu-unittests').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление проверки оплаты домена', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела проверок - Добавить проверку Ssl-сертификата
+        $('#menu-unittests #menu-unittests-add-ssl').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")';
+            var id = $('#menu-unittests').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление проверки Ssl-сертификата', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела проверок - Добавить Sql-проверку
+        $('#menu-unittests #menu-unittests-add-sql').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("EditSimple", "SqlChecks")';
+            var id = $('#menu-unittests').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление Sql-проверки', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела проверок - Добавить пользовательскую проверку
+        $('#menu-unittests #menu-unittests-add-custom').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("Add", "UnitTests")';
+            var id = $('#menu-unittests').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление пользовательской проверки', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела метрик - Добавить метрику
+        $('#menu-metrics #menu-metrics-add').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("Edit", "Metrics")';
+            var id = $('#menu-metrics').data('id');
+            var data = { componentId: id };
+            dialogs.showModal(url, 'Добавление метрики', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data, true);
         });
 
         // Обработчик ссылки скрытия шапки

@@ -127,7 +127,13 @@ namespace Zidium.UserAccount.Controllers
                     };
                     metricId = client.CreateMetric(CurrentUser.AccountId, createData).Data.MetricId;
                 }
-                return RedirectToAction("Show", new { id = metricId });
+
+                if (!Request.IsSmartBlocksRequest())
+                {
+                    return RedirectToAction("Show", new { id = metricId });
+                }
+
+                return GetSuccessJsonResponse(metricId);
             }
             catch (UserFriendlyException exception)
             {

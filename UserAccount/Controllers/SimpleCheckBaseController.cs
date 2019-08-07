@@ -103,7 +103,11 @@ namespace Zidium.UserAccount.Controllers
                 SetUnitTestParams(unitTest, model);
                 CurrentAccountDbContext.SaveChanges();
 
-                this.SetTempMessage(TempMessageType.Success, string.Format("Обновлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("Edit", "Checks", new { id = unitTest.Id })));
+                if (!Request.IsSmartBlocksRequest())
+                {
+                    this.SetTempMessage(TempMessageType.Success, string.Format("Обновлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("Edit", "Checks", new { id = unitTest.Id })));
+                }
+
                 return unitTest;
             }
             else // создание проверки

@@ -38,18 +38,20 @@
                 }
                 else if (ViewData.ModelMetadata.DataTypeName == "Component")
                 {
-                    @Html.ComponentSelector(m => m, new ComponentSelectorOptions()
+                    @Html.ComponentSelectorNew(m => m, new ComponentSelectorOptions()
                     {
                         ShowAsList = false,
-                        ShowComponentStatusSelector = false
+                        ShowComponentStatusSelector = false,
+                        ShowCreateButton = true
                     })
                 }
                 else if (ViewData.ModelMetadata.DataTypeName == "ComponentTree")
                 {
-                    @Html.ComponentSelector(m => m, new ComponentSelectorOptions()
+                    @Html.ComponentSelectorNew(m => m, new ComponentSelectorOptions()
                     {
                         ShowAsList = false,
-                        ShowComponentStatusSelector = false
+                        ShowComponentStatusSelector = false,
+                        ShowCreateButton = true
                     })
                 }
                 else if (ViewData.ModelMetadata.DataTypeName == "ComponentType")

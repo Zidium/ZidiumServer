@@ -5,37 +5,68 @@
 @{
     ViewBag.Title = "Добавление пользовательской проверки";
     ViewBag.ActiveMenuItems = "UnitTests";
+    var isSmartBlocks = HttpContext.Current.Request.IsSmartBlocksRequest();
+    if (isSmartBlocks)
+    {
+        Layout = null;
+    }
 }
 
-@Html.Partial("_PageTitle")
+<style>
+    .smart-col-labels {
+        min-width: 110px;
+    }
+</style>
 
-@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+@if (!isSmartBlocks)
+{
+    @Html.Partial("_PageTitle")
+}
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" + (isSmartBlocks ? " smart-block-form" : "") }))
 {
     @Html.AntiForgeryToken()
     @Html.MyValidationSummaryVertical()
 
-    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
-    @Html.EditorFor(m => m.UnitTestTypeId, "LabeledEdit", new { HorizontalForm = true })
+    <div class="smart-container">
+        @Html.EditorFor(m => m.DisplayName, "SmartEdit", new { HorizontalForm = true })
+        @Html.EditorFor(m => m.UnitTestTypeId, "SmartEdit", new { HorizontalForm = true })
 
-    <div class="form-group">
-        @Html.LabelFor(m => m.ComponentId, new { @class = "col-sm-2 control-label" })
-        <div class="col-sm-4">
-            @Html.ComponentSelector(x => x.ComponentId, new ComponentSelectorOptions()
-            {
-                ShowAsList = false,
-            }.SetShowCreateNewButton(null, null, null))
-        </div>
-        <div class="col-sm-6">
-            @Html.ValidationMessageFor(m => m.ComponentId, null, null, "p")
-        </div>
+        @if (!isSmartBlocks)
+        {
+            @Html.EditorFor(m => m.ComponentId, "SmartEdit", new { HorizontalForm = true })
+        }
+        else
+        {
+            @Html.HiddenFor(m => m.ComponentId)
+        }
+
+        @if (!isSmartBlocks)
+        {
+            <div class="smart-row">
+                <div class="smart-col-labels smart-col-empty"></div>
+                <div class="smart-col-fields">
+                    <div>
+                        <input type="submit" value="Добавить" class="btn btn-primary" />
+                        @Html.ActionLink("Вернуться к списку", "Index", null, new { @class = "btn btn-default" })
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
-    <div class="form-group">
-        <div class="col-sm-10 col-sm-offset-2">
-            <input type="submit" value="Добавить" class="btn btn-primary" />
-            @Html.ActionLink("Вернуться к списку", "Index", null, new { @class = "btn btn-default" })
+    if (isSmartBlocks)
+    {
+        <hr />
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">
+                Добавить
+            </button>
+            <button type="button" class="btn btn-default smart-button" data-dismiss="modal">
+                Отмена
+            </button>
         </div>
-    </div>
+    }
 }
 
 @section Scripts
