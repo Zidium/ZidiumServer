@@ -196,8 +196,21 @@
         </div>
 
         <ul class="dropdown-menu collapse" id="menu-component">
-            <li><a href="#" id="menu-component-add">Добавить дочерний компонент</a></li>
+            <li><a href="#" id="menu-component-add-component">Добавить дочерний компонент</a></li>
             <li><a href="#" id="menu-component-delete">Удалить</a></li>
+
+            <li role="separator" class="divider"></li>
+
+            <li><a href="#" id="menu-component-add-http-unittest">Добавить Http-проверку</a></li>
+            <li><a href="#" id="menu-component-add-ping-unittest">Добавить Ping-проверку</a></li>
+            <li><a href="#" id="menu-component-add-domain-unittest">Добавить проверку оплаты домена</a></li>
+            <li><a href="#" id="menu-component-add-ssl-unittest">Добавить проверку Ssl-сертификата</a></li>
+            <li><a href="#" id="menu-component-add-sql-unittest">Добавить Sql-проверку</a></li>
+            <li><a href="#" id="menu-component-add-custom-unittest">Добавить пользовательскую проверку</a></li>
+
+            <li role="separator" class="divider"></li>
+
+            <li><a href="#" id="menu-component-add-metric">Добавить метрику</a></li>
         </ul>
 
         <ul class="dropdown-menu collapse" id="menu-unittest">
@@ -415,7 +428,7 @@
         }
 
         // Меню компонента - Добавить
-        $('#menu-component #menu-component-add').click(function (event) {
+        $('#menu-component #menu-component-add-component').click(function (event) {
             event.preventDefault();
 
             var url = '@Url.Action("Add", "Components")';
@@ -469,92 +482,176 @@
         $('#menu-unittests #menu-unittests-add-http').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("EditSimple", "HttpRequestCheck")';
             var id = $('#menu-unittests').data('id');
+            addHttpUnitTest(id);
+        });
+
+        // Меню компонента - Добавить Http-проверку
+        $('#menu-component #menu-component-add-http-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addHttpUnitTest(id);
+        });
+
+        function addHttpUnitTest(id) {
+            var url = '@Url.Action("EditSimple", "HttpRequestCheck")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление Http-проверки', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
-        });
+        }
 
         // Меню раздела проверок - Добавить Ping-проверку
         $('#menu-unittests #menu-unittests-add-ping').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("EditSimple", "PingChecks")';
             var id = $('#menu-unittests').data('id');
+            addPingUnitTest(id);
+        });
+
+        // Меню компонента - Добавить Ping-проверку
+        $('#menu-component #menu-component-add-ping-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addPingUnitTest(id);
+        });
+
+        function addPingUnitTest(id) {
+            var url = '@Url.Action("EditSimple", "PingChecks")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление Ping-проверки', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
-        });
+        }
 
         // Меню раздела проверок - Добавить проверку домена
         $('#menu-unittests #menu-unittests-add-domain').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")';
             var id = $('#menu-unittests').data('id');
+            addDomainUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку домена
+        $('#menu-component #menu-component-add-domain-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addDomainUnitTest(id);
+        });
+
+        function addDomainUnitTest(id) {
+            var url = '@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление проверки оплаты домена', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
-        });
+        }
 
         // Меню раздела проверок - Добавить проверку Ssl-сертификата
         $('#menu-unittests #menu-unittests-add-ssl').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")';
             var id = $('#menu-unittests').data('id');
+            addSslUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку Ssl-сертификата
+        $('#menu-component #menu-component-add-ssl-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addSslUnitTest(id);
+        });
+
+        function addSslUnitTest(id) {
+            var url = '@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление проверки Ssl-сертификата', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
-        });
+        }
 
         // Меню раздела проверок - Добавить Sql-проверку
         $('#menu-unittests #menu-unittests-add-sql').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("EditSimple", "SqlChecks")';
             var id = $('#menu-unittests').data('id');
+            addSqlUnitTest(id);
+        });
+
+        // Меню компонента - Добавить Sql-проверку
+        $('#menu-component #menu-component-add-sql-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addSqlUnitTest(id);
+        });
+
+        function addSqlUnitTest(id) {
+            var url = '@Url.Action("EditSimple", "SqlChecks")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление Sql-проверки', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
-        });
+        }
 
         // Меню раздела проверок - Добавить пользовательскую проверку
         $('#menu-unittests #menu-unittests-add-custom').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("Add", "UnitTests")';
             var id = $('#menu-unittests').data('id');
+            addCustomUnitTest(id);
+        });
+
+        // Меню компонента - Добавить пользовательскую проверку
+        $('#menu-component #menu-component-add-custom-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addCustomUnitTest(id);
+        });
+
+        function addCustomUnitTest(id) {
+            var url = '@Url.Action("Add", "UnitTests")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление пользовательской проверки', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data);
-        });
+        }
 
         // Меню раздела метрик - Добавить метрику
         $('#menu-metrics #menu-metrics-add').click(function (event) {
             event.preventDefault();
 
-            var url = '@Url.Action("Edit", "Metrics")';
             var id = $('#menu-metrics').data('id');
+            addMetric(id);
+        });
+
+        // Меню компонента - Добавить метрику
+        $('#menu-component #menu-component-add-metric').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addMetric(id);
+        });
+
+        function addMetric(id) {
+            var url = '@Url.Action("Edit", "Metrics")';
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление метрики', function() {
                 hideDetailsPanel(id);
                 submitForm();
             }, data, true);
-        });
+        }
 
         // Обработчик ссылки скрытия шапки
         $('#tree-header-minimize').click(function(event) {
