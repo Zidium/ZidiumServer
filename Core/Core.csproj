@@ -487,6 +487,7 @@
     <Compile Include="Common\Helpers\BannerHelper.cs" />
     <Compile Include="Common\Helpers\ComponentHelper.cs" />
     <Compile Include="Common\Helpers\ComponentSelfTestResult.cs" />
+    <Compile Include="Common\Helpers\CsvWriter.cs" />
     <Compile Include="Common\Helpers\CultureHelper.cs" />
     <Compile Include="Common\Helpers\DatabaseHelper.cs" />
     <Compile Include="Common\Helpers\DataSizeHelper.cs" />
