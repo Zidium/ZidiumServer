@@ -16,6 +16,7 @@
     #form-add-component .smart-col-labels {
         min-width: 150px;
     }
+
     #showFullPeoprtiesBtn {
         white-space: nowrap;
         font-size: 12px;
@@ -27,50 +28,52 @@
     @Html.Partial("_PageTitle")
 }
 
-@using (Html.BeginForm(null, null, FormMethod.Post, new {@class = "form-horizontal" + (isSmartBlocks ? " smart-block-form" : ""), id = "form-add-component"}))
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" + (isSmartBlocks ? " smart-block-form" : ""), id = "form-add-component" }))
 {
     @Html.MyValidationSummary(true)
     @Html.HiddenFor(m => m.Id)
-    @Html.HiddenFor(m=>m.CanEditParentId)
+    @Html.HiddenFor(m => m.CanEditParentId)
+    @Html.HiddenFor(m => m.ParentId)
 
     <div class="smart-container">
         @{
             var form = Html.GetFormBuilder(Model);
         }
-                                                         
+
         @form.GroupFor(m => m.DisplayName).TextBox().Partial()
         @form.GroupFor(m => m.ComponentTypeId).Control(t => Html.ComponentTypeSelector(Html.NameFor(m => m.ComponentTypeId).ToString(), Model.ComponentTypeId, false, false)).Partial()
-       
+
         @form.Group("").Control(
-            @<text>
-                <div class="pull-right2">
-                    <a href="#" id="showFullPeoprtiesBtn" style="color: gray">Дополнительные настройки</a>
-                </div>
-             </text>).Partial()
-        
+                @<text>
+                    <div class="pull-right2">
+                        <a href="#" id="showFullPropertiesBtn" style="color: gray">Дополнительные настройки</a>
+                    </div>
+                </text>).Partial()
+
         @form.GroupFor(m => m.SystemName).AddGroupCss("ext-component-property").TextBox().Partial()
-        @form.GroupFor(m => m.ParentId).AddGroupCss("ext-component-property").Control(t => Html.ComponentSelectorNew(m => m.ParentId, new ComponentSelectorOptions()
-        {
-            ShowAsList = false,
-            ShowComponentStatusSelector = false,
-            AllowEmpty = false,
-            AutoRefreshPage = false
-        })).Partial()
-        
+
+        @*@form.GroupFor(m => m.ParentId).AddGroupCss("ext-component-property").Control(t => Html.ComponentSelectorNew(m => m.ParentId, new ComponentSelectorOptions()
+            {
+                ShowAsList = false,
+                ShowComponentStatusSelector = false,
+                AllowEmpty = false,
+                AutoRefreshPage = false
+            })).Partial()*@
+
         @form.GroupFor(m => m.Version).AddGroupCss("ext-component-property").TextBox().Partial()
 
         @if (!isSmartBlocks)
         {
             @form.Group("Submit").Control(@<text>
-                                              <input type="submit" value="Добавить" class="btn btn-primary"/>
-                                              @Html.ActionLink("Вернуться к списку", "List", "Components", null, new {@class = "btn btn-default"})
-                                           </text>).Partial()
+                <input type="submit" value="Добавить" class="btn btn-primary" />
+                @Html.ActionLink("Вернуться к списку", "List", "Components", null, new { @class = "btn btn-default" })
+            </text>).Partial()
         }
     </div>
 
     if (isSmartBlocks)
     {
-        <hr/>
+        <hr />
         <div class="text-right top10px">
             <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">Добавить</button>
             <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Отмена</button>
@@ -91,7 +94,7 @@
         $("#form-add-component .ext-component-property").hide();
     }
 
-    $("#showFullPeoprtiesBtn").click(function(event) {
+    $("#showFullPropertiesBtn").click(function (event) {
         event.preventDefault();
         if (isFullPropertieOpened)
             hideFullComponentProperties();

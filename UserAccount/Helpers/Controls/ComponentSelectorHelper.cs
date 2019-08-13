@@ -87,5 +87,19 @@ namespace Zidium.UserAccount
             return htmlHelper.Partial("~/Views/Controls/ComponentSelectorNew.cshtml", model);
         }
 
+        public static MvcHtmlString ComponentSelectorNew(
+            this HtmlHelper<object> htmlHelper,
+            Expression<Func<object, object>> expression,
+            ComponentSelectorOptions options)
+        {
+            var fullHtmlFieldName = GetName(htmlHelper, expression);
+            var componentId = GetComponentId(htmlHelper, expression, fullHtmlFieldName);
+            options = options ?? new ComponentSelectorOptions();
+            var model = PrepareModel(fullHtmlFieldName, componentId, options);
+            model.HtmlHelper = htmlHelper;
+            model.Expression = expression;
+            return htmlHelper.Partial("~/Views/Controls/ComponentSelectorNew.cshtml", model);
+        }
+
     }
 }

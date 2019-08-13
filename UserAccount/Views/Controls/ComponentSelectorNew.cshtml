@@ -23,42 +23,42 @@
                 <span id="@captionName"
                       style="cursor: text; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; direction: rtl; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"
                       class="form-control" title="@componentFullName">@(componentFullName ?? "Выберите компонент")</span>
-            </div>
-            <span class="input-group-btn">
-                @if (Model.ShowCreateNewButton)
-                {
-                    <button class="btn btn-default" type="button" onclick="showCreateNewComponentDialog()">Создать новый</button>
-                }
-                @if (Model.ShowFindButton)
-                {
-                    <button id="findComponentButton" class="btn btn-default" type="button">Выбрать</button>
-                }
-            </span>
-        </div>
-    }
-    else
-    {
-        <div class="input-group full-width">
-            <div style="display: table-cell; max-width: 1px;">
-                <span id="@captionName"
-                      style="cursor: text; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; direction: rtl; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"
-                      class="form-control" title="@componentFullName">@(componentFullName ?? "Выберите компонент")</span>
-            </div>
-                <div class="input-group-btn">
-                    <button id="clearComponentButton" class="btn btn-default" type="button" @(!Model.AllowEmpty ? "disabled" : null)>
-                        <span class="glyphicon glyphicon-remove text-muted"></span>
-                    </button>
                 </div>
-        </div>
-    }
+                <span class="input-group-btn">
+                    @if (Model.ShowCreateNewButton)
+                    {
+                        <button class="btn btn-default" type="button" onclick="showCreateNewComponentDialog()">Создать новый</button>
+                    }
+                    @if (Model.ShowFindButton)
+                    {
+                        <button id="findComponentButton" class="btn btn-default" type="button">Выбрать</button>
+                    }
+                </span>
+            </div>
+        }
+        else
+        {
+            <div class="input-group full-width">
+                <div style="display: table-cell; max-width: 1px;">
+                    <span id="@captionName"
+                          style="cursor: text; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; direction: rtl; border-top-left-radius: 4px; border-bottom-left-radius: 4px;"
+                          class="form-control" title="@componentFullName">@(componentFullName ?? "Выберите компонент")</span>
+                    </div>
+                    <div class="input-group-btn">
+                        <button id="clearComponentButton" class="btn btn-default" type="button" @(!Model.AllowEmpty ? "disabled" : null)>
+                            <span class="glyphicon glyphicon-remove text-muted"></span>
+                        </button>
+                    </div>
+                </div>
+            }
 
     @if (Model.Expression == null)
     {
-        @Html.Hidden(Model.Name, null, new { id = Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false", data_toggle = "dropdown" })
+        @Html.Hidden(Model.Name, null, new { id = Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false", data_toggle = "dropdown", data_expression = "false" })
     }
     else
     {
-        @Model.HtmlHelper.HiddenFor(Model.Expression, new { id = Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false", data_toggle = "dropdown" })
+        @Model.HtmlHelper.HiddenFor(Model.Expression, new { id = Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false", data_toggle = "dropdown", data_expression = "true" })
     }
 
     <div class="dropdown-menu" id="@divName" style="width: 100%; padding: 0; margin: 0; padding-top: 5px; margin-top: 5px;">

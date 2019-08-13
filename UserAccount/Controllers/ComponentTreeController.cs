@@ -368,17 +368,17 @@ namespace Zidium.UserAccount.Controllers
                     IsFolder = t.ComponentTypeId == SystemComponentTypes.Folder.Id
                 });
 
-            var list = query.ToList();
+            var dict = query.ToDictionary(t => t.Id, t => t);
 
             // Проставим ссылки на родителя и детей
-            foreach (var component in list.ToArray())
+            foreach (var component in dict.Values.ToArray())
             {
                 if (component.ParentId.HasValue)
                 {
-                    var parent = list.FirstOrDefault(t => t.Id == component.ParentId.Value);
+                    dict.TryGetValue(component.ParentId.Value, out var parent);
                     if (parent != null)
                     {
-                        component.Parent = list.First(t => t.Id == component.ParentId.Value);
+                        component.Parent = parent;
                         component.Parent.Childs.Add(component);
                     }
                     else
@@ -386,12 +386,12 @@ namespace Zidium.UserAccount.Controllers
                         // Если не нашли родителя, значит, он удалён, выбросим компонент из дерева
                         // Вообще такого не должно быть, потому что компонент удаляется вместе с детьми
                         // Но иногда всё равно бывает
-                        list.Remove(component);
+                        dict.Remove(component.Id);
                     }
                 }
             }
 
-            var result = list.ToArray();
+            var result = dict.Values.ToArray();
 
             var root = result.Single(t => t.IsRoot);
 

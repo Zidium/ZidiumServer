@@ -12,7 +12,6 @@ using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Components;
 using Zidium.UserAccount.Models.Controls;
-using Zidium.UserAccount.Models.Others;
 
 namespace Zidium.UserAccount.Controllers
 {
