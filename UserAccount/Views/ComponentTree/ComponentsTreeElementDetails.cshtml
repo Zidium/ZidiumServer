@@ -27,7 +27,7 @@
 
     @if (Model.Unittests.Items.Length > 0)
     {
-        <li style="white-space: nowrap;" data-id="@Model.Id">
+        <li style="white-space: nowrap;">
             <input type="checkbox" class="components-tree-item-checkbox" id='@Model.Unittests.HtmlId' @(Model.Unittests.Expanded ? "checked" : string.Empty) />
 
             <label for='@Model.Unittests.HtmlId'></label>
@@ -76,7 +76,7 @@
 
     @if (Model.Metrics.Items.Length > 0)
     {
-        <li style="white-space: nowrap;" data-id="@Model.Id">
+        <li style="white-space: nowrap;">
             <input type="checkbox" class="components-tree-item-checkbox" id='@Model.Metrics.HtmlId' @(Model.Metrics.Expanded ? "checked" : string.Empty) />
 
             <label for='@Model.Metrics.HtmlId'></label>

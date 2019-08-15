@@ -78,7 +78,7 @@ namespace Zidium.UserAccount.Controllers
                 FormsAuthentication.SetAuthCookie(token.UserId.ToString(), rememberMe);
                 UserHelper.SetIsUserSwitched(isSwitched);
 
-                return Redirect(returnUrl ?? Url.Action("Start", "Home"));
+                return Redirect(returnUrl ?? Url.Action("Index", "ComponentTree"));
             }
             catch (TokenNotValidException exception)
             {

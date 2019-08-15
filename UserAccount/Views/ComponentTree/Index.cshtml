@@ -166,74 +166,74 @@
     </div>
 }
 
-    <div id="relative-container">
+<div id="relative-container">
 
-        <div id="components-tree" class="css-treeview smart-block" data-smart-block-begin="onBegin">
-            @{ Html.RenderAction("GetComponentsTree", new { color = Model.Color, componentTypeId = Model.ComponentTypeId, search = Model.Search }); }
+    <div id="components-tree" class="css-treeview smart-block" data-smart-block-begin="onBegin" data-smart-block-complete="onFormSubmitComplete">
+        @{ Html.RenderAction("GetComponentsTree", new { color = Model.Color, componentTypeId = Model.ComponentTypeId, search = Model.Search }); }
+    </div>
+
+    <div id="details-panel" class="collapse">
+        <div id="details-panel-close">
+            <button type="button" id="details-panel-close-button" class="close" aria-hidden="true">×</button>
         </div>
 
-        <div id="details-panel" class="collapse">
-            <div id="details-panel-close">
-                <button type="button" id="details-panel-close-button" class="close" aria-hidden="true">×</button>
+        <div>
+            <div id="details-panel-container" class="smart-block" data-smart-block-loader="details-panel-loader">
             </div>
 
-            <div>
-                <div id="details-panel-container" class="smart-block" data-smart-block-loader="details-panel-loader">
-                </div>
-
-                <div id="details-panel-loader" class="collapse overlapped-loader">
-                    <div class="loader-container">
-                        <div class="loader-caption">
-                            <div class="loader-caption-container">
-                                <img src="~/Content/Icons/ajax-loader.gif" />
-                                <span>Обновление...</span>
-                            </div>
+            <div id="details-panel-loader" class="collapse overlapped-loader">
+                <div class="loader-container">
+                    <div class="loader-caption">
+                        <div class="loader-caption-container">
+                            <img src="~/Content/Icons/ajax-loader.gif" />
+                            <span>Обновление...</span>
                         </div>
                     </div>
                 </div>
-
             </div>
+
         </div>
-
-        <ul class="dropdown-menu collapse" id="menu-component">
-            <li><a href="#" id="menu-component-add-component">Добавить дочерний компонент</a></li>
-            <li><a href="#" id="menu-component-delete">Удалить</a></li>
-
-            <li role="separator" class="divider"></li>
-
-            <li><a href="#" id="menu-component-add-http-unittest">Добавить Http-проверку</a></li>
-            <li><a href="#" id="menu-component-add-ping-unittest">Добавить Ping-проверку</a></li>
-            <li><a href="#" id="menu-component-add-domain-unittest">Добавить проверку оплаты домена</a></li>
-            <li><a href="#" id="menu-component-add-ssl-unittest">Добавить проверку Ssl-сертификата</a></li>
-            <li><a href="#" id="menu-component-add-sql-unittest">Добавить Sql-проверку</a></li>
-            <li><a href="#" id="menu-component-add-custom-unittest">Добавить пользовательскую проверку</a></li>
-
-            <li role="separator" class="divider"></li>
-
-            <li><a href="#" id="menu-component-add-metric">Добавить метрику</a></li>
-        </ul>
-
-        <ul class="dropdown-menu collapse" id="menu-unittest">
-            <li><a href="#" id="menu-unittest-delete">Удалить</a></li>
-        </ul>
-
-        <ul class="dropdown-menu collapse" id="menu-metric">
-            <li><a href="#" id="menu-metric-delete">Удалить</a></li>
-        </ul>
-
-        <ul class="dropdown-menu collapse" id="menu-unittests">
-            <li><a href="#" id="menu-unittests-add-http">Добавить Http-проверку</a></li>
-            <li><a href="#" id="menu-unittests-add-ping">Добавить Ping-проверку</a></li>
-            <li><a href="#" id="menu-unittests-add-domain">Добавить проверку оплаты домена</a></li>
-            <li><a href="#" id="menu-unittests-add-ssl">Добавить проверку Ssl-сертификата</a></li>
-            <li><a href="#" id="menu-unittests-add-sql">Добавить Sql-проверку</a></li>
-            <li><a href="#" id="menu-unittests-add-custom">Добавить пользовательскую проверку</a></li>
-        </ul>
-
-        <ul class="dropdown-menu collapse" id="menu-metrics">
-            <li><a href="#" id="menu-metrics-add">Добавить метрику</a></li>
-        </ul>
     </div>
+
+    <ul class="dropdown-menu collapse" id="menu-component">
+        <li><a href="#" id="menu-component-add-component">Добавить дочерний компонент</a></li>
+        <li><a href="#" id="menu-component-delete">Удалить</a></li>
+
+        <li role="separator" class="divider"></li>
+
+        <li><a href="#" id="menu-component-add-http-unittest">Добавить Http-проверку</a></li>
+        <li><a href="#" id="menu-component-add-ping-unittest">Добавить Ping-проверку</a></li>
+        <li><a href="#" id="menu-component-add-domain-unittest">Добавить проверку оплаты домена</a></li>
+        <li><a href="#" id="menu-component-add-ssl-unittest">Добавить проверку Ssl-сертификата</a></li>
+        <li><a href="#" id="menu-component-add-sql-unittest">Добавить Sql-проверку</a></li>
+        <li><a href="#" id="menu-component-add-custom-unittest">Добавить пользовательскую проверку</a></li>
+
+        <li role="separator" class="divider"></li>
+
+        <li><a href="#" id="menu-component-add-metric">Добавить метрику</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-unittest">
+        <li><a href="#" id="menu-unittest-delete">Удалить</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-metric">
+        <li><a href="#" id="menu-metric-delete">Удалить</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-unittests">
+        <li><a href="#" id="menu-unittests-add-http">Добавить Http-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-ping">Добавить Ping-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-domain">Добавить проверку оплаты домена</a></li>
+        <li><a href="#" id="menu-unittests-add-ssl">Добавить проверку Ssl-сертификата</a></li>
+        <li><a href="#" id="menu-unittests-add-sql">Добавить Sql-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-custom">Добавить пользовательскую проверку</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-metrics">
+        <li><a href="#" id="menu-metrics-add">Добавить метрику</a></li>
+    </ul>
+</div>
 
 <div id="loader" class="collapse overlapped-loader">
     <div class="loader-container">
@@ -257,6 +257,10 @@
         // Подгрузка разворачиваемых узлов
         $('#components-tree').on('change', 'input.components-tree-item-checkbox-component', function () {
             var me = $(this);
+            loadItem(me);
+        });
+
+        function loadItem(me, onLoadCallback) {
             var isOpening = me.is(":checked");
             if (isOpening) {
                 var item = me.closest('li');
@@ -269,7 +273,10 @@
                     var contentData = {
                         id: item.data('id')
                     };
-                    contentDiv.load(contentUrl, contentData);
+                    contentDiv.load(contentUrl, contentData, function() {
+                        if (onLoadCallback)
+                            onLoadCallback();
+                    });
                     return;
                 }
 
@@ -281,17 +288,28 @@
                     var detailsData = {
                         id: item.data('id')
                     };
-                    detailsDiv.load(detailsUrl, detailsData);
+                    detailsDiv.load(detailsUrl, detailsData, function () {
+                        if (onLoadCallback)
+                            onLoadCallback();
+                    });
                     return;
                 }
+                else {
+                    if (onLoadCallback)
+                        onLoadCallback();
+                }
             }
-        });
+        }
 
         // Запоминание состояний узлов в cookie
         $('#components-tree').on('change', 'input.components-tree-item-checkbox', function () {
             var me = $(this);
+            saveItemState(me);
+        });
+
+        function saveItemState(me) {
             var expanded = me.is(":checked");
-            var id = this.id;
+            var id = me[0].id;
 
             var items = getExpandedItemsFromCookie();
             if (expanded) {
@@ -304,9 +322,8 @@
                     items.splice(index, 1);
                 }
             }
-
             setExpandedItemsToCookie(items);
-        });
+        }
 
         // Обработчик клика по названию компонента
         $('#components-tree').on('click', '.component-name-link', onComponentNameClick);
@@ -379,7 +396,7 @@
             event.preventDefault();
             var me = $(this);
             $('#menu-unittests')
-                .data('id', me.closest('li').data('id'))
+                .data('id', me.closest('li[data-id]').data('id'))
                 .css({
                     left: me.offset().left - me.offsetParent().offset().left,
                     top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
@@ -393,7 +410,7 @@
             event.preventDefault();
             var me = $(this);
             $('#menu-metrics')
-                .data('id', me.closest('li').data('id'))
+                .data('id', me.closest('li[data-id]').data('id'))
                 .css({
                     left: me.offset().left - me.offsetParent().offset().left,
                     top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
@@ -499,7 +516,9 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление Http-проверки', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentUnitTests(id);
+                });
             }, data);
         }
 
@@ -524,7 +543,9 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление Ping-проверки', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentUnitTests(id);
+                });
             }, data);
         }
 
@@ -549,7 +570,9 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление проверки оплаты домена', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentUnitTests(id);
+                });
             }, data);
         }
 
@@ -574,7 +597,9 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление проверки Ssl-сертификата', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentUnitTests(id);
+                });
             }, data);
         }
 
@@ -599,7 +624,9 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление Sql-проверки', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentUnitTests(id);
+                });
             }, data);
         }
 
@@ -624,8 +651,21 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление пользовательской проверки', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentUnitTests(id);
+                });
             }, data);
+        }
+
+        function expandComponentUnitTests(id) {
+            var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
+            componentItem.prop('checked', true);
+            loadItem(componentItem, function () {
+                saveItemState(componentItem);
+                var unittestsItem = $('#components-tree li[data-id="' + id + '"] #unittests-' + id);
+                unittestsItem.prop('checked', true);
+                saveItemState(unittestsItem);
+            });
         }
 
         // Меню раздела метрик - Добавить метрику
@@ -649,8 +689,21 @@
             var data = { componentId: id };
             dialogs.showModal(url, 'Добавление метрики', function() {
                 hideDetailsPanel(id);
-                submitForm();
+                submitForm(function () {
+                    expandComponentMetrics(id);
+                });
             }, data, true);
+        }
+
+        function expandComponentMetrics(id) {
+            var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
+            componentItem.prop('checked', true);
+            loadItem(componentItem, function () {
+                saveItemState(componentItem);
+                var metricsItem = $('#components-tree li[data-id="' + id + '"] #metrics-' + id);
+                metricsItem.prop('checked', true);
+                saveItemState(metricsItem);
+            });
         }
 
         // Обработчик ссылки скрытия шапки
@@ -894,7 +947,8 @@
     }
 
     // Если фильтры не менялись дольше 1 сек, применим их
-    function submitForm() {
+    function submitForm(onComplete) {
+        onFormSubmitCompleteRunOnce = onComplete;
         var form = $('#filters');
         form.trigger('submit');
     }
@@ -911,6 +965,16 @@
         }
         hideError();
     }
+
+    var onFormSubmitCompleteRunOnce = undefined;
+
+    function onFormSubmitComplete() {
+        if (onFormSubmitCompleteRunOnce) {
+            onFormSubmitCompleteRunOnce();
+            onFormSubmitCompleteRunOnce = undefined;
+        }
+    }
+
 </script>
 
 
