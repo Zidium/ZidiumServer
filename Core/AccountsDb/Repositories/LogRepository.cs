@@ -257,24 +257,24 @@ namespace Zidium.Core.AccountsDb
 
             if (!string.IsNullOrEmpty(context))
             {
-                query = query.Where(x => x.Context.StartsWith(context));
+                query = query.Where(x => x.Context.ToLower().StartsWith(context.ToLower()));
             }
 
             if (!string.IsNullOrEmpty(message))
             {
-                query = query.Where(x => x.Message.Contains(message));
+                query = query.Where(x => x.Message.ToLower().Contains(message.ToLower()));
             }
 
             if (!string.IsNullOrEmpty(propertyName) && string.IsNullOrEmpty(propertyValue))
             {
-                query = query.Where(x => x.Parameters.Any(t => t.Name.Contains(propertyName)));
+                query = query.Where(x => x.Parameters.Any(t => t.Name.ToLower().Contains(propertyName.ToLower())));
             }
             else if (!string.IsNullOrEmpty(propertyValue) && string.IsNullOrEmpty(propertyName))
             {
-                query = query.Where(x => x.Parameters.Any(t => t.Value.Contains(propertyValue)));
+                query = query.Where(x => x.Parameters.Any(t => t.Value.ToLower().Contains(propertyValue.ToLower())));
             } else if (!string.IsNullOrEmpty(propertyName) && !string.IsNullOrEmpty(propertyValue))
             {
-                query = query.Where(x => x.Parameters.Any(t => t.Name.Contains(propertyName) && t.Value.Contains(propertyValue)));
+                query = query.Where(x => x.Parameters.Any(t => t.Name.ToLower().Contains(propertyName.ToLower()) && t.Value.ToLower().Contains(propertyValue.ToLower())));
             }
 
             return query;
