@@ -5,12 +5,29 @@
 {
     <p>
         Добавить проверку:
-        <a href="@Url.Action("Edit", "HttpRequestCheck", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Http</a>
-        <a href="@Url.Action("Edit", "PingChecks", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Ping</a>
-        <a href="@Url.Action("Edit", "DomainNamePaymentPeriodChecks", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Domain</a>
-        <a href="@Url.Action("Edit", "SslCertificateExpirationDateChecks", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Ssl</a>
-        <a href="@Url.Action("Edit", "SqlChecks", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Sql</a>
-        <a href="@Url.Action("Add", "UnitTests", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Пользовательская</a>
+        <button type="button" id="component-details-unittests-add-http" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Http
+        </button>
+
+        <button type="button" id="component-details-unittests-add-ping" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Ping
+        </button>
+
+        <button type="button" id="component-details-unittests-add-domain" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Domain
+        </button>
+
+        <button type="button" id="component-details-unittests-add-ssl" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Ssl
+        </button>
+
+        <button type="button" id="component-details-unittests-add-sql" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Sql
+        </button>
+
+        <button type="button" id="component-details-unittests-add-custom" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Пользовательская
+        </button>
     </p>
 }
 
@@ -208,4 +225,47 @@
             smartButtons.endAction(me);
         });
     });
+
+    $('#component-details-unittests-add-http').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addHttpUnitTest(componentId, me);
+    });
+
+    $('#component-details-unittests-add-ping').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addPingUnitTest(componentId, me);
+    });
+
+    $('#component-details-unittests-add-domain').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addDomainUnitTest(componentId, me);
+    });
+
+    $('#component-details-unittests-add-ssl').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addSslUnitTest(componentId, me);
+    });
+
+    $('#component-details-unittests-add-sql').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addSqlUnitTest(componentId, me);
+    });
+
+    $('#component-details-unittests-add-custom').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addCustomUnitTest(componentId, me);
+    });
+
 </script>

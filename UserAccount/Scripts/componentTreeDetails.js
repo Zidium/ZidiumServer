@@ -35,7 +35,7 @@
 
     function accordionReloadCurrentGroup(element) {
         var groupContent;
-        if (element !== null)
+        if (element)
             groupContent = element.closest('.tree-details-content');
         else {
             var container = getDetailsContainer();

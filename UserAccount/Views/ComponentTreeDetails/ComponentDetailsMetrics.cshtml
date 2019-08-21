@@ -4,7 +4,9 @@
 @if (Model.CanEdit)
 {
     <p>
-        <a href="@Url.Action("Edit", "Metrics", new {componentId = Model.Id})" class="btn btn-default btn-xs" target="_blank">Добавить метрику</a>
+        <button type="button" id="component-details-metrics-add" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+            Добавить метрику
+        </button>
     </p>
 }
 
@@ -39,7 +41,7 @@
                             Актуальна @GuiHelper.TimeSpanAs2UnitString(metric.ActualInterval) (до @GuiHelper.GetDateTimeString(metric.ActualDate))
                         </span>
                     </td>
-                    <td class="td-metric-value">      
+                    <td class="td-metric-value">
                         @if (metric.HasSignal)
                         {
                             if (metric.LastResult.HasValue)
@@ -55,7 +57,7 @@
                         {
                             <span>Нет актуального значения</span>
                         }
-                        
+
                         <br />
                         <span class="metric-last-result-date">
                             @GuiHelper.GetDateTimeString(metric.LastResultDate)
@@ -130,5 +132,12 @@ else
             smartButtons.endAction(me);
         });
     });
-    
+
+    $('#component-details-metrics-add').click(function(event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addMetric(componentId, me);
+    });
+
 </script>

@@ -260,70 +260,11 @@
             loadItem(me);
         });
 
-        function loadItem(me, onLoadCallback) {
-            var isOpening = me.is(":checked");
-            if (isOpening) {
-                var item = me.closest('li');
-
-                var contentDiv = $('> div.components-tree-item-content', item);
-                var contentDivLoaded = $('> div.components-tree-item-content-loaded', contentDiv);
-                var isContentLoaded = contentDivLoaded.length > 0;
-                if (!isContentLoaded) {
-                    var contentUrl = '@Url.Action("GetComponentsTreeItemContent")';
-                    var contentData = {
-                        id: item.data('id')
-                    };
-                    contentDiv.load(contentUrl, contentData, function() {
-                        if (onLoadCallback)
-                            onLoadCallback();
-                    });
-                    return;
-                }
-
-                var detailsDiv = $('> div.components-tree-item-details', contentDivLoaded);
-                var detailsDivLoaded = $('> div.components-tree-item-details-loaded', detailsDiv);
-                var isDetailsLoaded = detailsDivLoaded.length > 0;
-                if (!isDetailsLoaded) {
-                    var detailsUrl = '@Url.Action("GetComponentsTreeItemDetails")';
-                    var detailsData = {
-                        id: item.data('id')
-                    };
-                    detailsDiv.load(detailsUrl, detailsData, function () {
-                        if (onLoadCallback)
-                            onLoadCallback();
-                    });
-                    return;
-                }
-                else {
-                    if (onLoadCallback)
-                        onLoadCallback();
-                }
-            }
-        }
-
         // Запоминание состояний узлов в cookie
         $('#components-tree').on('change', 'input.components-tree-item-checkbox', function () {
             var me = $(this);
             saveItemState(me);
         });
-
-        function saveItemState(me) {
-            var expanded = me.is(":checked");
-            var id = me[0].id;
-
-            var items = getExpandedItemsFromCookie();
-            if (expanded) {
-                if ($.inArray(id, items) === -1) {
-                    items.push(id);
-                }
-            } else {
-                var index = $.inArray(id, items);
-                if (index !== -1) {
-                    items.splice(index, 1);
-                }
-            }
-            setExpandedItemsToCookie(items);
-        }
 
         // Обработчик клика по названию компонента
         $('#components-tree').on('click', '.component-name-link', onComponentNameClick);
@@ -511,17 +452,6 @@
             addHttpUnitTest(id);
         });
 
-        function addHttpUnitTest(id) {
-            var url = '@Url.Action("EditSimple", "HttpRequestCheck")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление Http-проверки', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentUnitTests(id);
-                });
-            }, data);
-        }
-
         // Меню раздела проверок - Добавить Ping-проверку
         $('#menu-unittests #menu-unittests-add-ping').click(function (event) {
             event.preventDefault();
@@ -537,17 +467,6 @@
             var id = $('#menu-component').data('id');
             addPingUnitTest(id);
         });
-
-        function addPingUnitTest(id) {
-            var url = '@Url.Action("EditSimple", "PingChecks")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление Ping-проверки', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentUnitTests(id);
-                });
-            }, data);
-        }
 
         // Меню раздела проверок - Добавить проверку домена
         $('#menu-unittests #menu-unittests-add-domain').click(function (event) {
@@ -565,17 +484,6 @@
             addDomainUnitTest(id);
         });
 
-        function addDomainUnitTest(id) {
-            var url = '@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление проверки оплаты домена', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentUnitTests(id);
-                });
-            }, data);
-        }
-
         // Меню раздела проверок - Добавить проверку Ssl-сертификата
         $('#menu-unittests #menu-unittests-add-ssl').click(function (event) {
             event.preventDefault();
@@ -591,17 +499,6 @@
             var id = $('#menu-component').data('id');
             addSslUnitTest(id);
         });
-
-        function addSslUnitTest(id) {
-            var url = '@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление проверки Ssl-сертификата', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentUnitTests(id);
-                });
-            }, data);
-        }
 
         // Меню раздела проверок - Добавить Sql-проверку
         $('#menu-unittests #menu-unittests-add-sql').click(function (event) {
@@ -619,17 +516,6 @@
             addSqlUnitTest(id);
         });
 
-        function addSqlUnitTest(id) {
-            var url = '@Url.Action("EditSimple", "SqlChecks")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление Sql-проверки', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentUnitTests(id);
-                });
-            }, data);
-        }
-
         // Меню раздела проверок - Добавить пользовательскую проверку
         $('#menu-unittests #menu-unittests-add-custom').click(function (event) {
             event.preventDefault();
@@ -646,28 +532,6 @@
             addCustomUnitTest(id);
         });
 
-        function addCustomUnitTest(id) {
-            var url = '@Url.Action("Add", "UnitTests")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление пользовательской проверки', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentUnitTests(id);
-                });
-            }, data);
-        }
-
-        function expandComponentUnitTests(id) {
-            var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
-            componentItem.prop('checked', true);
-            loadItem(componentItem, function () {
-                saveItemState(componentItem);
-                var unittestsItem = $('#components-tree li[data-id="' + id + '"] #unittests-' + id);
-                unittestsItem.prop('checked', true);
-                saveItemState(unittestsItem);
-            });
-        }
-
         // Меню раздела метрик - Добавить метрику
         $('#menu-metrics #menu-metrics-add').click(function (event) {
             event.preventDefault();
@@ -683,28 +547,6 @@
             var id = $('#menu-component').data('id');
             addMetric(id);
         });
-
-        function addMetric(id) {
-            var url = '@Url.Action("Edit", "Metrics")';
-            var data = { componentId: id };
-            dialogs.showModal(url, 'Добавление метрики', function() {
-                hideDetailsPanel(id);
-                submitForm(function () {
-                    expandComponentMetrics(id);
-                });
-            }, data, true);
-        }
-
-        function expandComponentMetrics(id) {
-            var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
-            componentItem.prop('checked', true);
-            loadItem(componentItem, function () {
-                saveItemState(componentItem);
-                var metricsItem = $('#components-tree li[data-id="' + id + '"] #metrics-' + id);
-                metricsItem.prop('checked', true);
-                saveItemState(metricsItem);
-            });
-        }
 
         // Обработчик ссылки скрытия шапки
         $('#tree-header-minimize').click(function(event) {
@@ -748,6 +590,164 @@
             componentTreeDetails.accordionReloadCurrentGroup();
         });
     });
+
+    function loadItem(me, onLoadCallback) {
+        var isOpening = me.is(":checked");
+        if (isOpening) {
+            var item = me.closest('li');
+
+            var contentDiv = $('> div.components-tree-item-content', item);
+            var contentDivLoaded = $('> div.components-tree-item-content-loaded', contentDiv);
+            var isContentLoaded = contentDivLoaded.length > 0;
+            if (!isContentLoaded) {
+                var contentUrl = '@Url.Action("GetComponentsTreeItemContent")';
+                var contentData = {
+                    id: item.data('id')
+                };
+                contentDiv.load(contentUrl, contentData, function() {
+                    if (onLoadCallback)
+                        onLoadCallback();
+                });
+                return;
+            }
+
+            var detailsDiv = $('> div.components-tree-item-details', contentDivLoaded);
+            var detailsDivLoaded = $('> div.components-tree-item-details-loaded', detailsDiv);
+            var isDetailsLoaded = detailsDivLoaded.length > 0;
+            if (!isDetailsLoaded) {
+                var detailsUrl = '@Url.Action("GetComponentsTreeItemDetails")';
+                var detailsData = {
+                    id: item.data('id')
+                };
+                detailsDiv.load(detailsUrl, detailsData, function () {
+                    if (onLoadCallback)
+                        onLoadCallback();
+                });
+                return;
+            }
+            else {
+                if (onLoadCallback)
+                    onLoadCallback();
+            }
+        }
+    }
+
+    function saveItemState(me) {
+        var expanded = me.is(":checked");
+        var id = me[0].id;
+
+        var items = getExpandedItemsFromCookie();
+        if (expanded) {
+            if ($.inArray(id, items) === -1) {
+                items.push(id);
+            }
+        } else {
+            var index = $.inArray(id, items);
+            if (index !== -1) {
+                items.splice(index, 1);
+            }
+        }
+        setExpandedItemsToCookie(items);
+    }
+
+    function addHttpUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "HttpRequestCheck")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление Http-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addPingUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "PingChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление Ping-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addDomainUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки оплаты домена', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addSslUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки Ssl-сертификата', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addSqlUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "SqlChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление Sql-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addCustomUnitTest(id, parent) {
+        var url = '@Url.Action("Add", "UnitTests")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление пользовательской проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function expandComponentUnitTests(id) {
+        var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
+        componentItem.prop('checked', true);
+        loadItem(componentItem, function () {
+            saveItemState(componentItem);
+            var unittestsItem = $('#components-tree li[data-id="' + id + '"] #unittests-' + id);
+            unittestsItem.prop('checked', true);
+            saveItemState(unittestsItem);
+        });
+    }
+
+    function addMetric(id, parent) {
+        var url = '@Url.Action("Edit", "Metrics")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление метрики', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentMetrics(id);
+            });
+        }, data, true);
+    }
+
+    function expandComponentMetrics(id) {
+        var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
+        componentItem.prop('checked', true);
+        loadItem(componentItem, function () {
+            saveItemState(componentItem);
+            var metricsItem = $('#components-tree li[data-id="' + id + '"] #metrics-' + id);
+            metricsItem.prop('checked', true);
+            saveItemState(metricsItem);
+        });
+    }
 
     function getExpandedItemsFromCookie() {
         var result = Cookies.getJSON('@ComponentsTreeModel.ExpandedItemsCookieName');
