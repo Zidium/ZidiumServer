@@ -15,7 +15,7 @@ rmdir /s /q Release
 xcopy /E /Y /S Agent\bin\Release\*.pdb Release\Agent\
 xcopy /E /Y /S Agent\bin\Release\NLog.config Release\Agent\
 xcopy /E /Y /S Agent\bin\Release\Zidium.config Release\Agent\
-xcopy /E /Y /S Agent\bin\Release\App.Release.config Release\Agent\Zidium.Agent.exe.config*
+xcopy /E /Y /S Agent\App.Release.config Release\Agent\Zidium.Agent.exe.config*
 xcopy /E /Y /S Agent\bin\Release\*.exe Release\Agent\
 xcopy /E /Y /S Agent\bin\Release\*.dll Release\Agent\
 
