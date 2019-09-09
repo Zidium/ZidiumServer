@@ -255,13 +255,12 @@ input[type="checkbox"].input-validation-error {
 }
 
 .topLogoRightLink {
-    padding: 3px 0 3px 60px;
+    padding: 3px 20px 3px 40px;
     border: 0px solid white;
     color: white;
     font-size: 14px;
     position: relative;
     top: 5px;
-    right: 20px;
 }
 
 .navbar {
@@ -639,3 +638,15 @@ span.expand-icon {
     height: auto;
     position: relative;
 }
+
+.footerSocialIcon {
+    padding-left: 15px;
+}
+
+    .footerSocialIcon:hover {
+        text-decoration: none;
+    }
+
+    .footerSocialIcon:focus {
+        text-decoration: none;
+    }

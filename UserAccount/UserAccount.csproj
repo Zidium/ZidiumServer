@@ -514,7 +514,6 @@
     <Content Include="Content\errors.css" />
     <Content Include="Content\Icons\ajax-loader-blue.gif" />
     <Content Include="Content\Icons\ajax-loader-white.gif" />
-    <Content Include="Content\Icons\bug_128.png" />
     <Content Include="Content\Icons\Circle-Disabled.png" />
     <Content Include="Content\Icons\Circle-Gray.png" />
     <Content Include="Content\Icons\Circle-Green.png" />
@@ -522,6 +521,8 @@
     <Content Include="Content\Icons\Circle-Yellow.png" />
     <Content Include="Content\Icons\forbiddance-20px.png" />
     <Content Include="Content\Icons\Round_help_button_20.png" />
+    <Content Include="Content\Icons\Twitter.png" />
+    <Content Include="Content\Icons\VKontakte.png" />
     <Content Include="Content\images\Home\CheckGray.png" />
     <Content Include="Content\images\Home\CheckGreen.png" />
     <Content Include="Content\jquery-ui-1.11.4\images\ui-bg_diagonals-thick_18_b81900_40x40.png" />
