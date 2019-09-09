@@ -153,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AgentTests\DomainNamePaymentPeriodTests.cs" />
+    <Compile Include="AgentTests\HttpTestProcessorTests.cs" />
     <Compile Include="AgentTests\SmsNotificationTests.cs" />
     <Compile Include="AgentTests\HttpNotificationTests.cs" />
     <Compile Include="AgentTests\HttpRequestsProcessorTests.cs" />

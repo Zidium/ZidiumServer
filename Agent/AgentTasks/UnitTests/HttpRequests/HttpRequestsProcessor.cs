@@ -126,139 +126,69 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             };
         }
 
-        protected string GetResponseHeaders(HttpWebResponse response)
-        {
-            try
-            {
-                return response.Headers.ToString();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        protected string GetResponseHtml(HttpWebResponse response)
-        {
-            try
-            {
-                var responseStream = response.GetResponseStream();
-
-                if (responseStream == null)
-                    return null;
-
-                var streamReader = new StreamReader(responseStream, Encoding.UTF8); //todo почему всегда Encoding.UTF8?
-                var html = streamReader.ReadToEnd();
-                return html;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        protected HttpRequestErrorCode CheckResponse(
-            HttpRequestResultInfo httpResult,
-            int timeOutSeconds,
-            HttpWebResponse response,
-            ILogger logger)
-        {
-            var rule = httpResult.Rule;
-            httpResult.ErrorMessage = null;
-
-            // headers
-            httpResult.ResponseHeaders = response.Headers.ToString();
-
-            // html body
-            var html = string.Empty;
-            var responseStream = response.GetResponseStream();
-            if (responseStream != null)
-            {
-                var streamReader = new StreamReader(responseStream, Encoding.UTF8); //todo почему всегда Encoding.UTF8?
-                html = streamReader.ReadToEnd();
-            }
-
-            httpResult.ResponseHtml = html;
-
-            // проверка responseCode
-            httpResult.HttpStatusCode = response.StatusCode;
-            var responseCode = (int)response.StatusCode;
-            var validResponseCode = rule.ResponseCode ?? 200;
-            if (responseCode != validResponseCode)
-            {
-                // неверный код ответа
-                var message = string.Format(
-                    "Неверный ResponseCode (получено {0}, должно быть {1})",
-                    responseCode,
-                    validResponseCode);
-
-                httpResult.ErrorMessage = message;
-                logger.Info(message);
-                logger.Debug("ReponseHtml: " + html);
-                return HttpRequestErrorCode.InvalidResponseCode;
-            }
-
-            // проверка ContentLength
-            if (rule.MaxResponseSize > 0 && response.ContentLength > rule.MaxResponseSize)
-            {
-                // слишком большой ответ
-                var message = string.Format(
-                    "Превышен ContentLength (получено {0}, должно быть максимум {1})",
-                    response.ContentLength,
-                    rule.MaxResponseSize);
-
-                httpResult.ErrorMessage = message;
-                logger.Info(message);
-                return HttpRequestErrorCode.TooLargeResponse;
-            }
-
-            // проверка timeOut
-            var endTime = DateTime.Now;
-            var duration = endTime - httpResult.StartDate;
-            if (duration.TotalSeconds > timeOutSeconds)
-            {
-                // превышение тайматута
-                var message = string.Format(
-                    "Превышен таймаут выполнения (получилось {0} секунд, должно быть максимум {1} секунд)",
-                    duration,
-                    timeOutSeconds);
-
-                httpResult.ErrorMessage = message;
-                logger.Info(message);
-                return HttpRequestErrorCode.Timeout;
-            }
-
-            if (string.IsNullOrEmpty(rule.SuccessHtml) == false && html.Contains(rule.SuccessHtml) == false)
-            {
-                // не найден обязательный фрагмент html
-                var message = "Не найден обязательный фрагмент html";
-                if (message.Length > 90)
-                {
-                    message = message.Substring(90) + "...";
-                }
-                httpResult.ErrorMessage = message;
-                logger.Info(message);
-                return HttpRequestErrorCode.SuccessHtmlNotFound;
-            }
-            if (string.IsNullOrEmpty(rule.ErrorHtml) == false && html.Contains(rule.ErrorHtml))
-            {
-                // найден недопустимый фрагмент html
-                var message = "Найден недопустимый фрагмент html: " + rule.ErrorHtml;
-                if (message.Length > 90)
-                {
-                    message = message.Substring(90) + "...";
-                }
-                httpResult.ErrorMessage = message;
-                logger.Info(message);
-                return HttpRequestErrorCode.ErrorHtmlFound;
-            }
-
-            // ура, все ОК
-            return HttpRequestErrorCode.Success;
-        }
-
         protected HttpRequestResultInfo ProcessRule(HttpRequestUnitTestRule rule, ILogger logger)
         {
+            var processor = new HttpTestProcessor(logger);
+            var inputData = new HttpTestInputData()
+            {
+                ErrorHtml = rule.ErrorHtml,
+                SuccessHtml = rule.SuccessHtml,
+                MaxResponseSize = rule.MaxResponseSize,
+                Method = rule.Method,
+                Url = rule.Url,
+                TimeoutSeconds = rule.TimeoutSeconds,
+                ResponseCode = rule.ResponseCode
+            };
+            if (string.IsNullOrEmpty(rule.Body) == false)
+            {
+                inputData.Body = Encoding.UTF8.GetBytes(rule.Body);
+            }
+            if (rule.Datas != null)
+            {
+                // данные формы
+                var formDatas = rule.GetWebFormsDatas();
+                if (formDatas.Count > 0)
+                {
+                    var pars = new Dictionary<string, string>();
+                    foreach (var formData in formDatas)
+                    {
+                        if (pars.ContainsKey(formData.Key) == false)
+                        {
+                            pars.Add(formData.Key, formData.Value);
+                        }
+                    }
+                    inputData.FormParams = pars;
+                }
+
+                // куки
+                var cookies = rule.GetRequestCookies();
+                if (cookies.Count > 0)
+                {
+                    CookieCollection cookieCollection = new CookieCollection();
+                    foreach (var cookie in cookies)
+                    {
+                        Cookie c = new Cookie(cookie.Key, cookie.Value);
+                        cookieCollection.Add(c);
+                    }
+                    inputData.Cookies = cookieCollection;
+                }
+
+                // заголовки
+                var headers = rule.GetRequestHeaders();
+                if (headers.Count > 0)
+                {
+                    var pars = new Dictionary<string, string>();
+                    foreach (var header in headers)
+                    {
+                        if (pars.ContainsKey(header.Key) == false)
+                        {
+                            pars.Add(header.Key, header.Value);
+                        }
+                    }
+                    inputData.Headers = pars;
+                }
+            }
+
             var result = new HttpRequestResultInfo
             {
                 ErrorCode = HttpRequestErrorCode.Success,
@@ -267,203 +197,18 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             };
             try
             {
-                if (rule == null)
-                {
-                    throw new ArgumentNullException("rule");
-                }
-
-                logger.Debug("Правило: " + rule.DisplayName);
-                if (string.IsNullOrWhiteSpace(rule.Url))
-                {
-                    result.ErrorCode = HttpRequestErrorCode.UrlFormatError;
-                    result.ErrorMessage = "Укажите URL";
-                    return result;
-                }
-                Uri uri = null;
-                try
-                {
-                    uri = new Uri(rule.Url);
-                }
-                catch (UriFormatException)
-                {
-                    result.ErrorCode = HttpRequestErrorCode.UrlFormatError;
-                    result.ErrorMessage = "Неверный формат URL";
-                    return result;
-                }
-                if (new[] { "http", "https" }.Contains(uri.Scheme.ToLowerInvariant()) == false)
-                {
-                    result.ErrorCode = HttpRequestErrorCode.UrlFormatError;
-                    result.ErrorMessage = "Неверная схема URI. Используйте http или https";
-                    return result;
-                }
-                if (NetworkHelper.IsDomainHasIp(uri.Host) == false)
-                {
-                    result.ErrorCode = HttpRequestErrorCode.UnknownDomain;
-                    result.ErrorMessage = "Не удалось получить IP-адрес";
-                    return result;
-                }
-
-                var formDatas = rule.GetWebFormsDatas();
-                var requestHeaders = rule.GetRequestHeaders();
-                var requestCookies = rule.GetRequestCookies();
-
-                // установим таймаут
-                var timeOutSeconds = rule.TimeoutSeconds ?? 60;
-                if (timeOutSeconds > 60)
-                {
-                    timeOutSeconds = 60;
-                }
-
-                // обновим URL
-                if (rule.Method == HttpRequestMethod.Get && formDatas.Count > 0)
-                {
-                    var uriBuilder = new UriBuilder(uri);
-                    var httpValueCollection = HttpUtility.ParseQueryString(uriBuilder.Uri.Query);
-                    foreach (var webFormData in formDatas)
-                    {
-                        httpValueCollection.Add(webFormData.Key, webFormData.Value);
-                    }
-                    uriBuilder.Query = httpValueCollection.ToString();
-                    uri = uriBuilder.Uri;
-                }
-
-                // создадим запрос
-                var request = (HttpWebRequest)WebRequest.Create(uri);
-                logger.Debug("Uri: " + request.RequestUri.AbsoluteUri);
-                request.MaximumAutomaticRedirections = 4;
-                request.MaximumResponseHeadersLength = 20;
-                request.Timeout = timeOutSeconds * 1000;
-                request.ReadWriteTimeout = timeOutSeconds * 1000;
-                result.Request = request;
-
-                // добавим заголовки HTTP
-                foreach (var header in requestHeaders)
-                {
-                    if (string.Equals("Content-Type", header.Key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        request.ContentType = header.Value;
-                    }
-                    else if (string.Equals("User-Agent", header.Key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        request.UserAgent = header.Value;
-                    }
-                    else
-                    {
-                        request.Headers.Add(header.Key, header.Value);
-                    }
-                }
-
-                // Обязательно заполним UserAgent
-                // Пустого UserAgent быть не должно
-                // Многие сервера выдают ошибку из-за этого
-                if (string.IsNullOrEmpty(request.UserAgent))
-                    request.UserAgent = "Zidium";
-
-                // добавим куки
-                foreach (var cookie in requestCookies)
-                {
-                    request.CookieContainer.Add(new Cookie(cookie.Key, cookie.Value));
-                }
-
-                // добавим данные веб-формы
-                if (rule.Method == HttpRequestMethod.Post)
-                {
-                    request.Method = "POST";
-
-                    string postData;
-                    if (!string.IsNullOrEmpty(rule.Body))
-                    {
-                        request.ContentType = request.ContentType ?? "text/utf-8";
-                        postData = rule.Body;
-                    }
-                    else
-                    {
-                        request.ContentType = "application/x-www-form-urlencoded";
-                        var httpValueCollection = HttpUtility.ParseQueryString(string.Empty);
-                        foreach (var formData in formDatas)
-                        {
-                            httpValueCollection.Add(formData.Key, formData.Value);
-                        }
-
-                        postData = httpValueCollection.ToString();
-                    }
-
-                    var data = Encoding.UTF8.GetBytes(postData);
-                    request.ContentLength = postData.Length;
-
-                    using (var dataStream = request.GetRequestStream())
-                    {
-                        dataStream.Write(data, 0, data.Length);
-                        dataStream.Close();
-                    }
-                }
-
-                // получаем ответ
-                try
-                {
-                    var response = (HttpWebResponse)request.GetResponse();
-                    result.ErrorCode = CheckResponse(result, timeOutSeconds, response, logger);
-                }
-                catch (SocketException exception)
-                {
-                    result.ErrorMessage = exception.Message;
-                    result.ErrorCode = HttpRequestErrorCode.TcpError;
-                    result.IsNetworkProblem = true;
-                    logger.Error(exception);
-                }
-                catch (IOException exception)
-                {
-                    result.ErrorMessage = exception.Message;
-                    result.ErrorCode = HttpRequestErrorCode.TcpError;
-                    result.IsNetworkProblem = true;
-                    logger.Error(exception);
-                }
-                catch (WebException exception)
-                {
-                    result.ErrorMessage = exception.Message;
-                    if (exception.Response != null)
-                    {
-                        var httpResponse = (HttpWebResponse)exception.Response;
-                        if (result.ResponseHeaders == null)
-                        {
-                            result.ResponseHeaders = GetResponseHeaders(httpResponse);
-                        }
-                        if (result.ResponseHtml == null)
-                        {
-                            result.ResponseHtml = GetResponseHtml(httpResponse);
-                        }
-                        if (result.HttpStatusCode == null)
-                        {
-                            result.HttpStatusCode = httpResponse.StatusCode;
-                        }
-                    }
-                    if (exception.Status == WebExceptionStatus.Timeout)
-                    {
-                        result.ErrorCode = HttpRequestErrorCode.Timeout;
-                        result.IsNetworkProblem = true;
-                    }
-                    else if (exception.Status == WebExceptionStatus.ProtocolError)
-                    {
-                        result.ErrorCode = HttpRequestErrorCode.InvalidResponseCode;
-                    }
-                    else
-                    {
-                        result.ErrorCode = HttpRequestErrorCode.TcpError;
-                        result.IsNetworkProblem = true;
-                        logger.Error(exception);
-                    }
-                }
-            }
-            catch (WebException exception)
-            {
-                result.ErrorCode = HttpRequestErrorCode.TcpError;
-                result.ErrorMessage = exception.Message;
-                result.IsNetworkProblem = true;
-                logger.Error(exception);
+                HttpTestOutputData outputData = processor.Process(inputData);
+                result.StartDate = outputData.StartDate;
+                result.EndDate = outputData.EndDate;
+                result.ErrorCode = outputData.ErrorCode;
+                result.ErrorMessage = outputData.ErrorMessage;
+                result.HttpStatusCode = outputData.HttpStatusCode;
+                result.IsNetworkProblem = outputData.IsNetworkProblem;
+                result.ResponseHeaders = outputData.ResponseHeaders;
+                result.ResponseHtml = outputData.ResponseHtml;
             }
             catch (Exception exception)
             {
-
                 exception.Data.Add("UnitTestId", rule.HttpRequestUnitTest.UnitTestId);
                 exception.Data.Add("RuleId", rule.Id);
                 exception.Data.Add("RuleName", rule.DisplayName);
@@ -475,8 +220,10 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             }
             finally
             {
-                result.EndDate = DateTime.Now;
-                logger.Info(result.Rule.Url + " => " + result.ErrorCode);
+                if (result.EndDate == null)
+                {
+                    result.EndDate = DateTime.Now;
+                }
             }
             return result;
         }

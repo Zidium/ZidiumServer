@@ -155,6 +155,9 @@
     <Compile Include="AgentTasks\UnitTests\DomainNamePaymentPeriodChecks\WhoIsRecordType.cs" />
     <Compile Include="AgentTasks\UnitTests\DomainNamePaymentPeriodChecks\WhoisServerResolver.cs" />
     <Compile Include="AgentTasks\UnitTests\HttpRequests\HttpRequestResultInfo.cs" />
+    <Compile Include="AgentTasks\UnitTests\HttpRequests\HttpTestInputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\HttpRequests\HttpTestOutputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\HttpRequests\HttpTestProcessor.cs" />
     <Compile Include="AgentTasks\UnitTests\SslCertificateExpirationDateChecks\SslCertificateExpirationDateCheckProcessor.cs" />
     <Compile Include="AgentTasks\UnitTests\SslCertificateExpirationDateChecks\SslCertificateExpirationDateCheckTask.cs" />
     <Compile Include="AgentTasks\UnitTests\DomainNamePaymentPeriodChecks\DomainNamePaymentPeriodCheckTask.cs" />
