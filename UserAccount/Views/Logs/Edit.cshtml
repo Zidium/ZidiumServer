@@ -14,7 +14,11 @@
     .levelValue {}
 </style>
 
-<div class="alert alert-info">Укажите настройки Web-лога для компонента @Model.ComponentName</div>
+<div class="alert alert-info">
+    <p>Укажите настройки Web-лога для компонента @Model.ComponentName</p>
+    <p>Записи с выбранными уровнями будут записаны в лог</p>
+    <p>Записи с выключенными уровнями будут проигнорированы</p>
+</div>
 
 @using (Html.BeginForm(null, null, FormMethod.Post, new {@class = "form-horizontal smart-block-form", id = "log-levels-form"}))
 {
