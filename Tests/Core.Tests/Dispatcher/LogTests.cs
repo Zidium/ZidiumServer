@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.TestTools;
 
@@ -21,7 +22,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Info,
                 Message = "Message"
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -49,7 +50,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Level = Api.LogLevel.Info,
                 Message = "Message 1",
                 Date = date
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -57,7 +58,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Level = Api.LogLevel.Info,
                 Message = "Message 2",
                 Date = date.AddSeconds(-1)
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -86,7 +87,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Level = Api.LogLevel.Info,
                 Message = "Message 1",
                 Date = date.AddSeconds(-1)
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -94,7 +95,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Level = Api.LogLevel.Info,
                 Message = "Message 2",
                 Date = date
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -120,21 +121,21 @@ namespace Zidium.Core.Tests.Dispatcher
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Info,
                 Message = "Message 1"
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Error,
                 Message = "Message 2"
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Warning,
                 Message = "Message 3"
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -164,7 +165,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Level = Api.LogLevel.Info,
                 Message = "Message 1",
                 Context = "Context.Suffix"
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -172,7 +173,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Level = Api.LogLevel.Info,
                 Message = "Message 2",
                 Context = "Prefix.Context"
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -197,14 +198,14 @@ namespace Zidium.Core.Tests.Dispatcher
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Info,
                 Message = "Prefix.Message.Suffix"
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Info,
                 Message = "Prefix.Another.Suffix"
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -238,7 +239,7 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -254,7 +255,7 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -295,7 +296,7 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -311,14 +312,14 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Info,
                 Message = "Message 3"
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -352,7 +353,7 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -368,7 +369,7 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
@@ -384,14 +385,14 @@ namespace Zidium.Core.Tests.Dispatcher
                         Type = Api.DataType.String
                     }
                 }
-            });
+            }).Check();
 
             dispatcher.SendLog(account.Id, new Api.SendLogData()
             {
                 ComponentId = component.Info.Id,
                 Level = Api.LogLevel.Info,
                 Message = "Message 4"
-            });
+            }).Check();
 
             var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
             {
@@ -403,6 +404,39 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.Equal(1, logs.Count);
             var log = logs[0];
             Assert.Equal("Message 1", log.Message);
+        }
+
+        [Fact]
+        public void SendLogWithLongPropertyNameTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var component = TestHelper.CreateRandomComponent();
+            var dispatcher = TestHelper.GetDispatcherClient();
+
+            dispatcher.SendLog(account.Id, new Api.SendLogData()
+            {
+                ComponentId = component.Info.Id,
+                Level = Api.LogLevel.Info,
+                Message = "Message",
+                Properties = new List<Api.ExtentionPropertyDto>()
+                {
+                    new Api.ExtentionPropertyDto()
+                    {
+                        Name = RandomHelper.GetRandomStringAZ09(1000, 1000),
+                        Value = "Value",
+                        Type = Api.DataType.String
+                    }
+                }
+            }).Check();
+
+            var logs = dispatcher.GetLogs(account.Id, new Api.GetLogsRequestData()
+            {
+                ComponentId = component.Info.Id
+            }).Data;
+
+            Assert.Equal(1, logs.Count);
+            var property = logs[0].Properties[0];
+            Assert.Equal(100, property.Name.Length);
         }
 
     }

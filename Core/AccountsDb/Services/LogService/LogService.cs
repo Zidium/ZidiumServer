@@ -57,24 +57,7 @@ namespace Zidium.Core.AccountsDb
         public void SaveLogMessage(Guid accountId, Guid componentId, SendLogData message)
         {
             // Проверка на наличие необходимых параметров
-            if (message == null)
-            {
-                throw new ParameterRequiredException("Request.Message");
-            }
-            if (message.Message == null)
-            {
-                throw new ParameterRequiredException("Request.Message.Message"); //todo надо переименовать
-            }
-
-            if (message.Message.Length > 4000)
-            {
-                message.Message = message.Message.Substring(0, 4000);
-            }
-
-            if (message.Context != null && message.Context.Length > 255)
-            {
-                message.Context = message.Context.Substring(0, 255);
-            }
+            FixLogData(message);
 
             // Проверим лимиты
             var accountDbContext = Context.GetAccountDbContext(accountId);
@@ -134,20 +117,7 @@ namespace Zidium.Core.AccountsDb
                 accountDbContext.Configuration.AutoDetectChangesEnabled = false;
                 foreach (var message in messages)
                 {
-                    if (message.Message == null)
-                    {
-                        throw new ParameterRequiredException("Request.Message.Message"); //todo надо переименовать
-                    }
-
-                    if (message.Message.Length > 4000)
-                    {
-                        message.Message = message.Message.Substring(0, 4000);
-                    }
-
-                    if (message.Context != null && message.Context.Length > 255)
-                    {
-                        message.Context = message.Context.Substring(0, 255);
-                    }
+                    FixLogData(message);
 
                     var component = componentService.GetComponentById(accountId, message.ComponentId.Value);
 
@@ -163,6 +133,45 @@ namespace Zidium.Core.AccountsDb
                 accountDbContext.Configuration.AutoDetectChangesEnabled = true;
                 if (canIncreaseSizeInStatictics)
                     checker.AddLogSizePerDay(accountDbContext, totalSize);
+            }
+        }
+
+        protected void FixLogData(SendLogData data)
+        {
+            if (data == null)
+            {
+                throw new ParameterRequiredException("Request.Message");
+            }
+
+            if (data.Message == null)
+            {
+                throw new ParameterRequiredException("Request.Message.Message"); //todo надо переименовать
+            }
+
+            if (data.Message.Length > 4000)
+            {
+                data.Message = data.Message.Substring(0, 4000);
+            }
+
+            if (data.Context != null && data.Context.Length > 255)
+            {
+                data.Context = data.Context.Substring(0, 255);
+            }
+
+            if (data.Properties != null)
+            {
+                foreach (var property in data.Properties)
+                {
+                    if (property.Name == null)
+                    {
+                        throw new ParameterRequiredException("Property.Name");
+                    }
+
+                    if (property.Name.Length > 100)
+                    {
+                        property.Name = property.Name.Substring(0, 100);
+                    }
+                }
             }
         }
 
@@ -189,9 +198,9 @@ namespace Zidium.Core.AccountsDb
                 requestData.From,
                 requestData.To,
                 requestData.Levels,
-                requestData.Context, 
-                requestData.Message, 
-                requestData.PropertyName, 
+                requestData.Context,
+                requestData.Message,
+                requestData.PropertyName,
                 requestData.PropertyValue);
 
             return rows;
