@@ -18,12 +18,7 @@ namespace Zidium.Core.Common
         /// Количество потоков для обработки всех аккаунтов
         /// </summary>
         public int AccountThreads { get; set; }
-
-        /// <summary>
-        /// Количество потоков для обработки всех аккаунтов
-        /// </summary>
-        public int StorageThreads { get; set; }
-
+        
         /// <summary>
         /// Количество потоков для обработки БД 
         /// </summary>
@@ -59,7 +54,6 @@ namespace Zidium.Core.Common
             // значения по умолчанию
             Logger = logger ?? LogManager.GetCurrentClassLogger();
             AccountThreads = 4;
-            StorageThreads = 4;
             DataBaseThreads = 4;
             ComponentsThreads = 4;
             CancellationToken = cancellationToken;

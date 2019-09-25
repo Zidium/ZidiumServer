@@ -3,32 +3,36 @@
 
 @if (Model.CanEdit)
 {
-    <p>
-        Добавить проверку:
-        <button type="button" id="component-details-unittests-add-http" class="btn btn-default btn-xs" data-component-id="@Model.Id">
-            Http
-        </button>
+<p>
+    Добавить проверку:
+    <button type="button" id="component-details-unittests-add-http" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Http
+    </button>
 
-        <button type="button" id="component-details-unittests-add-ping" class="btn btn-default btn-xs" data-component-id="@Model.Id">
-            Ping
-        </button>
+    <button type="button" id="component-details-unittests-add-ping" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Ping
+    </button>
 
-        <button type="button" id="component-details-unittests-add-domain" class="btn btn-default btn-xs" data-component-id="@Model.Id">
-            Domain
-        </button>
+    <button type="button" id="component-details-unittests-add-tcp-port" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Tcp порт
+    </button>
 
-        <button type="button" id="component-details-unittests-add-ssl" class="btn btn-default btn-xs" data-component-id="@Model.Id">
-            Ssl
-        </button>
+    <button type="button" id="component-details-unittests-add-domain" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Domain
+    </button>
 
-        <button type="button" id="component-details-unittests-add-sql" class="btn btn-default btn-xs" data-component-id="@Model.Id">
-            Sql
-        </button>
+    <button type="button" id="component-details-unittests-add-ssl" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Ssl
+    </button>
 
-        <button type="button" id="component-details-unittests-add-custom" class="btn btn-default btn-xs" data-component-id="@Model.Id">
-            Пользовательская
-        </button>
-    </p>
+    <button type="button" id="component-details-unittests-add-sql" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Sql
+    </button>
+
+    <button type="button" id="component-details-unittests-add-custom" class="btn btn-default btn-xs" data-component-id="@Model.Id">
+        Пользовательская
+    </button>
+</p>
 }
 
 @if (Model.SystemUnittests.Length > 0)
@@ -238,6 +242,13 @@
         var me = $(this);
         var componentId = me.data('component-id');
         addPingUnitTest(componentId, me);
+    });
+
+    $('#component-details-unittests-add-tcp-port').click(function (event) {
+        event.preventDefault();
+        var me = $(this);
+        var componentId = me.data('component-id');
+        addTcpPortUnitTest(componentId, me);
     });
 
     $('#component-details-unittests-add-domain').click(function (event) {

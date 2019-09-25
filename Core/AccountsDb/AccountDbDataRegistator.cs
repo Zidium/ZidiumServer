@@ -140,6 +140,9 @@ namespace Zidium.Core.AccountsDb
             // Ping
             RegisterUnitTestType(SystemUnitTestTypes.PingTestType);
 
+            // TcpPort
+            RegisterUnitTestType(SystemUnitTestTypes.TcpPortTestType);
+
             // Sql
             RegisterUnitTestType(SystemUnitTestTypes.SqlTestType);
 

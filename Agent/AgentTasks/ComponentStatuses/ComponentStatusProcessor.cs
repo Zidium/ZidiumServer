@@ -20,6 +20,9 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
         {
             Logger = logger;
             DbProcessor = new MultipleDataBaseProcessor(logger, cancellationToken);
+            DbProcessor.AccountThreads = 2;
+            DbProcessor.ComponentsThreads = 2;
+            DbProcessor.DataBaseThreads = 2;
         }
 
         public void Process()
@@ -43,9 +46,17 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
                 .ToArray();
 
             logger.Debug("Найдено компонентов: " + components.Length);
+            int index = 0;
             foreach (var component in components)
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
+
+                // пауза, чтобы уменьшить нагрузку на CPU
+                index++;
+                if (index % 10 == 0)
+                {
+                    Thread.Sleep(200); 
+                }
 
                 var response = dispatcher.UpdateComponentState(accountId, component.Id);
                 if (response.Success)

@@ -104,6 +104,7 @@ namespace Zidium.Agent
                     new OutdatedUnitTestsTask(),
                     new HttpRequestsTask(),
                     new PingTask(),
+                    new TcpPortTask(),
                     new SqlCheckTask(),
                     new DomainNamePaymentPeriodCheckTask(),
                     new SslCertificateExpirationDateCheckTask(),

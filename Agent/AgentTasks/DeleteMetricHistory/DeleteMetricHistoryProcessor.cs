@@ -25,8 +25,7 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             {
                 AccountThreads = 1,
                 ComponentsThreads = 1,
-                DataBaseThreads = 1,
-                StorageThreads = 1
+                DataBaseThreads = 1
             };
         }
 

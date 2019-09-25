@@ -36,6 +36,7 @@ namespace Zidium.Core.AccountsDb
             modelBuilder.Configurations.Add(new HttpRequestUnitTestRuleDataMapping());
             modelBuilder.Configurations.Add(new UnitTestPropertyMapping());
             modelBuilder.Configurations.Add(new UnitTestPingRuleMapping());
+            modelBuilder.Configurations.Add(new UnitTestTcpPortRuleMapping());
             modelBuilder.Configurations.Add(new UnitTestSqlRuleMapping());
             modelBuilder.Configurations.Add(new UnitTestDomainNamePaymentPeriodRuleMapping());
             modelBuilder.Configurations.Add(new UnitTestSslCertificateExpirationDateRuleMapping());

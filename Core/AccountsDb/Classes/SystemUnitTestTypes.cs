@@ -24,6 +24,14 @@ namespace Zidium.Core.AccountsDb
             IsSystem = true
         };
 
+        public static readonly UnitTestType TcpPortTestType = new UnitTestType()
+        {
+            Id = new Guid("159E359D-BD27-4F72-BA76-CA8410EBF5B5"),
+            DisplayName = "TcpPort",
+            SystemName = "System.UnitTests.TcpPort",
+            IsSystem = true
+        };
+
         public static readonly UnitTestType SqlTestType = new UnitTestType()
         {
             Id = new Guid("CB35631D-8C1F-491C-A2C9-243641D72FBF"),
@@ -52,6 +60,7 @@ namespace Zidium.Core.AccountsDb
         {
             HttpUnitTestType.Id,
             PingTestType.Id,
+            TcpPortTestType.Id,
             SqlTestType.Id,
             DomainNameTestType.Id,
             SslTestType.Id

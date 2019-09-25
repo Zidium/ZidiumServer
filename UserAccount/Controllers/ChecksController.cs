@@ -85,6 +85,11 @@ namespace Zidium.UserAccount.Controllers
                 return RedirectToAction(editAction, "PingChecks", new { id });
             }
 
+            if (unitTest.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+            {
+                return RedirectToAction(editAction, "TcpPortChecks", new { id });
+            }
+
             if (unitTest.TypeId == SystemUnitTestTypes.SqlTestType.Id)
             {
                 return RedirectToAction(editAction, "SqlChecks", new { id });

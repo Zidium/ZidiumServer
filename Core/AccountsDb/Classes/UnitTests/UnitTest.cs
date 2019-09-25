@@ -87,6 +87,11 @@ namespace Zidium.Core.AccountsDb
         public virtual UnitTestPingRule PingRule { get; set; }
 
         /// <summary>
+        /// Правило проверки tcp порта
+        /// </summary>
+        public virtual UnitTestTcpPortRule TcpPortRule { get; set; }
+
+        /// <summary>
         /// Правило проверки Sql
         /// </summary>
         public virtual UnitTestSqlRule SqlRule { get; set; }

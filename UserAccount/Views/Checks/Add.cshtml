@@ -83,6 +83,14 @@
     </li>
     
     <li class="list-group-item">
+        @Html.ActionLink("TcpPort", "EditSimple", "TcpPortChecks",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">Zidium проверяет можно ли установить tcp соединение на указанный хост и порт.</div>
+    </li>
+    
+    <li class="list-group-item">
         @Html.ActionLink("Дата оплаты доменного имени", "EditSimple", "DomainNamePaymentPeriodChecks",
             null,
             new { @class = "checkTitle" })

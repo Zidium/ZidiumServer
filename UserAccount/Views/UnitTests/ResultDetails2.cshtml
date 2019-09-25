@@ -109,6 +109,10 @@ else
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsPing", new { id = Model.UnitTest.Id }))</text>
                     }
+                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+                    {
+                        <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsTcpPort", new { id = Model.UnitTest.Id }))</text>
+                    }
                     else if (Model.UnitTest.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsDomain", new { id = Model.UnitTest.Id }))</text>

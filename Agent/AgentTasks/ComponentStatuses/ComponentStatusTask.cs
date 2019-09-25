@@ -6,7 +6,7 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
     {
         public ComponentStatusTask()
         {
-            ExecutionPeriod = TimeSpan.FromMinutes(10);
+            ExecutionPeriod = TimeSpan.FromHours(5);
         }
 
         protected override AgentTaskResult Do()

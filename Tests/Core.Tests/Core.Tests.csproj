@@ -162,6 +162,7 @@
     <Compile Include="AgentTests\SmsTests.cs" />
     <Compile Include="AgentTests\SqlCheckProcessorTests.cs" />
     <Compile Include="AgentTests\SslCertificateExpirationDateCheckTests.cs" />
+    <Compile Include="AgentTests\TcpPortCheckTests.cs" />
     <Compile Include="Caching\EfTests.cs" />
     <Compile Include="Caching\ObjectChangesHelperTests.cs" />
     <Compile Include="Caching\OtherCacheTests.cs" />

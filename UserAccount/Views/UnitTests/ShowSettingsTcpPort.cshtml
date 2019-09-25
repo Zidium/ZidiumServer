@@ -1,0 +1,40 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Api
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.UnitTests
+@using Zidium.UserAccount.Models.Controls;
+@model ShowSettingsTcpPortModel
+
+<div class="col-md-8 tiles-column">
+    <div class="tiles-box" style="display: flex; flex-direction:column;">
+        <div style="flex: 1 0 auto;">
+            <div class="tiles-box-header1">Настройки tcp порта</div>
+            <div class="tiles-box-content">
+                <p>
+                    <span class="simple-text-header">Хост</span>
+                    <br />
+                    <span class="simple-text-value">@Model.Host</span>
+                </p>
+                <p>
+                    <span class="simple-text-header">Порт</span>
+                    <br />
+                    <span class="simple-text-value">@Model.Port</span>
+                </p>
+                <p>
+                    <span class="simple-text-header">Должен быть</span>
+                    <br />
+                    @if (Model.Opened)
+                    {
+                        <span class="simple-text-value">Открыт</span>
+                    }
+                    else
+                    {
+                        <span class="simple-text-value">Закрыт</span>
+                    }
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

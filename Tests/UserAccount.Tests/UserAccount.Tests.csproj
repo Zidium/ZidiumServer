@@ -57,6 +57,7 @@
     <Compile Include="WebSqlChecksTests.cs" />
     <Compile Include="WebSslCertificateExpirationDateChecksTests.cs" />
     <Compile Include="WebSubscriptionsTests.cs" />
+    <Compile Include="WebTcpPortChecksTests.cs" />
     <Compile Include="WebUnitTests.cs" />
     <Compile Include="WebUnitTestTypesTests.cs" />
   </ItemGroup>

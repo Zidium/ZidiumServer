@@ -143,6 +143,7 @@
     <Compile Include="AccountsDb\Classes\UnitTests\PingTests\PingErrorCode.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\PingTests\UnitTestPingRule.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\SqlTests\UnitTestSqlRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\TcpPortTests\UnitTestPingRule.cs" />
     <Compile Include="AccountsDb\Classes\UserFolder.cs" />
     <Compile Include="AccountsDb\Classes\SystemUnitTestTypes.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestUnitTestRuleData.cs" />
@@ -164,6 +165,7 @@
     <Compile Include="AccountsDb\Mapping\LastComponentNotificationMapping.cs" />
     <Compile Include="AccountsDb\Mapping\DefectMapping.cs" />
     <Compile Include="AccountsDb\Mapping\TokenMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestTcpPortRuleMapping.cs" />
     <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.cs" />
     <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.Designer.cs">
       <DependentUpon>201803232225266_Initial.cs</DependentUpon>
@@ -188,6 +190,14 @@
     <Compile Include="AccountsDb\MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.Designer.cs">
       <DependentUpon>201810260859442_AddedBodyToHttpUnittest.cs</DependentUpon>
     </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201909201752164_AddTcpPortRules.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201909201752164_AddTcpPortRules.Designer.cs">
+      <DependentUpon>201909201752164_AddTcpPortRules.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.Designer.cs">
+      <DependentUpon>201909201814080_AddOpenedToTcpPortRules.cs</DependentUpon>
+    </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
@@ -204,6 +214,10 @@
     <Compile Include="AccountsDb\PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.Designer.cs">
       <DependentUpon>201810260942307_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201909241332031_AddedTcpPortRules.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\201909241332031_AddedTcpPortRules.Designer.cs">
+      <DependentUpon>201909241332031_AddedTcpPortRules.cs</DependentUpon>
     </Compile>
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbContext.cs" />
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
@@ -936,6 +950,12 @@
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.resx">
       <DependentUpon>201810260859442_AddedBodyToHttpUnittest.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201909201752164_AddTcpPortRules.resx">
+      <DependentUpon>201909201752164_AddTcpPortRules.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.resx">
+      <DependentUpon>201909201814080_AddOpenedToTcpPortRules.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.resx">
       <DependentUpon>201805151013039_Initial.cs</DependentUpon>
     </EmbeddedResource>
@@ -947,6 +967,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.resx">
       <DependentUpon>201810260942307_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201909241332031_AddedTcpPortRules.resx">
+      <DependentUpon>201909241332031_AddedTcpPortRules.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

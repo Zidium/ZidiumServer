@@ -66,6 +66,10 @@
     {
         <text>@Html.Action("ShowSettingsPing", new { id = Model.Id })</text>
     }
+    else if (Model.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+    {
+        <text>@Html.Action("ShowSettingsTcpPort", new { id = Model.Id })</text>
+    }
     else
     {
         <text>@Html.Action("ShowSettingsCustom", new { id = Model.Id })</text>

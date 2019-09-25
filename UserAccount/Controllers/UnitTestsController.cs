@@ -271,6 +271,13 @@ namespace Zidium.UserAccount.Controllers
             return PartialView(model);
         }
 
+        public ActionResult OverviewSettingsTcpPort(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = OverviewSettingsTcpPortModel.Create(unitTest);
+            return PartialView(model);
+        }
+
         public ActionResult OverviewSettingsDomain(Guid id)
         {
             var unitTest = GetUnitTestById(id);
@@ -324,6 +331,13 @@ namespace Zidium.UserAccount.Controllers
         {
             var unitTest = GetUnitTestById(id);
             var model = ShowSettingsPingModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettingsTcpPort(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsTcpPortModel.Create(unitTest);
             return PartialView(model);
         }
 

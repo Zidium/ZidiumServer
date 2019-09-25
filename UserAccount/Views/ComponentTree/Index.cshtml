@@ -203,6 +203,7 @@
 
         <li><a href="#" id="menu-component-add-http-unittest">Добавить Http-проверку</a></li>
         <li><a href="#" id="menu-component-add-ping-unittest">Добавить Ping-проверку</a></li>
+        <li><a href="#" id="menu-component-add-tcp-port-unittest">Добавить проверку Tcp порта</a></li>
         <li><a href="#" id="menu-component-add-domain-unittest">Добавить проверку оплаты домена</a></li>
         <li><a href="#" id="menu-component-add-ssl-unittest">Добавить проверку Ssl-сертификата</a></li>
         <li><a href="#" id="menu-component-add-sql-unittest">Добавить Sql-проверку</a></li>
@@ -224,6 +225,7 @@
     <ul class="dropdown-menu collapse" id="menu-unittests">
         <li><a href="#" id="menu-unittests-add-http">Добавить Http-проверку</a></li>
         <li><a href="#" id="menu-unittests-add-ping">Добавить Ping-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-ping">Добавить проверку Tcp порта</a></li>
         <li><a href="#" id="menu-unittests-add-domain">Добавить проверку оплаты домена</a></li>
         <li><a href="#" id="menu-unittests-add-ssl">Добавить проверку Ssl-сертификата</a></li>
         <li><a href="#" id="menu-unittests-add-sql">Добавить Sql-проверку</a></li>
@@ -468,6 +470,22 @@
             addPingUnitTest(id);
         });
 
+        // Меню раздела проверок - Добавить проверку tcp порта
+        $('#menu-unittests #menu-unittests-add-tcp-port').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addTcpPortUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку tcp порта
+        $('#menu-component #menu-component-add-tcp-port-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addTcpPortUnitTest(id);
+        });
+
         // Меню раздела проверок - Добавить проверку домена
         $('#menu-unittests #menu-unittests-add-domain').click(function (event) {
             event.preventDefault();
@@ -665,6 +683,17 @@
         var url = '@Url.Action("EditSimple", "PingChecks")';
         var data = { componentId: id };
         dialogs.showModal(url, 'Добавление Ping-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addTcpPortUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "TcpPortChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки tcp порта', function() {
             componentTreeDetails.accordionReloadCurrentGroup(parent);
             submitForm(function () {
                 expandComponentUnitTests(id);

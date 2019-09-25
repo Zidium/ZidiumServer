@@ -166,6 +166,7 @@
     <Compile Include="Controllers\ReloadedTilesController.cs" />
     <Compile Include="Controllers\SelfTestController.cs" />
     <Compile Include="Controllers\SimpleCheckBaseController.cs" />
+    <Compile Include="Controllers\TcpPortChecksController.cs" />
     <Compile Include="Helpers\ActionXmlFileResult.cs" />
     <Compile Include="Helpers\ActionXmlResult.cs" />
     <Compile Include="Attributes\PermissionAttribute.cs" />
@@ -302,6 +303,8 @@
     <Compile Include="Models\Metrics\SetActualValueModel.cs" />
     <Compile Include="Models\Others\UserInfo.cs" />
     <Compile Include="Models\Others\UserInfoRole.cs" />
+    <Compile Include="Models\TcpPortChecksModels\EditModel.cs" />
+    <Compile Include="Models\TcpPortChecksModels\EditSimpleModel.cs" />
     <Compile Include="Models\ReloadedTileModels\GetChangedModel.cs" />
     <Compile Include="Models\ReloadedTileModels\GetChangedModelRow.cs" />
     <Compile Include="Models\ReloadedTileModels\RenderModel.cs" />
@@ -461,6 +464,7 @@
     <Compile Include="Models\UnitTests\OverviewSettingsCustomModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsDomainModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsHttpModel.cs" />
+    <Compile Include="Models\UnitTests\OverviewSettingsTcpPortModel.cs" />
     <Compile Include="Models\UnitTests\ShowExecutionResultsModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsCustomModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsDomainModel.cs" />
@@ -472,6 +476,7 @@
     <Compile Include="Models\UnitTests\ResultDetailsComonRowModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsHttpModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsTcpPortModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestAddModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestEditModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestResult2Model.cs" />
@@ -504,6 +509,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\Checks\http-check-simple.css" />
     <Content Include="Content\Checks\domain-check-simple.css" />
+    <Content Include="Content\Checks\tcp-port-check-simple.css" />
     <Content Include="Content\Checks\sql-check-simple.css" />
     <Content Include="Content\Checks\ssl-check-simple.css" />
     <Content Include="Content\Checks\ping-check-simple.css" />
@@ -880,6 +886,11 @@
     <Content Include="Views\SmartExamples\Example2Partial.cshtml" />
     <Content Include="Views\SmartExamples\Example3.cshtml" />
     <Content Include="Views\SmartExamples\Example4.cshtml" />
+    <Content Include="Views\TcpPortChecks\Edit.cshtml" />
+    <Content Include="Views\TcpPortChecks\EditSimple.cshtml" />
+    <Content Include="Views\TcpPortChecks\Show.cshtml" />
+    <Content Include="Views\UnitTests\OverviewSettingsTcpPort.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsTcpPort.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Errors\UserFriendlyError.cshtml" />
