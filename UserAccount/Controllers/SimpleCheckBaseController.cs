@@ -22,20 +22,29 @@ namespace Zidium.UserAccount.Controllers
 
         protected abstract void SetUnitTestParams(UnitTest unitTest, T model);
 
-        protected abstract string GetComponentDisplayName(T model);
+        public abstract string GetComponentDisplayName(T model);
 
-        protected string GetComponentSystemName(Guid componentId)
+        protected abstract string GetComponentSystemName(T model);
+
+        protected virtual string GetFolderDisplayName(T model)
         {
-            return ComponentHelper.GetDynamicSystemName(componentId);
+            return "Разное";
         }
 
-        protected abstract string GetFolderDisplayName(T model);
+        protected virtual string GetFolderSystemName(T model)
+        {
+            return "Others";
+        }
 
-        protected abstract string GetFolderSystemName(T model);
+        protected virtual string GetTypeSystemName(T model)
+        {
+            return SystemComponentTypes.Others.SystemName;
+        }
 
-        protected abstract string GetTypeDisplayName(T model);
-
-        protected abstract string GetTypeSystemName(T model);
+        protected virtual string GetTypeDisplayName(T model)
+        {
+            return SystemComponentTypes.Others.DisplayName;
+        }
 
         protected abstract void SetModelParams(T model, UnitTest unitTest);
 
@@ -74,7 +83,7 @@ namespace Zidium.UserAccount.Controllers
         }
 
         [CanEditAllData]
-        public UnitTest SaveSimpleCheck(T model)
+        protected UnitTest SaveSimpleCheck(T model)
         {
             var dispatcher = GetDispatcherClient();
             var unitTestDisplayName = GetUnitTestDisplayName(model);
@@ -150,7 +159,7 @@ namespace Zidium.UserAccount.Controllers
                     var createComponentResponse = dispatcher.GetOrCreateComponent(CurrentUser.AccountId, new GetOrCreateComponentRequestData()
                     {
                         NewId = componentId,
-                        SystemName = GetComponentSystemName(componentId),
+                        SystemName = GetComponentSystemName(model),
                         DisplayName = GetComponentDisplayName(model),
                         TypeId = componentType.Id,
                         ParentComponentId = folder.Id

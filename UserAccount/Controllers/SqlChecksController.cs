@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Models.SqlChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -128,7 +129,7 @@ namespace Zidium.UserAccount.Controllers
             unitTest.SqlRule.Provider = model.Provider;
         }
 
-        protected override string GetComponentDisplayName(EditSimpleModel model)
+        public override string GetComponentDisplayName(EditSimpleModel model)
         {
             return "База данных " + GetDbName(model.ConnectionString);
         }
@@ -175,11 +176,10 @@ namespace Zidium.UserAccount.Controllers
         public SqlChecksController(Guid accountId, Guid userId) : base(accountId, userId) { }
 
         public SqlChecksController() { }
-
-        public string ComponentDisplayName(EditSimpleModel model)
+        
+        protected override string GetComponentSystemName(EditSimpleModel model)
         {
-            return GetComponentDisplayName(model);
+            return ComponentHelper.GetDynamicSystemName(new Guid());
         }
-
     }
 }

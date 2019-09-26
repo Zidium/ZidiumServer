@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
+using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
@@ -146,6 +147,12 @@ namespace Zidium.UserAccount.Controllers
             return x => x.IsDeleted == false && x.SortNumber == 0;
         }
 
+        protected string GetHostFromUrl(string url)
+        {
+            var uri = new Uri(url);
+            return uri.Host;
+        }
+
         protected string GetComponentNameFromUrl(string url)
         {
             var uri = new Uri(url);
@@ -192,30 +199,19 @@ namespace Zidium.UserAccount.Controllers
             rule.Url = model.Url;
         }
 
-        protected override string GetComponentDisplayName(EditSimpleModel model)
+        public override string GetComponentDisplayName(EditSimpleModel model)
         {
-            return "Сайт " + GetComponentNameFromUrl(model.Url);
+            string host = GetHostFromUrl(model.Url);
+            return ComponentHelper.GetDisplayNameByHost(host);
         }
 
-        protected override string GetFolderDisplayName(EditSimpleModel model)
+        protected override string GetComponentSystemName(EditSimpleModel model)
         {
-            return "Сайты";
+            string host = GetHostFromUrl(model.Url);
+            return ComponentHelper.GetSystemNameByHost(host);
         }
 
-        protected override string GetFolderSystemName(EditSimpleModel model)
-        {
-            return "WebSitesFolder";
-        }
-
-        protected override string GetTypeDisplayName(EditSimpleModel model)
-        {
-            return SystemComponentTypes.WebSite.DisplayName;
-        }
-
-        protected override string GetTypeSystemName(EditSimpleModel model)
-        {
-            return SystemComponentTypes.WebSite.SystemName;
-        }
+        
 
         protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
         {
@@ -273,10 +269,5 @@ namespace Zidium.UserAccount.Controllers
         public HttpRequestCheckController(Guid accountId, Guid userId) : base(accountId, userId) { }
 
         public HttpRequestCheckController() { }
-
-        public string ComponentDisplayName(EditSimpleModel model)
-        {
-            return GetComponentDisplayName(model);
-        }
     }
 }

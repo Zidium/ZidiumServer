@@ -90,7 +90,7 @@ namespace Zidium.UserAccount.Tests
                     Assert.Equal(model.Provider, unitTest.SqlRule.Provider);
 
                     // Проверим, что компонент НЕ переименовался
-                    Assert.NotEqual(controller.ComponentDisplayName(model), unitTest.Component.DisplayName);
+                    Assert.NotEqual(controller.GetComponentDisplayName(model), unitTest.Component.DisplayName);
                     //Assert.Equal(controller.ComponentSystemName(model), unitTest.Component.SystemName);
 
                     // Отключим проверку, чтобы она не мешалась другим тестам

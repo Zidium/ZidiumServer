@@ -68,5 +68,33 @@ namespace Zidium.Core.Common.Helpers
             components.Reverse();
             return components;
         }
+
+        public static string GetSystemNameByHost(string host)
+        {
+            if (host == null)
+            {
+                throw new ArgumentNullException("host");
+            }
+
+            if (string.IsNullOrWhiteSpace(host))
+            {
+                throw new ArgumentException("host is empty");
+            }
+            return "Host_" + host;
+        }
+
+        public static string GetDisplayNameByHost(string host)
+        {
+            if (host == null)
+            {
+                throw new ArgumentNullException("host");
+            }
+
+            if (string.IsNullOrWhiteSpace(host))
+            {
+                throw new ArgumentException("host is empty");
+            }
+            return host;
+        }
     }
 }

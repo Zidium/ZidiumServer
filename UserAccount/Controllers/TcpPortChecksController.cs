@@ -3,6 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Models.TcpPortChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -113,31 +114,6 @@ namespace Zidium.UserAccount.Controllers
             unitTest.TcpPortRule.Opened = model.Opened;
         }
 
-        protected override string GetComponentDisplayName(EditSimpleModel model)
-        {
-            return "Сервер " + GetModelHost(model);
-        }
-
-        protected override string GetFolderDisplayName(EditSimpleModel model)
-        {
-            return "Сервера";
-        }
-
-        protected override string GetFolderSystemName(EditSimpleModel model)
-        {
-            return "Servers";
-        }
-
-        protected override string GetTypeDisplayName(EditSimpleModel model)
-        {
-            return "Сервера";
-        }
-
-        protected override string GetTypeSystemName(EditSimpleModel model)
-        {
-            return "Server";
-        }
-
         protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
         {
             model.Host = unitTest.TcpPortRule.Host;
@@ -198,6 +174,16 @@ namespace Zidium.UserAccount.Controllers
         public string ComponentDisplayName(EditSimpleModel model)
         {
             return GetComponentDisplayName(model);
+        }
+
+        protected override string GetComponentSystemName(EditSimpleModel model)
+        {
+            return ComponentHelper.GetSystemNameByHost(model.Host);
+        }
+
+        public override string GetComponentDisplayName(EditSimpleModel model)
+        {
+            return ComponentHelper.GetDisplayNameByHost(model.Host);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -132,29 +133,22 @@ namespace Zidium.UserAccount.Controllers
             unitTest.SslCertificateExpirationDateRule.Url = model.Url;
         }
 
-        protected override string GetComponentDisplayName(EditSimpleModel model)
+        protected string GetHostFromUrl(string url)
         {
-            return "SSL-сертификат сайта " + model.Url;
+            var uri = new Uri(url);
+            return uri.Host;
         }
 
-        protected override string GetFolderDisplayName(EditSimpleModel model)
+        public override string GetComponentDisplayName(EditSimpleModel model)
         {
-            return "SSL-сертификаты";
+            var host = GetHostFromUrl(model.Url);
+            return ComponentHelper.GetDisplayNameByHost(host);
         }
 
-        protected override string GetFolderSystemName(EditSimpleModel model)
+        protected override string GetComponentSystemName(EditSimpleModel model)
         {
-            return "SSL certificates";
-        }
-
-        protected override string GetTypeDisplayName(EditSimpleModel model)
-        {
-            return "SSL-сертификаты";
-        }
-
-        protected override string GetTypeSystemName(EditSimpleModel model)
-        {
-            return "SSL certificate";
+            var host = GetHostFromUrl(model.Url);
+            return ComponentHelper.GetSystemNameByHost(host);
         }
 
         protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
@@ -175,12 +169,5 @@ namespace Zidium.UserAccount.Controllers
         public SslCertificateExpirationDateChecksController(Guid accountId, Guid userId) : base(accountId, userId) { }
 
         public SslCertificateExpirationDateChecksController() { }
-
-
-        public string ComponentDisplayName(EditSimpleModel model)
-        {
-            return GetComponentDisplayName(model);
-        }
-
     }
 }

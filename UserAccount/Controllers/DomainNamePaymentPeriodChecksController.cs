@@ -3,6 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -114,31 +115,6 @@ namespace Zidium.UserAccount.Controllers
             unitTest.DomainNamePaymentPeriodRule.Domain = model.Domain;
         }
 
-        protected override string GetComponentDisplayName(EditSimpleModel model)
-        {
-            return "Домен " + model.Domain;
-        }
-
-        protected override string GetFolderDisplayName(EditSimpleModel model)
-        {
-            return "Домены";
-        }
-
-        protected override string GetFolderSystemName(EditSimpleModel model)
-        {
-            return "Domains";
-        }
-
-        protected override string GetTypeDisplayName(EditSimpleModel model)
-        {
-            return SystemComponentTypes.Domain.DisplayName;
-        }
-
-        protected override string GetTypeSystemName(EditSimpleModel model)
-        {
-            return SystemComponentTypes.Domain.SystemName;
-        }
-
         protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
         {
             model.Domain = unitTest.DomainNamePaymentPeriodRule.Domain;
@@ -155,11 +131,15 @@ namespace Zidium.UserAccount.Controllers
         public DomainNamePaymentPeriodChecksController() { }
 
         public DomainNamePaymentPeriodChecksController(Guid accountId, Guid userId) : base(accountId, userId) { }
-
-        public string ComponentDisplayName(EditSimpleModel model)
+        
+        protected override string GetComponentSystemName(EditSimpleModel model)
         {
-            return GetComponentDisplayName(model);
+            return ComponentHelper.GetSystemNameByHost(model.Domain);
         }
 
+        public override string GetComponentDisplayName(EditSimpleModel model)
+        {
+            return ComponentHelper.GetDisplayNameByHost(model.Domain);
+        }
     }
 }

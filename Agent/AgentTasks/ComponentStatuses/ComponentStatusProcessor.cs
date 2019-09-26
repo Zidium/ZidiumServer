@@ -20,9 +20,9 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
         {
             Logger = logger;
             DbProcessor = new MultipleDataBaseProcessor(logger, cancellationToken);
-            DbProcessor.AccountThreads = 2;
-            DbProcessor.ComponentsThreads = 2;
-            DbProcessor.DataBaseThreads = 2;
+            DbProcessor.AccountThreads = 1;
+            DbProcessor.ComponentsThreads = 1;
+            DbProcessor.DataBaseThreads = 1;
         }
 
         public void Process()
