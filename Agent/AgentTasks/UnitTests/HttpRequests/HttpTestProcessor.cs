@@ -74,6 +74,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 {
                     outputData.ErrorCode = HttpRequestErrorCode.UnknownDomain;
                     outputData.ErrorMessage = "Не удалось получить IP-адрес";
+                    outputData.IsNetworkProblem = true; // были случаи когда иногда IP не определялся, хз почему
                     return outputData;
                 }
 
@@ -229,7 +230,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     if (exception.Status == WebExceptionStatus.Timeout)
                     {
                         outputData.ErrorCode = HttpRequestErrorCode.Timeout;
-                        outputData.IsNetworkProblem = true; //todo почему это проблемы сети?
+                        outputData.IsNetworkProblem = true;
                     }
                     else if (exception.Status == WebExceptionStatus.ProtocolError)
                     {
@@ -340,6 +341,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
 
                 outputData.ErrorMessage = message;
                 _logger.Info(message);
+                outputData.IsNetworkProblem = true;
                 return HttpRequestErrorCode.Timeout;
             }
 

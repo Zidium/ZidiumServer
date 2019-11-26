@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Zidium.Api;
 using Zidium.Api.Dto;
+using Zidium.Core.Api.Accounts.ChangeApiKey;
 
 namespace Zidium.Core.Api
 {
@@ -552,6 +553,11 @@ namespace Zidium.Core.Api
         public ProcessPartnerPaymentsResponse ProcessPartnerPayments(ProcessPartnerPaymentsRequest request)
         {
             return ExecuteAction<ProcessPartnerPaymentsResponse>(request);
+        }
+
+        public ChangeApiKeyResponse ChangeApiKey(ChangeApiKeyRequest request)
+        {
+            return ExecuteAction<ChangeApiKeyResponse>(request);
         }
     }
 }

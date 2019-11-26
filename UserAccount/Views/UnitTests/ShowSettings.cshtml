@@ -70,6 +70,18 @@
     {
         <text>@Html.Action("ShowSettingsTcpPort", new { id = Model.Id })</text>
     }
+    else if (Model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+    {
+        <text>@Html.Action("ShowSettingsDomain", new { id = Model.Id })</text>
+    }
+    else if (Model.TypeId == SystemUnitTestTypes.SslTestType.Id)
+    {
+        <text>@Html.Action("ShowSettingsSsl", new { id = Model.Id })</text>
+    }
+    else if (Model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+    {
+        <text>@Html.Action("ShowSettingsSql", new { id = Model.Id })</text>
+    }
     else
     {
         <text>@Html.Action("ShowSettingsCustom", new { id = Model.Id })</text>

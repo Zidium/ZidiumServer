@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Core.Api;
+using Zidium.Core.Api.Accounts.ChangeApiKey;
 
 namespace Zidium.Core.ConfigDb
 {
@@ -34,5 +35,7 @@ namespace Zidium.Core.ConfigDb
         /// Получение системного аккаунта
         /// </summary>
         AccountInfo GetSystemAccount();
+
+        string ChangeApiKey(ChangeApiKeyRequestData data);
     }
 }

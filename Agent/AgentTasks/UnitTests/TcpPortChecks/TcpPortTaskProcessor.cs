@@ -87,11 +87,16 @@ namespace Zidium.Agent.AgentTasks
             }
 
             // ошибки
-            return new UnitTestExecutionInfo()
+            var executionInfo = new UnitTestExecutionInfo()
             {
                 Message = result.Message,
                 Result = UnitTestResult.Alarm
             };
+            if (result.Code == TcpPortCheckCode.NoIp)
+            {
+                executionInfo.IsNetworkProblem = true;
+            }
+            return executionInfo;
         }
     }
 }

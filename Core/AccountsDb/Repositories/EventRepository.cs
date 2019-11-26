@@ -101,6 +101,17 @@ namespace Zidium.Core.AccountsDb
                 eventObj.LastUpdateDate = DateTime.Now;
             }
 
+            eventObj.Message = eventObj.Message.FixStringSymbols();
+
+            if (eventObj.Properties != null)
+            {
+                foreach (var eventProperty in eventObj.Properties)
+                {
+                    eventProperty.Name = eventProperty.Name.FixStringSymbols();
+                    eventProperty.Value = eventProperty.Value.FixStringSymbols();
+                }
+            }
+
             Context.Events.Add(eventObj);
 
             return eventObj;

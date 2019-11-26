@@ -1,6 +1,7 @@
 using System;
 using System.Configuration;
 using Zidium.Core.Api;
+using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.ConfigDb
@@ -35,6 +36,11 @@ namespace Zidium.Core.ConfigDb
         public AccountInfo GetSystemAccount()
         {
             return _accountInfo;
+        }
+
+        public string ChangeApiKey(ChangeApiKeyRequestData data)
+        {
+            return AccountSecretKey;
         }
 
         public static readonly Guid AccountId = new Guid("11111111-1111-1111-1111-111111111111");

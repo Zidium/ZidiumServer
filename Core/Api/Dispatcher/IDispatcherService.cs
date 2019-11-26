@@ -1,4 +1,6 @@
-﻿namespace Zidium.Core.Api
+﻿using Zidium.Core.Api.Accounts.ChangeApiKey;
+
+namespace Zidium.Core.Api
 {
     public interface IDispatcherService
     {
@@ -323,6 +325,13 @@
         /// Обновление аккаунта
         /// </summary>
         UpdateAccountResponse UpdateAccount(UpdateAccountRequest request);
+
+        /// <summary>
+        /// Запрос на измнение ключа API
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        ChangeApiKeyResponse ChangeApiKey(ChangeApiKeyRequest request);
 
         #endregion
 

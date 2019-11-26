@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Zidium.Api;
 using Zidium.Core.Api;
 using Zidium.TestTools;
+using DataType = Zidium.Core.Api.DataType;
 using EventCategory = Zidium.Core.Api.EventCategory;
 using EventImportance = Zidium.Core.Api.EventImportance;
 using MonitoringStatus = Zidium.Core.Api.MonitoringStatus;
@@ -164,6 +166,36 @@ namespace Zidium.Core.Tests.Dispatcher
                 JoinInterval = 0
             });
             secondEventResponse.Check();
+        }
+
+        [Fact]
+        public void SendEventWithZeroesSymbols()
+        {
+            // Создадим компонент
+            var account = TestHelper.GetTestAccount();
+            var component = account.CreateTestApplicationComponent();
+            var dispatcher = TestHelper.GetDispatcherClient();
+            var eventTypeSystemName = "EventType.Test." + Guid.NewGuid();
+
+            // Отправим событие, в тексте которого присутствует символ с кодом 00
+            var response = dispatcher.SendEvent(account.Id, new SendEventData()
+            {
+                TypeSystemName = eventTypeSystemName,
+                ComponentId = component.Id,
+                Category = EventCategory.ComponentEvent,
+                Importance = EventImportance.Success,
+                Message = "AAA" + "\x00" + "BBB",
+                Properties = new List<ExtentionPropertyDto>()
+                {
+                    new ExtentionPropertyDto()
+                    {
+                        Name = "Property_" + "\x00" + "_Test",
+                        Type = DataType.String,
+                        Value = "AAA" + "\x00" + "BBB"
+                    }
+                }
+            });
+            response.Check();
         }
 
     }

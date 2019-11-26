@@ -281,14 +281,11 @@ else
 <script>
 
     function reloadTiles() {
+        console.log("reloadTiles");
         reloadedTiles.reload(".reloaded-tile");
     }
 
     $(function () {
-        ziCreateModalDialog("#disableBtn");
-        ziSetAjaxLink("#enableBtn");
-        ziCreateModalDialog("#set-result-link");
-
         setInterval(reloadTiles, 3000);
     });    
 

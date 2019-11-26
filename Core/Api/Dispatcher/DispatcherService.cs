@@ -4,6 +4,7 @@ using System.Linq;
 using ApiAdapter;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
@@ -2532,6 +2533,22 @@ namespace Zidium.Core
                 Code = Zidium.Api.ResponseCode.Success,
                 InternalData = accountInfo
             };
+        }
+
+        public ChangeApiKeyResponse ChangeApiKey(ChangeApiKeyRequest request)
+        {
+            CheckForLocalRequest(request);
+            CheckRequest(request);
+
+            using (var context = GetDispatcherContext(request))
+            {
+                var newKey = context.AccountService.ChangeApiKey(request.Data);
+                return new ChangeApiKeyResponse()
+                {
+                    Code = Zidium.Api.ResponseCode.Success,
+                    InternalData = newKey
+                };
+            }
         }
 
         #endregion

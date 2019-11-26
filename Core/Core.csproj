@@ -241,6 +241,9 @@
     <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep2RequestData.cs" />
     <Compile Include="Api\AccountRegistration\AccountRegistration\AccountRegistrationStep2Request.cs" />
     <Compile Include="Api\Accounts\AccountInfo.cs" />
+    <Compile Include="Api\Accounts\ChangeApiKey\ChangeApiKeyRequest.cs" />
+    <Compile Include="Api\Accounts\ChangeApiKey\ChangeApiKeyRequestData.cs" />
+    <Compile Include="Api\Accounts\ChangeApiKey\ChangeApiKeyResponse.cs" />
     <Compile Include="Api\Accounts\GetAccountById\GetAccountByIdRequest.cs" />
     <Compile Include="Api\Accounts\GetAccountById\GetAccountByIdRequestData.cs" />
     <Compile Include="Api\Accounts\GetAccountById\GetAccountByIdResponse.cs" />

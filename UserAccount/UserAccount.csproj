@@ -464,6 +464,7 @@
     <Compile Include="Models\UnitTests\OverviewSettingsCustomModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsDomainModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsHttpModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsSqlModel.cs" />
     <Compile Include="Models\UnitTests\OverviewSettingsTcpPortModel.cs" />
     <Compile Include="Models\UnitTests\ShowExecutionResultsModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsCustomModel.cs" />
@@ -476,6 +477,7 @@
     <Compile Include="Models\UnitTests\ResultDetailsComonRowModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsHttpModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsModel.cs" />
+    <Compile Include="Models\UnitTests\ShowSettingsSslModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsTcpPortModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestAddModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestEditModel.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Api.Dispatcher
@@ -761,6 +762,14 @@ namespace Zidium.Core.Api.Dispatcher
             request.Data = data;
             var dispatcher = DispatcherHelper.GetDispatcherService();
             return dispatcher.UpdateAccount(request);
+        }
+
+        public ChangeApiKeyResponse ChangeApiKey(ChangeApiKeyRequestData data)
+        {
+            var request = GetRequest<ChangeApiKeyRequest>(null);
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.ChangeApiKey(request);
         }
 
         #endregion

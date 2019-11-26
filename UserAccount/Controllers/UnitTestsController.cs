@@ -348,6 +348,20 @@ namespace Zidium.UserAccount.Controllers
             return PartialView(model);
         }
 
+        public ActionResult ShowSettingsSsl(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsSslModel.Create(unitTest);
+            return PartialView(model);
+        }
+
+        public ActionResult ShowSettingsSql(Guid id)
+        {
+            var unitTest = GetUnitTestById(id);
+            var model = ShowSettingsSqlModel.Create(unitTest);
+            return PartialView(model);
+        }
+
         public ActionResult ShowSettingsCustom(Guid id)
         {
             var unitTest = GetUnitTestById(id);
@@ -490,6 +504,7 @@ namespace Zidium.UserAccount.Controllers
             }
         }
 
+        // не ипользуется
         [CanEditAllData]
         public ActionResult DeleteAjax(Guid id)
         {
@@ -503,6 +518,7 @@ namespace Zidium.UserAccount.Controllers
             return PartialView("Dialogs/DeleteDialogAjaxNew", model);
         }
 
+        // не ипользуется
         [CanEditAllData]
         [HttpPost]
         public JsonResult DeleteAjax(DeleteDialogAjaxModel model)
@@ -512,6 +528,7 @@ namespace Zidium.UserAccount.Controllers
             return GetSuccessJsonResponse();
         }
 
+        // не ипользуется
         [CanEditAllData]
         public ActionResult DisableAjax(Guid id)
         {
@@ -526,6 +543,7 @@ namespace Zidium.UserAccount.Controllers
             return PartialView("Dialogs/DisableDialogAjaxNew", model);
         }
 
+        // не ипользуется
         [CanEditAllData]
         [HttpPost]
         public ActionResult DisableAjax(DisableDialogAjaxModel model)
@@ -559,6 +577,7 @@ namespace Zidium.UserAccount.Controllers
             return GetSuccessJsonResponse();
         }
 
+        // не ипользуется
         [CanEditAllData]
         [HttpPost]
         public JsonResult EnableAjax(Guid id)

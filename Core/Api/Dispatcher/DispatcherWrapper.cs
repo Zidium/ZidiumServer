@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using NLog;
 using Zidium.Api;
 using Zidium.Api.Dto;
+using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.TaskQueue;
 using Zidium.Core.Limits;
@@ -551,6 +552,11 @@ namespace Zidium.Core.Api
         public void SaveCaches()
         {
             AllCaches.SaveChanges();
+        }
+
+        public ChangeApiKeyResponse ChangeApiKey(ChangeApiKeyRequest request)
+        {
+            return Execute(() => InternalService.ChangeApiKey(request));
         }
     }
 }
