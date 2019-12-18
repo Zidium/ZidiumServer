@@ -10,6 +10,7 @@ rmdir /s /q Release
 "%msbuild.exe%" UserAccount.AddIn\UserAccount.AddIn.csproj /t:Build /p:Configuration=Release /v:minimal /p:SolutionDir="%cd%"\
 
 "%msbuild.exe%" UserAccount\UserAccount.csproj /t:Build /p:Configuration=Release /v:minimal /p:DeployOnBuild=true /p:PublishProfile=CreateRelease.pubxml
+xcopy /Y UserAccount.AddIn\bin\Zidium.UserAccount.AddIn.pdb Release\UserAccount\bin\
 
 "%msbuild.exe%" Agent\Agent.csproj /t:Build /p:Configuration=Release /v:minimal
 xcopy /Y Agent\bin\Release\*.pdb Release\Agent\

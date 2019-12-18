@@ -21,14 +21,14 @@ namespace Zidium.Api.Others
         {
             // заглушка для юнит-тестов
             var apiUrlFake = ConfigurationManager.AppSettings["ApiUrl"];
-            if (string.IsNullOrEmpty(apiUrlFake) == false)
+            if (!string.IsNullOrEmpty(apiUrlFake))
             {
                 apiUrlFake = apiUrlFake.Replace("*", accountName);
                 return new Uri(apiUrlFake);
             }
 
             var webVersion = GetWebServiceVersion();
-            return new Uri("http://" + accountName + ".api.zidium.net/" + webVersion);
+            return new Uri("https://" + accountName + ".api.zidium.net/" + webVersion);
         }
     }
 }

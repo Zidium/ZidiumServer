@@ -18,7 +18,9 @@ namespace Zidium.Core.AccountsDb
 
         public override AccountDbContext Clone()
         {
-            return Provider.Current().DbContext(ConnectionString);
+            var context = Provider.Current().DbContext(ConnectionString);
+            context.DatabaseName = DatabaseName;
+            return context;
         }
 
         public override DbConnection CreateConnection()

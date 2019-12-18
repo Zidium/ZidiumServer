@@ -76,7 +76,7 @@ namespace Zidium.Core.Common
             }
             else
             {
-                return currentUri.Scheme + "://localhost:16997" + pathAndQuery;
+                return currentUri.Scheme + "://" + currentUri.Authority + pathAndQuery;
             }
         }
 

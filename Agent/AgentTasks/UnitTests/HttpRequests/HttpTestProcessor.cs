@@ -1,12 +1,10 @@
 ﻿using NLog;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
@@ -86,7 +84,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 }
 
                 // обновим URL для GET-запроса
-                if (inputData.Method == HttpRequestMethod.Get 
+                if (inputData.Method == HttpRequestMethod.Get
                     && inputData.FormParams != null
                     && inputData.FormParams.Count > 0)
                 {
@@ -140,7 +138,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                         }
                     }
                 }
-                
+
 
                 // Обязательно заполним UserAgent
                 // Пустого UserAgent быть не должно
@@ -151,6 +149,11 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 // добавим куки
                 if (inputData.Cookies != null)
                 {
+                    request.CookieContainer = new CookieContainer();
+                    foreach (Cookie inputDataCookie in inputData.Cookies)
+                    {
+                        inputDataCookie.Domain = uri.Host;
+                    }
                     request.CookieContainer.Add(inputData.Cookies);
                 }
 
@@ -160,7 +163,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     request.Method = "POST";
 
                     byte[] postData;
-                    if (inputData.Body!=null)
+                    if (inputData.Body != null)
                     {
                         request.ContentType = request.ContentType ?? "text/utf-8";
                         postData = inputData.Body;
@@ -169,9 +172,12 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     {
                         request.ContentType = "application/x-www-form-urlencoded";
                         var httpValueCollection = HttpUtility.ParseQueryString(string.Empty);
-                        foreach (var formParam in inputData.FormParams)
+                        if (inputData.FormParams != null)
                         {
-                            httpValueCollection.Add(formParam.Key, formParam.Value);
+                            foreach (var formParam in inputData.FormParams)
+                            {
+                                httpValueCollection.Add(formParam.Key, formParam.Value);
+                            }
                         }
                         string postBodyText = httpValueCollection.ToString();
                         postData = Encoding.UTF8.GetBytes(postBodyText);
@@ -193,6 +199,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 }
                 catch (SocketException exception)
                 {
+                    exception.Data.Add("Account", inputData.AccountName);
+                    exception.Data.Add("UnitTestId", inputData.UnitTestId);
                     outputData.Exceptions.Add(exception);
                     outputData.ErrorMessage = exception.Message;
                     outputData.ErrorCode = HttpRequestErrorCode.TcpError;
@@ -201,6 +209,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 }
                 catch (IOException exception)
                 {
+                    exception.Data.Add("Account", inputData.AccountName);
+                    exception.Data.Add("UnitTestId", inputData.UnitTestId);
                     outputData.Exceptions.Add(exception);
                     outputData.ErrorMessage = exception.Message;
                     outputData.ErrorCode = HttpRequestErrorCode.TcpError;
@@ -209,6 +219,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 }
                 catch (WebException exception)
                 {
+                    exception.Data.Add("Account", inputData.AccountName);
+                    exception.Data.Add("UnitTestId", inputData.UnitTestId);
                     outputData.Exceptions.Add(exception);
                     outputData.ErrorMessage = exception.Message;
                     if (exception.Response != null)
@@ -246,6 +258,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             }
             catch (WebException exception)
             {
+                exception.Data.Add("Account", inputData.AccountName);
+                exception.Data.Add("UnitTestId", inputData.UnitTestId);
                 outputData.Exceptions.Add(exception);
                 outputData.ErrorCode = HttpRequestErrorCode.TcpError;
                 outputData.ErrorMessage = exception.Message;
@@ -254,6 +268,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             }
             catch (Exception exception)
             {
+                exception.Data.Add("Account", inputData.AccountName);
+                exception.Data.Add("UnitTestId", inputData.UnitTestId);
                 outputData.Exceptions.Add(exception);
                 _logger.Error(exception);
                 outputData.ErrorCode = HttpRequestErrorCode.UnknownError;
@@ -326,10 +342,6 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             }
 
             // проверка timeOut
-            if (outputData.EndDate == null)
-            {
-                outputData.EndDate = DateTime.Now;
-            }
             var duration = outputData.EndDate - outputData.StartDate;
             if (duration.TotalSeconds > timeOutSeconds)
             {

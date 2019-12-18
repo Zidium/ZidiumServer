@@ -235,7 +235,9 @@ namespace Zidium.Core.AccountsDb
         {
             var client = DispatcherHelper.GetDispatcherClient();
             var database = client.GetDatabaseById(new GetDatabaseByIdRequestData() { Id = databaseId }).Data;
-            return CreateFromConnectionString(database.ConnectionString);
+            var context = CreateFromConnectionString(database.ConnectionString);
+            context.DatabaseName = database.SystemName;
+            return context;
         }
 
         public static AccountDbContext CreateFromAccountId(Guid accountId)
@@ -243,14 +245,18 @@ namespace Zidium.Core.AccountsDb
             var client = DispatcherHelper.GetDispatcherClient();
             var account = client.GetAccountById(new GetAccountByIdRequestData() { Id = accountId }).Data;
             var database = client.GetDatabaseById(new GetDatabaseByIdRequestData() { Id = account.AccountDatabaseId }).Data;
-            return CreateFromConnectionString(database.ConnectionString);
+            var context = CreateFromConnectionString(database.ConnectionString);
+            context.DatabaseName = database.SystemName;
+            return context;
         }
 
         public static AccountDbContext CreateFromAccountIdLocalCache(Guid accountId)
         {
             var account = ConfigDbServicesHelper.GetAccountService().GetOneById(accountId);
             var database = ConfigDbServicesHelper.GetDatabaseService().GetOneById(account.AccountDatabaseId);
-            return CreateFromConnectionString(database.ConnectionString);
+            var context = CreateFromConnectionString(database.ConnectionString);
+            context.DatabaseName = database.SystemName;
+            return context;
         }
 
         public IComponentTypeRepository GetComponentTypeRepository()

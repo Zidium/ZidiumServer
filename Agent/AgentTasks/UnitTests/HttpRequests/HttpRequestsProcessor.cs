@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Web;
 using NLog;
 using Zidium.Agent.AgentTasks.UnitTests.HttpRequests;
 using Zidium.Core.AccountsDb;
@@ -31,6 +28,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
+            string accountName,
             CancellationToken token)
         {
             var rules = unitTest.HttpRequestUnitTest.Rules
@@ -58,7 +56,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 {
                     token.ThrowIfCancellationRequested();
 
-                    var ruleResult = ProcessRule(rule, logger);
+                    var ruleResult = ProcessRule(rule, logger, accountName);
 
                     if (ruleResult.ErrorCode == HttpRequestErrorCode.UnknownError)
                     {
@@ -126,11 +124,13 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             };
         }
 
-        protected HttpRequestResultInfo ProcessRule(HttpRequestUnitTestRule rule, ILogger logger)
+        protected HttpRequestResultInfo ProcessRule(HttpRequestUnitTestRule rule, ILogger logger, string accountName)
         {
             var processor = new HttpTestProcessor(logger);
             var inputData = new HttpTestInputData()
             {
+                AccountName = accountName,
+                UnitTestId = rule.HttpRequestUnitTestId,
                 ErrorHtml = rule.ErrorHtml,
                 SuccessHtml = rule.SuccessHtml,
                 MaxResponseSize = rule.MaxResponseSize,

@@ -51,6 +51,7 @@ namespace Zidium.Agent.AgentTasks
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
+            string accountName,
             CancellationToken token)
         {
             var rule = unitTest.SslCertificateExpirationDateRule;

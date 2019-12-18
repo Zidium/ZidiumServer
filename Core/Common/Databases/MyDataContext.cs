@@ -13,6 +13,8 @@ namespace Zidium.Core.Common
     {
         public string ConnectionString { get; protected set; }
 
+        public string DatabaseName { get; set; }
+
         protected MyDataContext(DbConnection connection, bool contextOwnsConnection)
             : base(connection, contextOwnsConnection)
         {
@@ -59,21 +61,30 @@ namespace Zidium.Core.Common
         {
             try
             {
-                return base.SaveChanges();
-            }
-            catch (DbEntityValidationException ex)
-            {
-                var sb = new StringBuilder();
-                foreach (var failure in ex.EntityValidationErrors)
+                try
                 {
-                    sb.AppendFormat("{0} failed validation\n", failure.Entry.Entity.GetType());
-                    foreach (var error in failure.ValidationErrors)
-                    {
-                        sb.AppendFormat("- {0} : {1}", error.PropertyName, error.ErrorMessage);
-                        sb.AppendLine();
-                    }
+                    return base.SaveChanges();
                 }
-                throw new DbEntityValidationException("Entity Validation Failed - errors follow:\n" + sb, ex);
+                catch (DbEntityValidationException ex)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var failure in ex.EntityValidationErrors)
+                    {
+                        sb.AppendFormat("{0} failed validation\n", failure.Entry.Entity.GetType());
+                        foreach (var error in failure.ValidationErrors)
+                        {
+                            sb.AppendFormat("- {0} : {1}", error.PropertyName, error.ErrorMessage);
+                            sb.AppendLine();
+                        }
+                    }
+
+                    throw new DbEntityValidationException("Entity Validation Failed - errors follow:\n" + sb, ex);
+                }
+            }
+            catch (Exception exception)
+            {
+                exception.Data.Add("Database", DatabaseName);
+                throw;
             }
         }
 

@@ -18,10 +18,10 @@
     <MvcBuildViews Condition="'$(Configuration)'=='Release'">true</MvcBuildViews>
     <MvcBuildViews Condition="'$(Configuration)'=='Work'">true</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
-    <IISExpressSSLPort />
-    <IISExpressAnonymousAuthentication />
-    <IISExpressWindowsAuthentication />
-    <IISExpressUseClassicPipelineMode />
+    <IISExpressSSLPort>60002</IISExpressSSLPort>
+    <IISExpressAnonymousAuthentication>enabled</IISExpressAnonymousAuthentication>
+    <IISExpressWindowsAuthentication>disabled</IISExpressWindowsAuthentication>
+    <IISExpressUseClassicPipelineMode>false</IISExpressUseClassicPipelineMode>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
     <TargetFrameworkProfile />
@@ -893,6 +893,8 @@
     <Content Include="Views\TcpPortChecks\Show.cshtml" />
     <Content Include="Views\UnitTests\OverviewSettingsTcpPort.cshtml" />
     <Content Include="Views\UnitTests\ShowSettingsTcpPort.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsSql.cshtml" />
+    <Content Include="Views\UnitTests\ShowSettingsSsl.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Errors\UserFriendlyError.cshtml" />
@@ -1057,11 +1059,11 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>False</UseIIS>
+          <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>16997</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:16997/</IISUrl>
+          <IISUrl>https://localhost:60002/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

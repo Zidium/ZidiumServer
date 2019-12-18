@@ -26,6 +26,7 @@ namespace Zidium.Agent.AgentTasks
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
+            string accountName,
             CancellationToken token)
         {
             return CheckSql(unitTest.SqlRule);

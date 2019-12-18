@@ -134,6 +134,7 @@ namespace Zidium.Agent.AgentTasks
             AccountDbContext accountDbContext,
             UnitTest unitTest,
             ILogger logger,
+            string accountName,
             CancellationToken token);
 
         protected void ProcessUnitTest(Guid accountId, Guid unitTestId, ILogger logger, string accountName, CancellationToken token)
@@ -151,11 +152,11 @@ namespace Zidium.Agent.AgentTasks
                     logger.Debug("Имя проверки: " + unitTest.SystemName);
                     try
                     {
-                        var result = GetResult(accountId, accountDbContext, unitTest, logger, token);
+                        var result = GetResult(accountId, accountDbContext, unitTest, logger, accountName, token);
 
                         if (result == null)
                         {
-                            logger.Warn("Отмена выполнения проверки {0} из-за внутренней проблемы", unitTestId);
+                            logger.Warn("Отмена выполнения проверки {0} в аккаунте {1} из-за внутренней проблемы", unitTestId, accountName);
 
                             return;
                         }

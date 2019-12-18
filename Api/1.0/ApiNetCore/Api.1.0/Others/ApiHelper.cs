@@ -37,7 +37,7 @@ namespace Zidium.Api.Others
             }
 
             var webVersion = GetWebServiceVersion();
-            return new Uri("http://" + accountName + ".api.zidium.net/" + webVersion);
+            return new Uri("https://" + accountName + ".api.zidium.net/" + webVersion);
         }
     }
 }

@@ -62,5 +62,9 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
         public Dictionary<string, string> Headers { get; set; }
 
         public CookieCollection Cookies { get; set; }
+
+        public string AccountName { get; set; }
+
+        public Guid UnitTestId { get; set; }
     }
 }

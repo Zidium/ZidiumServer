@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using NLog;
 using Zidium.Agent.AgentTasks.HttpRequests;
@@ -516,6 +517,23 @@ namespace Zidium.Core.Tests.AgentTests
                 Assert.Equal(2, unitTestObj.AttempCount);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
             }
+        }
+
+        [Fact]
+        public void CookieTest()
+        {
+            HttpTestInputData inputData = new HttpTestInputData()
+            {
+                Url = "https://zidium.net",
+                Method = HttpRequestMethod.Get,
+                Cookies = new CookieCollection()
+                {
+                    new Cookie("sessionid", "12345")
+                }
+            };
+            HttpTestProcessor processor = new HttpTestProcessor();
+            var outputData = processor.Process(inputData);
+            Assert.Equal(HttpRequestErrorCode.Success, outputData.ErrorCode);
         }
     }
 }
