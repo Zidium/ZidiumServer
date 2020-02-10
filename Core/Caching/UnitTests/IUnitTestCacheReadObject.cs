@@ -33,7 +33,7 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Время следующего запуска
         /// </summary>
-        DateTime? NextDate { get; }
+        DateTime? NextExecutionDate { get; }
 
         /// <summary>
         /// Дата до которой выключен юнит-тест

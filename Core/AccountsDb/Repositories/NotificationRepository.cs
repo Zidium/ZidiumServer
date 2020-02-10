@@ -2,7 +2,6 @@
 using System.Data.Entity;
 using System.Linq;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 
 namespace Zidium.Core.AccountsDb
 {
@@ -29,9 +28,9 @@ namespace Zidium.Core.AccountsDb
             return entity;
         }
 
-        public IQueryable<Notification> QueryAllForGui(Guid? componentId, DateTime? fromDate, DateTime? toDate, EventCategory? category, NotificationType? channel, NotificationStatus? status, Guid? userId)
+        public IQueryable<Notification> QueryAllForGui(Guid? componentId, DateTime? fromDate, DateTime? toDate, EventCategory? category, SubscriptionChannel? channel, NotificationStatus? status, Guid? userId)
         {
-            var query = QueryAll().Include("Event");
+            var query = QueryAll().Include(t => t.Event).Include(t => t.User).Include(t => t.Event.EventType);
             if (componentId.HasValue)
                 query = query.Where(t => t.Event.OwnerId == componentId.Value);
             if (fromDate.HasValue)
@@ -91,22 +90,36 @@ namespace Zidium.Core.AccountsDb
             }
         }
 
-        public IQueryable<Notification> GetForSend(NotificationType notificationType)
+        public IQueryable<Notification> GetForSend(SubscriptionChannel[] channels)
         {
             return Context
                 .Notifications
                 .Where(x =>
-                    x.Type == notificationType &&
+                    channels.Contains(x.Type) &&
                     x.Status == NotificationStatus.InQueue);
         }
 
         public Notification Find(Guid id, Guid componentId)
         {
-            var result = Context.Notifications.Find(id);
+            var result = GetOneOrNullById(id);
             if (result == null)
                 throw new ObjectNotFoundException(id, Naming.Notification);
             if (result.Event.OwnerId != componentId)
                 throw new AccessDeniedException(id, Naming.Notification);
+            return result;
+        }
+
+        public Notification Find(Guid id)
+        {
+            var result = GetOneOrNullById(id);
+            if (result == null)
+                throw new ObjectNotFoundException(id, Naming.Notification);
+            return result;
+        }
+
+        public Notification GetOneOrNullById(Guid id)
+        {
+            var result = Context.Notifications.Find(id);
             return result;
         }
 

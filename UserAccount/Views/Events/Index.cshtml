@@ -220,7 +220,20 @@
     columns.Add(m => m.EndDate).Titled("Закончилось").RenderValueAs(m =>
         @<text>
             <span class='@GuiHelper.GetEventImportanceTextCssClass(m.Importance)'>
-                @Html.Raw(m.RealEndDate.ToString(GuiHelper.DateTimeDisplayFormat) + (m.Duration != TimeSpan.Zero ? "<br><i>(" + GuiHelper.TimeSpanAs2UnitString(m.Duration) + ")</i>" : string.Empty))
+                @if (m.RealEndDateString != null)
+                {
+                    <text>@m.RealEndDateString</text>
+                }
+                else
+                {
+                    <text>&mdash;</text>
+                }
+                
+                @if (m.Duration != TimeSpan.Zero)
+                {
+                    <br/>
+                    <i>@GuiHelper.TimeSpanAs2UnitString(m.Duration)</i>
+                }
             </span>
         </text>
             )

@@ -241,7 +241,19 @@ if (Model.Component != null)
                     {
                         <tr>
                             <td>@Html.EventLinkStartDate(reason.Event)</td>
-                            <td>@reason.Event.GetEndDate(now)</td>
+                            <td>
+                                @{
+                                    var realEndDateString = Model.GetRealEndDateString(reason.Event);
+                                    if (realEndDateString != null)
+                                    {
+                                        <text>@realEndDateString</text>
+                                    }
+                                    else
+                                    {
+                                        <text>&mdash;</text>
+                                    }
+                                }
+                            </td>
                             <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
                             <td>@reason.Event.Count</td>
                             <td>@Html.UnitTestLink(reason.UnitTest)</td>
@@ -267,14 +279,26 @@ if (Model.Component != null)
                     </tr>
                     @foreach (var reason in Model.MetricsReasons)
                     {
-                        <tr>
-                            <td>@Html.EventLinkStartDate(reason.Event)</td>
-                            <td>@reason.Event.GetEndDate(now)</td>
-                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
-                            <td>@reason.Event.Count</td>
-                            <td>@Html.MetricLink(reason.Metric)</td>
-                            <td>@Model.GetEventMessageText(reason.Event)</td>
-                        </tr>
+                    <tr>
+                        <td>@Html.EventLinkStartDate(reason.Event)</td>
+                        <td>
+                            @{
+                                var realEndDateString = Model.GetRealEndDateString(reason.Event);
+                                if (realEndDateString != null)
+                                {
+                                    <text>@realEndDateString</text>
+                                }
+                                else
+                                {
+                                    <text>&mdash;</text>
+                                }
+                            }
+                        </td>
+                        <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                        <td>@reason.Event.Count</td>
+                        <td>@Html.MetricLink(reason.Metric)</td>
+                        <td>@Model.GetEventMessageText(reason.Event)</td>
+                    </tr>
                     }
                 </table>
             </div>
@@ -294,13 +318,25 @@ if (Model.Component != null)
                     </tr>
                     @foreach (var reason in Model.ChildsReasons)
                     {
-                        <tr>
-                            <td>@Html.EventLinkStartDate(reason.Event)</td>
-                            <td>@reason.Event.GetEndDate(now)</td>
-                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
-                            <td>@Html.ComponentLink(reason.Component)</td>
-                            <td>@Model.GetEventMessageText(reason.Event)</td>
-                        </tr>
+                    <tr>
+                        <td>@Html.EventLinkStartDate(reason.Event)</td>
+                        <td>
+                            @{
+                                var realEndDateString = Model.GetRealEndDateString(reason.Event);
+                                if (realEndDateString != null)
+                                {
+                                    <text>@realEndDateString</text>
+                                }
+                                else
+                                {
+                                    <text>&mdash;</text>
+                                }
+                            }
+                        </td>
+                        <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                        <td>@Html.ComponentLink(reason.Component)</td>
+                        <td>@Model.GetEventMessageText(reason.Event)</td>
+                    </tr>
                     }
                 </table>
             </div>
@@ -320,13 +356,25 @@ if (Model.Component != null)
                     </tr>
                     @foreach (var reason in Model.ErrorReasons)
                     {
-                        <tr>
-                            <td>@Html.EventLinkStartDate(reason.Event)</td>
-                            <td>@reason.Event.GetEndDate(now)</td>
-                            <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
-                            <td>@reason.Event.Count</td>
-                            <td>@Model.GetEventMessageText(reason.Event)</td>
-                        </tr>
+                    <tr>
+                        <td>@Html.EventLinkStartDate(reason.Event)</td>
+                        <td>
+                            @{
+                                var realEndDateString = Model.GetRealEndDateString(reason.Event);
+                                if (realEndDateString != null)
+                                {
+                                    <text>@realEndDateString</text>
+                                }
+                                else
+                                {
+                                    <text>&mdash;</text>
+                                }
+                            }
+                        </td>
+                        <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
+                        <td>@reason.Event.Count</td>
+                        <td>@Model.GetEventMessageText(reason.Event)</td>
+                    </tr>
                     }
                 </table>
             </div>

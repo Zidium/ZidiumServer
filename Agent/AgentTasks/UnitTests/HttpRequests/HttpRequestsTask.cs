@@ -11,7 +11,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
 
         protected override AgentTaskResult Do()
         {
-            var processor = new HttpRequestsProcessor(Logger, CancellationToken);
+            var processor = new HttpRequestsProcessor(Logger, CancellationToken, TimeService);
             processor.ProcessAll();
 
             var result = string.Format(

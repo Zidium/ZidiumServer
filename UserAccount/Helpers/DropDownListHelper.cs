@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.AccountsDb.Classes;
 using Zidium.Core.Api;
@@ -99,11 +100,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetSubscriptionChannels(SubscriptionChannel? selected, bool allowEmpty)
         {
-            var channels = new[]
-            {
-                SubscriptionChannel.Sms,
-                SubscriptionChannel.Email
-            };
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
             var items = channels.Select(x => new SelectListItem()
             {
                 Text = x.ToString(),

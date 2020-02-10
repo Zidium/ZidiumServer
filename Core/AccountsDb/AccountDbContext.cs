@@ -6,6 +6,7 @@ using Zidium.Core.AccountsDb.Classes;
 using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
 using Zidium.Core.AccountsDb.Mapping;
 using Zidium.Core.AccountsDb.Repositories;
+using Zidium.Core.AccountsDb.Services.AccountSettings;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
@@ -33,9 +34,11 @@ namespace Zidium.Core.AccountsDb
             modelBuilder.Configurations.Add(new HttpRequestUnitTestMapping());
             modelBuilder.Configurations.Add(new HttpRequestUnitTestRuleMapping());
             modelBuilder.Configurations.Add(new UserSettingMapping());
+            modelBuilder.Configurations.Add(new AccountSettingMapping());
             modelBuilder.Configurations.Add(new HttpRequestUnitTestRuleDataMapping());
             modelBuilder.Configurations.Add(new UnitTestPropertyMapping());
             modelBuilder.Configurations.Add(new UnitTestPingRuleMapping());
+            modelBuilder.Configurations.Add(new UnitTestVirusTotalRuleMapping());
             modelBuilder.Configurations.Add(new UnitTestTcpPortRuleMapping());
             modelBuilder.Configurations.Add(new UnitTestSqlRuleMapping());
             modelBuilder.Configurations.Add(new UnitTestDomainNamePaymentPeriodRuleMapping());
@@ -54,11 +57,13 @@ namespace Zidium.Core.AccountsDb
             modelBuilder.Configurations.Add(new MetricHistoryMapping());
             modelBuilder.Configurations.Add(new SendEmailCommandMapping());
             modelBuilder.Configurations.Add(new SendSmsCommandMapping());
+            modelBuilder.Configurations.Add(new SendMessageCommandMapping());
             modelBuilder.Configurations.Add(new LogMapping());
             modelBuilder.Configurations.Add(new LogParameterMapping());
             modelBuilder.Configurations.Add(new NotificationHttpMapping());
             modelBuilder.Configurations.Add(new ArchivedStatusMapping());
             modelBuilder.Configurations.Add(new TokenMapping());
+            modelBuilder.Configurations.Add(new TimeZoneMapping());
             modelBuilder.Conventions.Remove<OneToManyCascadeDeleteConvention>();
         }
 
@@ -158,6 +163,11 @@ namespace Zidium.Core.AccountsDb
         public DbSet<UserSetting> UserSettings { get; set; }
 
         /// <summary>
+        /// Настройки аккаунта
+        /// </summary>
+        public DbSet<AccountSetting> AccountSettings { get; set; }
+
+        /// <summary>
         /// Тарифы аккаунтов
         /// </summary>
         public DbSet<AccountTariff> AccountTariffs { get; set; }
@@ -193,6 +203,8 @@ namespace Zidium.Core.AccountsDb
 
         public DbSet<SendSmsCommand> SendSmsCommands { get; set; }
 
+        public DbSet<SendMessageCommand> SendMessageCommands { get; set; }
+
         /// <summary>
         /// Уведомления
         /// </summary>
@@ -207,6 +219,11 @@ namespace Zidium.Core.AccountsDb
         /// Токены на любые одноразовые действия
         /// </summary>
         public DbSet<Token> Tokens { get; set; }
+
+        /// <summary>
+        /// Часовые пояса
+        /// </summary>
+        public DbSet<TimeZone> TimeZones { get; set; }
 
         // Skokov: без этой строки не работает построитель миграций, не удаляйте её!
         protected AccountDbContext()
@@ -334,6 +351,16 @@ namespace Zidium.Core.AccountsDb
             return new UserSettingService(this);
         }
 
+        public IAccountSettingRepository GetAccountSettingRepository()
+        {
+            return new AccountSettingRepository(this);
+        }
+
+        public IAccountSettingService GetAccountSettingService()
+        {
+            return new AccountSettingService(this);
+        }
+
         public ITariffLimitRepository GetTariffLimitRepository()
         {
             return new TariffLimitRepository(this);
@@ -415,6 +442,16 @@ namespace Zidium.Core.AccountsDb
         public ITokenRepository GetTokenRepository()
         {
             return new TokenRepository(this);
+        }
+
+        public ISendMessageCommandRepository GetSendMessageCommandRepository()
+        {
+            return new SendMessageCommandRepository(this);
+        }
+
+        public ITimeZoneRepository GetTimeZoneRepository()
+        {
+            return new TimeZoneRepository(this);
         }
 
         /// <summary>

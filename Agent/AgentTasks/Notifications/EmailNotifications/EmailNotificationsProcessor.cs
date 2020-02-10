@@ -2,24 +2,59 @@
 using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Api;
 using Zidium.Core.Common;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
     /// <summary>
-    /// Для каждого уведомления (с типом email) создает задачу на отправку email
+    /// Для каждого уведомления (с типом email) создает команду на отправку email
     /// </summary>
     public class EmailNotificationsProcessor : NotificationSenderBase
     {
         public EmailNotificationsProcessor(ILogger logger, CancellationToken cancellationToken)
             : base(logger, cancellationToken) { }
 
-        protected override NotificationType NotificationType
+        protected override SubscriptionChannel[] Channels { get; } = new[] { SubscriptionChannel.Email };
+
+        protected override void Send(
+            ILogger logger,
+            Notification notification,
+            AccountDbContext accountDbContext,
+            string accountName, 
+            Guid accountId)
         {
-            get { return NotificationType.Email; }
+            var componentRepository = accountDbContext.GetComponentRepository();
+            var component = componentRepository.GetById(notification.Event.OwnerId);
+            var path = ComponentHelper.GetComponentPathText(component);
+
+            var subject = string.Format("{0} - {1}", path, GetEventImportanceText(notification.Event.Importance));
+            if (notification.Reason == NotificationReason.Reminder)
+            {
+                subject += " (напоминание)";
+            }
+
+            // составляем тело письма
+            var user = accountDbContext.GetUserRepository().GetById(notification.UserId);
+            var htmlBody = GetStatusEventHtml(user, logger, notification, component, accountDbContext, accountName);
+
+            // сохраняем письмо в очередь
+            var emailRepository = accountDbContext.GetSendEmailCommandRepository();
+            var command = new SendEmailCommand()
+            {
+                Id = Guid.NewGuid(),
+                Body = htmlBody,
+                IsHtml = true,
+                Subject = subject,
+                To = notification.Address,
+                ReferenceId = notification.Id
+            };
+            emailRepository.Add(command);
+
+            // заполним ссылку на письмо в уведомлении
+            notification.SendEmailCommand = command;
         }
 
         protected Event GetRecentReasonEvent(Event statusEvent, AccountDbContext accountDbContext)
@@ -40,18 +75,17 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
             // Делаем строку:
             // 30.04.2016 в 08:37:43 компонент ПДК-10 перешёл в статус ОШИБКА.
-            var statusUrl = UrlHelper.GetEventUrl(statusEvent.Id, accountName);
 
             var statusTimeText = string.Format(
                 "{0} в {1}",
                 statusEvent.StartDate.ToString("dd.MM.yyyy"),
                 statusEvent.StartDate.ToString("HH:mm:ss"));
 
-            html.WriteLink(statusUrl, statusTimeText);
+            html.Write(statusTimeText);
             html.Write(" компонент ");
 
-            var componentPathHtml = ComponentHelper.GetComponentPathHtml(component, accountName);
-            html.WriteRaw(componentPathHtml);
+            var componentPathText = ComponentHelper.GetComponentPathText(component);
+            html.Write(componentPathText);
 
             if (statusEvent.ImportanceHasGrown)
                 html.Write(" перешёл в статус ");
@@ -75,10 +109,8 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     html.NewLine();
                     html.NewLine();
 
-                    var reasonEventUrl = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
-
                     // причина - ошибка компонента
-                    if (reasonEvent.Category == Core.Api.EventCategory.ApplicationError)
+                    if (reasonEvent.Category == EventCategory.ApplicationError)
                     {
                         // Делаем строку:
                         // Причиной стала ошибка 5412584 - Данный ключ отсутствует в словаре
@@ -95,6 +127,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
                         errorTitle += " - " + errorType.DisplayName;
 
+                        var reasonEventUrl = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
                         html.WriteLink(reasonEventUrl, errorTitle);
 
                         if (reasonEvent.Message != null)
@@ -111,7 +144,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     }
 
                     // причина - событие компонента
-                    if (reasonEvent.Category == Core.Api.EventCategory.ComponentEvent)
+                    if (reasonEvent.Category == EventCategory.ComponentEvent)
                     {
                         // Делаем строку:
                         // Причиной стало событие компонента Запуск компонента: Данный ключ отсутствует в словаре
@@ -119,7 +152,10 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
                         var eventTypeRepository = accountDbContext.GetEventTypeRepository();
                         var componentEventType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+
+                        var reasonEventUrl = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
                         html.WriteLink(reasonEventUrl, componentEventType.DisplayName);
+
                         if (reasonEvent.Message != null)
                         {
                             html.Write(": " + reasonEvent.Message);
@@ -133,7 +169,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     }
 
                     // причина - статус дочернего компонента
-                    if (reasonEvent.Category == Core.Api.EventCategory.ComponentExternalStatus)
+                    if (reasonEvent.Category == EventCategory.ComponentExternalStatus)
                     {
                         var componentRepository = accountDbContext.GetComponentRepository();
                         var childComponent = componentRepository.GetById(reasonEvent.OwnerId);
@@ -143,13 +179,16 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Причиной стал статус ОШИБКА дочернего компонента ВИДЕОКАМЕРА
 
                         html.Write("Причиной стал ");
+
+                        var reasonEventUrl = UrlHelper.GetComponentUrl(childComponent.Id, accountName);
                         html.WriteLink(reasonEventUrl, "статус " + statusName);
+
                         html.Write(" дочернего компонента ");
                         html.WriteLink(childComponentUrl, childComponent.DisplayName);
                     }
 
                     // причина - результат проверки
-                    if (reasonEvent.Category == Core.Api.EventCategory.UnitTestResult)
+                    if (reasonEvent.Category == EventCategory.UnitTestResult)
                     {
                         var unitTestRepository = accountDbContext.GetUnitTestRepository();
                         var unitTest = unitTestRepository.GetById(reasonEvent.OwnerId);
@@ -159,7 +198,10 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Причиной стал РЕЗУЛЬТАТ проверки МОЯ ПРОВЕРКА: Превышен таймаут выполнения запроса
 
                         html.Write("Причиной стал ");
+
+                        var reasonEventUrl = UrlHelper.GetUnitTestUrl(unitTest.Id, accountName);
                         html.WriteLink(reasonEventUrl, "результат");
+
                         html.Write(" проверки ");
                         html.WriteLink(unitTestUrl, unitTest.DisplayName);
                         if (reasonEvent.Message != null)
@@ -175,11 +217,10 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     }
 
                     // причина - значение метрики
-                    if (reasonEvent.Category == Core.Api.EventCategory.MetricStatus)
+                    if (reasonEvent.Category == EventCategory.MetricStatus)
                     {
                         var metricRepository = accountDbContext.GetMetricRepository();
                         var metric = metricRepository.GetById(reasonEvent.OwnerId);
-                        var metricUrl = UrlHelper.GetMetricUrl(metric.Id, accountName);
                         var metricHistoryRepository = accountDbContext.GetMetricHistoryRepository();
 
                         var firstValue = metricHistoryRepository.GetAllByStatus(reasonEvent.Id)
@@ -192,11 +233,20 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Причиной стало значение метрики CPU, % = 200
 
                         html.Write("Причиной стало значение метрики ");
-                        html.WriteLink(metricUrl, metric.MetricType.DisplayName);
+
+                        var reasonEventUrl = UrlHelper.GetMetricUrl(metric.Id, accountName);
+                        html.WriteLink(reasonEventUrl, metric.MetricType.DisplayName);
+
                         html.Write(" = ");
                         html.Span(firstValueText, "font-weight: bold, color: " + statusColor);
                     }
                 }
+            }
+            else
+            {
+                var reasonEventUrl = UrlHelper.GetComponentUrl(component.Id, accountName);
+                html.NewLine();
+                html.WriteLink(reasonEventUrl, "Посмотреть подробности");
             }
 
             if (notification.SubscriptionId.HasValue)
@@ -209,20 +259,20 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 html.NewLine();
                 html.Span("ID уведомления: " + notification.Id, "color: gray");
             }
-            
+
             var htmlBody = html.GetHtml();
             return NotificationHelper.HtmlToLetter(htmlBody, user);
         }
 
-        protected static string EventImportanceToColor(Core.Api.EventImportance eventImportance)
+        protected static string EventImportanceToColor(EventImportance eventImportance)
         {
-            if (eventImportance == Core.Api.EventImportance.Alarm)
+            if (eventImportance == EventImportance.Alarm)
                 return "darkred";
 
-            if (eventImportance == Core.Api.EventImportance.Warning)
+            if (eventImportance == EventImportance.Warning)
                 return "darkgoldenrod";
 
-            if (eventImportance == Core.Api.EventImportance.Success)
+            if (eventImportance == EventImportance.Success)
                 return "darkgreen";
 
             return "gray";
@@ -244,53 +294,19 @@ namespace Zidium.Agent.AgentTasks.Notifications
             }
         }
 
-        protected override void Send(ILogger logger,
-            Notification notification,
-            AccountDbContext accountDbContext,
-            string accountName, Guid accountId)
+        protected string GetEventImportanceText(EventImportance importance)
         {
-            var to = notification.Address;
-            var componentRepository = accountDbContext.GetComponentRepository();
-            var component = componentRepository.GetById(notification.Event.OwnerId);
-            var path = ComponentHelper.GetComponentPathText(component);
-            
-            var subject = string.Format("{0} - {1}", path, GetEventImportanceText(notification.Event.Importance));
-            if (notification.Reason == NotificationReason.Reminder)
-            {
-                subject = subject + " (напоминание)";
-            }
-
-            // составляем тело письма
-            var user = accountDbContext.GetUserRepository().GetById(notification.UserId);
-            var htmlBody = GetStatusEventHtml(user, logger, notification, component, accountDbContext, accountName);
-
-            // сохраняем письмо в очередь
-            var emailRepository = accountDbContext.GetSendEmailCommandRepository();
-            var command = new SendEmailCommand()
-            {
-                Id = Guid.NewGuid(),
-                Body = htmlBody,
-                IsHtml = true,
-                Subject = subject,
-                To = to,
-                ReferenceId = notification.Id
-            };
-            emailRepository.Add(command);
-        }
-
-        protected string GetEventImportanceText(Core.Api.EventImportance importance)
-        {
-            if (importance == Core.Api.EventImportance.Alarm)
+            if (importance == EventImportance.Alarm)
             {
                 return "ОШИБКА";
             }
 
-            if (importance == Core.Api.EventImportance.Warning)
+            if (importance == EventImportance.Warning)
             {
                 return "ПРЕДУПРЕЖДЕНИЕ";
             }
 
-            if (importance == Core.Api.EventImportance.Success)
+            if (importance == EventImportance.Success)
             {
                 return "ВСЁ ХОРОШО";
             }

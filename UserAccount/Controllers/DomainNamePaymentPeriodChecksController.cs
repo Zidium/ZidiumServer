@@ -87,15 +87,6 @@ namespace Zidium.UserAccount.Controllers
                 .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.DomainNameTestType.Id && t.DomainNamePaymentPeriodRule != null && t.DomainNamePaymentPeriodRule.Domain == model.Domain && t.IsDeleted == false);
         }
 
-        protected override string GetOldReplacementPart(UnitTest unitTest)
-        {
-            return unitTest.DomainNamePaymentPeriodRule.Domain;
-        }
-
-        protected override string GetNewReplacementPart(EditSimpleModel model)
-        {
-            return model.Domain;
-        }
 
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {

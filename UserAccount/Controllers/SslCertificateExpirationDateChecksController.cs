@@ -105,15 +105,6 @@ namespace Zidium.UserAccount.Controllers
                 .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.SslTestType.Id && t.SslCertificateExpirationDateRule != null && t.SslCertificateExpirationDateRule.Url == model.Url && t.IsDeleted == false);
         }
 
-        protected override string GetOldReplacementPart(UnitTest unitTest)
-        {
-            return unitTest.SslCertificateExpirationDateRule.Url;
-        }
-
-        protected override string GetNewReplacementPart(EditSimpleModel model)
-        {
-            return model.Url;
-        }
 
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {

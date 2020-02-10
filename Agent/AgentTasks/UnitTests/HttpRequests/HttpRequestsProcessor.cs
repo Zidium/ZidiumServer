@@ -8,14 +8,15 @@ using NLog;
 using Zidium.Agent.AgentTasks.UnitTests.HttpRequests;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Agent.AgentTasks.HttpRequests
 {
     public class HttpRequestsProcessor : UnitTestProcessorBase
     {
-        public HttpRequestsProcessor(ILogger logger, CancellationToken cancellationToken)
-            : base(logger, cancellationToken)
+        public HttpRequestsProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
+            : base(logger, cancellationToken, timeService)
         {
         }
 
@@ -49,7 +50,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                         return bannerResultData;
                 }
 
-                var resultData = new UnitTestExecutionInfo();
+                var resultData = new Core.Api.SendUnitTestResultRequestData();
                 resultData.Properties = new List<ExtentionPropertyDto>();
 
                 foreach (var rule in rules)
@@ -62,7 +63,10 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     {
                         // если произошла неизвестная ошибка, то не обновляем статус проверки
                         logger.Debug("Выход из-за неизвестной ошибки");
-                        return null;
+                        return new UnitTestExecutionInfo()
+                        {
+                            IsNetworkProblem = true
+                        };
                     }
 
                     // обновим правило
@@ -100,11 +104,14 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                         resultData.Result = UnitTestResult.Alarm;
                         var errorMessage = rule.DisplayName + ". " + rule.LastRunErrorMessage;
                         resultData.Message = errorMessage;
-                        resultData.IsNetworkProblem = ruleResult.IsNetworkProblem;
 
                         accountDbContext.SaveChanges();
 
-                        return resultData;
+                        return new UnitTestExecutionInfo()
+                        {
+                            ResultRequest = resultData,
+                            IsNetworkProblem = ruleResult.IsNetworkProblem
+                        };
                     }
                 }
 
@@ -114,13 +121,19 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 // сохраним изменения статусов правил
                 accountDbContext.SaveChanges();
 
-                return resultData;
+                return new UnitTestExecutionInfo()
+                {
+                    ResultRequest = resultData
+                };
             }
 
             return new UnitTestExecutionInfo()
             {
-                Result = UnitTestResult.Unknown,
-                Message = "Укажите хотя бы один запрос (правило) для проверки"
+                ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                {
+                    Result = UnitTestResult.Unknown,
+                    Message = "Укажите хотя бы один запрос (правило) для проверки"
+                }
             };
         }
 
@@ -286,10 +299,13 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             {
                 result = new UnitTestExecutionInfo()
                 {
-                    Result = UnitTestResult.Alarm,
-                    Message = "Проверка отключена, не найден баннер Zidium на странице " + noBannerUrl
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Result = UnitTestResult.Alarm,
+                        Message = "Проверка отключена, не найден баннер Zidium на странице " + noBannerUrl
+                    }
                 };
-                logger.Warn(result.Message);
+                logger.Warn(result.ResultRequest.Message);
             }
             else
             {

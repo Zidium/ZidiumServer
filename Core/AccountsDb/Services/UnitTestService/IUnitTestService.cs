@@ -11,6 +11,8 @@ namespace Zidium.Core.AccountsDb
 
         void SetUnitTestNextTime(Guid accountId, SetUnitTestNextTimeRequestData data);
 
+        void SetUnitTestNextStepProcessTime(Guid accountId, SetUnitTestNextStepProcessTimeRequestData data);
+
         void UpdateUnitTest(Guid accountId, UpdateUnitTestRequestData data);
 
         void Delete(Guid accountId, Guid unitTestId);

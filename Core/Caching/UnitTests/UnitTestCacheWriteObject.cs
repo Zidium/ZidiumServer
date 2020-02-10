@@ -24,7 +24,8 @@ namespace Zidium.Core.Caching
                    + 4 // PeriodSeconds
                    + 16 // ComponentId
                    + 16 // StatusDataId
-                   + 8 // NextDate
+                   + 8 // NextExecutionDate
+                   + 8 // NextStepProcessDate
                    + 1 //Enable
                    + 1 //ParentEnable
                    + 1 //SimpleMode
@@ -62,7 +63,12 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Время следующего запуска
         /// </summary>
-        public DateTime? NextDate { get; set; }
+        public DateTime? NextExecutionDate { get; set; }
+
+        /// <summary>
+        /// Время выполнения следующего шага
+        /// </summary>
+        public DateTime? NextStepProcessDate { get; set; }
 
         /// <summary>
         /// Дата до которой выключен юнит-тест
@@ -144,7 +150,8 @@ namespace Zidium.Core.Caching
                 CreateDate = unitTest.CreateDate,
                 ComponentId = unitTest.ComponentId,
                 IsDeleted = unitTest.IsDeleted,
-                NextDate = unitTest.NextExecutionDate,
+                NextExecutionDate = unitTest.NextExecutionDate,
+                NextStepProcessDate = unitTest.NextStepProcessDate,
                 ParentEnable = unitTest.ParentEnable,
                 PeriodSeconds = unitTest.PeriodSeconds,
                 SimpleMode = unitTest.SimpleMode,
@@ -172,7 +179,8 @@ namespace Zidium.Core.Caching
                 CreateDate = CreateDate,
                 ComponentId = ComponentId,
                 IsDeleted = IsDeleted,
-                NextExecutionDate = NextDate,
+                NextExecutionDate = NextExecutionDate,
+                NextStepProcessDate = NextStepProcessDate,
                 ParentEnable = ParentEnable,
                 PeriodSeconds = PeriodSeconds,
                 SimpleMode = SimpleMode,

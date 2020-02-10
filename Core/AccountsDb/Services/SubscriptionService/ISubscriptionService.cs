@@ -27,17 +27,11 @@ namespace Zidium.Core.AccountsDb
         /// <param name="userId"></param>
         Subscription CreateDefaultForUser(Guid accountId, Guid userId);
 
-        /// <summary>
-        /// Какие каналы подписок доступны для аккаунта
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <returns></returns>
-        SubscriptionChannel[] GetAvailableChannelsForAccount(Guid accountId);
-
         Subscription SetSubscriptionEnable(Guid accountId, SetSubscriptionEnableRequestData requestData);
 
         Subscription SetSubscriptionDisable(Guid accountId, SetSubscriptionDisableRequestData requestData);
 
-        void Remove(Guid accountId, Subscription subscription);
+        void DeleteSubscription(Guid accountId, DeleteSubscriptionRequestData requestData);
+
     }
 }

@@ -6,10 +6,10 @@
 
         public string DisplayName { get; set; }
 
-        protected UserFolder(string systemName, string diplsyaName)
+        protected UserFolder(string systemName, string displayName)
         {
             SystemName = systemName;
-            DisplayName = diplsyaName;
+            DisplayName = displayName;
         }
 
         public static readonly UserFolder WebSites = new UserFolder("WebSites", "Веб-сайты");

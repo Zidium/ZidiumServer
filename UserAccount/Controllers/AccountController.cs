@@ -90,8 +90,7 @@ namespace Zidium.UserAccount.Controllers
         private string GetAccountName()
         {
             var requestUrl = Url.ToAbsolute(Url.Current().ToString());
-            var currentUri = new Uri(requestUrl);
-            var accountName = Core.Common.UrlHelper.GetAccountNameFromUrl(requestUrl, currentUri.Scheme + "://" + currentUri.Authority);
+            var accountName = ConfigDbServicesHelper.GetUrlService().GetAccountNameFromUrl(requestUrl);
             return accountName;
         }
 

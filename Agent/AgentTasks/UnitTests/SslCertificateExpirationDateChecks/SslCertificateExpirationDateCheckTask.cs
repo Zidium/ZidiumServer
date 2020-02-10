@@ -11,7 +11,7 @@ namespace Zidium.Agent.AgentTasks
 
         protected override AgentTaskResult Do()
         {
-            var processor = new SslCertificateExpirationDateCheckProcessor(Logger, CancellationToken);
+            var processor = new SslCertificateExpirationDateCheckProcessor(Logger, CancellationToken, TimeService);
             processor.ProcessAll();
 
             var result = string.Format(

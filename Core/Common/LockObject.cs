@@ -33,7 +33,7 @@ namespace Zidium.Core.Common
         private static readonly LockObject _unitTestLocks = new LockObject(_locksCount);
         private static readonly LockObject _joinEventLocks = new LockObject(_locksCount);
         private static readonly LockObject _unitTestTypesLocks = new LockObject(_locksCount);
-
+        private static readonly LockObject _subscriptionLocks = new LockObject(_locksCount);
 
         public static object ForComponent(string systemName)
         {
@@ -101,6 +101,11 @@ namespace Zidium.Core.Common
         public static object ForJoinEvent(Event eventObj)
         {
             return _joinEventLocks.Get(eventObj.OwnerId);
+        }
+
+        public static object ForSubscription(Guid subscriptionId)
+        {
+            return _subscriptionLocks.Get(subscriptionId);
         }
 
         /// <summary>

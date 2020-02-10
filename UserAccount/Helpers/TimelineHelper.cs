@@ -37,8 +37,8 @@ namespace Zidium.UserAccount
                     intervalTo = to;
 
                 // Для каждого интервала найдём самое важное попадающее в него событие
-                var state = states
-                    .Where(t => t.EndDate >= intervalFrom && t.StartDate < intervalTo)
+                var intervalStates = states.Where(t => t.EndDate >= intervalFrom && t.StartDate < intervalTo).ToArray();
+                var state = intervalStates
                     .OrderByDescending(t => t.Status)
                     .Take(1)
                     .FirstOrDefault();
@@ -47,13 +47,16 @@ namespace Zidium.UserAccount
 
                 if (state != null)
                 {
+                    // Посчитаем количество всех событий этой важности в интервале
+                    var count = intervalStates.Where(t => t.Status == state.Status).Sum(t => t.Count);
+
                     // Если событие есть, создадим новый элемент диаграммы
                     itemModel = new TimelineItemModel()
                     {
                         EventId = state.Id,
                         StartDate = state.StartDate,
                         EndDate = state.EndDate,
-                        Count = state.Count,
+                        Count = count,
                         Message = state.Message,
                         Status = state.Status,
                         Width = (intervalTo - intervalFrom).TotalSeconds / totalDuration.TotalSeconds * 100.0
@@ -80,7 +83,8 @@ namespace Zidium.UserAccount
                     // Если совпадает, то продлим предыдущий
                     lastItemModel.EndDate = itemModel.EndDate;
                     lastItemModel.Width += itemModel.Width;
-                    lastItemModel.Count += itemModel.Count;
+                    // Количество не прибавляем, оно уже учтено в предыдущем интервале
+                    // lastItemModel.Count += itemModel.Count;
                 }
                 else
                 {
@@ -112,8 +116,6 @@ namespace Zidium.UserAccount
             return toDate.AddDays(-1);
 
         }
-
-        public static readonly int MaxTimelineItems = 200;
 
         public static string UnknownStatusColor = "#b7b7b7";
 

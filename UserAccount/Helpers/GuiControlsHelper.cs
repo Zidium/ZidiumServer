@@ -7,16 +7,6 @@ namespace Zidium.UserAccount.Helpers
 {
     public static class GuiControlsHelper
     {
-        public static MvcHtmlString PartialSimpleBarChar(this HtmlHelper htmlHelper, SimpleBarCharModel model)
-        {
-            return htmlHelper.Partial("~/Views/Controls/SimpleBarChar.cshtml", model);
-        }
-
-        public static MvcHtmlString PartialOneLineSausageChar(this HtmlHelper htmlHelper, OneLineSausageCharModel model)
-        {
-            return htmlHelper.Partial("~/Views/Controls/OneLineSausageChar.cshtml", model);
-        }
-
         public static MvcHtmlString PartialObjectStatus(this HtmlHelper htmlHelper, ObjectStatusModel model)
         {
             return htmlHelper.Partial("~/Views/Controls/ObjectStatus.cshtml", model);

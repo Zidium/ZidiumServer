@@ -318,7 +318,7 @@ namespace Zidium.UserAccount.Controllers
         /// <summary>
         /// Для unit-тестов
         /// </summary>
-        public ContextController(Guid? accountId, Guid? userId)
+        public ContextController(Guid? accountId, Guid? userId, bool isSmartBlocksRequest = false)
         {
             ControllerContext = new ControllerContext();
 
@@ -326,6 +326,8 @@ namespace Zidium.UserAccount.Controllers
                 string.Empty,
                 @"//localhost/",
                 string.Empty);
+
+            _isSmartBlocksRequestOverride = isSmartBlocksRequest;
 
             RouteData.Values.Add("controller", GetType().Name.ToLower().Replace("controller", ""));
 
@@ -395,5 +397,12 @@ namespace Zidium.UserAccount.Controllers
         {
             return GetDispatcherClient().GetServerTime().Data.Date;
         }
+
+        public bool IsSmartBlocksRequest()
+        {
+            return _isSmartBlocksRequestOverride || Request.IsSmartBlocksRequest();
+        }
+
+        private bool _isSmartBlocksRequestOverride = false;
     }
 }

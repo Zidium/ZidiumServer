@@ -48,6 +48,9 @@ namespace Zidium.UserAccount.Models
         [Display(Name = "Отправлять новости и полезную информацию")]
         public bool SendMeNews { get; set; }
 
+        [Display(Name = "Часовой пояс")]
+        public int TimeZoneOffsetMinutes { get; set; }
+
         public List<UserContact> Contacts { get; set; }
 
     }

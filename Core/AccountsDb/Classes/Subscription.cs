@@ -76,5 +76,31 @@ namespace Zidium.Core.AccountsDb
         /// Дата и время последнего изменения
         /// </summary>
         public DateTime LastUpdated { get; set; }
+
+        /// <summary>
+        /// Отправлять только в указанный интервал 
+        /// </summary>
+        public bool SendOnlyInInterval { get; set; }
+
+        /// <summary>
+        /// Отправлять не раньше этого часа
+        /// </summary>
+        public int? SendIntervalFromHour { get; set; }
+
+        /// <summary>
+        /// Отправлять не раньше этой минуты
+        /// </summary>
+        public int? SendIntervalFromMinute { get; set; }
+
+        /// <summary>
+        /// Отправлять не позже этого часа
+        /// </summary>
+        public int? SendIntervalToHour { get; set; }
+
+        /// <summary>
+        /// Отправлять не позже этой минуты
+        /// </summary>
+        public int? SendIntervalToMinute { get; set; }
+
     }
 }

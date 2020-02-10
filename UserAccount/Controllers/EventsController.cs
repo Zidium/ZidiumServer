@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
-using System.Web;
 using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes;
 using Zidium.Core.Api;
-using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Helpers;
@@ -327,22 +323,15 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult ErrorStatictics(
             ReportPeriod? period, 
-            Guid? componentTypeId,
             Guid? componentId,
-            ErrorStatisticsModel.SortOrder? order,
             ErrorStatisticsModel.ShowMode? mode)
         {
             var model = new ErrorStatisticsModel()
             {
                 ComponentId = componentId,
-                ComponentTypeId = componentTypeId,
                 Period = period ?? ReportPeriod.Day,
                 Mode  = mode ?? ErrorStatisticsModel.ShowMode.NotProcessed
             };
-            if (order.HasValue)
-            {
-                model.Order = order.Value;
-            }
             model.LoadData(CurrentUser.AccountId, CurrentAccountDbContext);
             return View(model);
         }

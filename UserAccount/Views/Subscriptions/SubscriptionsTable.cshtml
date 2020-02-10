@@ -11,9 +11,12 @@ else
     <table class="simpleTableClear">
         <tr>
             <th style="min-width: 200px">@Model.SubscriptionName</th>
-            <th style="width: 100px; text-align: center">Email</th>
-            <th style="width: 100px; text-align: center">SMS</th>
+            @foreach (var channel in Model.Channels)
+            {
+                <th style="width: 100px; text-align: center">@channel</th>
+            }
         </tr>
+
         @foreach (var row in Model.Rows)
         {
             var first = row.GetFirstNotNull();
@@ -34,12 +37,12 @@ else
                         </text>
                     }
                 </td>
-                <td style="text-align: center">
-                    @Html.Partial("ShowSubscriptionCell", row.Email)
-                </td>
-                <td style="text-align: center">
-                    @Html.Partial("ShowSubscriptionCell", row.Sms)
-                </td>
+                @foreach (var cell in row.Cells)
+                {
+                    <td style="text-align: center">
+                        @Html.Partial("ShowSubscriptionCell", cell)
+                    </td>
+                }
             </tr>
         }
     </table>

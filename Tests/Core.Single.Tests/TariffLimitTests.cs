@@ -9,6 +9,7 @@ using Zidium.Core.Api;
 using Zidium.Core.ConfigDb;
 using Zidium.Core.Limits;
 using Xunit;
+using Zidium.Core.Common.TimeService;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
@@ -338,7 +339,7 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Активируем проверку
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
             processor.ProcessAccount(account.Id, httpCheckId);
             Assert.Null(processor.DbProcessor.FirstException);
             account.SaveAllCaches();

@@ -24,10 +24,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected DispatcherClient Dispatcher;
 
-        protected override NotificationType NotificationType
-        {
-            get { return NotificationType.Sms; }
-        }
+        protected override SubscriptionChannel[] Channels { get; } = new[] { SubscriptionChannel.Sms };
 
         protected Event GetRecentReasonEvent(Event statusEvent, AccountDbContext accountDbContext)
         {

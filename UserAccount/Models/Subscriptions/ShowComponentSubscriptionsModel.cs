@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
@@ -32,14 +34,15 @@ namespace Zidium.UserAccount.Models.Subscriptions
 
         public void Init()
         {
+            Channels = SubscriptionHelper.AvailableSubscriptionChannels;
+
             var accountDbContext = FullRequestContext.Current.AccountDbContext;
-            var accountId = FullRequestContext.Current.CurrentUser.AccountId;
             CurrentUserId = FullRequestContext.Current.CurrentUser.Id;
 
             var subscriptionsQuery = accountDbContext
                 .GetSubscriptionRepository()
                 .QueryAll()
-                .Where(x=>x.User.InArchive == false);
+                .Where(x => x.User.InArchive == false);
 
             if (Channel.HasValue)
             {
@@ -54,17 +57,15 @@ namespace Zidium.UserAccount.Models.Subscriptions
             var subscriptions = subscriptionsQuery.ToArray();
             var filtered = new List<Subscription>();
             var userGroups = subscriptions.GroupBy(x => x.UserId);
-            var channels = new []
-            {
-                SubscriptionChannel.Email,
-                SubscriptionChannel.Sms
-            };
+
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
+
             foreach (var userGroup in userGroups)
             {
                 foreach (var channel in channels)
                 {
                     // подписка на компонент
-                    var userSubscriptions = userGroup.Where(x=>x.Channel == channel).ToArray();
+                    var userSubscriptions = userGroup.Where(x => x.Channel == channel).ToArray();
 
                     var onComponent = userSubscriptions.SingleOrDefault(x =>
                         x.Object == SubscriptionObject.Component
@@ -102,5 +103,7 @@ namespace Zidium.UserAccount.Models.Subscriptions
                 .ThenBy(x => x.Channel)
                 .ToArray();
         }
+
+        public SubscriptionChannel[] Channels { get; set; }
     }
 }

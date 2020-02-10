@@ -45,7 +45,7 @@ namespace Zidium.Core.AccountsDb
             }
             else if (requestData.Object == SubscriptionObject.Component)
             {
-                if (requestData.ComponentId==null)
+                if (requestData.ComponentId == null)
                 {
                     throw new UserFriendlyException("Укажите ComponentId для подписки на компонент");
                 }
@@ -65,7 +65,7 @@ namespace Zidium.Core.AccountsDb
                     throw new UserFriendlyException("Нельзя указывать ComponentId для подписки на тип компонента");
                 }
             }
-            var lockObj = typeof(SubscriptionService);
+            var lockObj = LockObject.ForAccount(accountId);
             lock (lockObj)
             {
                 var accountDbContext = Context.GetAccountDbContext(accountId);
@@ -90,6 +90,9 @@ namespace Zidium.Core.AccountsDb
                 var subscription = query.FirstOrDefault();
                 if (subscription != null)
                 {
+                    // ВАЖНО!
+                    // Если подписка уже есть, не трогаем её
+
                     return subscription;
                 }
 
@@ -102,7 +105,7 @@ namespace Zidium.Core.AccountsDb
                     var componentTypeRepository = accountDbContext.GetComponentTypeRepository();
                     componentType = componentTypeRepository.GetById(requestData.ComponentTypeId.Value);
                 }
-                
+
                 subscription = new Subscription()
                 {
                     User = user,
@@ -115,7 +118,12 @@ namespace Zidium.Core.AccountsDb
                     DurationMinimumInSeconds = requestData.DurationMinimumInSeconds,
                     ResendTimeInSeconds = requestData.ResendTimeInSeconds,
                     LastUpdated = DateTime.Now,
-                    NotifyBetterStatus = requestData.NotifyBetterStatus
+                    NotifyBetterStatus = requestData.NotifyBetterStatus,
+                    SendOnlyInInterval = requestData.SendOnlyInInterval,
+                    SendIntervalFromHour = requestData.SendIntervalFromHour,
+                    SendIntervalFromMinute = requestData.SendIntervalFromMinute,
+                    SendIntervalToHour = requestData.SendIntervalToHour,
+                    SendIntervalToMinute = requestData.SendIntervalToMinute
                 };
 
                 subscription = subscriptionRepository.Add(subscription);
@@ -132,7 +140,7 @@ namespace Zidium.Core.AccountsDb
                 throw new ParameterRequiredException("Request.Subscription");
             }
 
-            var lockObj = typeof(SubscriptionService);
+            var lockObj = LockObject.ForSubscription(requestData.Id);
             lock (lockObj)
             {
 
@@ -146,6 +154,11 @@ namespace Zidium.Core.AccountsDb
                 subscription.NotifyBetterStatus = requestData.NotifyBetterStatus;
                 subscription.DurationMinimumInSeconds = requestData.DurationMinimumInSeconds;
                 subscription.ResendTimeInSeconds = requestData.ResendTimeInSeconds;
+                subscription.SendOnlyInInterval = requestData.SendOnlyInInterval;
+                subscription.SendIntervalFromHour = requestData.SendIntervalFromHour;
+                subscription.SendIntervalFromMinute = requestData.SendIntervalFromMinute;
+                subscription.SendIntervalToHour = requestData.SendIntervalToHour;
+                subscription.SendIntervalToMinute = requestData.SendIntervalToMinute;
                 subscription.LastUpdated = DateTime.Now;
 
                 accountDbContext.SaveChanges();
@@ -156,7 +169,7 @@ namespace Zidium.Core.AccountsDb
 
         private Subscription SetSubscriptionEnable(Guid accountId, Guid subscriptionId, bool enable)
         {
-            var lockObj = typeof(SubscriptionService);
+            var lockObj = LockObject.ForSubscription(subscriptionId);
             lock (lockObj)
             {
                 var accountDbContext = Context.GetAccountDbContext(accountId);
@@ -187,15 +200,26 @@ namespace Zidium.Core.AccountsDb
             return SetSubscriptionEnable(accountId, requestData.Id, false);
         }
 
-        public void Remove(Guid accountId, Subscription subscription)
+        public void DeleteSubscription(Guid accountId, DeleteSubscriptionRequestData requestData)
         {
-            var accountDbContext = Context.GetAccountDbContext(accountId);
+            if (requestData == null)
+            {
+                throw new ParameterRequiredException("Request.Data");
+            }
 
-            var notificationRepository = accountDbContext.GetNotificationRepository();
-            notificationRepository.DeleteBySubscriptionId(subscription.Id);
+            var lockObj = LockObject.ForSubscription(requestData.SubscriptionId.Value);
 
-            var subscriptionRepository = accountDbContext.GetSubscriptionRepository();
-            subscriptionRepository.Remove(subscription);
+            lock (lockObj)
+            {
+                var accountDbContext = Context.GetAccountDbContext(accountId);
+                var subscription = accountDbContext.GetSubscriptionRepository().GetById(requestData.SubscriptionId.Value);
+
+                var notificationRepository = accountDbContext.GetNotificationRepository();
+                notificationRepository.DeleteBySubscriptionId(subscription.Id);
+
+                var subscriptionRepository = accountDbContext.GetSubscriptionRepository();
+                subscriptionRepository.Remove(subscription);
+            }
         }
 
         public Subscription CreateDefaultForUser(Guid accountId, Guid userId)
@@ -203,56 +227,51 @@ namespace Zidium.Core.AccountsDb
             var accountDbContext = Context.GetAccountDbContext(accountId);
             var repository = accountDbContext.GetSubscriptionRepository();
 
-            var defaultForUser = new Subscription()
-            {
-                UserId = userId,
-                ComponentTypeId = null,
-                Channel = SubscriptionChannel.Email,
-                Object = SubscriptionObject.Default,
-                IsEnabled = true,
-                Importance = EventImportance.Alarm,
-                DurationMinimumInSeconds = 10 * 60,
-                ResendTimeInSeconds = 24 * 60 * 60,
-                NotifyBetterStatus = false,
-                LastUpdated = DateTime.Now
-            };
-            repository.Add(defaultForUser);
+            var lockObj = LockObject.ForAccount(accountId);
 
-            var forRoot = new Subscription()
+            lock (lockObj)
             {
-                UserId = userId,
-                Channel = SubscriptionChannel.Email,
-                Object = SubscriptionObject.ComponentType,
-                ComponentTypeId = SystemComponentTypes.Root.Id,
-                IsEnabled = false,
-                LastUpdated = DateTime.Now
-            };
-            repository.Add(forRoot);
+                var defaultForUser = new Subscription()
+                {
+                    UserId = userId,
+                    ComponentTypeId = null,
+                    Channel = SubscriptionChannel.Email,
+                    Object = SubscriptionObject.Default,
+                    IsEnabled = true,
+                    Importance = EventImportance.Alarm,
+                    DurationMinimumInSeconds = 10 * 60,
+                    ResendTimeInSeconds = 24 * 60 * 60,
+                    NotifyBetterStatus = false,
+                    SendOnlyInInterval = false,
+                    LastUpdated = DateTime.Now
+                };
+                repository.Add(defaultForUser);
 
-            var forFolder = new Subscription()
-            {
-                UserId = userId,
-                Channel = SubscriptionChannel.Email,
-                Object = SubscriptionObject.ComponentType,
-                ComponentTypeId = SystemComponentTypes.Folder.Id,
-                IsEnabled = false,
-                LastUpdated = DateTime.Now
-            };
-            repository.Add(forFolder);
+                var forRoot = new Subscription()
+                {
+                    UserId = userId,
+                    Channel = SubscriptionChannel.Email,
+                    Object = SubscriptionObject.ComponentType,
+                    ComponentTypeId = SystemComponentTypes.Root.Id,
+                    IsEnabled = false,
+                    LastUpdated = DateTime.Now
+                };
+                repository.Add(forRoot);
 
-            return defaultForUser;
+                var forFolder = new Subscription()
+                {
+                    UserId = userId,
+                    Channel = SubscriptionChannel.Email,
+                    Object = SubscriptionObject.ComponentType,
+                    ComponentTypeId = SystemComponentTypes.Folder.Id,
+                    IsEnabled = false,
+                    LastUpdated = DateTime.Now
+                };
+                repository.Add(forFolder);
+
+                return defaultForUser;
+            }
         }
 
-        public SubscriptionChannel[] GetAvailableChannelsForAccount(Guid accountId)
-        {
-            var channels = new[]
-            {
-                SubscriptionChannel.Email,
-                SubscriptionChannel.Sms,
-                SubscriptionChannel.Http
-            };
-
-            return channels;
-        }
     }
 }

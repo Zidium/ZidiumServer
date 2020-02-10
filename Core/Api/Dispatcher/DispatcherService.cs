@@ -1636,6 +1636,34 @@ namespace Zidium.Core
             }
         }
 
+        public SetUnitTestNextStepProcessTimeResponse SetUnitTestNextStepProcessTime(SetUnitTestNextStepProcessTimeRequest request)
+        {
+            CheckRequest(request);
+
+            if (request.Data == null)
+            {
+                throw new ParameterRequiredException("Request.Data");
+            }
+            if (request.Data.UnitTestId == null)
+            {
+                throw new ParameterRequiredException("Request.Data.UnitTestId");
+            }
+            if (request.Data.NextStepProcessTime == null)
+            {
+                throw new ParameterRequiredException("Request.Data.NextStepProcessTime");
+            }
+            using (var context = GetDispatcherContext(request))
+            {
+                var accountId = request.Token.AccountId.Value;
+                var service = context.UnitTestService;
+                service.SetUnitTestNextStepProcessTime(accountId, request.Data);
+                return new SetUnitTestNextStepProcessTimeResponse()
+                {
+                    Code = Zidium.Api.ResponseCode.Success
+                };
+            }
+        }
+
         public GetOrCreateUnitTestTypeResponse GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequest request)
         {
             CheckRequest(request);
@@ -2111,6 +2139,23 @@ namespace Zidium.Core
                 var service = context.SubscriptionService;
                 var subscription = service.SetSubscriptionEnable(accountId, request.Data);
                 return new SetSubscriptionEnableResponse()
+                {
+                    Code = Zidium.Api.ResponseCode.Success
+                };
+            }
+        }
+
+        public DeleteSubscriptionResponse DeleteSubscription(DeleteSubscriptionRequest request)
+        {
+            CheckRequest(request);
+            using (var context = GetDispatcherContext(request))
+            {
+                var accountId = request.Token.AccountId.Value;
+                var service = context.SubscriptionService;
+                service.DeleteSubscription(accountId, request.Data);
+                context.SaveChanges();
+
+                return new DeleteSubscriptionResponse()
                 {
                     Code = Zidium.Api.ResponseCode.Success
                 };

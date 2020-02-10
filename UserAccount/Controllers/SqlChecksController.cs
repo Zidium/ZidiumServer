@@ -98,16 +98,7 @@ namespace Zidium.UserAccount.Controllers
             return null; // Всегда создаём новую
         }
 
-        protected override string GetOldReplacementPart(UnitTest unitTest)
-        {
-            return GetDbName(unitTest.SqlRule.ConnectionString);
-        }
-
-        protected override string GetNewReplacementPart(EditSimpleModel model)
-        {
-            return GetDbName(model.ConnectionString);
-        }
-
+       
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Sql-запрос: " + model.Name;

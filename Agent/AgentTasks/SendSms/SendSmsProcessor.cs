@@ -48,8 +48,6 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
         protected void ProcessAccount(ForEachAccountData data, Guid? smsId = null)
         {
-            var account = data.Account;
-
             var repository = data.AccountDbContext.GetSendSmsCommandRepository();
             var smss = repository.GetForSend(SendMaxCount);
 

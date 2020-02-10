@@ -22,6 +22,7 @@ namespace Zidium.Core.AccountsDb.Mapping
             Property(t => t.SimpleMode).HasColumnName("SimpleMode");
             Property(t => t.NextExecutionDate).HasColumnName("NextExecutionDate");
             Property(t => t.LastExecutionDate).HasColumnName("LastExecutionDate");
+            Property(t => t.NextStepProcessDate).HasColumnName("NextStepProcessDate");
             Property(t => t.NoSignalColor).HasColumnName("NoSignalColor");
             Property(t => t.ActualTimeSecs).HasColumnName("ActualTimeSecs");
             HasRequired(x => x.Type).WithMany().HasForeignKey(x => x.TypeId);

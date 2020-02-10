@@ -64,12 +64,17 @@ namespace Zidium.Core.Tests.AgentTests
                 var subscriptionId = dispatcher.CreateSubscription(account.Id, new CreateSubscriptionRequestData()
                 {
                     UserId = user.Id,
-                    Channel = SubscriptionChannel.Sms,
+                    Channel = SubscriptionChannel.Email,
+                    Object = SubscriptionObject.Default
+                }).Data.Id;
+
+                dispatcher.UpdateSubscription(account.Id, new UpdateSubscriptionRequestData()
+                {
+                    Id = subscriptionId,
                     IsEnabled = true,
-                    Object = SubscriptionObject.Default,
                     Importance = EventImportance.Success,
                     NotifyBetterStatus = false
-                }).Data.Id;
+                }).Check();
 
                 if (user.Id == user1.Id)
                 {
@@ -82,7 +87,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 UserId = user2.Id,
                 ComponentTypeId = component.Type.Info.Id,
-                Channel = SubscriptionChannel.Sms,
+                Channel = SubscriptionChannel.Email,
                 IsEnabled = true,
                 Object = SubscriptionObject.ComponentType,
                 Importance = EventImportance.Warning,
@@ -94,7 +99,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 UserId = user3.Id,
                 ComponentTypeId = component.Type.Info.Id,
-                Channel = SubscriptionChannel.Sms,
+                Channel = SubscriptionChannel.Email,
                 IsEnabled = true,
                 Object = SubscriptionObject.ComponentType,
                 Importance = EventImportance.Warning,
@@ -106,7 +111,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 UserId = user3.Id,
                 ComponentId = component.Info.Id,
-                Channel = SubscriptionChannel.Sms,
+                Channel = SubscriptionChannel.Email,
                 IsEnabled = true,
                 Object = SubscriptionObject.Component,
                 Importance = EventImportance.Alarm,
@@ -128,7 +133,7 @@ namespace Zidium.Core.Tests.AgentTests
             // user2  = не получит = подписка на желтый тип компонента
             // user3  = не получит = подписка на красный компонент
 
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, NotificationType.Sms);
+            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             var notify1 = notifications.Single(x => x.UserId == user1.Id && x.SubscriptionId == subscription1Id);
 
@@ -146,7 +151,7 @@ namespace Zidium.Core.Tests.AgentTests
             // user2  = получит = подписка на тип компонента
             // user3  = не получит = подписка на красный компонент
 
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, NotificationType.Sms);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, SubscriptionChannel.Email);
             //var equal = ReferenceEquals(notifications, TestHelper._Last);
             //var notifications2 = TestHelper._Last;
             //Assert.Equal(2, TestHelper._Last.Count);
@@ -170,7 +175,7 @@ namespace Zidium.Core.Tests.AgentTests
             // user2  = получит = подписка на тип компонента
             // user3  = получит = подписка на красный компонент
 
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, NotificationType.Sms);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(3, notifications.Count);
             notify1 = notifications.Single(x => x.UserId == user1.Id && x.SubscriptionId == subscription1Id);
             notify2 = notifications.Single(x => x.UserId == user2.Id && x.SubscriptionId == subscription2Id);
@@ -179,10 +184,13 @@ namespace Zidium.Core.Tests.AgentTests
 
 
         /// <summary>
-        /// Проверяем, что подписка на тип компонента работает
+        /// Проверяем, что подписка на тип компонента работает для каждого канала
         /// </summary>
-        [Fact]
-        public void NotificationByEmailTest()
+        [Theory]
+        [InlineData(SubscriptionChannel.Email)]
+        [InlineData(SubscriptionChannel.Telegram)]
+        [InlineData(SubscriptionChannel.VKontakte)]
+        public void NotificationByChannelTest(SubscriptionChannel channel)
         {
             // Создадим компонент
             var account = TestHelper.GetTestAccount();
@@ -196,18 +204,19 @@ namespace Zidium.Core.Tests.AgentTests
                 UserId = user.Id,
                 Object = SubscriptionObject.ComponentType,
                 ComponentTypeId = component.Type.Id,
-                Channel = SubscriptionChannel.Email,
+                Channel = channel,
                 Importance = EventImportance.Alarm,
                 IsEnabled = true
             });
+            subscriptionResponse.Check();
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
@@ -221,21 +230,21 @@ namespace Zidium.Core.Tests.AgentTests
             using (var context = account.CreateAccountDbContext())
             {
                 // Должно быть одно уведомление
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, channel);
                 Assert.Equal(1, notifications.Count);
 
                 // Проверим параметры
                 var notification = notifications[0];
 
                 Assert.NotNull(notification);
-                Assert.Equal(NotificationType.Email, notification.Type);
+                Assert.Equal(channel, notification.Type);
 
                 // Проверим, что уведомление создано по событию красного статуса
                 var eventRepository = context.GetEventRepository();
                 var eventObj = eventRepository.GetByIdOrNull(notification.EventId);
 
                 Assert.NotNull(eventObj);
-                Assert.Equal(Core.Api.EventCategory.ComponentExternalStatus, eventObj.Category);
+                Assert.Equal(Api.EventCategory.ComponentExternalStatus, eventObj.Category);
                 Assert.Equal(EventImportance.Alarm, eventObj.Importance);
                 Assert.Equal(component.Id, eventObj.OwnerId);
             }
@@ -246,79 +255,9 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Нового уведомления не должно появиться
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, channel);
                 Assert.Equal(0, notifications.Count);
             }
-        }
-
-        /// <summary>
-        /// Проверяем, что рабоают уведомления по смс для красного цвета
-        /// </summary>
-        [Fact]
-        public void NotificationBySmsTest()
-        {
-            // Создадим компонент
-            var account = TestHelper.GetTestAccount();
-            var user = TestHelper.CreateTestUser(account.Id);
-            var component = account.CreateTestApplicationComponent();
-
-            // Подпишемся на красное событие
-            var dispatcher = TestHelper.GetDispatcherClient();
-            var subscriptionResponse = dispatcher.CreateSubscription(account.Id, new CreateSubscriptionRequestData()
-            {
-                UserId = user.Id,
-                Object = SubscriptionObject.ComponentType,
-                ComponentTypeId = component.Type.Id,
-                Channel = SubscriptionChannel.Sms,
-                Importance = EventImportance.Alarm,
-                IsEnabled = true
-            });
-            Assert.True(subscriptionResponse.Success);
-
-            // Отправим красное событие
-            var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
-            {
-                TypeSystemName = eventType.SystemName,
-                ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
-                Importance = EventImportance.Alarm,
-            });
-            Assert.True(eventResponse.Success);
-            account.SaveAllCaches();
-
-            // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
-            processor.ProcessAccount(account.Id, component.Id, user.Id);
-
-            // Должно быть одно уведомление
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Sms);
-            Assert.Equal(1, notifications.Count);
-
-            // Проверим параметры
-            var notification = notifications[0];
-
-            Assert.NotNull(notification);
-            Assert.Equal(NotificationType.Sms, notification.Type);
-
-            using (var context = account.CreateAccountDbContext())
-            {
-                // Проверим, что уведомление создано по событию красного статуса
-                var eventRepository = context.GetEventRepository();
-                var eventObj = eventRepository.GetByIdOrNull(notification.EventId);
-
-                Assert.NotNull(eventObj);
-                Assert.Equal(Core.Api.EventCategory.ComponentExternalStatus, eventObj.Category);
-                Assert.Equal(EventImportance.Alarm, eventObj.Importance);
-                Assert.Equal(component.Id, eventObj.OwnerId);
-            }
-
-            // Запустим обработку ещё раз
-            processor.ProcessAccount(account.Id, component.Id, user.Id);
-
-            // Нового уведомления не должно появиться
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Sms);
-            Assert.Equal(0, notifications.Count);
         }
 
         /// <summary>
@@ -353,11 +292,11 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.Equal(ResponseCode.ObjectDisabled, eventResponse.Code);
@@ -369,7 +308,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Уведомление не должно появиться
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(0, notifications.Count);
             }
 
@@ -382,7 +321,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Нового уведомления не должно появиться
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(0, notifications.Count);
             }
         }
@@ -413,11 +352,11 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             eventResponse.Check();
@@ -429,13 +368,13 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Нового уведомления не должно появиться
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(0, notifications.Count);
             }
         }
 
         /// <summary>
-        /// Проверим фильтр по минимальной длительности статуса
+        /// Проверим условие по минимальной длительности статуса
         /// </summary>
         [Fact]
         public void MinDurationTest()
@@ -460,49 +399,51 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.True(subscriptionResponse.Success);
             account.SaveAllCaches();
 
+            var now = dispatcher.GetServerTime().Data.Date;
+
             // Запустим обработку
             var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.SetNow(now);
             processor.ProcessAccount(account.Id, component.Id, user.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Нового уведомления не должно появиться
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(0, notifications.Count);
             }
 
             // Отправим красное событие 1 раз
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
             account.SaveAllCaches();
 
-            // Запустим обработку
+            // Запустим обработку через 9 секунд
+            processor.SetNow(now.AddSeconds(9));
             processor.ProcessAccount(account.Id, component.Id, user.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Нового уведомления не должно появиться
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(0, notifications.Count);
             }
 
-            // Подождём 11 секунд
-            Thread.Sleep(11 * 1000);
-
-            // Запустим обработку
+            // Запустим обработку через 11 секунд
+            processor.SetNow(now.AddSeconds(11));
             account.SaveAllCaches();
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Должно появиться одно уведомление
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(1, notifications.Count);
                 var notification = notifications.Single();
                 Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
@@ -536,11 +477,11 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
@@ -552,7 +493,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Должно появиться 1 уведомление
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(1, notifications.Count);
                 var notification = notifications.Single();
                 Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
@@ -563,7 +504,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Новых уведомлений быть не должно
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(0, notifications.Count);
             }
 
@@ -575,7 +516,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Должно появиться новое уведомление
             {
-                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
                 Assert.Equal(1, notifications.Count);
                 var notification = notifications.Single();
                 Assert.Equal(NotificationReason.Reminder, notification.Reason);
@@ -621,24 +562,25 @@ namespace Zidium.Core.Tests.AgentTests
             // Отправим жёлтую проверку
             var unitTest = component.GetOrCreateUnitTestControl("test");
             unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromHours(1)).Check();
-            var sendTime = DateTime.Now;
+            var sendTime = dispatcher.GetServerTime().Data.Date;
             account.SaveAllCaches();
 
             // Запустим обработку
             var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.SetNow(sendTime);
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
 
             // Должно появиться 0 уведомлений, т.к. ограничение min длительности не выполнилось
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, NotificationType.Email);
+            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(0, notifications.Count);
 
             // Запустим обработку ещё раз
-            TestHelper.WaitForTime(sendTime.AddSeconds(10));
+            processor.SetNow(sendTime.AddSeconds(10));
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Должно быть 1 уведомление, т.к. выполнилось условие min длительности
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
 
             // изменим статус на красный
@@ -646,15 +588,15 @@ namespace Zidium.Core.Tests.AgentTests
 
             // и сразу опять изменим на желтый
             unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromHours(1));
-            sendTime = DateTime.Now;
+            sendTime = dispatcher.GetServerTime().Data.Date;
             account.SaveAllCaches();
 
             // Запустим обработку ещё раз
-            TestHelper.WaitForTime(sendTime.AddSeconds(10));
+            processor.SetNow(sendTime.AddSeconds(10));
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
 
             // Получим 1 новых уведомлений (2 желтых уведомления подряд разрешены!)
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
 
             ////////////////////////////////
@@ -669,21 +611,21 @@ namespace Zidium.Core.Tests.AgentTests
             // Отправим красную проверку
             unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromHours(1)).Check();
             account.SaveAllCaches();
-            sendTime = DateTime.Now;
+            sendTime = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку
-            TestHelper.WaitForTime(sendTime.AddSeconds(10));
+            processor.SetNow(sendTime.AddSeconds(10));
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
 
             // Должно появиться 1 уведомление
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
 
             // Запустим обработку ещё раз
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
 
             // Новых уведомлений быть не должно (статус не изменился)
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(0, notifications.Count);
 
             // изменим статус на зеленый
@@ -691,24 +633,24 @@ namespace Zidium.Core.Tests.AgentTests
 
             // и сразу опять изменим на красный
             unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromHours(1));
-            sendTime = DateTime.Now;
+            sendTime = dispatcher.GetServerTime().Data.Date;
             account.SaveAllCaches();
 
             // Запустим обработку ещё раз
-            TestHelper.WaitForTime(sendTime.AddSeconds(10));
+            processor.SetNow(sendTime.AddSeconds(10));
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
 
             // Получим 2 уведомления (зеленое и красное)
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
         }
 
         /// <summary>
         /// Проверка отправки уведомлений по http
         /// </summary>
-        [Fact]
+        [Fact(Skip = "Http-уведомления временно отключены")]
         public void HttpNotificationTest()
         {
             // Создадим компонент
@@ -740,11 +682,11 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm
             });
             Assert.True(eventResponse.Success);
@@ -755,7 +697,9 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Проверим, что появилось уведомление с типом http
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Http);
+            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Http);
+            Assert.Equal(1, notifications.Count);
+
             var notification = notifications[0];
             Assert.NotNull(notification);
             Assert.Equal(url, notification.Address);
@@ -796,7 +740,7 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
 
             // Проверим, что создалось уведомление
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, NotificationType.Email);
+            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             var notification = notifications.Single();
             Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
@@ -807,7 +751,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Проверим, что снова получили уведомление (о том, что стало лучше)
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             notification = notifications.Single();
             Assert.Equal(NotificationReason.BetterStatus, notification.Reason);
@@ -818,7 +762,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Проверим, что создалось уведомление
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Warning, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             notification = notifications.Single();
             Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
@@ -829,7 +773,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Проверим, что снова получили уведомление (потому что перешли ИЗ жёлтого статуса)
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             notification = notifications.Single();
             Assert.Equal(NotificationReason.BetterStatus, notification.Reason);
@@ -840,7 +784,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Проверим, что уведомления нет
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Unknown, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Unknown, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(0, notifications.Count);
 
             // Отправим зелёную проверку
@@ -849,7 +793,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Проверим, что уведомления нет
             processor.ProcessAccount(account.Id, component.Info.Id, user.Id);
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Unknown, component.Info.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Unknown, component.Info.Id, SubscriptionChannel.Email);
             Assert.Equal(0, notifications.Count);
         }
 
@@ -880,11 +824,11 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Core.Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Core.Api.EventCategory.ApplicationError,
+                Category = Api.EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
@@ -895,7 +839,7 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Проверим, что появилось уведомление
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
 
             // Добавим пользователю новый контакт
@@ -912,7 +856,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Проверим, что новых уведомлений не появилось
             // Старые уведомления не должны приходить на новые контакты
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
             Assert.Equal(0, notifications.Count);
         }
 
@@ -945,7 +889,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красную проверку
             var unittest = TestHelper.CreateTestUnitTest(account.Id, component.Id);
-            var sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Core.Api.SendUnitTestResultRequestData()
+            var sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,
                 Result = Core.Api.UnitTestResult.Alarm,
@@ -959,13 +903,13 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Проверим, что появилось уведомление
-            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+            var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             var notification = notifications.Single();
             Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
 
             // Отправим зелёную проверку
-            sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Core.Api.SendUnitTestResultRequestData()
+            sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,
                 Result = Core.Api.UnitTestResult.Success,
@@ -979,11 +923,11 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Проверим, что уведомлений нет
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Success, component.Id, SubscriptionChannel.Email);
             Assert.Equal(0, notifications.Count);
 
             // Отправим красную проверку (вторую)
-            sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Core.Api.SendUnitTestResultRequestData()
+            sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,
                 Result = Core.Api.UnitTestResult.Alarm,
@@ -997,10 +941,204 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Проверим, что ещё раз появилось уведомление
-            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, NotificationType.Email);
+            notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
             Assert.Equal(1, notifications.Count);
             notification = notifications.Single();
             Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
+        }
+
+        /// <summary>
+        /// Проверим отправку, когда текущее время попадает в заданный интервал
+        /// </summary>
+        [Fact]
+        public void SendIntervalInsideTest()
+        {
+            // Создадим компонент
+            var account = TestHelper.GetTestAccount();
+            var user = TestHelper.CreateTestUser(account.Id);
+            var component = account.CreateTestApplicationComponent();
+
+            // Установим часовой пояс клиента UTC +04:00
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var userSettingService = accountDbContext.GetUserSettingService();
+                userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
+                accountDbContext.SaveChanges();
+            }
+
+            // Подпишемся на красное событие
+            var dispatcher = TestHelper.GetDispatcherClient();
+            var subscriptionResponse = dispatcher.CreateSubscription(account.Id, new CreateSubscriptionRequestData()
+            {
+                UserId = user.Id,
+                Object = SubscriptionObject.ComponentType,
+                ComponentTypeId = component.Type.Id,
+                Channel = SubscriptionChannel.Email,
+                Importance = EventImportance.Alarm,
+                IsEnabled = true,
+                SendOnlyInInterval = true,
+                SendIntervalFromHour = 10,
+                SendIntervalFromMinute = 30,
+                SendIntervalToHour = 11,
+                SendIntervalToMinute = 30
+            });
+            Assert.True(subscriptionResponse.Success);
+            account.SaveAllCaches();
+
+            // Отправим красное событие
+            var eventType = TestHelper.GetTestEventType(account.Id);
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
+            {
+                TypeSystemName = eventType.SystemName,
+                ComponentId = component.Id,
+                Category = Api.EventCategory.ApplicationError,
+                Importance = EventImportance.Alarm
+            });
+            Assert.True(eventResponse.Success);
+            account.SaveAllCaches();
+
+            // Запустим обработку в 11:00 UTC +04:00
+            var now = new DateTimeOffset(2020, 01, 01, 11, 00, 00, TimeSpan.FromHours(4)).UtcDateTime.ToLocalTime();
+            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.SetNow(now);
+            account.SaveAllCaches();
+            processor.ProcessAccount(account.Id, component.Id, user.Id);
+
+            // Должно появиться одно уведомление
+            {
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
+                Assert.Equal(1, notifications.Count);
+                var notification = notifications.Single();
+                Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
+            }
+        }
+
+        /// <summary>
+        /// Проверим отправку, когда текущее время до заданного интервала
+        /// </summary>
+        [Fact]
+        public void SendIntervalBeforeTest()
+        {
+            // Создадим компонент
+            var account = TestHelper.GetTestAccount();
+            var user = TestHelper.CreateTestUser(account.Id);
+            var component = account.CreateTestApplicationComponent();
+
+            // Установим часовой пояс клиента UTC +04:00
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var userSettingService = accountDbContext.GetUserSettingService();
+                userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
+                accountDbContext.SaveChanges();
+            }
+
+            // Подпишемся на красное событие
+            var dispatcher = TestHelper.GetDispatcherClient();
+            var subscriptionResponse = dispatcher.CreateSubscription(account.Id, new CreateSubscriptionRequestData()
+            {
+                UserId = user.Id,
+                Object = SubscriptionObject.ComponentType,
+                ComponentTypeId = component.Type.Id,
+                Channel = SubscriptionChannel.Email,
+                Importance = EventImportance.Alarm,
+                IsEnabled = true,
+                SendOnlyInInterval = true,
+                SendIntervalFromHour = 10,
+                SendIntervalFromMinute = 30,
+                SendIntervalToHour = 11,
+                SendIntervalToMinute = 30
+            });
+            Assert.True(subscriptionResponse.Success);
+            account.SaveAllCaches();
+
+            // Отправим красное событие
+            var eventType = TestHelper.GetTestEventType(account.Id);
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
+            {
+                TypeSystemName = eventType.SystemName,
+                ComponentId = component.Id,
+                Category = Api.EventCategory.ApplicationError,
+                Importance = EventImportance.Alarm
+            });
+            Assert.True(eventResponse.Success);
+            account.SaveAllCaches();
+
+            // Запустим обработку в 10:29 UTC +04:00
+            var now = new DateTimeOffset(2020, 01, 01, 10, 29, 00, TimeSpan.FromHours(4)).UtcDateTime.ToLocalTime();
+            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.SetNow(now);
+            account.SaveAllCaches();
+            processor.ProcessAccount(account.Id, component.Id, user.Id);
+
+            // Уведомление не должно появиться
+            {
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
+                Assert.Equal(0, notifications.Count);
+            }
+        }
+
+        /// <summary>
+        /// Проверим отправку, когда текущее время после заданного интервала
+        /// </summary>
+        [Fact]
+        public void SendIntervalAfterTest()
+        {
+            // Создадим компонент
+            var account = TestHelper.GetTestAccount();
+            var user = TestHelper.CreateTestUser(account.Id);
+            var component = account.CreateTestApplicationComponent();
+
+            // Установим часовой пояс клиента UTC +04:00
+            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var userSettingService = accountDbContext.GetUserSettingService();
+                userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
+                accountDbContext.SaveChanges();
+            }
+
+            // Подпишемся на красное событие
+            var dispatcher = TestHelper.GetDispatcherClient();
+            var subscriptionResponse = dispatcher.CreateSubscription(account.Id, new CreateSubscriptionRequestData()
+            {
+                UserId = user.Id,
+                Object = SubscriptionObject.ComponentType,
+                ComponentTypeId = component.Type.Id,
+                Channel = SubscriptionChannel.Email,
+                Importance = EventImportance.Alarm,
+                IsEnabled = true,
+                SendOnlyInInterval = true,
+                SendIntervalFromHour = 10,
+                SendIntervalFromMinute = 30,
+                SendIntervalToHour = 11,
+                SendIntervalToMinute = 30
+            });
+            Assert.True(subscriptionResponse.Success);
+            account.SaveAllCaches();
+
+            // Отправим красное событие
+            var eventType = TestHelper.GetTestEventType(account.Id);
+            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
+            {
+                TypeSystemName = eventType.SystemName,
+                ComponentId = component.Id,
+                Category = Api.EventCategory.ApplicationError,
+                Importance = EventImportance.Alarm
+            });
+            Assert.True(eventResponse.Success);
+            account.SaveAllCaches();
+
+            // Запустим обработку в 11:31 UTC +04:00
+            var now = new DateTimeOffset(2020, 01, 01, 11, 31, 00, TimeSpan.FromHours(4)).UtcDateTime.ToLocalTime();
+            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor.SetNow(now);
+            account.SaveAllCaches();
+            processor.ProcessAccount(account.Id, component.Id, user.Id);
+
+            // Уведомление не должно появиться
+            {
+                var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, SubscriptionChannel.Email);
+                Assert.Equal(0, notifications.Count);
+            }
         }
 
     }

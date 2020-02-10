@@ -159,17 +159,6 @@ namespace Zidium.UserAccount.Controllers
             return uri.Scheme + @"://" + uri.Authority;
         }
 
-        protected override string GetOldReplacementPart(UnitTest unitTest)
-        {
-            var url = unitTest.HttpRequestUnitTest.Rules.First(FindRulePredicate()).Url;
-            return GetComponentNameFromUrl(url);
-        }
-
-        protected override string GetNewReplacementPart(EditSimpleModel model)
-        {
-            return GetComponentNameFromUrl(model.Url);
-        }
-
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Http-запрос для сайта " + model.Url;

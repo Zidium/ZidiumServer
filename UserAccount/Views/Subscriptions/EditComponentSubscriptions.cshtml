@@ -1,58 +1,74 @@
-﻿@using Zidium.Core.AccountsDb
-@using Zidium.Core.Common
+﻿@using Zidium.Core
+@using Zidium.Core.AccountsDb
+@using Zidium.Core.Api
 @using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.Subscriptions.EditComponentSubscriptionsModel
+
 @{
     ViewBag.Title = "Настройка подписок на компонент";
 }
+
 <style>
     #info-table {
-        margin-left: 20px;    
-    } 
-    #info-table td {
-        padding: 2px 40px;
-        vertical-align: top;
+        margin-left: 20px;
     }
+
+        #info-table td {
+            padding: 2px 40px;
+            vertical-align: top;
+        }
+
     .emptyCell {
         color: gray;
     }
+
     .subscriptions-table {
         border-collapse: separate;
         border-spacing: 20px;
-    } 
-    .subscriptions-table td {
-        vertical-align: top;
     }
+
+        .subscriptions-table td {
+            vertical-align: top;
+        }
+
     .subscription-type {
         font-weight: normal;
         padding: 5px;
         background-color: #eee;
         border-bottom: 0px dashed gray !important;
     }
+
     .select-title {
         color: green;
         font-weight: bold;
     }
+
     .cell {
         padding: 10px;
         border-bottom: 1px solid #eee;
         text-align: center;
     }
+
     .no-column-border {
         border-bottom-width: 0;
-    } 
+    }
+
     .select-border {
         border: 5px green solid !important;
     }
+
     .subscription-data-column {
         border: 1px #eee solid;
         padding: 20px;
         vertical-align: top;
     }
+
     .subscription-header-column {
         padding: 20px;
     }
+
     .property-name {
         font-size: 12px;
         color: gray;
@@ -60,9 +76,11 @@
         margin-top: 5px;
         margin-bottom: 5px;
     }
+
     .property-value {
         font-weight: bold;
     }
+
     .user-contact {
         color: gray;
         display: block;
@@ -111,7 +129,7 @@
                     <span class="property-name">Минимальная длительность</span>
                     @if (subscription.DurationMinimumInSeconds == null)
                     {
-                        <span class="emptyCell">&minus;</span>
+                        <span class="emptyCell">&mdash;</span>
                     }
                     else
                     {
@@ -123,23 +141,36 @@
                     <span class="property-name">Уведомлять об улучшениях?</span>
                     @if (subscription.NotifyBetterStatus == false)
                     {
-                        <span class="emptyCell">&minus;</span>
+                        <span class="emptyCell">&mdash;</span>
                     }
                     else
                     {
                         <span class="property-value">Да</span>
                     }
                 </div>
-                <div class="cell @(column.Selected? "":"no-column-border")">
+                <div class="cell">
                     <span class="property-name">Интервал напоминаний</span>
                     @if (subscription.ResendTimeInSeconds == null)
                     {
-                        <span class="emptyCell">&minus;</span>
+                        <span class="emptyCell">&mdash;</span>
                     }
                     else
                     {
                         var duration = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds);
                         <span class="property-value">@TimeSpanHelper.Get2UnitsString(duration.Value)</span>
+                    }
+                </div>
+                <div class="cell @(column.Selected? "":"no-column-border")">
+                    <span class="property-name">Ограничить по времени</span>
+                    @if (!subscription.SendOnlyInInterval)
+                    {
+                        <span class="emptyCell">&mdash;</span>
+                    }
+                    else
+                    {
+                        var from = (subscription.SendIntervalFromHour ?? 0).ToString("00") + ":" + (subscription.SendIntervalFromMinute ?? 0).ToString("00");
+                        var to = (subscription.SendIntervalToHour ?? 0).ToString("00") + ":" + (subscription.SendIntervalToMinute ?? 0).ToString("00");
+                        <span class="property-value">@from - @to</span>
                     }
                 </div>
             }
@@ -168,7 +199,7 @@
 }
 
 <div class="pull-right">
-    <a href="http://zidium.net/wiki/work-principle/subscriptions" target="_blank" class="btn btn-default">?</a>
+    <a href='@(Model.CommonWebsiteUrl + "/wiki/work-principle/subscriptions")' target="_blank" class="btn btn-default">?</a>
 </div>
 
 <table id="info-table">
@@ -196,11 +227,8 @@
 </table>
 
 @{
-    var channels = new[]
-{
-        SubscriptionChannel.Email,
-        SubscriptionChannel.Sms
-    };
+    var channels = SubscriptionHelper.AvailableSubscriptionChannels;
+
     foreach (var channel in channels)
     {
         <div style="padding: 10px;">
@@ -227,7 +255,7 @@
     }
 
     function init() {
-        $(".showDialogBtn").on("click", function(event) {
+        $(".showDialogBtn").on("click", function (event) {
             event.preventDefault();
             //alert(event.target.outerHTML);
             var btn = $(this);
@@ -243,10 +271,10 @@
     }
 
     init();
-    
+
 </script>
 
 @section Scripts
-    {
-        @Scripts.Render("~/Scripts/AllControls")
-    }
+{
+    @Scripts.Render("~/Scripts/AllControls")
+}

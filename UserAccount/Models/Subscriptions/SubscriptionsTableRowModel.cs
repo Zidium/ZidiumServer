@@ -1,26 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Zidium.Core.AccountsDb;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
     public class SubscriptionsTableRowModel
     {
-        public ShowSubscriptionCellModel Email { get; set; }
-
-        public ShowSubscriptionCellModel Sms { get; set; }
+        public List<ShowSubscriptionCellModel> Cells { get; set; }
 
         public SubscriptionsTableModel Table { get; set; }
 
         public Subscription GetFirstNotNull()
         {
-            if (Email.Subscription != null)
-            {
-                return Email.Subscription;
-            }
-            if (Sms.Subscription != null)
-            {
-                return Sms.Subscription;
-            }
+            var result = Cells.FirstOrDefault(t => t.Subscription != null);
+
+            if (result != null)
+                return result.Subscription;
+
             throw new Exception("GetFirstNotNull не удалось найти");
         }
     }

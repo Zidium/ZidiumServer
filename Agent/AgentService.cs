@@ -25,6 +25,8 @@ using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
 using System.Linq;
+using Zidium.Agent.AgentTasks.SendMessages;
+using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
 
 namespace Zidium.Agent
 {
@@ -89,9 +91,12 @@ namespace Zidium.Agent
                     new EmailNotificationsTask(),
                     new SmsNotificationsTask(),
                     new HttpNotificationsTask(),
+                    new MessangerNotificationsTask(),
                     new OutdatedMetricsTask(),
                     new SendEmailsTask(),
                     new SendSmsTask(),
+                    new SendToTelegramTask(),
+                    new SendToVKontakteTask(),
                     new DeleteLogsTask(),
                     new DeleteMetricHistoryTask(),
                     new DeleteCustomerEventsTask(),
@@ -107,6 +112,7 @@ namespace Zidium.Agent
                     new SqlCheckTask(),
                     new DomainNamePaymentPeriodCheckTask(),
                     new SslCertificateExpirationDateCheckTask(),
+                    new VirusTotalTask()
                 } : new List<AgentTaskBase>()
                 {
                     new DummyTask()

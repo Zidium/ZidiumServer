@@ -98,7 +98,7 @@ namespace Zidium.UserAccount.Controllers
         }
 
         // Рисует диаграмму указанных статусов для типа события независимо от компонента
-        public ActionResult ForEventTypeAnyComponents(Guid eventTypeId, DateTime? fromDate, DateTime? toDate)
+        public ActionResult ForEventTypeAnyComponents(Guid eventTypeId, DateTime? fromDate, DateTime? toDate, bool? hideUptime)
         {
             var eDate = toDate ?? DateTime.Now;
             var sDate = fromDate ?? eDate.AddHours(-24);
@@ -117,17 +117,18 @@ namespace Zidium.UserAccount.Controllers
                 DateTo = eDate,
                 Items = items,
                 OkTime = okTime,
-                EventTypeId = eventTypeId
+                EventTypeId = eventTypeId,
+                HideUptime = hideUptime ?? false
             };
 
             return PartialView("TimelinePartial", model);
         }
 
-        public ActionResult ForEventTypeAnyComponentsByInterval(Guid eventTypeId, TimelineInterval interval)
+        public ActionResult ForEventTypeAnyComponentsByInterval(Guid eventTypeId, TimelineInterval interval, bool? hideUptime)
         {
             var toDate = MvcApplication.GetServerDateTime();
             var fromDate = TimelineHelper.IntervalToStartDate(toDate, interval);
-            return ForEventTypeAnyComponents(eventTypeId, fromDate, toDate);
+            return ForEventTypeAnyComponents(eventTypeId, fromDate, toDate, hideUptime);
         }
 
         /// <summary>

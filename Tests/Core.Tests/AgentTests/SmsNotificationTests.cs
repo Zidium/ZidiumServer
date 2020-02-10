@@ -43,7 +43,7 @@ namespace Zidium.Core.Tests.AgentTests
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
-                    Type = NotificationType.Sms,
+                    Type = SubscriptionChannel.Sms,
                     Address = phone,
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now

@@ -1,6 +1,7 @@
 ﻿using System;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models
 {
@@ -40,6 +41,16 @@ namespace Zidium.UserAccount.Models
             get
             {
                 return StartDate + Duration;
+            }
+        }
+
+        public string RealEndDateString
+        {
+            get
+            {
+                return ActualDate == DateTimeHelper.InfiniteActualDate
+                    ? null
+                    : RealEndDate.ToString(GuiHelper.DateTimeDisplayFormat);
             }
         }
 

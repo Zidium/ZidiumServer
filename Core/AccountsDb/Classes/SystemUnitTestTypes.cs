@@ -56,6 +56,14 @@ namespace Zidium.Core.AccountsDb
             IsSystem = true
         };
 
+        public static readonly UnitTestType VirusTotalTestType = new UnitTestType()
+        {
+            Id = new Guid("87F2A4E6-9D23-4724-AA1F-0517DB060D03"),
+            DisplayName = "VirusTotal",
+            SystemName = "System.UnitTests.VirusTotal",
+            IsSystem = true
+        };
+
         public static readonly Guid[] AllSystemTypesIds =
         {
             HttpUnitTestType.Id,
@@ -63,7 +71,8 @@ namespace Zidium.Core.AccountsDb
             TcpPortTestType.Id,
             SqlTestType.Id,
             DomainNameTestType.Id,
-            SslTestType.Id
+            SslTestType.Id,
+            VirusTotalTestType.Id
         };
 
         public static bool IsSystem(Guid unitTestTypeId)

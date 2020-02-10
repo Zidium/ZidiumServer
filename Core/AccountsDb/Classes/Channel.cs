@@ -7,12 +7,9 @@
 
         MobilePhone = 2,
 
-        // Убраны те, которые мы не умеем отправлять
-        /*
-        Skype = 3,
+        Telegram = 3,
 
-        Icq = 4,
-        */
+        VKontakte = 4,
 
         Http = 5
     }

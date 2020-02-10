@@ -49,6 +49,12 @@ namespace Zidium.Api.Dto
             return JsonClasses.JSON.ToObject<T>(json);
         }
 
+        public T GetObject<T>(byte[] bytes)
+        {
+            string json = Encoding.UTF8.GetString(bytes);
+            return JsonClasses.JSON.ToObject<T>(json);
+        }
+
         public string Format
         {
             get { return "json"; }

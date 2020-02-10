@@ -302,6 +302,11 @@ namespace Zidium.Core.Api
             return ExecuteAction<SetSubscriptionEnableResponse>(request);
         }
 
+        public DeleteSubscriptionResponse DeleteSubscription(DeleteSubscriptionRequest request)
+        {
+            return ExecuteAction<DeleteSubscriptionResponse>(request);
+        }
+
         public SendSmsResponse SendSms(SendSmsRequest request)
         {
             return ExecuteAction<SendSmsResponse>(request);
@@ -558,6 +563,11 @@ namespace Zidium.Core.Api
         public ChangeApiKeyResponse ChangeApiKey(ChangeApiKeyRequest request)
         {
             return ExecuteAction<ChangeApiKeyResponse>(request);
+        }
+
+        public SetUnitTestNextStepProcessTimeResponse SetUnitTestNextStepProcessTime(SetUnitTestNextStepProcessTimeRequest request)
+        {
+            return ExecuteAction<SetUnitTestNextStepProcessTimeResponse>(request);
         }
     }
 }

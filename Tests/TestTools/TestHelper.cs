@@ -645,13 +645,23 @@ namespace Zidium.TestTools
                 if (!string.IsNullOrEmpty(password))
                     user.PasswordHash = PasswordHelper.GetPasswordHashString(password);
 
-                // должны быть уникальные, т.к. это используется юнит-тестах уведомлений на смс
-                var phone = Guid.NewGuid().ToString();
-
+                // Создадим по одному контакту каждого типа
                 user.UserContacts.Add(new UserContact()
                 {
                     Type = UserContactType.MobilePhone,
-                    Value = phone
+                    Value = Guid.NewGuid().ToString()
+                });
+
+                user.UserContacts.Add(new UserContact()
+                {
+                    Type = UserContactType.Telegram,
+                    Value = Guid.NewGuid().ToString()
+                });
+
+                user.UserContacts.Add(new UserContact()
+                {
+                    Type = UserContactType.VKontakte,
+                    Value = Guid.NewGuid().ToString()
                 });
 
                 user = userService.CreateUser(user, accountId, false);
@@ -795,15 +805,12 @@ namespace Zidium.TestTools
             Guid accountId,
             Core.Api.EventImportance importance,
             Guid componentId,
-            NotificationType notificationType)
+            SubscriptionChannel notificationType)
         {
             using (var accountDbContext = AccountDbContext.CreateFromAccountId(accountId))
             {
                 // получим новые, неотправленные уведомления
                 var notifications = accountDbContext.Notifications
-                    .Include("Event")
-                    .Include("Subscription")
-                    .Include("NotificationHttp")
                     .Where(x => x.Event.OwnerId == componentId &&
                                 x.Status == NotificationStatus.InQueue &&
                                 x.Event.Importance == importance &&
@@ -814,7 +821,7 @@ namespace Zidium.TestTools
                 {
                     // сделаем вид, что уведомления отправлены
                     notification.SendDate = DateTime.Now;
-                    notification.Status = NotificationStatus.Sended;
+                    notification.Status = NotificationStatus.Processed;
                 }
 
                 accountDbContext.SaveChanges();

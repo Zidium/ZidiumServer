@@ -84,17 +84,7 @@ namespace Zidium.UserAccount.Controllers
                 .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.TcpPortTestType.Id 
                                      && t.TcpPortRule != null && t.TcpPortRule.Host == GetModelHost(model) && t.IsDeleted == false);
         }
-
-        protected override string GetOldReplacementPart(UnitTest unitTest)
-        {
-            return unitTest.TcpPortRule.Host;
-        }
-
-        protected override string GetNewReplacementPart(EditSimpleModel model)
-        {
-            return GetModelHost(model);
-        }
-
+        
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Tcp порт " + GetModelHost(model) + ":" + model.Port;

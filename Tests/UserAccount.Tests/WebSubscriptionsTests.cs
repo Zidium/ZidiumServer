@@ -3,6 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core.Api;
 using Xunit;
+using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.TestTools;
@@ -23,12 +24,7 @@ namespace Zidium.UserAccount.Tests
             var user = TestHelper.CreateTestUser(account.Id);
             var dispatcher = TestHelper.GetDispatcherClient();
 
-            var channels = new[]
-            {
-                SubscriptionChannel.Email,
-                SubscriptionChannel.Sms,
-                SubscriptionChannel.Http
-            };
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
 
             foreach (var channel in channels)
             {
@@ -38,7 +34,7 @@ namespace Zidium.UserAccount.Tests
                     UserId = user.Id,
                     Object = SubscriptionObject.Default,
                     Channel = channel
-                }); 
+                });
                 var defaultSubscription = response.Data;
 
                 // Изменим подписку по умолчанию
@@ -54,6 +50,9 @@ namespace Zidium.UserAccount.Tests
                 model.Color = ColorStatusSelectorValue.FromEventImportance(EventImportance.Success);
                 model.MinimumDuration = TimeSpan.FromSeconds(10);
                 model.ResendTime = TimeSpan.FromSeconds(20);
+                model.SendOnlyInInterval = true;
+                model.SendIntervalFrom = new Time() {Hour = 10, Minute = 30};
+                model.SendIntervalTo = new Time() {Hour = 18, Minute = 50};
 
                 using (var controller = new SubscriptionsController(account.Id, user.Id))
                 {
@@ -73,6 +72,11 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(EventImportance.Success, newDefaultSubscription.Importance);
                 Assert.Equal(10, newDefaultSubscription.DurationMinimumInSeconds);
                 Assert.Equal(20, newDefaultSubscription.ResendTimeInSeconds);
+                Assert.True(newDefaultSubscription.SendOnlyInInterval);
+                Assert.Equal(10, newDefaultSubscription.SendIntervalFromHour);
+                Assert.Equal(30, newDefaultSubscription.SendIntervalFromMinute);
+                Assert.Equal(18, newDefaultSubscription.SendIntervalToHour);
+                Assert.Equal(50, newDefaultSubscription.SendIntervalToMinute);
             }
         }
 
@@ -87,12 +91,7 @@ namespace Zidium.UserAccount.Tests
             // Создадим тип компонента
             var componentType = TestHelper.CreateRandomComponentType(account.Id);
 
-            var channels = new[]
-            {
-                SubscriptionChannel.Email,
-                SubscriptionChannel.Sms,
-                SubscriptionChannel.Http
-            };
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
 
             foreach (var channel in channels)
             {
@@ -118,7 +117,7 @@ namespace Zidium.UserAccount.Tests
                     Object = SubscriptionObject.ComponentType,
                     Channel = channel,
                     ComponentTypeId = componentType.Id
-                }); 
+                });
                 var data3 = response3.Data;
                 var response4 = dispatcher.UpdateSubscription(account.Id, new UpdateSubscriptionRequestData()
                 {
@@ -185,12 +184,7 @@ namespace Zidium.UserAccount.Tests
         [Fact]
         public void ChangeColorTest()
         {
-            var channels = new[]
-            {
-                SubscriptionChannel.Email,
-                SubscriptionChannel.Sms,
-                SubscriptionChannel.Http
-            };
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
 
             foreach (var channel in channels)
             {
@@ -278,8 +272,8 @@ namespace Zidium.UserAccount.Tests
             using (var controller = new SubscriptionsController(account.Id, user.Id))
             {
                 // прочитаем подписки админа
-                var result = (ViewResultBase) controller.Index(admin.Id);
-                model = (SubscriptionListModel) result.Model;
+                var result = (ViewResultBase)controller.Index(admin.Id);
+                model = (SubscriptionListModel)result.Model;
             }
             Assert.Equal(admin.Id, model.UserId);
             Assert.True(model.Subscriptions.Length > 0);
@@ -290,23 +284,22 @@ namespace Zidium.UserAccount.Tests
             SubscriptionEditModel editModel = null;
             using (var controller = new SubscriptionsController(account.Id, user.Id))
             {
-                var result = (ViewResultBase) controller.Edit(adminSubscription.Id);
-                editModel = (SubscriptionEditModel) result.Model;
+                var result = (ViewResultBase)controller.Edit(adminSubscription.Id);
+                editModel = (SubscriptionEditModel)result.Model;
             }
 
             // сохраним изменения в подписке админа
             using (var controller = new SubscriptionsController(account.Id, user.Id))
             {
-                Assert.Null(editModel.MinimumDuration);
                 editModel.MinimumDuration = TimeSpan.FromSeconds(10);
-                var result = (ViewResultBase) controller.Edit(editModel);
+                var result = (ViewResultBase)controller.Edit(editModel);
             }
 
             // проверим, что настройки подписки НЕ изменились
             using (var accountDbContext = account.CreateAccountDbContext())
             {
                 var subscription = accountDbContext.Subscriptions.Find(adminSubscription.Id);
-                Assert.Null(subscription.DurationMinimumInSeconds);
+                Assert.Equal(adminSubscription.DurationMinimumInSeconds, subscription.DurationMinimumInSeconds);
             }
         }
 
@@ -322,7 +315,7 @@ namespace Zidium.UserAccount.Tests
             SubscriptionListModel model;
             using (var controller = new SubscriptionsController(account.Id, admin.Id))
             {
-                // прочитаем подписки админа
+                // прочитаем подписки пользователя
                 var result = (ViewResultBase)controller.Index(user.Id);
                 model = (SubscriptionListModel)result.Model;
             }
@@ -330,14 +323,13 @@ namespace Zidium.UserAccount.Tests
             Assert.True(model.Subscriptions.Length > 0);
             Assert.True(model.Subscriptions.All(t => t.UserId == user.Id));
 
-            // откроем подписку админа на редактирование
+            // откроем подписку пользователя на редактирование
             var userSubscription = model.Subscriptions.First();
             SubscriptionEditModel editModel = null;
             using (var controller = new SubscriptionsController(account.Id, user.Id))
             {
                 var result = (ViewResultBase)controller.Edit(userSubscription.Id);
                 editModel = (SubscriptionEditModel)result.Model;
-                Assert.Null(editModel.MinimumDuration);
             }
 
             // сохраним изменения в подписке пользователя
@@ -347,7 +339,7 @@ namespace Zidium.UserAccount.Tests
                 controller.Edit(editModel);
             }
 
-            // проверим, что настройки подписки изменились
+            // проверим, что настройки подписки пользователя изменились
             using (var accountDbContext = account.CreateAccountDbContext())
             {
                 var subscription = accountDbContext.Subscriptions.Find(userSubscription.Id);

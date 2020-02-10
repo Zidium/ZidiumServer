@@ -12,7 +12,7 @@ namespace Zidium.Agent.AgentTasks
 
         protected override AgentTaskResult Do()
         {
-            var processor = new DomainNamePaymentPeriodCheckProcessor(Logger, CancellationToken);
+            var processor = new DomainNamePaymentPeriodCheckProcessor(Logger, CancellationToken, TimeService);
             processor.ProcessAll();
 
             var result = string.Format(

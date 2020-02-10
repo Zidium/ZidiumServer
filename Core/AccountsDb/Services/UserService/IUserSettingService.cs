@@ -15,5 +15,9 @@ namespace Zidium.Core.AccountsDb
         int? ComponentHistoryInterval(Guid userId);
 
         void ComponentHistoryInterval(Guid userId, int value);
+
+        int TimeZoneOffsetMinutes(Guid userId);
+
+        void TimeZoneOffsetMinutes(Guid userId, int value);
     }
 }

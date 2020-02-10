@@ -12,17 +12,27 @@
 {
     @Html.AntiForgeryToken()
     @Html.MyValidationSummary()
-    @Html.EditorFor(m => m.Login, "LabeledEdit", new { HorizontalForm  = true })
-    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })    
+    @Html.EditorFor(m => m.Login, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
     @Html.EditorFor(m => m.Post, "LabeledEdit", new { HorizontalForm = true })
-    
+
     <div class="form-group">
         @Html.LabelFor(m => m.RoleId, new { @class = "col-sm-2 control-label" })
         <div class="col-sm-4">
-            @Html.DropDownListFor(x=>x.RoleId, GuiHelper.GetRolesItems(Model.RoleId), new {@class="form-control"})
+            @Html.DropDownListFor(x => x.RoleId, GuiHelper.GetRolesItems(Model.RoleId), new { @class = "form-control" })
         </div>
         <div class="col-sm-6">
-            @Html.ValidationMessageFor(x=>x.RoleId)
+            @Html.ValidationMessageFor(x => x.RoleId)
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.TimeZoneOffsetMinutes, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-4">
+            @Html.DropDownListFor(x => x.TimeZoneOffsetMinutes, GuiHelper.GetTimeZoneItems(Model.TimeZoneOffsetMinutes), new { @class = "form-control" })
+        </div>
+        <div class="col-sm-6">
+            @Html.ValidationMessageFor(x => x.TimeZoneOffsetMinutes)
         </div>
     </div>
 

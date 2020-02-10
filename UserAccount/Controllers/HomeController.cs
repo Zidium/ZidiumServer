@@ -112,7 +112,7 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                var accountName = Core.Common.UrlHelper.GetAccountNameFromUrl(Url.ToAbsolute(Url.Current().ToString()));
+                var accountName = ConfigDbServicesHelper.GetUrlService().GetAccountNameFromUrl(Url.ToAbsolute(Url.Current().ToString()));
                 var userService = new UserService(DbContext);
                 var user = userService.FindUser(model.Login, accountName);
 

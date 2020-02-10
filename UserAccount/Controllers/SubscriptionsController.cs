@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Web.Mvc;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.ConfigDb;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
 using Zidium.UserAccount.Models.Others;
@@ -26,17 +25,20 @@ namespace Zidium.UserAccount.Controllers
                 userId = CurrentUser.Id;
             }
 
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
+
             // получаем подписки
             var subscriptions = CurrentAccountDbContext.GetSubscriptionRepository()
                 .QueryAll()
                 .Where(x => x.UserId == userId.Value)
-                .Where(x=>x.Channel == SubscriptionChannel.Email || x.Channel == SubscriptionChannel.Sms)
+                .Where(x => channels.Contains(x.Channel))
                 .ToArray();
 
             var model = new SubscriptionListModel()
             {
                 UserId = userId.Value,
-                Subscriptions = subscriptions
+                Subscriptions = subscriptions,
+                Channels = channels
             };
 
             return View(model);
@@ -45,11 +47,6 @@ namespace Zidium.UserAccount.Controllers
         /// <summary>
         /// Добавление новой подписки
         /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="channel"></param>
-        /// <param name="componentTypeId"></param>
-        /// <param name="componentId"></param>
-        /// <returns></returns>
         public ActionResult Add(
             Guid? userId,
             SubscriptionObject? @object,
@@ -70,16 +67,17 @@ namespace Zidium.UserAccount.Controllers
                 Object = @object.Value,
                 NotifyBetterStatus = false,
                 UserId = userId,
-                CanShowChannel = channel==null,
-                CanShowComponentType = componentTypeId==null,
-                CanShowComponent = componentId==null,
+                CanShowChannel = channel == null,
+                CanShowComponentType = componentTypeId == null,
+                CanShowComponent = componentId == null,
                 Channel = channel ?? SubscriptionChannel.Email,
                 IsEnabled = true,
                 Color = ColorStatusSelectorValue.FromColor(ObjectColor.Gray),
                 MinimumDuration = null,
                 ResendTime = null,
                 ComponentTypeId = componentTypeId,
-                ComponentId = componentId
+                ComponentId = componentId,
+                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
             };
             return View("Edit", model);
         }
@@ -96,7 +94,7 @@ namespace Zidium.UserAccount.Controllers
             var model = new SubscriptionEditModel()
             {
                 ModalMode = Request.IsAjaxRequest(),
-                ReturnUrl = Url.Action("Index", new {userId = subscription.UserId}),
+                ReturnUrl = Url.Action("Index", new { userId = subscription.UserId }),
                 Id = subscription.Id,
                 Object = subscription.Object,
                 NotifyBetterStatus = subscription.NotifyBetterStatus,
@@ -110,7 +108,15 @@ namespace Zidium.UserAccount.Controllers
                 IsEnabled = subscription.IsEnabled,
                 Color = ColorStatusSelectorValue.FromEventImportance(subscription.Importance),
                 MinimumDuration = TimeSpanHelper.FromSeconds(subscription.DurationMinimumInSeconds),
-                ResendTime = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds)
+                ResendTime = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds),
+                SendOnlyInInterval = subscription.SendOnlyInInterval,
+                SendIntervalFrom = subscription.SendIntervalFromHour.HasValue && subscription.SendIntervalFromMinute.HasValue
+                    ? new Time() { Hour = subscription.SendIntervalFromHour.Value, Minute = subscription.SendIntervalFromMinute.Value }
+                    : (Time?)null,
+                SendIntervalTo = subscription.SendIntervalToHour.HasValue && subscription.SendIntervalToMinute.HasValue
+                    ? new Time() { Hour = subscription.SendIntervalToHour.Value, Minute = subscription.SendIntervalToMinute.Value }
+                    : (Time?)null,
+                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
             };
             return View(model);
         }
@@ -122,7 +128,7 @@ namespace Zidium.UserAccount.Controllers
             var modelState = new ModelStateHelper<SubscriptionEditModel>(ModelState);
 
             // Проверка ComponentTypeId
-            if (model.Object == SubscriptionObject.ComponentType && model.ComponentTypeId==null)
+            if (model.Object == SubscriptionObject.ComponentType && model.ComponentTypeId == null)
             {
                 modelState.AddErrorFor(x => x.ComponentTypeId, "Выберите тип компонента");
             }
@@ -134,7 +140,7 @@ namespace Zidium.UserAccount.Controllers
             }
 
             // Проверка Channel
-            if (model.Id==null && model.Channel==null)
+            if (model.Id == null && model.Channel == null)
             {
                 // канал должен указываться явно только для новых подписок
                 modelState.AddErrorFor(x => x.Channel, "Выберите канал");
@@ -151,7 +157,17 @@ namespace Zidium.UserAccount.Controllers
             var color = model.Color.GetSelectedOne();
             if (color == null)
             {
-                modelState.AddErrorFor(x=>x.Color, "Укажите цвет");
+                modelState.AddErrorFor(x => x.Color, "Укажите цвет");
+            }
+
+            // проверка заполненности интервала отправки, если он включен
+            if (model.SendOnlyInInterval && model.IsEnabled)
+            {
+                if (model.SendIntervalFrom == null)
+                    modelState.AddErrorFor(x => x.SendIntervalFrom, "Укажите время");
+
+                if (model.SendIntervalTo == null)
+                    modelState.AddErrorFor(x => x.SendIntervalTo, "Укажите время");
             }
 
             if (!ModelState.IsValid)
@@ -165,7 +181,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     if (CurrentUser.IsAdmin() == false)
                     {
-                        throw new UserFriendlyException("Нет прав на создание подписок другим пользователям");
+                        throw new UserFriendlyException("Вы не можете создавать подписки другим пользователям");
                     }
                 }
 
@@ -183,7 +199,12 @@ namespace Zidium.UserAccount.Controllers
                         Importance = importance,
                         IsEnabled = model.IsEnabled,
                         NotifyBetterStatus = model.NotifyBetterStatus,
-                        Object = model.Object
+                        Object = model.Object,
+                        SendOnlyInInterval = model.SendOnlyInInterval,
+                        SendIntervalFromHour = model.SendIntervalFrom?.Hour,
+                        SendIntervalFromMinute = model.SendIntervalFrom?.Minute,
+                        SendIntervalToHour = model.SendIntervalTo?.Hour,
+                        SendIntervalToMinute = model.SendIntervalTo?.Minute
                     };
                     if (model.Object == SubscriptionObject.Component)
                     {
@@ -207,14 +228,19 @@ namespace Zidium.UserAccount.Controllers
                         IsEnabled = model.IsEnabled,
                         ResendTimeInSeconds = TimeSpanHelper.GetSeconds(model.ResendTime),
                         DurationMinimumInSeconds = TimeSpanHelper.GetSeconds(model.MinimumDuration),
-                        Importance = importance
+                        Importance = importance,
+                        SendOnlyInInterval = model.SendOnlyInInterval,
+                        SendIntervalFromHour = model.SendIntervalFrom?.Hour,
+                        SendIntervalFromMinute = model.SendIntervalFrom?.Minute,
+                        SendIntervalToHour = model.SendIntervalTo?.Hour,
+                        SendIntervalToMinute = model.SendIntervalTo?.Minute
                     };
                     var response = client.UpdateSubscription(CurrentUser.AccountId, updateData);
                     response.Check();
                 }
                 if (model.ModalMode)
                 {
-                    return GetSuccessJsonResponse(new {subscriptionId = model.Id});
+                    return GetSuccessJsonResponse(new { subscriptionId = model.Id });
                 }
                 return Redirect(model.ReturnUrl);
             }
@@ -334,16 +360,14 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                // TODO Удаление подписок нужно делать через Диспетчер
-
                 var repository = CurrentAccountDbContext.GetSubscriptionRepository();
                 var subscription = repository.GetById(model.Id);
                 CheckEditingPermissions(subscription);
 
-                var subscriptionService = new SubscriptionService(DbContext);
-                subscriptionService.Remove(CurrentUser.AccountId, subscription);
+                var client = GetDispatcherClient();
+                var response = client.DeleteSubscription(CurrentUser.AccountId, subscription.Id);
+                response.Check();
 
-                CurrentAccountDbContext.SaveChanges();
                 return GetSuccessJsonResponse();
             }
             catch (Exception exception)
@@ -354,9 +378,9 @@ namespace Zidium.UserAccount.Controllers
         }
 
         public ActionResult ShowComponentSubscriptions(
-            Guid componentId, 
-            Guid? userId, 
-            ShowComponentSubscriptionsModel.ViewModeCode? viewMode, 
+            Guid componentId,
+            Guid? userId,
+            ShowComponentSubscriptionsModel.ViewModeCode? viewMode,
             SubscriptionChannel? channel)
         {
             if (viewMode == null)
@@ -395,13 +419,14 @@ namespace Zidium.UserAccount.Controllers
                     || (x.Object == SubscriptionObject.ComponentType && x.ComponentTypeId == component.ComponentTypeId)
                     || (x.Object == SubscriptionObject.Component && x.ComponentId == componentId)))
                 .ToArray();
-            
+
 
             var model = new EditComponentSubscriptionsModel()
             {
                 Component = component,
                 User = user,
-                AllSubscriptions = subscriptions
+                AllSubscriptions = subscriptions,
+                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
             };
 
             return View(model);

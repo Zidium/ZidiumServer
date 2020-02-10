@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Core.Api;
 
 namespace Zidium.Core.AccountsDb
 {
@@ -32,7 +33,7 @@ namespace Zidium.Core.AccountsDb
         /// <summary>
         /// Канал отправки
         /// </summary>
-        public NotificationType Type { get; set; }
+        public SubscriptionChannel Type { get; set; }
 
         /// <summary>
         /// Статус отправки
@@ -78,5 +79,14 @@ namespace Zidium.Core.AccountsDb
         /// Http-часть уведомления, для уведомлений с типом http
         /// </summary>
         public virtual NotificationHttp NotificationHttp { get; set; }
+
+        public Guid? SendEmailCommandId { get; set; }
+
+        public virtual SendEmailCommand SendEmailCommand { get; set; }
+
+        public Guid? SendMessageCommandId { get; set; }
+
+        public virtual SendMessageCommand SendMessageCommand { get; set; }
+
     }
 }

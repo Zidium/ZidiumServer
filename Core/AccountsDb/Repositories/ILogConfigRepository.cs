@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Zidium.Core.AccountsDb.Repositories
+namespace Zidium.Core.AccountsDb
 {
     public interface ILogConfigRepository
     {

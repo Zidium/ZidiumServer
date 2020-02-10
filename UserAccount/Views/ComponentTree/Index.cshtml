@@ -207,6 +207,7 @@
         <li><a href="#" id="menu-component-add-domain-unittest">Добавить проверку оплаты домена</a></li>
         <li><a href="#" id="menu-component-add-ssl-unittest">Добавить проверку Ssl-сертификата</a></li>
         <li><a href="#" id="menu-component-add-sql-unittest">Добавить Sql-проверку</a></li>
+        <li><a href="#" id="menu-component-add-virus-total-unittest">Добавить проверку VirusTotal</a></li>
         <li><a href="#" id="menu-component-add-custom-unittest">Добавить пользовательскую проверку</a></li>
 
         <li role="separator" class="divider"></li>
@@ -225,10 +226,11 @@
     <ul class="dropdown-menu collapse" id="menu-unittests">
         <li><a href="#" id="menu-unittests-add-http">Добавить Http-проверку</a></li>
         <li><a href="#" id="menu-unittests-add-ping">Добавить Ping-проверку</a></li>
-        <li><a href="#" id="menu-unittests-add-ping">Добавить проверку Tcp порта</a></li>
+        <li><a href="#" id="menu-unittests-add-tcp-port">Добавить проверку Tcp порта</a></li>
         <li><a href="#" id="menu-unittests-add-domain">Добавить проверку оплаты домена</a></li>
         <li><a href="#" id="menu-unittests-add-ssl">Добавить проверку Ssl-сертификата</a></li>
         <li><a href="#" id="menu-unittests-add-sql">Добавить Sql-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-virus-total">Добавить проверку VirusTotal</a></li>
         <li><a href="#" id="menu-unittests-add-custom">Добавить пользовательскую проверку</a></li>
     </ul>
 
@@ -486,6 +488,22 @@
             addTcpPortUnitTest(id);
         });
 
+        // Меню раздела проверок - Добавить проверку virus total
+        $('#menu-unittests #menu-unittests-add-virus-total').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addVirusTotalUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку tcp порта
+        $('#menu-component #menu-component-add-virus-total-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addVirusTotalUnitTest(id);
+        });
+
         // Меню раздела проверок - Добавить проверку домена
         $('#menu-unittests #menu-unittests-add-domain').click(function (event) {
             event.preventDefault();
@@ -694,6 +712,17 @@
         var url = '@Url.Action("EditSimple", "TcpPortChecks")';
         var data = { componentId: id };
         dialogs.showModal(url, 'Добавление проверки tcp порта', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addVirusTotalUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "VirusTotal")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки VirusTotal', function() {
             componentTreeDetails.accordionReloadCurrentGroup(parent);
             submitForm(function () {
                 expandComponentUnitTests(id);

@@ -52,7 +52,7 @@ else
         }
         else if (Model is Event)
         {
-            @Html.ActionLink((Model as Event).Message ?? (Model as Event).Id.ToString(), "Show", "Events", new { id = (Model as Event).Id }, null)
+            @Html.ActionLink(!string.IsNullOrEmpty((Model as Event).Message) ? (Model as Event).Message : (Model as Event).EventType.DisplayName, "Show", "Events", new { id = (Model as Event).Id }, null)
         }
         else if (Model is User)
         {

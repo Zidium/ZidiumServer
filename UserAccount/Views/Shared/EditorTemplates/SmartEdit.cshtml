@@ -74,6 +74,10 @@
                 {
                     @Html.DateSelector(m => m)
                 }
+                else if (type == typeof(Time))
+                {
+                    @Html.TimeSelector(m => m)
+                }
                 else if (ViewData.ModelMetadata.DataTypeName == DataType.Password.ToString())
                 {
                     @Html.PasswordFor(m => m, new { @class = "form-control", placeholder = @placeholder })
@@ -86,7 +90,7 @@
                 {
                     if (ViewData.ModelMetadata.DataTypeName == "TextArea")
                     {
-                        @Html.TextAreaFor(m => m, new { @class = "form-control", placeholder = @placeholder})
+                        @Html.TextAreaFor(m => m, new { @class = "form-control", placeholder = @placeholder })
                     }
                     else
                     {

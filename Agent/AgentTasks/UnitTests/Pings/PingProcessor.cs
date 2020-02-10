@@ -5,14 +5,15 @@ using NLog;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.AccountsDb.Classes.UnitTests.PingTests;
 using Zidium.Core.Api;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Agent.AgentTasks
 {
     public class PingProcessor : UnitTestProcessorBase
     {
-        public PingProcessor(ILogger logger, CancellationToken cancellationToken)
-            : base(logger, cancellationToken)
+        public PingProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
+            : base(logger, cancellationToken, timeService)
         {
         }
 
@@ -111,15 +112,21 @@ namespace Zidium.Agent.AgentTasks
             {
                 return new UnitTestExecutionInfo()
                 {
-                    Message = "Успешно",
-                    Result = UnitTestResult.Success
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Message = "Успешно",
+                        Result = UnitTestResult.Success
+                    }
                 };
             }
 
             return new UnitTestExecutionInfo()
             {
-                Message = result.ErrorMessage,
-                Result = UnitTestResult.Alarm,
+                ResultRequest = new SendUnitTestResultRequestData()
+                {
+                    Message = result.ErrorMessage,
+                    Result = UnitTestResult.Alarm,
+                },
                 IsNetworkProblem = true // Для пинга всегда будем использовать попытки
             };
         }

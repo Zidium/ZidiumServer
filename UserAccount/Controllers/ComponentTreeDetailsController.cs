@@ -415,6 +415,15 @@ namespace Zidium.UserAccount.Controllers
                 model.PingHost = unittest.PingRule?.Host;
                 model.PingTimeout = TimeSpan.FromMilliseconds(unittest.PingRule?.TimeoutMs ?? 0);
             }
+            else if (model.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+            {
+                model.PingHost = unittest.TcpPortRule.Host;
+                model.TcpPort = unittest.TcpPortRule.Port;
+            }
+            else if (model.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+            {
+                model.HttpUrl = unittest.VirusTotalRule.Url;
+            }
             else if (model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
                 model.DomainName = unittest.DomainNamePaymentPeriodRule?.Domain;
             else if (model.TypeId == SystemUnitTestTypes.SslTestType.Id)

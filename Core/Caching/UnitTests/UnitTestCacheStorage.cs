@@ -38,7 +38,7 @@ namespace Zidium.Core.Caching
             dbEntity.DisableToDate = unitTest.DisableToDate;
             dbEntity.ErrorColor = unitTest.ErrorColor;
             dbEntity.IsDeleted = unitTest.IsDeleted;
-            dbEntity.NextExecutionDate = unitTest.NextDate;
+            dbEntity.NextExecutionDate = unitTest.NextExecutionDate;
             dbEntity.ParentEnable = unitTest.ParentEnable;
             dbEntity.PeriodSeconds = unitTest.PeriodSeconds;
             dbEntity.SimpleMode = unitTest.SimpleMode;

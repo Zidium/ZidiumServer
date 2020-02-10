@@ -41,7 +41,7 @@ namespace Zidium.Core.Tests.AgentTests
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
-                    Type = NotificationType.Http,
+                    Type = SubscriptionChannel.Http,
                     Address = @"http://fakesite.zidium.net/post",
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now,
@@ -66,7 +66,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 var notificationRepository = context.GetNotificationRepository();
                 var notification = notificationRepository.QueryAllByComponent(component.Id).First(t => t.Id == notificationId);
-                Assert.Equal(NotificationStatus.Sended, notification.Status);
+                Assert.Equal(NotificationStatus.Processed, notification.Status);
             }
         }
     }

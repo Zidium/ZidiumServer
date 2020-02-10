@@ -152,6 +152,8 @@ namespace Zidium.Core.AccountsDb
             // срок годности ssl-сертификата
             RegisterUnitTestType(SystemUnitTestTypes.SslTestType);
 
+            // VirusTotal
+            RegisterUnitTestType(SystemUnitTestTypes.VirusTotalTestType);
         }
 
         protected void RegisterTariffLimit(TariffLimit limit)
@@ -180,6 +182,28 @@ namespace Zidium.Core.AccountsDb
             RegisterTariffLimit(SystemTariffLimits.TestBonus);
         }
 
+        protected void RegisterTimeZones()
+        {
+            if (!Context.TimeZones.Any())
+            {
+                var offsets = TimeZoneInfo.GetSystemTimeZones()
+                    .Select(t => t.BaseUtcOffset)
+                    .Distinct();
+                foreach (var offset in offsets)
+                {
+                    var timezone = new TimeZone()
+                    {
+                        OffsetMinutes = (int)offset.TotalMinutes,
+                        Name = "UTC " + (offset < TimeSpan.Zero ? "-" : "+") + offset.ToString(@"hh\:mm")
+                    };
+
+                    Context.TimeZones.Add(timezone);
+                }
+
+                Context.SaveChanges();
+            }
+        }
+
         public void RegisterAll()
         {
             RegisterComponentTypes();
@@ -187,6 +211,7 @@ namespace Zidium.Core.AccountsDb
             RegisterUserRoles();
             RegisterUnitTestTypes();
             RegisterTariffLimits();
+            RegisterTimeZones();
 
             Context.SaveChanges();
         }

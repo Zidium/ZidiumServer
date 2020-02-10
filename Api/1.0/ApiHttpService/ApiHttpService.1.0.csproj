@@ -45,10 +45,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
-    </Reference>
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -68,12 +64,6 @@
   <ItemGroup>
     <Content Include="ApiHandler.ashx" />
     <Content Include="NLog.config" />
-    <None Include="Properties\PublishProfiles\FTP - Test.pubxml" />
-    <None Include="Properties\PublishProfiles\FTP - Work.pubxml" />
-    <None Include="Properties\PublishProfiles\WebDeploy - Test.pubxml" />
-    <None Include="Properties\PublishProfiles\WebDeploy - Work.pubxml" />
-    <None Include="Properties\PublishProfiles\Zem - Local.pubxml" />
-    <None Include="Properties\PublishProfiles\Local.pubxml" />
     <Content Include="Zidium.config" />
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>

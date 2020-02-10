@@ -14,6 +14,15 @@
             {
                 <p>@DateTimeHelper.GetRussianDateTime(Model.ExecutionTime)</p>
                 <p class="@textCss big-font">@Model.Message</p>
+                if (Model.ShowDetailsUrl != null)
+                {
+                    <p>
+                        <a href="@Model.ShowDetailsUrl" target="_blank">Внешний отчет</a>
+                    </p>
+                }
+                <p>
+                    <a href="@Url.Action("Index", "Events", Model.EventId)">Событие</a>
+                </p>
             }
             else
             {

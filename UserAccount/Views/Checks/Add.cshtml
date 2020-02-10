@@ -73,7 +73,7 @@
             </ul>
         </div>
     </li>
-    
+
     <li class="list-group-item">
         @Html.ActionLink("Ping", "EditSimple", "PingChecks",
             null,
@@ -81,7 +81,7 @@
         <a href="#" class="helpButton iconButton"></a>
         <div class="checkDescription">Zidium выполнит команду ping и проверит время отклика.</div>
     </li>
-    
+
     <li class="list-group-item">
         @Html.ActionLink("TcpPort", "EditSimple", "TcpPortChecks",
             null,
@@ -89,7 +89,7 @@
         <a href="#" class="helpButton iconButton"></a>
         <div class="checkDescription">Zidium проверяет можно ли установить tcp соединение на указанный хост и порт.</div>
     </li>
-    
+
     <li class="list-group-item">
         @Html.ActionLink("Дата оплаты доменного имени", "EditSimple", "DomainNamePaymentPeriodChecks",
             null,
@@ -99,7 +99,7 @@
             Zidium проверит количество дней, которые остались до даты оплаты домена.
         </div>
     </li>
-    
+
     <li class="list-group-item">
         @Html.ActionLink("Срок годности Ssl-сертификата сайта", "EditSimple", "SslCertificateExpirationDateChecks",
             null,
@@ -109,34 +109,34 @@
             Zidium проверит количество дней, которые остались до срока годности Ssl-сертификата.
         </div>
     </li>
-    
+
     @*<li class="list-group-item">
-        <div class="addButtonDiv">
-            <a href='@Url.Action("Edit", "SmtpCheck")' class="btn btn-default addCheckButton">
-                <span class="glyphicon glyphicon-plus"></span>
-                Добавить
-            </a>
-        </div>
-        @Html.ActionLink("Отправка писем через SMTP-шлюз", "Index", "UnitTests",
-            new { unitTestTypeId = SystemUnitTestTypes.HttpUnitTestType.Id },
-            new { @class = "checkTitle" })
-        <a href="#" class="helpButton iconButton"></a>
-        <div class="checkDescription" id="smtp">
-            <p>Zidium проверит, что через указанный smtp-шлюз письма успешно доставляются на популярные почтовые адреса.</p>
-            <p>Основные почтовые адреса:</p>
-            <ul>
-                <li>@@mail.ru</li>
-                <li>@@yandex.ru</li>
-                <li>@@gmail.com</li>
-            </ul>
-        </div>
-    </li>*@
+            <div class="addButtonDiv">
+                <a href='@Url.Action("Edit", "SmtpCheck")' class="btn btn-default addCheckButton">
+                    <span class="glyphicon glyphicon-plus"></span>
+                    Добавить
+                </a>
+            </div>
+            @Html.ActionLink("Отправка писем через SMTP-шлюз", "Index", "UnitTests",
+                new { unitTestTypeId = SystemUnitTestTypes.HttpUnitTestType.Id },
+                new { @class = "checkTitle" })
+            <a href="#" class="helpButton iconButton"></a>
+            <div class="checkDescription" id="smtp">
+                <p>Zidium проверит, что через указанный smtp-шлюз письма успешно доставляются на популярные почтовые адреса.</p>
+                <p>Основные почтовые адреса:</p>
+                <ul>
+                    <li>@@mail.ru</li>
+                    <li>@@yandex.ru</li>
+                    <li>@@gmail.com</li>
+                </ul>
+            </div>
+        </li>*@
 
     <li class="list-group-item">
         @Html.ActionLink("Sql-запрос", "EditSimple", "SqlChecks",
             null,
             new { @class = "checkTitle" })
-        <a href="#" class="helpButton iconButton"></a>   
+        <a href="#" class="helpButton iconButton"></a>
         <div class="checkDescription">
             <p>Пример Sql-запроса:</p>
             <pre>
@@ -150,13 +150,21 @@ ELSE
                 <br /> - message = сообщение проверки (любая строка).
             </p>
             @*<p>Параметры проверки:</p>
-            <ul>
-                <li>время выполнения запроса</li>
-                <li>возвращаемое значение</li>
-            </ul>*@
+                <ul>
+                    <li>время выполнения запроса</li>
+                    <li>возвращаемое значение</li>
+                </ul>*@
         </div>
     </li>
-    
+
+    <li class="list-group-item">
+        @Html.ActionLink("VirusTotal", "EditSimple", "VirusTotal",
+            null,
+            new { @class = "checkTitle" })
+        <a href="#" class="helpButton iconButton"></a>
+        <div class="checkDescription">Zidium выполнит проверку заданного url через сервис VirusTotal.</div>
+    </li>
+
     <li class="list-group-item">
         @Html.ActionLink("Пользовательская", "Add", "UnitTests",
             null,

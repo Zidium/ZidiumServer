@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models
 {
@@ -17,7 +18,7 @@ namespace Zidium.UserAccount.Models
 
         public User User { get; set; }
 
-        public NotificationType Channel { get; set; }
+        public SubscriptionChannel Channel { get; set; }
 
         public NotificationStatus Status { get; set; }
 

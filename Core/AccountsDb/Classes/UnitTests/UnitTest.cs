@@ -71,6 +71,8 @@ namespace Zidium.Core.AccountsDb
         /// </summary>
         public DateTime? NextExecutionDate { get; set; }
 
+        public DateTime? NextStepProcessDate { get; set; }
+
         /// <summary>
         /// Время последнего выполнения
         /// </summary>
@@ -85,6 +87,11 @@ namespace Zidium.Core.AccountsDb
         /// Правило проверки ping
         /// </summary>
         public virtual UnitTestPingRule PingRule { get; set; }
+
+        /// <summary>
+        /// Правило проверки virus total
+        /// </summary>
+        public virtual UnitTestVirusTotalRule VirusTotalRule { get; set; }
 
         /// <summary>
         /// Правило проверки tcp порта

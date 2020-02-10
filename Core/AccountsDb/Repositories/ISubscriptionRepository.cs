@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Zidium.Core.AccountsDb
+﻿namespace Zidium.Core.AccountsDb
 {
     /// <summary>
     /// Репозиторий для работы с подписками

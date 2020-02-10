@@ -45,6 +45,11 @@ namespace Zidium.UserAccount.Controllers
             var userSettingService = CurrentAccountDbContext.GetUserSettingService();
             model.SendMeNews = userSettingService.SendMeNews(user.Id);
 
+            var timeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(user.Id);
+            var timeZoneRepository = CurrentAccountDbContext.GetTimeZoneRepository();
+            var timeZone = timeZoneRepository.GetOneByOffsetMinutes(timeZoneOffsetMinutes);
+            model.TimeZone = timeZone.Name;
+
             return View(model);
         }
 
@@ -54,7 +59,10 @@ namespace Zidium.UserAccount.Controllers
         [CanManageAccount]
         public ActionResult Add()
         {
-            var user = new AddUserModel();
+            var user = new AddUserModel()
+            {
+                TimeZoneOffsetMinutes = 3 * 60
+            };
             return View(user);
         }
 
@@ -99,6 +107,10 @@ namespace Zidium.UserAccount.Controllers
                 }
 
                 userService.CreateUser(user, CurrentUser.AccountId);
+
+                var userSettingService = CurrentAccountDbContext.GetUserSettingService();
+                userSettingService.TimeZoneOffsetMinutes(user.Id, model.TimeZoneOffsetMinutes);
+
                 DbContext.SaveChanges();
             }
             catch (UserFriendlyException e)
@@ -134,6 +146,7 @@ namespace Zidium.UserAccount.Controllers
 
             var userSettingService = CurrentAccountDbContext.GetUserSettingService();
             model.SendMeNews = userSettingService.SendMeNews(user.Id);
+            model.TimeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(user.Id);
 
             return View(model);
         }
@@ -194,6 +207,7 @@ namespace Zidium.UserAccount.Controllers
 
                 var userSettingService = CurrentAccountDbContext.GetUserSettingService();
                 userSettingService.SendMeNews(user.Id, model.SendMeNews);
+                userSettingService.TimeZoneOffsetMinutes(user.Id, model.TimeZoneOffsetMinutes);
 
                 DbContext.SaveChanges();
             }
@@ -259,7 +273,8 @@ namespace Zidium.UserAccount.Controllers
                 Id = id,
                 UserId = contact.UserId,
                 Type = contact.Type,
-                Value = contact.Value
+                Value = contact.Value,
+                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
             };
             return View(model);
         }
@@ -304,7 +319,8 @@ namespace Zidium.UserAccount.Controllers
             {
                 ModalMode = Request.IsAjaxRequest(),
                 ReturnUrl = Url.Action("Edit", new { id = userId.ToString() }),
-                UserId = user.Id
+                UserId = user.Id,
+                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
             };
             return View(model);
         }

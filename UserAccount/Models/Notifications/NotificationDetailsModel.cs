@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models
 {
@@ -19,7 +20,7 @@ namespace Zidium.UserAccount.Models
         public User User { get; set; }
 
         [Display(Name = "Канал")]
-        public NotificationType Channel { get; set; }
+        public SubscriptionChannel Channel { get; set; }
 
         [Display(Name = "Статус")]
         public NotificationStatus Status { get; set; }
@@ -35,6 +36,9 @@ namespace Zidium.UserAccount.Models
 
         [Display(Name = "Подписка")]
         public Subscription Subscription { get; set; }
+
+        [Display(Name = "Сообщение")]
+        public string Text { get; set; }
 
     }
 }

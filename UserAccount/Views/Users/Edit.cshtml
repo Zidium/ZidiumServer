@@ -15,15 +15,15 @@
     @Html.HiddenFor(m => m.Id)
 
     @Html.EditorFor(m => m.Login, "LabeledEdit", new { HorizontalForm = true })
-    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })  
+    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
     @Html.EditorFor(m => m.Post, "LabeledEdit", new { HorizontalForm = true })
 
     if (UserHelper.CurrentUser.CanManageAccount())
     {
         <div class="form-group">
-            @Html.LabelFor(m => m.RoleId, new {@class = "col-sm-2 control-label"})
+            @Html.LabelFor(m => m.RoleId, new { @class = "col-sm-2 control-label" })
             <div class="col-sm-4">
-                @Html.DropDownListFor(x => x.RoleId, GuiHelper.GetRolesItems(Model.RoleId), new {@class = "form-control"})
+                @Html.DropDownListFor(x => x.RoleId, GuiHelper.GetRolesItems(Model.RoleId), new { @class = "form-control" })
             </div>
             <div class="col-sm-6">
                 @Html.ValidationMessageFor(x => x.RoleId, null, "p")
@@ -34,6 +34,16 @@
     {
         @Html.HiddenFor(m => m.RoleId)
     }
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.TimeZoneOffsetMinutes, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-4">
+            @Html.DropDownListFor(x => x.TimeZoneOffsetMinutes, GuiHelper.GetTimeZoneItems(Model.TimeZoneOffsetMinutes), new { @class = "form-control" })
+        </div>
+        <div class="col-sm-6">
+            @Html.ValidationMessageFor(x => x.TimeZoneOffsetMinutes)
+        </div>
+    </div>
 
     @Html.EditorFor(m => m.SendMeNews, "BoolEdit", new { HorizontalForm = true })
 
@@ -48,17 +58,17 @@
             <div>
                 <table class="table simpleTableClear table-condensed">
                     <thead>
-                    <tr>
-                        <th>Значение</th>
-                        <th>Тип</th>
-                        <th></th>
-                    </tr>
+                        <tr>
+                            <th>Значение</th>
+                            <th>Тип</th>
+                            <th></th>
+                        </tr>
                     </thead>
                     <tbody id="contactstablebody">
-                    @foreach (var contact in Model.Contacts)
-                    {
-                        @Html.Partial("UserContactRow", contact)
-                    }
+                        @foreach (var contact in Model.Contacts)
+                        {
+                            @Html.Partial("UserContactRow", contact)
+                        }
                     </tbody>
                 </table>
             </div>
@@ -67,8 +77,8 @@
 
     <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-            <input type="submit" value="Сохранить" class="btn btn-primary"/>
-            @Html.ActionLink("Отмена", "Show", "Users", new {id = Model.Id}, new {@class = "btn btn-default"})
+            <input type="submit" value="Сохранить" class="btn btn-primary" />
+            @Html.ActionLink("Отмена", "Show", "Users", new { id = Model.Id }, new { @class = "btn btn-default" })
         </div>
     </div>
 }

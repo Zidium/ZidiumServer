@@ -42,7 +42,7 @@ namespace Zidium.Core.Tests.AgentTests
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
-                    Type = NotificationType.Email,
+                    Type = SubscriptionChannel.Email,
                     Address = user.Login,
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now
@@ -58,14 +58,20 @@ namespace Zidium.Core.Tests.AgentTests
             var processor = new EmailNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
             processor.Process(account.Id, component.Id);
 
-            // Должно появиться письмо
             using (var context = account.CreateAccountDbContext())
             {
+                // Должно появиться письмо
                 var emailRepository = context.GetSendEmailCommandRepository();
                 var email = emailRepository.QueryAll().FirstOrDefault(t => t.ReferenceId == notificationId);
 
                 Assert.NotNull(email);
                 Assert.Equal(user.Login, email.To);
+
+                // У уведомления должна появиться ссылка на письмо
+                var notificationRepository = context.GetNotificationRepository();
+                var notification = notificationRepository.Find(notificationId);
+
+                Assert.Equal(email.Id, notification.SendEmailCommandId);
             }
         }
     }

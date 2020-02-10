@@ -98,7 +98,8 @@ namespace Zidium.Core.AccountsDb
                             && x.IsDeleted == false
                             && x.Enable
                             && x.ParentEnable
-                            && (x.NextExecutionDate <= date || x.NextExecutionDate == null))
+                            && (x.NextExecutionDate <= date || x.NextExecutionDate == null)
+                            && (x.NextStepProcessDate <= date || x.NextStepProcessDate==null))
                 .ToList();
         }
 

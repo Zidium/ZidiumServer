@@ -325,11 +325,11 @@ function HideModal() {
 function myGuid() {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
+            .toString(16)
+            .substring(1);
     }
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-      s4() + '-' + s4() + s4() + s4();
+        s4() + '-' + s4() + s4() + s4();
 }
 
 function addKeyValueRow(collectionName) {
@@ -390,6 +390,16 @@ $(function () {
             digitsOptional: false
         }
     });
+
+    Inputmask.extendAliases({
+        "time": {
+            mask: "h:s",
+            placeholder: "__:__",
+            alias: "datetime",
+            autoUnmask: !1
+        }
+    }
+    );
 
 });
 

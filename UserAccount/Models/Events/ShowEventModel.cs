@@ -5,6 +5,7 @@ using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.Events;
 
 namespace Zidium.UserAccount.Models
@@ -245,5 +246,13 @@ namespace Zidium.UserAccount.Models
         public bool CanChangeImportance { get; set; }
 
         public bool CanChangeActuality { get; set; }
+
+        public string GetRealEndDateString(Event eventObj)
+        {
+            var realEndDate = eventObj.StartDate + EventHelper.GetDuration(eventObj.StartDate, eventObj.ActualDate, DateTime.Now);
+            return eventObj.ActualDate == DateTimeHelper.InfiniteActualDate
+                ? null
+                : realEndDate.ToString(GuiHelper.DateTimeDisplayFormat);
+        }
     }
 }

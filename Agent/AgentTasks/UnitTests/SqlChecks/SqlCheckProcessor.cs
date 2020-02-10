@@ -12,8 +12,8 @@ namespace Zidium.Agent.AgentTasks
 {
     public class SqlCheckProcessor : UnitTestProcessorBase
     {
-        public SqlCheckProcessor(ILogger logger, CancellationToken cancellationToken)
-            : base(logger, cancellationToken)
+        public SqlCheckProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
+            : base(logger, cancellationToken, timeService)
         {
         }
 
@@ -116,8 +116,11 @@ namespace Zidium.Agent.AgentTasks
                 var status = GetStatus(statusText);
                 return new UnitTestExecutionInfo()
                 {
-                    Message = message,
-                    Result = status
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Message = message,
+                        Result = status
+                    }
                 };
             }
             catch (Exception exception)
@@ -126,8 +129,11 @@ namespace Zidium.Agent.AgentTasks
 
                 return new UnitTestExecutionInfo()
                 {
-                    Message = error + ": " + exception.Message,
-                    Result = UnitTestResult.Alarm,
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Message = error + ": " + exception.Message,
+                        Result = UnitTestResult.Alarm,
+                    },
                     IsNetworkProblem = sqlException?.Number == -2 || sqlException?.Number == 11 // TIMEOUT_EXPIRED = -2, GENERAL_NETWORK_ERROR = 11
                 };
             }

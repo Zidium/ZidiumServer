@@ -30,10 +30,10 @@
                 <span class="simple-text-value">@(Model.ActualInterval != null ? TimeSpanHelper.GetOneUnitString(Model.ActualInterval.Value) : "нет")</span>
             </p>
         }
-            <p>
-                <span class="simple-text-header">Цвет, если нет сигнала</span><br />
-                @Html.ObjectColorIcon(Model.NoSignalColor)
-            </p>        
+        <p>
+            <span class="simple-text-header">Цвет, если нет сигнала</span><br />
+            @Html.ObjectColorIcon(Model.NoSignalColor)
+        </p>
     </div>
 </div>
 
@@ -49,24 +49,31 @@
     <p>
         <span class="simple-text-header">Таймаут</span><br />
         <span class="simple-text-value">@TimeSpanHelper.GetOneUnitString(Model.HttpTimeout)</span>
-</p>
+    </p>
 }
 else if (Model.TypeId == SystemUnitTestTypes.PingTestType.Id)
 {
     <p>
         <span class="simple-text-header">Хост</span><br />
         <span class="simple-text-value">@Model.PingHost</span>
-</p>
+    </p>
     <p>
         <span class="simple-text-header">Таймаут</span><br />
         <span class="simple-text-value">@TimeSpanHelper.GetOneUnitString(Model.PingTimeout)</span>
-</p>
+    </p>
 }
 else if (Model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
 {
     <p>
         <span class="simple-text-header">Домен</span><br />
-        <a target="_blank" href="@Model.DomainName">@Model.DomainName</a>
+        <span class="simple-text-value">@Model.DomainName</span>
+    </p>
+}
+else if (Model.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Url ресурса</span><br />
+        <a target="_blank" href="@Model.HttpUrl">@Model.HttpUrl</a>
     </p>
 }
 else if (Model.TypeId == SystemUnitTestTypes.SslTestType.Id)
@@ -81,6 +88,17 @@ else if (Model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
     <p>
         <span class="simple-text-header">Sql-запрос</span><br />
         <span class="simple-text-value text-wordbreak">@Model.SqlQuery</span>
+    </p>
+}
+else if (Model.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+{
+    <p>
+        <span class="simple-text-header">Хост</span><br />
+        <span class="simple-text-value">@Model.PingHost</span>
+    </p>
+    <p>
+        <span class="simple-text-header">Порт tcp</span><br />
+        <span class="simple-text-value">@Model.TcpPort</span>
     </p>
 }
 

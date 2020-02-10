@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zidium.Core.Api;
-using Zidium.Core.AccountsDb;
 
-namespace Zidium.Core
+namespace Zidium.Core.AccountsDb
 {
     /// <summary>
     /// Репозиторий для работы с логами

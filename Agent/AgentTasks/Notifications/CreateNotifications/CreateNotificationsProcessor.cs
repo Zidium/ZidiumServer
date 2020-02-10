@@ -4,7 +4,6 @@ using System.Data.Entity;
 using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Api;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
@@ -137,8 +136,17 @@ namespace Zidium.Agent.AgentTasks.Notifications
             var subscriptions = subscriptionsRepository.QueryAll();
             var userToSubscriptions = subscriptions.GroupBy(x => x.UserId).ToDictionary(x => x.Key, y => y.ToArray());
 
-            // получим всех пользователей
-            var users = accountDbContext.GetUserRepository().QueryAll().ToArray();
+            // получим всех пользователей с их часовыми поясами
+            var userSettingService = accountDbContext.GetUserSettingService();
+            var users = accountDbContext.GetUserRepository().QueryAll()
+                .Select(t => t.Id)
+                .ToArray()
+                .Select(t => new UserInfo()
+                {
+                    Id = t,
+                    TimeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(t)
+                })
+                .ToArray();
 
             if (userId.HasValue)
                 users = users.Where(t => t.Id == userId.Value).ToArray();
@@ -173,7 +181,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
         protected void ProcessAccountArchivedStatuses(
             Guid accountId,
             AccountDbContext accountDbContext,
-            User[] users,
+            UserInfo[] users,
             Dictionary<Guid, Component> components,
             Dictionary<Guid, Subscription[]> userToSubscriptions,
             ILogger logger,
@@ -183,7 +191,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
             var archivedStatusRepository = accountDbContext.GetArchivedStatusRepository();
 
             var archivedStatuses = archivedStatusRepository
-                .GetTop(1000)
+                .GetTop(EventMaxCount)
                 .Include(x => x.Event)
                 .ToArray();
 
@@ -223,7 +231,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
         protected void ProcessAccountCurrentStatuses(
             Guid accountId,
             AccountDbContext accountDbContext,
-            User[] users,
+            UserInfo[] users,
             Dictionary<Guid, Subscription[]> userToSubscriptions,
             ILogger logger,
             Guid? componentId = null)
@@ -264,7 +272,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected void ProcessAccountInternal(
             Guid accountId,
-            User[] users,
+            UserInfo[] users,
             Dictionary<Guid, Subscription[]> userToSubscriptions,
             List<StatusInfo> statuses,
             AccountDbContext accountDbContext,
@@ -305,7 +313,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     continue;
                 }
 
-                // Пропускаем удалённые
+                // Пропускаем корневой (причина?)
                 if (component.IsRoot)
                 {
                     logger.Trace("component.IsRoot");
@@ -315,12 +323,8 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 // цикл по пользователям
                 foreach (var user in users)
                 {
-                    var channels = new[]
-                    {
-                        SubscriptionChannel.Email,
-                        SubscriptionChannel.Sms,
-                        SubscriptionChannel.Http
-                    };
+                    var channels = SubscriptionHelper.AvailableSubscriptionChannels;
+
                     if (userToSubscriptions.TryGetValue(user.Id, out var subscriptions))
                     {
                         foreach (var channel in channels)
@@ -394,17 +398,38 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                     }
                                 }
 
+                                // проверяем интервал отправки
+                                if (subscription.SendOnlyInInterval)
+                                {
+                                    // переводим текущее время в часовой пояс клиента
+                                    var nowUtc = Now().ToUniversalTime();
+                                    var nowOffset = new DateTimeOffset(nowUtc);
+                                    var nowForUser = nowOffset.ToOffset(TimeSpan.FromMinutes(user.TimeZoneOffsetMinutes));
+                                    var nowForUserTime = nowForUser.TimeOfDay;
+                                    var fromTime = TimeSpan.FromMinutes(subscription.SendIntervalFromHour.Value * 60 + subscription.SendIntervalFromMinute.Value);
+                                    var toTime = TimeSpan.FromMinutes(subscription.SendIntervalToHour.Value * 60 + subscription.SendIntervalToMinute.Value);
+                                    if (nowForUserTime < fromTime || nowForUserTime > toTime)
+                                    {
+                                        logger.Trace("False by SendInterval");
+                                        continue;
+                                    }
+                                }
+
                                 logger.Debug("Создаем уведомления для подписки: " + subscription.Id);
                                 cancellationToken.ThrowIfCancellationRequested();
 
                                 List<UserContact> contacts;
 
                                 if (subscription.Channel == SubscriptionChannel.Email)
-                                    contacts = GetUserEMailContacts(subscription.User);
+                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.Email);
                                 else if (subscription.Channel == SubscriptionChannel.Sms)
-                                    contacts = GetUserMobileContacts(subscription.User);
+                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.MobilePhone);
                                 else if (subscription.Channel == SubscriptionChannel.Http)
-                                    contacts = GetUserHttpContacts(subscription.User);
+                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.Http);
+                                else if (subscription.Channel == SubscriptionChannel.Telegram)
+                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.Telegram);
+                                else if (subscription.Channel == SubscriptionChannel.VKontakte)
+                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.VKontakte);
                                 else
                                     contacts = new List<UserContact>();
 
@@ -419,27 +444,8 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                     var address = contact.Value;
                                     logger.Debug("Создаём уведомление на адрес: " + address);
 
-                                    NotificationType notificationType;
-                                    if (contact.Type == UserContactType.Email)
-                                    {
-                                        notificationType = NotificationType.Email;
-                                    }
-                                    else if (contact.Type == UserContactType.MobilePhone)
-                                    {
-                                        notificationType = NotificationType.Sms;
-                                    }
-                                    else if (contact.Type == UserContactType.Http)
-                                    {
-                                        notificationType = NotificationType.Http;
-                                    }
-                                    else
-                                    {
-                                        logger.Debug("Неизвестный тип контакта: " + contact.Type);
-                                        continue;
-                                    }
-
                                     var lastComponentNotification = component.LastNotifications.FirstOrDefault(
-                                        x => x.Address == address && x.Type == notificationType);
+                                        x => x.Address == address && x.Type == subscription.Channel);
 
                                     var isImportanceColor = status.Importance >= subscription.Importance;
 
@@ -459,7 +465,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                                 CreateDate = Now(),
                                                 EventId = status.EventId,
                                                 EventImportance = status.Importance,
-                                                Type = notificationType,
+                                                Type = subscription.Channel,
                                                 NotificationId = Guid.Empty
                                             };
                                             component.LastNotifications.Add(lastComponentNotification);
@@ -551,47 +557,6 @@ namespace Zidium.Agent.AgentTasks.Notifications
             }
         }
 
-
-        protected static List<UserContact> GetUserEMailContacts(User user)
-        {
-            var result = user
-                .UserContacts.Where(x => x.Type == UserContactType.Email && !string.IsNullOrEmpty(x.Value))
-                .ToList();
-
-            if (result.Count == 0)
-            {
-                var login = user.Login;
-                if (ValidationHelper.IsEmail(login))
-                {
-                    result.Add(new UserContact()
-                    {
-                        Type = UserContactType.Email,
-                        Value = login
-                    });
-                }
-            }
-
-            return result;
-        }
-
-        protected static List<UserContact> GetUserMobileContacts(User user)
-        {
-            var result = user
-                .UserContacts.Where(x => x.Type == UserContactType.MobilePhone && !string.IsNullOrEmpty(x.Value))
-                .ToList();
-
-            return result;
-        }
-
-        protected static List<UserContact> GetUserHttpContacts(User user)
-        {
-            var result = user
-                .UserContacts.Where(x => x.Type == UserContactType.Http && !string.IsNullOrEmpty(x.Value))
-                .ToList();
-
-            return result;
-        }
-
         protected void AddNotification(
             LastComponentNotification lastComponentNotification,
             StatusInfo statusInfo,
@@ -621,7 +586,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 Reason = reason
             };
 
-            if (newNotification.Type == NotificationType.Http)
+            if (newNotification.Type == SubscriptionChannel.Http)
             {
                 newNotification.NotificationHttp = new NotificationHttp()
                 {
@@ -640,7 +605,24 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected DateTime Now()
         {
-            return AgentHelper.GetDispatcherClient().GetServerTime().Data.Date;
+            return _nowOverride ?? AgentHelper.GetDispatcherClient().GetServerTime().Data.Date;
+        }
+
+        private DateTime? _nowOverride;
+
+        /// <summary>
+        /// Для юнит-тестов
+        /// </summary>
+        public void SetNow(DateTime now)
+        {
+            _nowOverride = now;
+        }
+
+        protected class UserInfo
+        {
+            public Guid Id;
+
+            public int TimeZoneOffsetMinutes;
         }
     }
 }

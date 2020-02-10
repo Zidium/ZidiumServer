@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
@@ -11,6 +12,8 @@ namespace Zidium.UserAccount.Models.Subscriptions
         public User User { get; set; }
 
         public Subscription[] AllSubscriptions { get; set; }
+        
+        public string CommonWebsiteUrl { get; set; }
 
         public class SubscriptionColumnData
         {

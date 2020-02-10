@@ -30,6 +30,11 @@ namespace Zidium.Core.Api
         /// </summary>
         public int? AttempCount { get; set; }
 
+        /// <summary>
+        /// Время следующего выполнения проверки, если НЕ задано, то диспетчер его расчитает самостоятельно
+        /// </summary>
+        public DateTime? NextExecutionTime { get; set; }
+
         public List<ExtentionPropertyDto> Properties { get; set; }
 
         public long GetSize()

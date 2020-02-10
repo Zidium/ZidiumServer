@@ -49,13 +49,13 @@
     <div class="row">
         <div class="col-sm-4 bottom10px">
             @Html.Label("Канал")
-            @Html.DropDownList("channel", GuiHelper.GetNotificationTypeItems(Model.Channel, true), new { @class = "form-control", data_filterbyvalue = "true" })
+            @Html.DropDownList("channel", DropDownListHelper.GetSubscriptionChannels(Model.Channel, true), new { @class = "form-control", data_filterbyvalue = "true" })
         </div>
         <div class="col-sm-4 bottom10px">
             @Html.Label("Статус")
             @Html.DropDownList("status", GuiHelper.GetNotificationStatusItems(Model.Status, true), new { @class = "form-control", data_filterbyvalue = "true" })
         </div>
-        
+
         @if (UserHelper.CurrentUser.CanManageAccount())
         {
             <div class="col-sm-4 bottom10px">
@@ -68,15 +68,18 @@
     <div class="row">
         <div class="col-sm-12 bottom10px">
             @Html.FilterButton("filters")
+            <a class="btn btn-default" id="send-notification-button" href='@Url.Action("SendNotification")'>
+                Проверить отправку
+            </a>
         </div>
     </div>
 </div>
 
 @Html.Grid(Model.Notifications).Columns(columns =>
 {
-    columns.Add(m => m.SendDate).Titled("Дата отправки").RenderValueAs(m =>
-        Html.ActionLink(m.SendDate == null ? "..." : m.SendDate.Value.ToString(GuiHelper.DateTimeDisplayFormat), "Show", new { id = m.Id, componentId = m.Component.Id }))
-        .Encoded(false).Sanitized(false).SortInitialDirection(GridSortDirection.Descending).Css("text-nowrap");
+    columns.Add(m => m.CreationDate).Titled("Дата").RenderValueAs(m =>
+        Html.ActionLink(m.CreationDate.ToString(GuiHelper.DateTimeDisplayFormat), "Show", new { id = m.Id, componentId = m.Component.Id }))
+        .Encoded(false).Sanitized(false).SortInitialDirection(GridSortDirection.Descending).Css("text-nowrap").SetWidth("150px");
 
     columns.Add(t => t.Component.DisplayName).Titled("Компонент").RenderValueAs(t =>
         Html.ActionLink(t.Component.DisplayName, "Show", "Components", new { id = t.Component.Id }, null))
@@ -86,7 +89,7 @@
     {
         var descriptionFull = (!string.IsNullOrEmpty(t.Event.Message) ? t.Event.Message : t.EventType.DisplayName);
         var description = descriptionFull.Length <= NotificationsListModel.MaxMessageLength ? descriptionFull : descriptionFull.Substring(0, NotificationsListModel.MaxMessageLength) + "...";
-        return Html.ActionLink(description, "Show", "Events", new { id = t.Event.Id, componentId = t.Component.Id }, null);
+        return Html.ActionLink(description, "Show", "Events", new { id = t.Event.Id }, null);
     }).Encoded(false).Sanitized(false).Css("text-wordbreak");
 
     columns.Add(m => m.User.Login).Titled("Адрес").RenderValueAs(t =>
@@ -95,30 +98,46 @@
 
     columns.Add(t => t.Channel).Titled("Канал");
 
-    columns.Add(t => t.Status).Titled("Статус").RenderValueAs(m =>
-        @<text>
-            @{
-                string labelClass = "label-default";
-                if (m.Status == NotificationStatus.Error)
-                {
-                    labelClass = "label-danger";
-                }
-                else if (m.Status == NotificationStatus.InQueue)
-                {
-                    labelClass = "label-warning";
-                }
-                else if (m.Status == NotificationStatus.Sended)
-                {
-                    labelClass = "label-success";
-                }
-            }
-            <span class="label @labelClass" title="@m.SendError">@m.Status</span>
-        </text>)
-        .Encoded(false).Sanitized(false).Css("text-center");
-}).Sortable().WithMultipleFilters().Selectable(false).WithPaging(50)
+    columns.Add(t => t.Status).Titled("Статус").RenderValueAs(m =>@<text>
+        @{string labelClass = "label-default";
+                        if (m.Status == NotificationStatus.Error)
+                        {
+                            labelClass = "label-danger";
+                        }
+                        else if (m.Status == NotificationStatus.InQueue)
+                        {
+                            labelClass = "label-warning";
+                        }
+                        else if (m.Status == NotificationStatus.Processed)
+                        {
+                            labelClass = "label-info";
+                        }
+                        else if (m.Status == NotificationStatus.Sent)
+                        {
+                            labelClass = "label-success";
+                        }
+        }
+        <span class="label @labelClass" title="@m.SendError">@m.Status</span>
+    </text>).Encoded(false).Sanitized(false).Css("text-center");
+        }).Sortable().WithMultipleFilters().Selectable(false).WithPaging(50)
 
 @section Scripts
 {
     @Scripts.Render("~/Scripts/GridMvc")
     @Scripts.Render("~/Scripts/AllControls")
+
+    <script>
+        $(function () {
+            $('#send-notification-button').click(onSendNotificationButtonClick);
+        });
+
+        function onSendNotificationButtonClick(event) {
+            event.preventDefault();
+
+            var url = $(this).attr('href');
+            dialogs.showModal(url, 'Проверка уведомлений', function () {
+                window.location.reload();
+            }, null);
+        }
+    </script>
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Mvc;
+using Newtonsoft.Json;
 using Zidium.Core.Api;
 using Xunit;
 using Zidium.Core.AccountsDb;
@@ -39,14 +40,14 @@ namespace Zidium.UserAccount.Tests
 
             var dispatcherClient = TestHelper.GetDispatcherClient();
             var response = dispatcherClient.CreateSubscription(
-                account.Id, 
+                account.Id,
                 new CreateSubscriptionRequestData()
-            {
-                UserId = user.Id,
-                Object = SubscriptionObject.ComponentType,
-                ComponentTypeId = component.Type.Info.Id,
-                Channel = SubscriptionChannel.Email
-            });
+                {
+                    UserId = user.Id,
+                    Object = SubscriptionObject.ComponentType,
+                    ComponentTypeId = component.Type.Info.Id,
+                    Channel = SubscriptionChannel.Email
+                });
             var subscription = response.Data;
 
             Notification notification;
@@ -59,9 +60,9 @@ namespace Zidium.UserAccount.Tests
                     CreationDate = DateTime.Now,
                     EventId = eventId,
                     SendDate = DateTime.Now.AddDays(1),
-                    Status = NotificationStatus.Sended,
+                    Status = NotificationStatus.Processed,
                     SubscriptionId = subscription.Id,
-                    Type = Core.AccountsDb.NotificationType.Email,
+                    Type = SubscriptionChannel.Email,
                     UserId = user.Id,
                     Address = "test@mail.ru"
                 };
@@ -114,7 +115,7 @@ namespace Zidium.UserAccount.Tests
                 Object = SubscriptionObject.ComponentType,
                 Channel = SubscriptionChannel.Email,
                 ComponentTypeId = component.Type.Info.Id
-            }); 
+            });
             var subscription = response.Data;
 
             Notification notification;
@@ -127,9 +128,9 @@ namespace Zidium.UserAccount.Tests
                     CreationDate = DateTime.Now,
                     EventId = eventId,
                     SendDate = DateTime.Now.AddDays(1),
-                    Status = NotificationStatus.Sended,
+                    Status = NotificationStatus.Processed,
                     SubscriptionId = subscription.Id,
-                    Type = NotificationType.Email,
+                    Type = SubscriptionChannel.Email,
                     UserId = user.Id,
                     Address = "test@mail.ru"
                 };
@@ -149,6 +150,48 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(notification.Type, model.Channel);
                 Assert.Equal(notification.UserId, model.User.Id);
                 Assert.Equal(notification.Address, model.Address);
+            }
+        }
+
+        [Fact]
+        public void SendNotificationTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var user = TestHelper.GetAccountAdminUser(account.Id);
+
+            SendNotificationModel model;
+            using (var controller = new NotificationsController(account.Id, user.Id, true))
+            {
+                var result = (ViewResultBase)controller.SendNotification();
+                model = (SendNotificationModel)result.Model;
+            }
+
+            model.UserId = user.Id;
+            model.Channel = SubscriptionChannel.Email;
+
+            JsonResult requestResult;
+            using (var controller = new NotificationsController(account.Id, user.Id, true))
+            {
+                requestResult = (JsonResult)controller.SendNotification(model);
+            }
+
+            var resultDataType = new { success = true, data = new { NotificationId = Guid.Empty } };
+            var resultData = JsonConvert.DeserializeAnonymousType(JsonConvert.SerializeObject(requestResult.Data), resultDataType);
+
+            Assert.True(resultData.success);
+
+            var notificationId = resultData.data.NotificationId;
+
+            using (var accountDbContext = account.CreateAccountDbContext())
+            {
+                var repository = accountDbContext.GetNotificationRepository();
+                var notification = repository.Find(notificationId);
+
+                Assert.NotNull(notification);
+                Assert.Equal(user.Id, notification.UserId);
+                Assert.Equal(SubscriptionChannel.Email, notification.Type);
+                Assert.Equal(NotificationStatus.InQueue, notification.Status);
+                Assert.NotNull(notification.Address);
             }
         }
 

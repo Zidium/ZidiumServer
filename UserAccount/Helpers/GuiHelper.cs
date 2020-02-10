@@ -238,8 +238,8 @@ namespace Zidium.UserAccount.Helpers
             ModelState modelState;
             DateTime? fromModelState = null;
             if (htmlHelper.ViewData.ModelState.TryGetValue(name, out modelState) && modelState.Value != null)
-                fromModelState = (DateTime?) modelState.Value.ConvertTo(typeof(DateTime?), null);
-            var date = fromModelState ?? (DateTime?) metadata.Model;
+                fromModelState = (DateTime?)modelState.Value.ConvertTo(typeof(DateTime?), null);
+            var date = fromModelState ?? (DateTime?)metadata.Model;
             var model = new DateSelectorModel(fullHtmlFieldName, date, false, hideWhenFilter, expression, htmlHelper);
             return htmlHelper.Partial("~/Views/Controls/DateSelector.cshtml", model);
         }
@@ -273,22 +273,22 @@ namespace Zidium.UserAccount.Helpers
 
         public static MvcHtmlString EventLinkStartDate(this HtmlHelper htmlHelper, Event eventObj)
         {
-            return htmlHelper.ActionLink(GetDateTimeString(eventObj.StartDate), "Show", "Events", new {id = eventObj.Id}, null);
+            return htmlHelper.ActionLink(GetDateTimeString(eventObj.StartDate), "Show", "Events", new { id = eventObj.Id }, null);
         }
 
         public static MvcHtmlString ComponentLink(this HtmlHelper htmlHelper, Component component)
         {
-            return htmlHelper.ActionLink(component.GetFullDisplayName(), "Show", "Components", new {id = component.Id}, null);
+            return htmlHelper.ActionLink(component.GetFullDisplayName(), "Show", "Components", new { id = component.Id }, null);
         }
 
         public static MvcHtmlString UnitTestLink(this HtmlHelper htmlHelper, UnitTest unitTest)
         {
-            return htmlHelper.ActionLink(unitTest.GetFullDisplayName(), "ResultDetails", "UnitTests", new {id = unitTest.Id}, null);
+            return htmlHelper.ActionLink(unitTest.GetFullDisplayName(), "ResultDetails", "UnitTests", new { id = unitTest.Id }, null);
         }
 
         public static MvcHtmlString MetricLink(this HtmlHelper htmlHelper, Metric metric)
         {
-            return htmlHelper.ActionLink(metric.GetFullDisplayName(), "Show", "Metrics", new {id = metric.Id}, null);
+            return htmlHelper.ActionLink(metric.GetFullDisplayName(), "Show", "Metrics", new { id = metric.Id }, null);
         }
 
         public static MvcHtmlString KeyValueRow(this HtmlHelper htmlHelper, KeyValueRowModel model)
@@ -377,11 +377,11 @@ namespace Zidium.UserAccount.Helpers
             if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState)
                 && modelState.Value != null)
             {
-                result = (TProperty) modelState.Value.ConvertTo(typeof(TProperty), null);
+                result = (TProperty)modelState.Value.ConvertTo(typeof(TProperty), null);
             }
 
-            result = result ?? (TProperty) metadata.Model;
-            return (TProperty) result;
+            result = result ?? (TProperty)metadata.Model;
+            return (TProperty)result;
         }
 
         public static MvcHtmlString ColorCircleWithNumber(this HtmlHelper htmlHelper, int value, ImportanceColor color, string url)
@@ -486,8 +486,8 @@ namespace Zidium.UserAccount.Helpers
             ModelState modelState;
             Guid? fromModelState = null;
             if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState) && modelState.Value != null)
-                fromModelState = (Guid) modelState.Value.ConvertTo(typeof(Guid), null);
-            var componentTypeId = fromModelState ?? (Guid?) metadata.Model;
+                fromModelState = (Guid)modelState.Value.ConvertTo(typeof(Guid), null);
+            var componentTypeId = fromModelState ?? (Guid?)metadata.Model;
             var baseType = Nullable.GetUnderlyingType(metadata.ModelType);
             var model = new ComponentTypeSelectorModel(fullHtmlFieldName, componentTypeId, baseType != null, false, hideWhenFilter, expression, htmlHelper);
             return htmlHelper.Partial("~/Views/Controls/ComponentTypeSelector.cshtml", model);
@@ -508,8 +508,8 @@ namespace Zidium.UserAccount.Helpers
             ModelState modelState;
             Guid? fromModelState = null;
             if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState) && modelState.Value != null)
-                fromModelState = (Guid) modelState.Value.ConvertTo(typeof(Guid), null);
-            var eventTypeId = fromModelState ?? (Guid?) metadata.Model;
+                fromModelState = (Guid)modelState.Value.ConvertTo(typeof(Guid), null);
+            var eventTypeId = fromModelState ?? (Guid?)metadata.Model;
             var baseType = Nullable.GetUnderlyingType(metadata.ModelType);
             var model = new EventTypeSelectorModel(fullHtmlFieldName, accountId, eventTypeId, baseType != null, false, hideWhenFilter, externalEventCategorySelectId, expression, htmlHelper);
             return htmlHelper.Partial("~/Views/Controls/EventTypeSelector.cshtml", model);
@@ -540,8 +540,8 @@ namespace Zidium.UserAccount.Helpers
             ModelState modelState;
             Guid? fromModelState = null;
             if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState) && modelState.Value != null)
-                fromModelState = (Guid) modelState.Value.ConvertTo(typeof(Guid), null);
-            var userId = fromModelState ?? (Guid?) metadata.Model;
+                fromModelState = (Guid)modelState.Value.ConvertTo(typeof(Guid), null);
+            var userId = fromModelState ?? (Guid?)metadata.Model;
             var baseType = Nullable.GetUnderlyingType(metadata.ModelType);
             var model = new UserSelectorModel(fullHtmlFieldName, userId, baseType != null, false, hideWhenFilter, expression, htmlHelper);
             return htmlHelper.Partial("~/Views/Controls/UserSelector.cshtml", model);
@@ -561,8 +561,8 @@ namespace Zidium.UserAccount.Helpers
             ModelState modelState;
             Guid? fromModelState = null;
             if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState) && modelState.Value != null)
-                fromModelState = (Guid) modelState.Value.ConvertTo(typeof(Guid), null);
-            var unitTestTypeId = fromModelState ?? (Guid?) metadata.Model;
+                fromModelState = (Guid)modelState.Value.ConvertTo(typeof(Guid), null);
+            var unitTestTypeId = fromModelState ?? (Guid?)metadata.Model;
             var baseType = Nullable.GetUnderlyingType(metadata.ModelType);
             var model = new UnitTestTypeSelectorModel(fullHtmlFieldName, unitTestTypeId, baseType != null, false, hideWhenFilter, expression, htmlHelper, userOnly);
             return htmlHelper.Partial("~/Views/Controls/UnitTestTypeSelector.cshtml", model);
@@ -612,8 +612,8 @@ namespace Zidium.UserAccount.Helpers
             ModelState modelState;
             string fromModelState = null;
             if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState) && modelState.Value != null)
-                fromModelState = (string) modelState.Value.ConvertTo(typeof(string), null);
-            var value = fromModelState ?? TimeSpanAsShortString((TimeSpan?) metadata.Model);
+                fromModelState = (string)modelState.Value.ConvertTo(typeof(string), null);
+            var value = fromModelState ?? TimeSpanAsShortString((TimeSpan?)metadata.Model);
             var model = new TimeSpanSelectorModel()
             {
                 HtmlHelper = htmlHelper,
@@ -729,6 +729,25 @@ namespace Zidium.UserAccount.Helpers
                 return new MvcHtmlString(html);
             }
             return null;
+        }
+
+        public static MvcHtmlString TimeSelector<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression)
+        {
+            var name = ExpressionHelper.GetExpressionText(expression);
+            var fullHtmlFieldName = htmlHelper.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldName(name);
+            var metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            ModelState modelState;
+            string fromModelState = null;
+            if (htmlHelper.ViewData.ModelState.TryGetValue(fullHtmlFieldName, out modelState) && modelState.Value != null)
+                fromModelState = (string)modelState.Value.ConvertTo(typeof(string), null);
+            var value = fromModelState ?? metadata.Model?.ToString();
+            var model = new TimeSelectorModel()
+            {
+                HtmlHelper = htmlHelper,
+                Name = name,
+                Value = value
+            };
+            return htmlHelper.Partial("~/Views/Controls/TimeSelector.cshtml", model);
         }
 
         public static void FixKeyValueRows(List<KeyValueRowModel> rows)
@@ -1244,58 +1263,13 @@ namespace Zidium.UserAccount.Helpers
             return result;
         }
 
-        public static List<SelectListItem> GetNotificationTypeItems(NotificationType? channel, bool allowEmpty)
-        {
-            var items = new[]
-            {
-                NotificationType.Email,
-                NotificationType.Sms
-            };
-            var result = items.Select(t => new SelectListItem()
-            {
-                Text = t.ToString(),
-                Value = t.ToString(),
-                Selected = t == channel
-            }).ToList();
-            if (allowEmpty)
-                result.Insert(0, new SelectListItem()
-                {
-                    Text = "Любой",
-                    Value = string.Empty,
-                    Selected = channel == null
-                });
-            return result;
-        }
-
-        public static List<SelectListItem> GetSubscriptionChannelItems(SubscriptionChannel? channel, bool allowEmpty)
-        {
-            var items = new SubscriptionChannel[]
-            {
-                SubscriptionChannel.Email,
-                SubscriptionChannel.Sms
-            };
-            var result = items.Select(t => new SelectListItem()
-            {
-                Text = t.ToString(),
-                Value = t.ToString(),
-                Selected = t == channel
-            }).ToList();
-            if (allowEmpty)
-                result.Insert(0, new SelectListItem()
-                {
-                    Text = "Любой",
-                    Value = string.Empty,
-                    Selected = channel == null
-                });
-            return result;
-        }
-
         public static List<SelectListItem> GetNotificationStatusItems(NotificationStatus? status, bool allowEmpty)
         {
             var items = new NotificationStatus[]
             {
                 NotificationStatus.InQueue,
-                NotificationStatus.Sended,
+                NotificationStatus.Processed,
+                NotificationStatus.Sent,
                 NotificationStatus.Error
             };
             var result = items.Select(t => new SelectListItem()
@@ -1392,6 +1366,21 @@ namespace Zidium.UserAccount.Helpers
             return items;
         }
 
+        public static List<SelectListItem> GetTimeZoneItems(int offsetMinutes)
+        {
+            var timeZoneRepository = FullRequestContext.Current.Controller.CurrentAccountDbContext.GetTimeZoneRepository();
+            var result = timeZoneRepository
+                .QueryAll().ToArray()
+                .Select(t => new SelectListItem()
+                {
+                    Value = t.OffsetMinutes.ToString(),
+                    Text = t.Name,
+                    Selected = t.OffsetMinutes == offsetMinutes
+                })
+                .ToList();
+            return result;
+        }
+
         public static List<SelectListItem> GetEnumItems(Type type, object selectedItem, bool allowEmpty)
         {
             return GetEnumItems(type, selectedItem, allowEmpty, null);
@@ -1414,7 +1403,7 @@ namespace Zidium.UserAccount.Helpers
                 items.Add(new SelectListItem()
                 {
                     Value = enumItem.ToString(),
-                    Text = (string) generic.Invoke(null, new[] {enumItem}),
+                    Text = (string)generic.Invoke(null, new[] { enumItem }),
                     Selected = enumItem.Equals(selectedItem)
                 });
             }
@@ -1432,6 +1421,31 @@ namespace Zidium.UserAccount.Helpers
             return items;
         }
 
+        public static List<SelectListItem> GetUserContactTypeItems(UserContactType? contactType, bool allowEmpty)
+        {
+            var items = new[]
+            {
+                UserContactType.Email,
+                UserContactType.MobilePhone,
+                UserContactType.Telegram,
+                UserContactType.VKontakte
+            };
+            var result = items.Select(t => new SelectListItem()
+            {
+                Text = t.ToString(),
+                Value = t.ToString(),
+                Selected = t == contactType
+            }).ToList();
+            if (allowEmpty)
+                result.Insert(0, new SelectListItem()
+                {
+                    Text = "Любой",
+                    Value = string.Empty,
+                    Selected = contactType == null
+                });
+            return result;
+        }
+
         public static void SetTempMessage(this Controller controller, TempMessageType type, string message)
         {
             var tempmessage = new TempMessage()
@@ -1447,7 +1461,7 @@ namespace Zidium.UserAccount.Helpers
             var currentContext = FullRequestContext.Current;
             if (currentContext == null)
                 return null;
-            return (TempMessage) currentContext.Controller.TempData["Alert"];
+            return (TempMessage)currentContext.Controller.TempData["Alert"];
         }
 
         public static string FormatSize(Int64 value)
@@ -1493,7 +1507,7 @@ namespace Zidium.UserAccount.Helpers
             if (!value.HasValue)
                 return list;
 
-            var days = (int) value.Value.TotalDays;
+            var days = (int)value.Value.TotalDays;
             var hours = value.Value.Hours;
             var minutes = value.Value.Minutes;
             var seconds = value.Value.Seconds;
@@ -1541,7 +1555,7 @@ namespace Zidium.UserAccount.Helpers
             if (!value.HasValue)
                 return string.Empty;
 
-            var days = (int) value.Value.TotalDays;
+            var days = (int)value.Value.TotalDays;
             var hours = value.Value.Hours;
             var minutes = value.Value.Minutes;
             var seconds = value.Value.Seconds;
@@ -1608,7 +1622,7 @@ namespace Zidium.UserAccount.Helpers
         public static int GetDecimalPlaces(decimal value)
         {
             value = Math.Abs(value);
-            value -= (int)value;    
+            value -= (int)value;
             var decimalPlaces = 0;
             while (value > 0)
             {
@@ -1618,6 +1632,7 @@ namespace Zidium.UserAccount.Helpers
             }
             return decimalPlaces;
         }
+
     }
 
 }

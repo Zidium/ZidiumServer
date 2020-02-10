@@ -169,6 +169,8 @@ namespace Zidium.Core.Api
 
         SetSubscriptionEnableResponse SetSubscriptionEnable(SetSubscriptionEnableRequest request);
 
+        DeleteSubscriptionResponse DeleteSubscription(DeleteSubscriptionRequest request);
+
         SendSmsResponse SendSms(SendSmsRequest request);
 
         #endregion
@@ -204,6 +206,8 @@ namespace Zidium.Core.Api
         #region Проверки
 
         SetUnitTestNextTimeResponse SetUnitTestNextTime(SetUnitTestNextTimeRequest request);
+
+        SetUnitTestNextStepProcessTimeResponse SetUnitTestNextStepProcessTime(SetUnitTestNextStepProcessTimeRequest request);
 
         GetOrCreateUnitTestTypeResponse GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequest request);
 

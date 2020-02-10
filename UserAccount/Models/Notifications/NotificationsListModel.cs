@@ -17,7 +17,7 @@ namespace Zidium.UserAccount.Models
 
         public EventCategory? Category { get; set; }
 
-        public NotificationType? Channel { get; set; }
+        public SubscriptionChannel? Channel { get; set; }
 
         public NotificationStatus? Status { get; set; }
 

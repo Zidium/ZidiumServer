@@ -1,0 +1,319 @@
+﻿using NLog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
+using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
+using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
+using Zidium.Core.Common;
+
+namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
+{
+    public class VirusTotalProcessor
+    {
+        private VirusTotalLimitManager limitManager;
+        private ITimeService timeService;
+        private ILogger logger;
+
+        public VirusTotalProcessor(VirusTotalLimitManager limitManager, ITimeService timeService, ILogger logger)
+        {
+            this.limitManager = limitManager;
+            this.timeService = timeService;
+            this.logger = logger;
+        }
+
+        private bool isSuccessResponse(ResponseBase response)
+        {
+            return response.response_code == 1;
+        }
+
+        private void ValidateResponse(ResponseBase response)
+        {
+            if (isSuccessResponse(response))
+            {
+                return;
+            }
+            throw new VirusTotalException("Ошибка выполнения запроса: " + response.response_code + "; " + response.verbose_msg);
+        }
+
+        public VirusTotalLimitManager GetVisrusTotalLimitManager()
+        {
+            return limitManager;
+        }
+        
+
+        private VirusTotalProcessorReport ConvertReport(ReportResponse report)
+        {
+            // проверки
+            if (report.total == null)
+            {
+                throw new Exception("Response error: total is null");
+            }
+            if (report.positives == null)
+            {
+                throw new Exception("Response error: positives is null");
+            }
+            if (report.scans == null)
+            {
+                throw new Exception("Response error: scans is null");
+            }
+
+            // результат
+            var result = new VirusTotalProcessorReport()
+            {
+                Positives = report.positives.Value,
+                Total = report.positives.Value,
+                Permalink = report.permalink
+            };
+            if (report.scan_date != null)
+            {
+                result.ScanDate = VirusTotalHelper.ParseDateTime(report.scan_date);
+            }
+            var items = new List<VirusTotalProcessorReport.ScanItem>();
+            foreach (var scansKey in report.scans.Keys)
+            {
+                var val = report.scans[scansKey];
+                if (val.detected == null)
+                {
+                    throw new Exception("scan item detected is null");
+                }
+                var item = new VirusTotalProcessorReport.ScanItem()
+                {
+                    Name = scansKey,
+                    Message = val.result,
+                    Detected = val.detected.Value
+                };
+                items.Add(item);
+            }
+            result.Scans = items.ToArray();
+            return result;
+        }
+
+        /*
+        private VirusTotalProcessorOutputData CreateResultFromException(Exception exception)
+        {
+            // VirusTotalApiError
+            VirusTotalException virusTotalException = exception as VirusTotalException;
+            if (virusTotalException != null)
+            {
+                return new VirusTotalProcessorOutputData()
+                {
+                    ErrorCode = VirusTotalErrorCode.VirusTotalApiError,
+                    Message = exception.Message
+                };
+            }
+
+            // ServiceForbidden
+            var webException = exception as WebException;
+            if (webException != null)
+            {
+                var response = webException.Response as HttpWebResponse;
+                if (response != null)
+                {
+                    if (response.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        return new VirusTotalProcessorOutputData()
+                        {
+                            ErrorCode = VirusTotalErrorCode.ServiceForbidden,
+                            Message = "Нет доступа (проверьте ключ api)"
+                        };
+                    }
+                }
+            }
+
+            // UnknownError
+            return new VirusTotalProcessorOutputData()
+            {
+                ErrorCode = VirusTotalErrorCode.UnknownError,
+                Message = exception.Message
+            };
+        }*/
+
+
+        private VirusTotalProcessorOutputData ProcessScanStep(VirusTotalProcessorInputData inputData)
+        {
+            // проверка входных данных
+            if (inputData == null)
+            {
+                throw new ArgumentNullException("inputData");
+            }
+            if (inputData.ApiKey == null)
+            {
+                throw new ArgumentException("ApiKey is null");
+            }
+            if (inputData.Url == null)
+            {
+                throw new ArgumentException("Url is null");
+            }
+
+            var client = new VirusTotalClient();
+            ScanResponse scanResponse = client.Scan(new ScanRequest()
+            {
+                Apikey = inputData.ApiKey,
+                Url = inputData.Url
+            });
+            if (isSuccessResponse(scanResponse))
+            {
+                DateTime scanTime = VirusTotalHelper.ParseDateTime(scanResponse.scan_date);
+                return new VirusTotalProcessorOutputData()
+                {
+                    NextStepProcessTime = timeService.Now().AddMinutes(1),
+                    ScanId = scanResponse.scan_id,
+                    ScanTime = scanTime,
+                    NextStep = VirusTotalStep.Report
+                };
+            }
+            return new VirusTotalProcessorOutputData()
+            {
+                NextStep = VirusTotalStep.Scan,
+                Result = new SendUnitTestResultRequestData()
+                {
+                    Result = UnitTestResult.Alarm,
+                    Message = scanResponse.verbose_msg ?? "Неизвестная ошибка"
+                },
+                ErrorCode = VirusTotalErrorCode.VirusTotalApiError
+            };
+        }
+
+        private SendUnitTestResultRequestData CreateUnitTestResult(VirusTotalProcessorReport report)
+        {
+            // ссылка на отчет
+            var properties = new List<ExtentionPropertyDto>();
+            properties.Add(ExtentionPropertyDto.Create("Permalink", report.Permalink));
+            properties.Add(ExtentionPropertyDto.Create("Scan date utc", report.ScanDate.ToString("yyyy.MM.dd HH:mm:ss")));
+
+            // чистый сайт
+            var detectedItems = report.Scans.Where(x => x.Detected).ToList();
+            if (detectedItems.Count == 0)
+            {
+                return new SendUnitTestResultRequestData()
+                {
+                    Message = "Сайт чистый",
+                    Result = UnitTestResult.Success,
+                    Properties = properties
+                };
+            }
+
+            // есть проблемы
+            foreach (var item in detectedItems)
+            {
+                properties.Add(ExtentionPropertyDto.Create("Source " + item.Name, item.Message));
+            }
+            return new SendUnitTestResultRequestData()
+            {
+                Message = "Обнаружены проблемы (" + detectedItems.Count + " источников)",
+                Result = UnitTestResult.Alarm,
+                Properties = properties
+            };
+        }
+
+        private VirusTotalProcessorOutputData ProcessReportStep(VirusTotalProcessorInputData inputData)
+        {
+            // проверка входных данных
+            if (inputData == null)
+            {
+                throw new ArgumentNullException("inputData");
+            }
+            if (inputData.ApiKey == null)
+            {
+                throw new ArgumentException("ApiKey is null");
+            }
+            if (inputData.Url == null)
+            {
+                throw new ArgumentException("Url is null");
+            }
+            if (inputData.ScanId == null)
+            {
+                throw new ArgumentException("ScanId is null");
+            }
+            if (inputData.ScanTime == null)
+            {
+                throw new ArgumentException("ScanTime is null");
+            }
+
+            var client = new VirusTotalClient();
+            var reportResponse = client.Report(new ReportRequest()
+            {
+                Apikey = inputData.ApiKey,
+                ScanId = inputData.ScanId,
+                Resource = inputData.Url
+            });
+            ValidateResponse(reportResponse);
+            var scanTime = VirusTotalHelper.ParseDateTime(reportResponse.scan_date);
+
+            // если отчет старый
+            if (scanTime < inputData.ScanTime)
+            {
+                return new VirusTotalProcessorOutputData()
+                {
+                    NextStep = VirusTotalStep.Report,
+                    NextStepProcessTime = timeService.Now().AddMinutes(1),
+                    ScanId = inputData.ScanId,
+                    ScanTime = inputData.ScanTime
+                };
+            }
+
+            // актуальный отчет
+            var report = ConvertReport(reportResponse);
+            var unitTestResult = CreateUnitTestResult(report);
+            VirusTotalErrorCode errorCode = VirusTotalErrorCode.CleanSite;
+            if (unitTestResult.Result == UnitTestResult.Alarm)
+            {
+                errorCode = VirusTotalErrorCode.ProblemsDetected;
+            }
+            return new VirusTotalProcessorOutputData()
+            {
+                Result = unitTestResult,
+                NextStep = VirusTotalStep.Scan,
+                ErrorCode = errorCode
+            };
+        }
+
+        public VirusTotalProcessorOutputData Process(VirusTotalProcessorInputData inputData)
+        {
+            // чтобы не превысить лимиты, спим
+            limitManager.SleepByLimits(inputData.ApiKey);
+            
+            try
+            {
+                // обработка шагов
+                if (inputData.NextStep == VirusTotalStep.Scan)
+                {
+                    return ProcessScanStep(inputData);
+                }
+                else if (inputData.NextStep == VirusTotalStep.Report)
+                {
+                    return ProcessReportStep(inputData);
+                }
+                else
+                {
+                    throw new Exception("Неизвестный шаг: " + inputData.NextStep);
+                }
+            }
+            catch (WebException webException)
+            {
+                // ServiceForbidden
+                var response = webException.Response as HttpWebResponse;
+                if (response != null)
+                {
+                    if (response.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        return new VirusTotalProcessorOutputData()
+                        {
+                            Result = new SendUnitTestResultRequestData()
+                            {
+                                Result = UnitTestResult.Alarm,
+                                Message = "Нет доступа (проверьте ключ api)"
+                            },
+                            NextStep = VirusTotalStep.Scan,
+                            ErrorCode = VirusTotalErrorCode.ServiceForbidden
+                        };
+                    }
+                }
+                throw;
+            }
+        }
+    }
+}

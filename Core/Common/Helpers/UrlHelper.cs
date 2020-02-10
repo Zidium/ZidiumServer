@@ -80,25 +80,5 @@ namespace Zidium.Core.Common
             }
         }
 
-        public static string GetAccountNameFromUrl(string url, string accountWebSiteUrl = null)
-        {
-            var uri = new Uri(url);
-            var host = uri.Host;
-
-            var guiUri = new Uri(accountWebSiteUrl ?? AccountWebSite);
-            var guiHost = guiUri.Host;
-
-            if (!host.EndsWith(guiHost))
-                return null;
-
-            var hostParts = host.Split('.');
-            var guiHostParts = guiHost.Split('.');
-
-            if (hostParts.Length != guiHostParts.Length + 1)
-                return null;
-
-            return hostParts[0];
-        }
-
     }
 }

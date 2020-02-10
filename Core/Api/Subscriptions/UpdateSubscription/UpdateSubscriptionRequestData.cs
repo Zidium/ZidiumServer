@@ -16,5 +16,15 @@ namespace Zidium.Core.Api
 
         public int? ResendTimeInSeconds { get; set; }
 
+        public bool SendOnlyInInterval { get; set; }
+
+        public int? SendIntervalFromHour { get; set; }
+
+        public int? SendIntervalFromMinute { get; set; }
+
+        public int? SendIntervalToHour { get; set; }
+
+        public int? SendIntervalToMinute { get; set; }
+
     }
 }

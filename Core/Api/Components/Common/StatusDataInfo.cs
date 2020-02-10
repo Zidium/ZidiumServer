@@ -14,6 +14,8 @@ namespace Zidium.Core.Api
 
         public DateTime ActualDate { get; set; }
 
+        public Guid StatusEventId { get; set; }
+
         public MonitoringStatus Status { get; set; }
 
         public string Message { get; set; }

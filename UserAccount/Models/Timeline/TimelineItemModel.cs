@@ -64,5 +64,15 @@ namespace Zidium.UserAccount.Models
         {
             get { return NumbersHelper.Amount(Count); }
         }
+
+        public TimeSpan Duration
+        {
+            get { return EndDate - StartDate; }
+        }
+
+        public string DurationStr
+        {
+            get { return GuiHelper.TimeSpanAs2UnitString(Duration); }
+        }
     }
 }

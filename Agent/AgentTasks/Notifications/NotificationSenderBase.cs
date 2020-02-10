@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
 
@@ -28,9 +29,9 @@ namespace Zidium.Agent.AgentTasks.Notifications
         }
 
         /// <summary>
-        /// Переопределите этот метод для указания канала
+        /// Переопределите этот метод для указания каналов
         /// </summary>
-        protected abstract NotificationType NotificationType { get; }
+        protected abstract SubscriptionChannel[] Channels { get; }
 
         /// <summary>
         /// Переопределите этот метод для выполнения реальной отправки
@@ -47,7 +48,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
         {
             var notificationRepository = data.AccountDbContext.GetNotificationRepository();
 
-            var notificationsQuery = notificationRepository.GetForSend(NotificationType);
+            var notificationsQuery = notificationRepository.GetForSend(Channels);
 
             if (componentId.HasValue)
                 notificationsQuery = notificationsQuery.Where(t => t.Event.OwnerId == componentId.Value);
@@ -70,7 +71,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                             data.AccountDbContext,
                             data.Account.SystemName, data.Account.Id);
 
-                        notification.Status = NotificationStatus.Sended;
+                        notification.Status = NotificationStatus.Processed;
                         notification.SendDate = DateTime.Now;
                         data.AccountDbContext.SaveChanges();
 

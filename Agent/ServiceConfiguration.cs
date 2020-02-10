@@ -138,6 +138,22 @@
             }
         }
 
+        public static string TelegramBotToken
+        {
+            get
+            {
+                return GetConfigurationValue("TelegramBotToken");
+            }
+        }
+
+        public static string VKontakteAuthToken
+        {
+            get
+            {
+                return GetConfigurationValue("VKontakteAuthToken");
+            }
+        }
+
         private static string GetConfigurationValue(string key, bool required = true)
         {
             var service = Assembly.GetEntryAssembly();

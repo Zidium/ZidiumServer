@@ -26,7 +26,7 @@
 
         <div id="@(ViewBag.UseFixedHeader != null ? "fixed-header": null)">
             <div id="topLogoRow">
-                <a id="zidiumLogoName" href='http://zidium.net'>Zidium</a>
+                <a id="zidiumLogoName" href='@Zidium.Core.ConfigDb.UrlHelper.CommonWebSite'>Zidium</a>
                 <div class="pull-right" id="topLogoRowRight">
                     @Html.Partial("_LoginPartial")
                 </div>

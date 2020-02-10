@@ -1,5 +1,4 @@
 ﻿@using Zidium.Core.Common
-@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
 @using Zidium.UserAccount.Models.Events
@@ -12,9 +11,6 @@
     var showAllCss = Model.Mode == ErrorStatisticsModel.ShowMode.All ? "active" : "";
 }
 
-<link href="/Css/Controls/SimpleBarChar.css" rel="stylesheet" />
-<link href="/Css/Controls/OneLineSausageChar.css" rel="stylesheet" />
-
 <style>
     .my-label {
         font-weight: bold;
@@ -23,45 +19,58 @@
     .event-type-name {
         font-weight: bold;
         color: black;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .event-message {
-        height: 27px;
         width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
         font-size: 14px;
         color: gray;
         padding-top: 5px;
-        padding-bottom: 10px;
-    }
-
-    .event-graph-label {
-        display: inline-block;
-        width: 50px;
-        color: gray;
-    }
-
-    .event-graph {
-        display: inline-block;
-        height: 3px;
-        width: 100%;
-        margin-bottom: 5px;
-        margin-top: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .event-type-block {
         padding: 10px 10px;
     }
 
-    .defect-cell {
-        min-width: 250px;
+    .event-type-timeline .timeline-subcontainer {
+        height: 10px;
     }
 
-    #form-filter2 .active {
-        background-color: #00a65a;
-        color: white;
-        font-weight: bold;
+    .event-type-timeline-loader {
+        height: 18px;
+    }
+
+    .event-type-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .event-type-table-count-column {
+        width: 70px;
+    }
+
+    .event-type-table-count {
+        font-size: 18px;
+    }
+
+    .event-type-table-main-column {
+        width: 100%;
+    }
+
+    .event-type-table-defect-column {
+        width: 180px;
+        text-align: right;
+    }
+
+    .no-errors {
+        margin-top: 15px;
+        font-size: 18px;
     }
 </style>
 
@@ -106,15 +115,13 @@
     </div>
 </div>
 
-@*<p class="my-label" style="margin-top: 30px;">Результат</p>*@
-
 @if (Model.EventTypeDatas.Count == 0)
 {
-    <p>Нет ошибок</p>
+    <p class="no-errors">Нет ошибок</p>
 }
 @foreach (var eventTypeData in Model.EventTypeDatas)
 {
-    var message = eventTypeData.Events.First().Message;
+    var message = eventTypeData.Message;
     var period = TimelineInterval.Day;
     if (Model.Period == ReportPeriod.Hour)
     {
@@ -133,35 +140,34 @@
         period = TimelineInterval.Month;
     }
     <div class="event-type-block">
-        <table style="width: 100%;">
+        <table class="event-type-table">
             <tr id="defect-row-@eventTypeData.EventType.Id">
-                <td style="width: 70px; min-width: 70px;">
-                    <span class="badge alert-danger" style="font-size: 18px;" title="Ошибка случилась @eventTypeData.SausageModel.Count раз">@eventTypeData.SausageModel.Count</span>
+                <td class="event-type-table-count-column">
+                    <span class="badge alert-danger event-type-table-count" title="Ошибка случилась @eventTypeData.Count раз">@eventTypeData.Count</span>
                 </td>
-                <td style="width: 100%">
-                    <div class="event-type-name">
+                <td class="event-type-table-main-column">
+                    <div class="event-type-name" title="eventTypeData.EventType.DisplayName">
                         <a href="@Url.Action("Show", "EventTypes", new {id = eventTypeData.EventType.Id, period})">
                             @eventTypeData.EventType.DisplayName
                         </a>
                     </div>
                     @if (string.IsNullOrEmpty(message) == false)
                     {
-                        <div class="event-message">@message</div>
+                        <div class="event-message" title="@message">@message</div>
                     }
                     else
                     {
-                        <div class="event-message" style="color: gray;">Нет сообщения</div>
+                        <div class="event-message">Нет сообщения</div>
                     }
                 </td>
-                <td class="defect-cell">
+                <td class="event-type-table-defect-column">
                     @Html.Partial("~/Views/Defects/DefectControl.cshtml", eventTypeData.EventType)
                 </td>
             </tr>
         </table>
-        <div class="event-graph-container">
-            <div class="event-graph">
-                @Html.PartialOneLineSausageChar(eventTypeData.SausageModel)
-            </div>
+        <div class="event-type-timeline"
+             data-url='@Url.Action("ForEventTypeAnyComponentsByInterval", "Timeline", new { eventTypeId = eventTypeData.EventType.Id, interval = period, hideUptime = true })'>
+            <img src="~/Content/Icons/ajax-loader.gif" class="event-type-timeline-loader" />
         </div>
     </div>
 }
@@ -184,6 +190,11 @@
         {
             <text>$("#time-selector-week").addClass("active");</text>
         }
+
+        $.each($('.event-type-timeline'), function (index, element) {
+            var url = $(element).data('url');
+            $(element).load(url);
+        });
     });
 </script>
 

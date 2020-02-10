@@ -12,8 +12,8 @@ namespace Zidium.Agent.AgentTasks
 {
     public class SslCertificateExpirationDateCheckProcessor : UnitTestProcessorBase
     {
-        public SslCertificateExpirationDateCheckProcessor(ILogger logger, CancellationToken cancellationToken)
-            : base(logger, cancellationToken)
+        public SslCertificateExpirationDateCheckProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
+            : base(logger, cancellationToken, timeService)
         {
         }
 
@@ -62,8 +62,11 @@ namespace Zidium.Agent.AgentTasks
                 rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
                 return new UnitTestExecutionInfo()
                 {
-                    Message = "Url должен начинаться с https://",
-                    Result = UnitTestResult.Alarm
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Message = "Url должен начинаться с https://",
+                        Result = UnitTestResult.Alarm
+                    }
                 };
             }
 
@@ -77,8 +80,11 @@ namespace Zidium.Agent.AgentTasks
                 rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
                 return new UnitTestExecutionInfo()
                 {
-                    Result = UnitTestResult.Alarm,
-                    Message = exception.Message,
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Result = UnitTestResult.Alarm,
+                        Message = exception.Message,
+                    },
                     IsNetworkProblem = true
                 };
             }
@@ -87,22 +93,25 @@ namespace Zidium.Agent.AgentTasks
             rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
             var result = new UnitTestExecutionInfo()
             {
-                Message = string.Format(
-                    "Осталось {0} дней до окончания срока действия сертификата. Срок действия {1}",
-                    days,
-                    date.ToString("dd.MM.yyyy"))
+                ResultRequest = new SendUnitTestResultRequestData()
+                {
+                    Message = string.Format(
+                        "Осталось {0} дней до окончания срока действия сертификата. Срок действия {1}",
+                        days,
+                        date.ToString("dd.MM.yyyy"))
+                }
             };
             if (days <= rule.AlarmDaysCount)
             {
-                result.Result = UnitTestResult.Alarm;
+                result.ResultRequest.Result = UnitTestResult.Alarm;
             }
             else if (days <= rule.WarningDaysCount)
             {
-                result.Result = UnitTestResult.Warning;
+                result.ResultRequest.Result = UnitTestResult.Warning;
             }
             else
             {
-                result.Result = UnitTestResult.Success;
+                result.ResultRequest.Result = UnitTestResult.Success;
             }
             return result;
         }

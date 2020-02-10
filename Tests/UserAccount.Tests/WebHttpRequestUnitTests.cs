@@ -8,6 +8,7 @@ using Xunit;
 using Zidium.Agent.AgentTasks.HttpRequests;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.Common.TimeService;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models.HttpRequestCheckModels;
@@ -71,7 +72,7 @@ namespace Zidium.UserAccount.Tests
 
             // 1-ый запуск проверок
             // проверим, что агент НЕ будет выполнять проверку постоянно (был такой дефект, как будто период равен нулю)
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
             processor.ProcessAccount(account.Id, unittestId);
 
             Assert.Equal(0, processor.ErrorCount);
@@ -79,7 +80,7 @@ namespace Zidium.UserAccount.Tests
             account.SaveAllCaches();
 
             // 2-ый запуск проверок
-            processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
             processor.ProcessAccount(account.Id, unittestId);
 
             // проверка уже выполнена, время следующего выполнения еще НЕ настало

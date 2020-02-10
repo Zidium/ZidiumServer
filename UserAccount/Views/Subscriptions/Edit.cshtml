@@ -2,7 +2,21 @@
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
+
 @model SubscriptionEditModel
+
+<style>
+    #form-edit-subscription .smart-col-labels {
+        min-width: 350px;
+    }
+
+    .time-selector-container {
+        display: inline-block;
+        width: 80px;
+        margin-left: 10px;
+    }
+</style>
+
 @{
     if (Model.ModalMode)
     {
@@ -35,14 +49,8 @@
     @Html.Partial("_PageTitle")
 }
 
-<style>
-    #form-edit-subscription .smart-col-labels {
-        min-width: 350px;
-    }
-</style>
-
 <form action="@Url.Action("Edit", "Subscriptions")" method="post" id="form-edit-subscription" class="@(Model.ModalMode?"smart-block-form":"")">
-    
+
     @if (Model.Exception != null)
     {
         <div class="alert alert-danger">@Model.Exception.Message</div>
@@ -55,34 +63,13 @@
     @Html.HiddenFor(x => x.CanShowChannel)
     @Html.HiddenFor(x => x.CanShowComponentType)
     @Html.HiddenFor(x => x.CanShowComponent)
+    @Html.HiddenFor(x => x.CommonWebsiteUrl)
 
     <div class="smart-container">
         @{
             var form = Html.GetFormBuilder(Model);
             var group = form.Group("x");
         }
-
-        @*@{
-            if (Model.IsExists || Model.ModalMode)
-            {
-                <text>@Html.HiddenFor(x => x.UserId)</text>
-            }
-            if (Model.UserId==null)
-            {
-                var group = form.GroupFor(x => x.UserId, "Пользователь");
-                if (Model.IsNew)
-                {
-                    // пользователя выбираем только для новых подписок
-                    var userItems = DropDownListHelper.GetUsers(Model.UserId, false);
-                    group.DropDownList(userItems);
-                }
-                else
-                {
-                    group.Paragraph(FullRequestContext.Current.GetUserById(Model.UserId.Value).FioOrLogin);
-                }
-                group.Render();
-            }
-        }*@
 
         @{
             if (Model.CanShowChannel)
@@ -137,7 +124,7 @@
                 group = form.GroupFor(x => x.ComponentId, "Компонент");
                 if (Model.IsNew)
                 {
-                    group.Control(y => Html.ComponentSelector(x => x.ComponentId, new ComponentSelectorOptions()
+                    group.Control(y => Html.ComponentSelectorNew(x => x.ComponentId, new ComponentSelectorOptions()
                     {
                         AllowEmpty = false,
                         AutoRefreshPage = false,
@@ -150,23 +137,23 @@
                     <text>@Html.HiddenFor(x => x.ComponentId)</text>
                     var component = FullRequestContext.Current.GetComponentById(Model.ComponentId.Value);
                     group.Control(@<p class="form-control-static">@Html.ComponentPath(component)</p>);
-                }
-                group.Render();
-            }
-            else
-            {
-                <text>@Html.HiddenFor(x => x.ComponentId)</text>
-            }
-        }
+}
+group.Render();
+}
+else
+{
+<text>@Html.HiddenFor(x => x.ComponentId)</text>
+}
+}
 
         @{
             form.GroupFor(x => x.IsEnabled, "Отправлять уведомления")
                 .Control(@<div class="form-control-static" style="padding-bottom: 0">
-                             <p style="display: inline-block; font-size: 13px; margin-right: 10px;" class="label" id="subscription-enable-text"></p>
-                             <a href="#" id="subscription-enable-btn" style="color: gray; font-size: 12px;" onclick="setSubscriptionEnabled(event)"></a>
-                             @Html.HiddenFor(x => x.IsEnabled)
-                         </div>)
-                .Render();
+    <p style="display: inline-block; font-size: 13px; margin-right: 10px;" class="label" id="subscription-enable-text"></p>
+    <a href="#" id="subscription-enable-btn" style="color: gray; font-size: 12px;" onclick="setSubscriptionEnabled(event)"></a>
+    @Html.HiddenFor(x => x.IsEnabled)
+</div>)
+.Render();
         }
 
         @{
@@ -184,15 +171,15 @@
         @{
             form.GroupFor(x => x.NotifyBetterStatus, "Уведомлять когда стало лучше?")
                 .Tooltip(@<div>
-                    <p>
-                        Если в настройках подписки минимальный цвет указан красный,
-                        то уведомления будут приходить только, когда компонент будет красным.
-                        Вы не получите уведомления о том, что компонент стал зеленым (стало лучше).
-                    </p>
-                    <p>Но если включить данную галочку, то вы получите уведомленияе, когда компонент вернётся в зеленый цвет.</p>
-                </div>)
-            .CheckBox()
-            .Render();
+    <p>
+        Если в настройках подписки минимальный цвет указан красный,
+        то уведомления будут приходить только, когда компонент будет красным.
+        Вы не получите уведомления о том, что компонент стал зеленым (стало лучше).
+    </p>
+    <p>Но если включить данную галочку, то вы получите уведомленияе, когда компонент вернётся в зеленый цвет.</p>
+</div>)
+.CheckBox()
+.Render();
         }
 
         @{
@@ -208,37 +195,62 @@
                 .Control(x => Html.TimeSpanSelector(y => y.ResendTime))
                 .Render();
         }
-        
-        @*@if (Model.ModalMode)
-        {
-            <div class="smart-row">
-                <hr/>
+
+        @form.GroupFor(x => x.SendOnlyInInterval, "Ограничить по времени").CheckBox().Partial()
+
+        @form.Group("SendInterval").Control(@<text>
+            <div class="row">
+                <div class="col-xs-6 col-auto-width">
+                    @Html.LabelFor(m => m.SendIntervalFrom, "с")
+                    <div class="time-selector-container">
+                        @Html.TimeSelector(m => m.SendIntervalFrom)
+                    </div>
+                    <div>
+                        @Html.ValidationMessageFor(m => m.SendIntervalFrom, null, null, "p")
+                    </div>
+                </div>
+                <div class="col-xs-6 col-auto-width">
+                    @Html.LabelFor(m => m.SendIntervalTo, "до")
+                    <div class="time-selector-container">
+                        @Html.TimeSelector(m => m.SendIntervalTo)
+                    </div>
+                    <div>
+                        @Html.ValidationMessageFor(m => m.SendIntervalTo, null, null, "p")
+                    </div>
+                </div>
             </div>
-        }*@
+        </text>).Partial()
+
+        @form.Group("").Control(@<text>
+            <a href='@(Model.CommonWebsiteUrl + "/wiki/how-to/subscriptions/messangers")' target="_blank">
+                Как настроить отправку через мессенджеры?
+            </a>
+        </text>).Partial()
+
         @{
             form.Group("Submit")
                 .Label("")
                 .Control(@<div style="padding-top: 20px;">
-                             <button type="submit" class="btn btn-primary smart-button">
-                                 Сохранить
-                                 <img src="~/Content/Icons/ajax-loader-blue.gif" id="save-loader" class="collapse" />
-                             </button>
-                             @if (Model.ModalMode)
-                             {
-                                <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Отмена</button>
-                             }
-                             else
-                             {
-                                <a class="btn btn-default smart-button" href="@Model.ReturnUrl">Вернуться к подпискам</a>
-                             }
-                             @if (Model.IsExists && Model.Object != SubscriptionObject.Default)
-                             {
-                                 <a class="btn btn-default smart-button" href="#" onclick="deleteSubscription(event);" style="min-width: 5px;" title="Удалить">
-                                     <span class="glyphicon glyphicon-trash"></span>
-                                 </a>
-                             }
-                          </div>)
-                .Render();
+    <button type="submit" class="btn btn-primary smart-button">
+        Сохранить
+        <img src="~/Content/Icons/ajax-loader-blue.gif" id="save-loader" class="collapse" />
+    </button>
+    @if (Model.ModalMode)
+    {
+        <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Отмена</button>
+    }
+    else
+    {
+        <a class="btn btn-default smart-button" href="@Model.ReturnUrl">Вернуться к подпискам</a>
+    }
+    @if (Model.IsExists && Model.Object != SubscriptionObject.Default)
+    {
+        <a class="btn btn-default smart-button" href="#" onclick="deleteSubscription(event);" style="min-width: 5px;" title="Удалить">
+            <span class="glyphicon glyphicon-trash"></span>
+        </a>
+    }
+</div>)
+.Render();
         }
     </div>
 </form>
@@ -247,7 +259,6 @@
 {
     @Scripts.Render("~/Scripts/AllControls")
 }
-
 
 <script>
 
@@ -275,7 +286,11 @@
             $("#smart-row-for-NotifyBetterStatus", form).hide();
             $("#smart-row-for-MinimumDuration", form).hide();
             $("#smart-row-for-ResendTime", form).hide();
+            $("#smart-row-for-SendOnlyInInterval", form).hide();
+            $("#smart-row-for-SendInterval", form).hide();
         }
+
+        updateSendIntervalVisibility();
     }
 
     function setSubscriptionEnabled(event) {
@@ -299,9 +314,26 @@
                 document.location.href = '@Model.ReturnUrl';
             });
     }
-    
-    updateEnableControl();
-    var form = $("#form-edit-subscription");
-    initTooltips(form);
+
+    function updateSendIntervalVisibility() {
+        var value = $('#@Html.IdFor(m => m.SendOnlyInInterval)').prop('checked');
+        var div = $('#smart-row-for-SendInterval');
+        if (value)
+            div.show();
+        else
+            div.hide();
+    }
+
+    $(function() {
+        updateEnableControl();
+        var form = $("#form-edit-subscription");
+        initTooltips(form);
+        updateSendIntervalVisibility();
+
+        $('#@Html.IdFor(m => m.SendIntervalFrom)', form).inputmask();
+        $('#@Html.IdFor(m => m.SendIntervalTo)', form).inputmask();
+
+        $('#@Html.IdFor(m => m.SendOnlyInInterval)').change(updateSendIntervalVisibility);
+    });
 
 </script>

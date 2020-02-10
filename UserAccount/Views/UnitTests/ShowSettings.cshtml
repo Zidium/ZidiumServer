@@ -82,6 +82,10 @@
     {
         <text>@Html.Action("ShowSettingsSql", new { id = Model.Id })</text>
     }
+    else if (Model.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+    {
+        <text>@Html.Action("ShowSettingsVirusTotal", new { id = Model.Id })</text>
+    }
     else
     {
         <text>@Html.Action("ShowSettingsCustom", new { id = Model.Id })</text>

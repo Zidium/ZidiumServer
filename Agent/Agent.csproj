@@ -94,6 +94,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MySql.Data.Entity.6.9.7\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
     </Reference>
@@ -133,9 +136,18 @@
     <Compile Include="AgentTasks\Dummy\DummyProcessor.cs" />
     <Compile Include="AgentTasks\Dummy\DummyTask.cs" />
     <Compile Include="AgentTasks\Notifications\CreateNotifications\CreateNotificationsProcessor.cs" />
+    <Compile Include="AgentTasks\Notifications\EmailNotifications\MessangerNotificationsTask.cs" />
+    <Compile Include="AgentTasks\Notifications\MessangerNotifications\MessangerNotificationsProcessor.cs" />
     <Compile Include="AgentTasks\Notifications\HttpNotifications\HttpNotificationsProcessor.cs" />
     <Compile Include="AgentTasks\Notifications\HttpNotifications\HttpNotificationsTask.cs" />
     <Compile Include="AgentTasks\Notifications\NotificationNonImportantException.cs" />
+    <Compile Include="AgentTasks\SendMessages\SendMessagesDisabledException.cs" />
+    <Compile Include="AgentTasks\SendMessages\SendMessagesOverlimitException.cs" />
+    <Compile Include="AgentTasks\SendMessages\Telegram\SendToTelegramTask.cs" />
+    <Compile Include="AgentTasks\SendMessages\SendMessagesProcessorBase.cs" />
+    <Compile Include="AgentTasks\SendMessages\Telegram\SendToTelegramProcessor.cs" />
+    <Compile Include="AgentTasks\SendMessages\VKontakte\SendToVKontakteTask.cs" />
+    <Compile Include="AgentTasks\SendMessages\VKontakte\SendToVKontakteProcessor.cs" />
     <Compile Include="AgentTasks\SendSms\InvalidPhoneException.cs" />
     <Compile Include="AgentTasks\Notifications\SmsNotifications\SmsNotificationsTask.cs" />
     <Compile Include="AgentTasks\Notifications\SmsNotifications\SmsNotificationsProcessor.cs" />
@@ -184,6 +196,26 @@
     <Compile Include="AgentTasks\UnitTests\UnitTestProcessorBase.cs" />
     <Compile Include="AgentTasks\OutdatedUnitTests\OutdatedUnitTestsProcessor.cs" />
     <Compile Include="AgentTasks\OutdatedUnitTests\OutdatedUnitTestsTask.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\IVirusTotalClient.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\ReportRequest.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\ReportResponse.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\ResponseBase.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\ScanRequest.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\ScanResponse.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\VirusTotalClient.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\VirusTotalException.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\VirusTotalHelper.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Client\VirusTotalResponseException.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalLimitManager.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalProcessor.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalProcessorInputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalProcessorOutputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalProcessorReport.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalReportOutputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalScanInputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\Processor\VirusTotalScanOutputData.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\VirusTotalTask.cs" />
+    <Compile Include="AgentTasks\UnitTests\VirusTotal\VirusTotalTaskProcessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProjectInstaller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

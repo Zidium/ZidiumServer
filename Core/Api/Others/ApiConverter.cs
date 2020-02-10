@@ -191,6 +191,12 @@ namespace Zidium.Core
                 Importance = subscription.Importance,
                 DurationMinimumInSeconds = subscription.DurationMinimumInSeconds,
                 ResendTimeInSeconds = subscription.ResendTimeInSeconds,
+                Channel = subscription.Channel,
+                SendOnlyInInterval = subscription.SendOnlyInInterval,
+                SendIntervalFromHour = subscription.SendIntervalFromHour,
+                SendIntervalFromMinute = subscription.SendIntervalFromMinute,
+                SendIntervalToHour = subscription.SendIntervalToHour,
+                SendIntervalToMinute = subscription.SendIntervalToMinute
             };
         }
 
@@ -702,7 +708,8 @@ namespace Zidium.Core
                 Message = data.Message,
                 HasSignal = data.HasSignal,
                 StartDate = data.StartDate,
-                Status = data.Status
+                Status = data.Status,
+                StatusEventId = data.StatusEventId
             };
         }
 

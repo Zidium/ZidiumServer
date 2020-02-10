@@ -75,11 +75,6 @@
     <Content Include="DispatcherHandler.ashx" />
     <Content Include="NLog.config" />
     <None Include="packages.config" />
-    <None Include="Properties\PublishProfiles\FTP - Test.pubxml" />
-    <None Include="Properties\PublishProfiles\FTP - Work.pubxml" />
-    <None Include="Properties\PublishProfiles\WebDeploy - Test.pubxml" />
-    <None Include="Properties\PublishProfiles\WebDeploy - Work.pubxml" />
-    <None Include="Properties\PublishProfiles\Zem-Local.pubxml" />
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

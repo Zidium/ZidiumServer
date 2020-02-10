@@ -26,5 +26,7 @@ namespace Zidium.UserAccount.Models
 
         public string ReturnUrl { get; set; }
 
+        public string CommonWebsiteUrl { get; set; }
+
     }
 }

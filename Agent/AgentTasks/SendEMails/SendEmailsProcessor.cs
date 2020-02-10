@@ -6,7 +6,7 @@ using System.Threading;
 using MailKit.Security;
 using MimeKit;
 using NLog;
-using Zidium.Api;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
@@ -161,16 +161,13 @@ namespace Zidium.Agent.AgentTasks.SendEMails
 
         protected void ProcessAccount(ForEachAccountData data, Guid? emailId = null)
         {
-            var account = data.Account;
-
             using (var smtpClient = GetSmtpClient())
             {
-                var repository = data.AccountDbContext.GetSendEmailCommandRepository();
+                var emailCommandRepository = data.AccountDbContext.GetSendEmailCommandRepository();
+                var notificationRepository = data.AccountDbContext.GetNotificationRepository();
 
-                // важно отсортировать письма в порядке их создания
-                var emails = repository
+                var emails = emailCommandRepository
                     .GetForSend(SendMaxCount)
-                    .OrderBy(x => x.CreateDate)
                     .ToArray();
 
                 if (emailId.HasValue)
@@ -210,8 +207,19 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                         // TODO Тут надо писать метрику
 
                         // обновим статус  и статистику
-                        repository.MarkAsSendSuccessed(email.Id);
+                        emailCommandRepository.MarkAsSendSuccessed(email.Id);
                         Interlocked.Increment(ref SuccessSendCount);
+
+                        // если есть соответствующее уведомление, поменяем его статус
+                        if (email.ReferenceId != null)
+                        {
+                            var notification = notificationRepository.GetOneOrNullById(email.ReferenceId.Value);
+                            if (notification != null)
+                            {
+                                notification.Status = NotificationStatus.Sent;
+                                data.AccountDbContext.SaveChanges();
+                            }
+                        }
 
                         data.Logger.Info("Отправлено письмо на адрес '{0}' с темой '{1}'", email.To, email.Subject);
                     }
@@ -228,7 +236,19 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             exception.Data.Add("EMailId", email.Id);
                             data.Logger.Error(exception);
 
-                            repository.MarkAsSendFail(email.Id, exception.Message);
+                            emailCommandRepository.MarkAsSendFail(email.Id, exception.Message);
+
+                            // если есть соответствующее уведомление, поменяем его статус
+                            if (email.ReferenceId != null)
+                            {
+                                var notification = notificationRepository.GetOneOrNullById(email.ReferenceId.Value);
+                                if (notification != null)
+                                {
+                                    notification.Status = NotificationStatus.Error;
+                                    notification.SendError = exception.Message;
+                                    data.AccountDbContext.SaveChanges();
+                                }
+                            }
                         }
                         else
                         {

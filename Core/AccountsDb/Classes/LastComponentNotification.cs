@@ -17,7 +17,7 @@ namespace Zidium.Core.AccountsDb
 
         public string Address { get; set; }
 
-        public NotificationType Type { get; set; }
+        public SubscriptionChannel Type { get; set; }
 
         /// <summary>
         /// Важность статуса (цвет компонента), которое было в уведомлении

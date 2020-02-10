@@ -4,13 +4,14 @@ using NLog;
 using Zidium.Agent.AgentTasks.UnitTests.TcpPortChecks;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Core.Common;
 
 namespace Zidium.Agent.AgentTasks
 {
     public class TcpPortTaskProcessor : UnitTestProcessorBase
     {
-        public TcpPortTaskProcessor(ILogger logger, CancellationToken cancellationToken)
-            : base(logger, cancellationToken)
+        public TcpPortTaskProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
+            : base(logger, cancellationToken, timeService)
         {
         }
        
@@ -71,8 +72,11 @@ namespace Zidium.Agent.AgentTasks
             {
                     return new UnitTestExecutionInfo()
                     {
-                        Message = "Порт закрыт",
-                        Result = rule.Opened ? UnitTestResult.Alarm : UnitTestResult.Success,
+                        ResultRequest = new SendUnitTestResultRequestData()
+                        {
+                            Message = "Порт закрыт",
+                            Result = rule.Opened ? UnitTestResult.Alarm : UnitTestResult.Success
+                        },
                         IsNetworkProblem = true // чтобы выполнить 2-ую попытку
                     };
             }
@@ -82,16 +86,22 @@ namespace Zidium.Agent.AgentTasks
             {
                 return new UnitTestExecutionInfo()
                 {
-                    Message = "Порт открыт",
-                    Result = rule.Opened ? UnitTestResult.Success : UnitTestResult.Alarm
+                    ResultRequest = new SendUnitTestResultRequestData()
+                    {
+                        Message = "Порт открыт",
+                        Result = rule.Opened ? UnitTestResult.Success : UnitTestResult.Alarm
+                    }
                 };
             }
 
             // ошибки
             var executionInfo = new UnitTestExecutionInfo()
             {
-                Message = result.Message,
-                Result = UnitTestResult.Alarm
+                ResultRequest = new SendUnitTestResultRequestData()
+                {
+                    Message = result.Message,
+                    Result = UnitTestResult.Alarm
+                }
             };
             if (result.Code == TcpPortCheckCode.NoIp)
             {

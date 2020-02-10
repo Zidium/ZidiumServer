@@ -105,6 +105,11 @@ namespace Zidium.UserAccount.Controllers
                 return RedirectToAction(editAction, "SslCertificateExpirationDateChecks", new { id });
             }
 
+            if (unitTest.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+            {
+                return RedirectToAction(editAction, "VirusTotal", new { id });
+            }
+
             return RedirectToAction("Edit", "UnitTests", new { id });
         }
 

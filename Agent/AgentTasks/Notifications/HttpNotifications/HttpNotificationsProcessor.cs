@@ -6,6 +6,7 @@ using System.Threading;
 using NLog;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -14,10 +15,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
         public HttpNotificationsProcessor(ILogger logger, CancellationToken cancellationToken) 
             : base(logger, cancellationToken) { }
 
-        protected override NotificationType NotificationType
-        {
-            get { return NotificationType.Http; }
-        }
+        protected override SubscriptionChannel[] Channels { get; } = new[] { SubscriptionChannel.Http };
 
         public static string GetNotificationJson(Component component, Event eventObj)
         {

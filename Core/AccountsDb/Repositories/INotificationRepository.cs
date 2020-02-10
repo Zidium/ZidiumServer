@@ -11,15 +11,19 @@ namespace Zidium.Core.AccountsDb
     {
         Notification Add(Notification entity);
 
+        Notification Find(Guid id);
+
         Notification Find(Guid id, Guid componentId);
+
+        Notification GetOneOrNullById(Guid id);
 
         IQueryable<Notification> QueryAllByComponent(Guid componentId);
 
-        IQueryable<Notification> GetForSend(NotificationType notificationType);
+        IQueryable<Notification> GetForSend(SubscriptionChannel[] channels);
 
         IQueryable<Notification> QueryAllByComponentId(Guid[] componentId);
 
-        IQueryable<Notification> QueryAllForGui(Guid? componentId, DateTime? fromDate, DateTime? toDate, EventCategory? category, NotificationType? channel, NotificationStatus? status, Guid? userId);
+        IQueryable<Notification> QueryAllForGui(Guid? componentId, DateTime? fromDate, DateTime? toDate, EventCategory? category, SubscriptionChannel? channel, NotificationStatus? status, Guid? userId);
 
         IQueryable<Notification> QueryAll();
 

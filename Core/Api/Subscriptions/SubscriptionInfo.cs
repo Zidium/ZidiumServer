@@ -30,5 +30,23 @@ namespace Zidium.Core.Api
         [DataMember]
         public int? ResendTimeInSeconds { get; set; }
 
+        [DataMember]
+        public SubscriptionChannel Channel { get; set; }
+
+        [DataMember]
+        public bool SendOnlyInInterval { get; set; }
+
+        [DataMember]
+        public int? SendIntervalFromHour { get; set; }
+
+        [DataMember]
+        public int? SendIntervalFromMinute { get; set; }
+
+        [DataMember]
+        public int? SendIntervalToHour { get; set; }
+
+        [DataMember]
+        public int? SendIntervalToMinute { get; set; }
+
     }
 }

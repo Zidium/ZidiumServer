@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models
@@ -36,6 +37,12 @@ namespace Zidium.UserAccount.Models
 
         public bool NotifyBetterStatus { get; set; }
 
+        public bool SendOnlyInInterval { get; set; }
+
+        public Time? SendIntervalFrom { get; set; }
+
+        public Time? SendIntervalTo { get; set; }
+
         public string ReturnUrl { get; set; }
 
         public bool ModalMode { get; set; }
@@ -43,5 +50,7 @@ namespace Zidium.UserAccount.Models
         public bool IsNew => Id == null;
 
         public bool IsExists => Id.HasValue;
+
+        public string CommonWebsiteUrl { get; set; }
     }
 }

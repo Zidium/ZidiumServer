@@ -7,26 +7,6 @@ namespace Zidium.Core.Tests.Others
 {
     public class UrlHelperTests
     {
-        [Fact]
-        public void GetAccountNameFromUrlTest()
-        {
-            var result = UrlHelper.GetAccountNameFromUrl("http://test.lk.zidium.net", "http://lk.zidium.net");
-            Assert.Equal("test", result);
-        }
-
-        [Fact]
-        public void GetAccountNameFromLocalhostUrlTest()
-        {
-            var result = UrlHelper.GetAccountNameFromUrl("http://localhost", "http://lk.zidium.net");
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public void AddAccountNameToUrlTest()
-        {
-            var result = UrlHelper.GetFullUrl("test", "/Components/1", "http://lk.zidium.net");
-            Assert.Equal("http://lk.zidium.net/Components/1", result);
-        }
 
         [Fact]
         public void GetAccountWebsiteUrlTest()
@@ -45,7 +25,7 @@ namespace Zidium.Core.Tests.Others
         [Fact]
         public void GetAccountLocalhostUrlTest()
         {
-            var result = UrlHelper.GetAccountWebsiteUrl("test", "/Info", "http://localhost/Logon", "http://lk.zidium.net");
+            var result = UrlHelper.GetAccountWebsiteUrl("test", "/Info", "http://localhost:16997/Logon", "http://lk.zidium.net");
             Assert.Equal("http://localhost:16997/Info", result);
         }
 

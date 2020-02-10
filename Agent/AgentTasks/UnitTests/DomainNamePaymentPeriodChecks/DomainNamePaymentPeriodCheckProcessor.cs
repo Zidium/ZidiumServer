@@ -10,6 +10,7 @@ using NLog;
 using Zidium.Api;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 
@@ -17,8 +18,8 @@ namespace Zidium.Agent.AgentTasks
 {
     public class DomainNamePaymentPeriodCheckProcessor : UnitTestProcessorBase
     {
-        public DomainNamePaymentPeriodCheckProcessor(ILogger logger, CancellationToken cancellationToken)
-            : base(logger, cancellationToken)
+        public DomainNamePaymentPeriodCheckProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
+            : base(logger, cancellationToken, timeService)
         {
         }
 
@@ -272,8 +273,11 @@ namespace Zidium.Agent.AgentTasks
             {
                 return new UnitTestExecutionInfo()
                 {
-                    Message = resultInfo.ErrorMessage,
-                    Result = Core.Api.UnitTestResult.Unknown,
+                    ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                    {
+                        Message = resultInfo.ErrorMessage,
+                        Result = Core.Api.UnitTestResult.Unknown,
+                    },
                     IsNetworkProblem = true
                 };
             }
@@ -296,8 +300,11 @@ namespace Zidium.Agent.AgentTasks
                 rule.LastRunErrorCode = resultInfo.Code;
                 return new UnitTestExecutionInfo()
                 {
-                    Result = Core.Api.UnitTestResult.Alarm,
-                    Message = resultInfo.ErrorMessage
+                    ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                    {
+                        Result = Core.Api.UnitTestResult.Alarm,
+                        Message = resultInfo.ErrorMessage
+                    }
                 };
             }
 
@@ -305,22 +312,25 @@ namespace Zidium.Agent.AgentTasks
             rule.LastRunErrorCode = DomainNamePaymentPeriodErrorCode.Success;
             var result = new UnitTestExecutionInfo()
             {
-                Message = string.Format(
-                    "Осталось {0} дней до окончания срока оплаты. Домен оплачен до {1}",
-                    days,
-                    resultInfo.Date.Value.ToString("dd.MM.yyyy"))
+                ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                {
+                    Message = string.Format(
+                        "Осталось {0} дней до окончания срока оплаты. Домен оплачен до {1}",
+                        days,
+                        resultInfo.Date.Value.ToString("dd.MM.yyyy"))
+                }
             };
             if (days <= rule.AlarmDaysCount)
             {
-                result.Result = Core.Api.UnitTestResult.Alarm;
+                result.ResultRequest.Result = Core.Api.UnitTestResult.Alarm;
             }
             else if (days <= rule.WarningDaysCount)
             {
-                result.Result = Core.Api.UnitTestResult.Warning;
+                result.ResultRequest.Result = Core.Api.UnitTestResult.Warning;
             }
             else
             {
-                result.Result = Core.Api.UnitTestResult.Success;
+                result.ResultRequest.Result = Core.Api.UnitTestResult.Success;
             }
             return result;
         }

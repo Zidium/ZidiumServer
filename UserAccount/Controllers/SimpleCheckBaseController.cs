@@ -14,10 +14,6 @@ namespace Zidium.UserAccount.Controllers
     {
         protected abstract UnitTest FindSimpleCheck(T model);
 
-        protected abstract string GetOldReplacementPart(UnitTest unitTest);
-
-        protected abstract string GetNewReplacementPart(T model);
-
         protected abstract string GetUnitTestDisplayName(T model);
 
         protected abstract void SetUnitTestParams(UnitTest unitTest, T model);

@@ -125,6 +125,10 @@ else
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsSql", new { id = Model.UnitTest.Id }))</text>
                     }
+                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+                    {
+                        <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsVirusTotal", new { id = Model.UnitTest.Id }))</text>
+                    }
                     else
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsCustom", new { id = Model.UnitTest.Id }))</text>

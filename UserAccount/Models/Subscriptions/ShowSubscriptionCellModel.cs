@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {

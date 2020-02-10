@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
@@ -30,5 +31,7 @@ namespace Zidium.UserAccount.Models.Subscriptions
         }
 
         public SubscriptionsTableRowModel[] Rows { get; set; }
+
+        public SubscriptionChannel[] Channels { get; set; }
     }
 }

@@ -84,16 +84,6 @@ namespace Zidium.UserAccount.Controllers
                 .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.PingTestType.Id && t.PingRule != null && t.PingRule.Host == GetModelHost(model) && t.IsDeleted == false);
         }
 
-        protected override string GetOldReplacementPart(UnitTest unitTest)
-        {
-            return unitTest.PingRule.Host;
-        }
-
-        protected override string GetNewReplacementPart(EditSimpleModel model)
-        {
-            return GetModelHost(model);
-        }
-
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Ping " + GetModelHost(model);

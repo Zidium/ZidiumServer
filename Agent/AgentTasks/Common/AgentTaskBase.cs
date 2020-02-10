@@ -6,6 +6,7 @@ using NLog;
 using Zidium.Api;
 using Zidium.Core;
 using Zidium.Core.Common;
+using Zidium.Core.Common.TimeService;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -32,6 +33,8 @@ namespace Zidium.Agent.AgentTasks
 
         protected Thread WorkThread;
 
+        protected ITimeService TimeService { get; set; }
+
         protected abstract AgentTaskResult Do();
 
         public string Name
@@ -43,6 +46,7 @@ namespace Zidium.Agent.AgentTasks
 
         protected AgentTaskBase()
         {
+            TimeService = new TimeService();
             ExecutionPeriod = TimeSpan.FromMinutes(10);
             WaitOnErrorTime = TimeSpan.FromMinutes(1);
             _maximumOfflineInterval = ServiceConfiguration.MaximumOfflineInterval;
@@ -58,8 +62,6 @@ namespace Zidium.Agent.AgentTasks
         }
 
         protected IUnitTestControl MainUnitTest;
-
-        protected IUnitTestControl ActivityUnitTest;
 
         protected void SetMainStatus(AgentTaskResult result, TimeSpan actualInterval)
         {

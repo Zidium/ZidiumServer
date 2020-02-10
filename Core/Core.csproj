@@ -120,6 +120,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccountsDb\Classes\AccountSetting.cs" />
     <Compile Include="AccountsDb\Classes\AccountTariff.cs" />
     <Compile Include="AccountsDb\Classes\BalanceOperation.cs" />
     <Compile Include="AccountsDb\Classes\Defects\Defect.cs" />
@@ -127,10 +128,56 @@
     <Compile Include="AccountsDb\Classes\Defects\DefectStatus.cs" />
     <Compile Include="AccountsDb\Classes\LastComponentNotification.cs" />
     <Compile Include="AccountsDb\Classes\LimitDataType.cs" />
+    <Compile Include="AccountsDb\Classes\MessageStatus.cs" />
     <Compile Include="AccountsDb\Classes\Metric.cs" />
     <Compile Include="AccountsDb\Classes\LimitDataForUnitTest.cs" />
     <Compile Include="AccountsDb\Classes\Bulb.cs" />
-    <Compile Include="AccountsDb\Classes\SubscriptionChannel.cs" />
+    <Compile Include="AccountsDb\Classes\SendMessageCommand.cs" />
+    <Compile Include="AccountsDb\Classes\TimeZone.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\VirusTotal\VirusTotalStep.cs" />
+    <Compile Include="AccountsDb\Mapping\AccountSettingMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\TimeZoneMapping.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\202001232048399_VirusTotal.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\202001232048399_VirusTotal.Designer.cs">
+      <DependentUpon>202001232048399_VirusTotal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\202001261050288_NotificationsSendInterval.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\202001261050288_NotificationsSendInterval.Designer.cs">
+      <DependentUpon>202001261050288_NotificationsSendInterval.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\202001270935574_AddedTimeZones.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\202001270935574_AddedTimeZones.Designer.cs">
+      <DependentUpon>202001270935574_AddedTimeZones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\202002061507069_FixVirusTotal.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\202002061507069_FixVirusTotal.Designer.cs">
+      <DependentUpon>202002061507069_FixVirusTotal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001261030480_VirusTotal.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001261030480_VirusTotal.Designer.cs">
+      <DependentUpon>202001261030480_VirusTotal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001261048024_NotificationsSendInterval.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001261048024_NotificationsSendInterval.Designer.cs">
+      <DependentUpon>202001261048024_NotificationsSendInterval.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001270950025_AddedTimeZones.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001270950025_AddedTimeZones.Designer.cs">
+      <DependentUpon>202001270950025_AddedTimeZones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202002070758096_VirusTotal1.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202002070758096_VirusTotal1.Designer.cs">
+      <DependentUpon>202002070758096_VirusTotal1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\Repositories\AccountSettingRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\IAccountSettingRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ISendMessageCommandRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\ITimeZoneRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\SendMessageCommandRepository.cs" />
+    <Compile Include="AccountsDb\Repositories\TimeZoneRepository.cs" />
+    <Compile Include="AccountsDb\Services\AccountSettings\AccountSettingService.cs" />
+    <Compile Include="AccountsDb\Services\AccountSettings\IAccountSettingService.cs" />
+    <Compile Include="Api\Subscriptions\Common\SubscriptionChannel.cs" />
     <Compile Include="AccountsDb\Classes\SubscriptionObject.cs" />
     <Compile Include="AccountsDb\Classes\SystemTariffLimits.cs" />
     <Compile Include="AccountsDb\Classes\TariffLimitSource.cs" />
@@ -144,6 +191,8 @@
     <Compile Include="AccountsDb\Classes\UnitTests\PingTests\UnitTestPingRule.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\SqlTests\UnitTestSqlRule.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\TcpPortTests\UnitTestPingRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\VirusTotal\UnitTestVirusTotalRule.cs" />
+    <Compile Include="AccountsDb\Classes\UnitTests\VirusTotal\VirusTotalErrorCode.cs" />
     <Compile Include="AccountsDb\Classes\UserFolder.cs" />
     <Compile Include="AccountsDb\Classes\SystemUnitTestTypes.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestUnitTestRuleData.cs" />
@@ -156,7 +205,6 @@
     <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestErrorCode.cs" />
     <Compile Include="AccountsDb\Classes\UnitTests\HttpTests\HttpRequestMethod.cs" />
     <Compile Include="AccountsDb\Classes\LogConfig.cs" />
-    <Compile Include="AccountsDb\Classes\NotificationType.cs" />
     <Compile Include="AccountsDb\Classes\SystemEventType.cs" />
     <Compile Include="AccountsDb\Classes\UserRole.cs" />
     <Compile Include="AccountsDb\Classes\UserSetting.cs" />
@@ -164,8 +212,10 @@
     <Compile Include="AccountsDb\Mapping\DefectChangeMapping.cs" />
     <Compile Include="AccountsDb\Mapping\LastComponentNotificationMapping.cs" />
     <Compile Include="AccountsDb\Mapping\DefectMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\SendMessageCommandMapping.cs" />
     <Compile Include="AccountsDb\Mapping\TokenMapping.cs" />
     <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestTcpPortRuleMapping.cs" />
+    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestVirusTotalRuleMapping.cs" />
     <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.cs" />
     <Compile Include="AccountsDb\MsSql\Migrations\201803232225266_Initial.Designer.cs">
       <DependentUpon>201803232225266_Initial.cs</DependentUpon>
@@ -198,6 +248,10 @@
     <Compile Include="AccountsDb\MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.Designer.cs">
       <DependentUpon>201909201814080_AddOpenedToTcpPortRules.cs</DependentUpon>
     </Compile>
+    <Compile Include="AccountsDb\MsSql\Migrations\202001141705124_SendMessageCommandTable.cs" />
+    <Compile Include="AccountsDb\MsSql\Migrations\202001141705124_SendMessageCommandTable.Designer.cs">
+      <DependentUpon>202001141705124_SendMessageCommandTable.cs</DependentUpon>
+    </Compile>
     <Compile Include="AccountsDb\Namings\StatusDataNaming.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
@@ -218,6 +272,10 @@
     <Compile Include="AccountsDb\PostgreSql\Migrations\201909241332031_AddedTcpPortRules.cs" />
     <Compile Include="AccountsDb\PostgreSql\Migrations\201909241332031_AddedTcpPortRules.Designer.cs">
       <DependentUpon>201909241332031_AddedTcpPortRules.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001141707161_SendMessageCommandTable.cs" />
+    <Compile Include="AccountsDb\PostgreSql\Migrations\202001141707161_SendMessageCommandTable.Designer.cs">
+      <DependentUpon>202001141707161_SendMessageCommandTable.cs</DependentUpon>
     </Compile>
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbContext.cs" />
     <Compile Include="AccountsDb\PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
@@ -387,6 +445,9 @@
     <Compile Include="Api\Subscriptions\CreateUserDefaultSubscription\CreateUserDefaultSubscriptionRequest.cs" />
     <Compile Include="Api\Subscriptions\CreateUserDefaultSubscription\CreateUserDefaultSubscriptionRequestData.cs" />
     <Compile Include="Api\Subscriptions\CreateUserDefaultSubscription\CreateUserDefaultSubscriptionResponse.cs" />
+    <Compile Include="Api\Subscriptions\DeleteSubscription\DeleteSubscriptionRequest.cs" />
+    <Compile Include="Api\Subscriptions\DeleteSubscription\DeleteSubscriptionRequestData.cs" />
+    <Compile Include="Api\Subscriptions\DeleteSubscription\DeleteSubscriptionResponse.cs" />
     <Compile Include="Api\Subscriptions\SendSms\SendSmsRequest.cs" />
     <Compile Include="Api\Subscriptions\SendSms\SendSmsRequestData.cs" />
     <Compile Include="Api\Subscriptions\SendSms\SendSmsResponse.cs" />
@@ -424,6 +485,9 @@
     <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsRequestData.cs" />
     <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsResponse.cs" />
     <Compile Include="Api\UnitTests\RecalcUnitTestsResults\RecalcUnitTestsResultsResponseData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestNextStepProcessTime\SetUnitTestNextStepProcessTimeRequest.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestNextStepProcessTime\SetUnitTestNextStepProcessTimeRequestData.cs" />
+    <Compile Include="Api\UnitTests\SetUnitTestNextStepProcessTime\SetUnitTestNextStepProcessTimeResponse.cs" />
     <Compile Include="Api\UnitTests\SetUnitTestNextTime\SetUnitTestNextTimeRequest.cs" />
     <Compile Include="Api\UnitTests\SetUnitTestNextTime\SetUnitTestNextTimeRequestData.cs" />
     <Compile Include="Api\UnitTests\SetUnitTestNextTime\SetUnitTestNextTimeResponse.cs" />
@@ -513,8 +577,12 @@
     <Compile Include="Common\Helpers\DebugHelper.cs" />
     <Compile Include="Common\Helpers\EventCategoryHelper.cs" />
     <Compile Include="Common\Helpers\EventHelper.cs" />
+    <Compile Include="Common\Helpers\SubscriptionHelper.cs" />
     <Compile Include="Common\Helpers\UrlHelper.cs" />
+    <Compile Include="Common\Helpers\UserHelper.cs" />
     <Compile Include="Common\INaming.cs" />
+    <Compile Include="Common\TimeService\ITimeService.cs" />
+    <Compile Include="Common\TimeService\TimeService.cs" />
     <Compile Include="ConfigDb\Dto\LoginInfo.cs" />
     <Compile Include="ConfigDb\Services\ConfigDbServicesHelper.cs" />
     <Compile Include="ConfigDb\Services\IAccountManagementService.cs" />
@@ -561,7 +629,6 @@
     <Compile Include="AccountsDb\Mapping\UnitTests\HttpRequestUnitTestMapping.cs" />
     <Compile Include="AccountsDb\Mapping\UnitTests\HttpRequestUnitTestRuleDataMapping.cs" />
     <Compile Include="AccountsDb\Mapping\UnitTests\HttpRequestUnitTestRuleMapping.cs" />
-    <Compile Include="AccountsDb\Mapping\UnitTests\UnitTestResultMapping.cs" />
     <Compile Include="AccountsDb\Mapping\UserSettingMapping.cs" />
     <Compile Include="AccountsDb\Namings\CounterNaming.cs" />
     <Compile Include="AccountsDb\Namings\ComponentNaming.cs" />
@@ -959,6 +1026,21 @@
     <EmbeddedResource Include="AccountsDb\MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.resx">
       <DependentUpon>201909201814080_AddOpenedToTcpPortRules.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\202001141705124_SendMessageCommandTable.resx">
+      <DependentUpon>202001141705124_SendMessageCommandTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\202001232048399_VirusTotal.resx">
+      <DependentUpon>202001232048399_VirusTotal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\202001261050288_NotificationsSendInterval.resx">
+      <DependentUpon>202001261050288_NotificationsSendInterval.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\202001270935574_AddedTimeZones.resx">
+      <DependentUpon>202001270935574_AddedTimeZones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\MsSql\Migrations\202002061507069_FixVirusTotal.resx">
+      <DependentUpon>202002061507069_FixVirusTotal.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201805151013039_Initial.resx">
       <DependentUpon>201805151013039_Initial.cs</DependentUpon>
     </EmbeddedResource>
@@ -973,6 +1055,21 @@
     </EmbeddedResource>
     <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\201909241332031_AddedTcpPortRules.resx">
       <DependentUpon>201909241332031_AddedTcpPortRules.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\202001141707161_SendMessageCommandTable.resx">
+      <DependentUpon>202001141707161_SendMessageCommandTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\202001261030480_VirusTotal.resx">
+      <DependentUpon>202001261030480_VirusTotal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\202001261048024_NotificationsSendInterval.resx">
+      <DependentUpon>202001261048024_NotificationsSendInterval.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\202001270950025_AddedTimeZones.resx">
+      <DependentUpon>202001270950025_AddedTimeZones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AccountsDb\PostgreSql\Migrations\202002070758096_VirusTotal1.resx">
+      <DependentUpon>202002070758096_VirusTotal1.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

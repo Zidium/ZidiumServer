@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Infrastructure;
-using System.Data.SqlClient;
 using System.Linq;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.AccountsDb
@@ -241,7 +238,7 @@ namespace Zidium.Core.AccountsDb
             return Context.Events.Where(x =>
                 //x.Importance == EventImportance.Alarm &&
                 x.StartDate < to &&
-                x.EndDate >= from &&
+                x.ActualDate >= from &&
                 x.Category == EventCategory.ApplicationError);
             //&& (x.Category == EventCategory.ApplicationError || x.Category == EventCategory.ComponentEvent));
         }

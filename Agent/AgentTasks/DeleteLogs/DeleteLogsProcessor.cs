@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using NLog;
 using Zidium.Core;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Zidium.Core.AccountsDb.Repositories
+namespace Zidium.Core.AccountsDb
 {
     internal class LogConfigRepository : ILogConfigRepository
     {

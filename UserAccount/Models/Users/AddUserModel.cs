@@ -40,5 +40,8 @@ namespace Zidium.UserAccount.Models
         [MyRequired]
         [Display(Name = "Роль")]
         public Guid? RoleId { get; set; }
+
+        [Display(Name = "Часовой пояс")]
+        public int TimeZoneOffsetMinutes { get; set; }
     }
 }

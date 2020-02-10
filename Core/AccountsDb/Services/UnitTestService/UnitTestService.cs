@@ -293,12 +293,34 @@ namespace Zidium.Core.AccountsDb
             {
                 if (data.NextTime == null)
                 {
-                    unitTest.NextDate = DateTime.Now;
+                    unitTest.NextExecutionDate = DateTime.Now;
                 }
                 else
                 {
-                    unitTest.NextDate = data.NextTime.Value;
+                    unitTest.NextExecutionDate = data.NextTime.Value;
                 }
+                unitTest.BeginSave();
+            }
+        }
+
+        public void SetUnitTestNextStepProcessTime(Guid accountId, SetUnitTestNextStepProcessTimeRequestData data)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException("data");
+            }
+            if (data.UnitTestId == null)
+            {
+                throw new ParameterRequiredException("UnitTestId");
+            }
+            if (data.NextStepProcessTime == null)
+            {
+                throw new ParameterRequiredException("NextStepProcessTime");
+            }
+            var cache = new AccountCache(accountId);
+            using (var unitTest = cache.UnitTests.Write(data.UnitTestId.Value))
+            {
+                unitTest.NextExecutionDate = data.NextStepProcessTime;
                 unitTest.BeginSave();
             }
         }
@@ -364,7 +386,7 @@ namespace Zidium.Core.AccountsDb
                     }
 
                     // чтобы выполнить проверку прямо сейчас с новыми параметрами и увидеть результат
-                    unitTest.NextDate = DateTime.Now;
+                    unitTest.NextExecutionDate = DateTime.Now;
                 }
 
                 noSignalColorChanged = data.NoSignalColor != unitTest.NoSignalColor;
@@ -398,7 +420,7 @@ namespace Zidium.Core.AccountsDb
             {
                 var now = DateTime.Now;
                 var noSignalEvent = GetNoSignalEvent(unitTest, now, now);
-                SaveResultEvent(now, unitTest, noSignalEvent);
+                SaveResultEvent(now, unitTest, noSignalEvent, null);
             }
         }
 
@@ -487,7 +509,7 @@ namespace Zidium.Core.AccountsDb
             {
                 unitTest.PeriodSeconds = data.PeriodSeconds;
                 unitTest.ErrorColor = data.ErrorColor;
-                unitTest.NextDate = DateTime.Now;
+                unitTest.NextExecutionDate = DateTime.Now;
                 unitTest.BeginSave();
                 unitTest.WaitSaveChanges(TimeSpan.FromSeconds(30));
             }
@@ -522,7 +544,7 @@ namespace Zidium.Core.AccountsDb
             {
                 unitTest.PeriodSeconds = data.PeriodSeconds;
                 unitTest.ErrorColor = data.ErrorColor;
-                unitTest.NextDate = DateTime.Now;
+                unitTest.NextExecutionDate = DateTime.Now;
                 unitTest.BeginSave();
                 unitTest.WaitSaveChanges(TimeSpan.FromSeconds(30));
             }
@@ -560,6 +582,7 @@ namespace Zidium.Core.AccountsDb
             DateTime processDate,
             IUnitTestCacheReadObject unitTest,
             Event newEvent,
+            DateTime? nextExecutionTime,
             int? attempCount = null)
         {
             var request = new AccountCacheRequest()
@@ -619,16 +642,22 @@ namespace Zidium.Core.AccountsDb
                     wUnitTest.LastExecutionDate = newEvent.EndDate;
                     wUnitTest.AttempCount = attempCount ?? wUnitTest.AttempCount;
 
-                    // расчитаем время следующего выполнения
-                    if (wUnitTest.PeriodSeconds > 0)
+                    // установим время следующего выполнения
+                    if (nextExecutionTime.HasValue)
                     {
-                        var nextTime = wUnitTest.NextDate ?? processDate;
+                        // время задано явно
+                        wUnitTest.NextExecutionDate = nextExecutionTime.Value;
+                    }
+                    else if (wUnitTest.PeriodSeconds > 0)
+                    {
+                        // время явно не задано, нужно рассчитать
+                        var nextTime = wUnitTest.NextExecutionDate ?? processDate;
                         var period = TimeSpan.FromSeconds(wUnitTest.PeriodSeconds.Value);
                         while (nextTime <= processDate)
                         {
                             nextTime = nextTime + period;
                         }
-                        wUnitTest.NextDate = nextTime;
+                        wUnitTest.NextExecutionDate = nextTime;
                     }
                     wUnitTest.BeginSave();
                 }
@@ -701,7 +730,7 @@ namespace Zidium.Core.AccountsDb
                         }
 
                         // сохраним результаты
-                        var result = SaveResultEvent(processDate, unitTest, resultEvent, data.AttempCount);
+                        var result = SaveResultEvent(processDate, unitTest, resultEvent, data.NextExecutionTime, data.AttempCount);
 
                         return result;
                     }
@@ -773,7 +802,7 @@ namespace Zidium.Core.AccountsDb
             // сохраняем пробел (событие результата теста)
             var noSignalEvent = GetNoSignalEvent(unitTest, processDate, data.ActualDate);
 
-            return SaveResultEvent(processDate, unitTest, noSignalEvent);
+            return SaveResultEvent(processDate, unitTest, noSignalEvent, null);
         }
 
         private Event GetNoSignalEvent(IUnitTestCacheReadObject unitTest, DateTime processDate, DateTime startDate)

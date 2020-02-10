@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.UserAccount.Models.Subscriptions
@@ -19,44 +20,43 @@ namespace Zidium.UserAccount.Models.Subscriptions
             var model = new SubscriptionsTableModel()
             {
                 Object = obj,
-                UserId = UserId
+                UserId = UserId,
+                Channels = Channels
             };
             var subscriptions = Subscriptions.Where(x => x.Object == obj).ToArray();
 
             // подписки по умолчанию
             if (obj == SubscriptionObject.Default)
             {
-                var emails = subscriptions.Where(x => x.Channel == SubscriptionChannel.Email).ToArray();
-                var sms = subscriptions.Where(x => x.Channel == SubscriptionChannel.Sms).ToArray();
-
                 var row = new SubscriptionsTableRowModel()
                 {
-                    Email = new ShowSubscriptionCellModel()
-                    {
-                        Channel = SubscriptionChannel.Email,
-                        Object = SubscriptionObject.Default
-                    },
-                    Sms = new ShowSubscriptionCellModel()
-                    {
-                        Channel = SubscriptionChannel.Sms,
-                        Object = SubscriptionObject.Default
-                    }
+                    Cells = new List<ShowSubscriptionCellModel>(),
+                    Table = model
                 };
 
-                row.Email.Subscription = emails.SingleOrDefault(x => x.Object == SubscriptionObject.Default);
-                row.Sms.Subscription = sms.SingleOrDefault(x => x.Object == SubscriptionObject.Default);
-                model.Rows = new[] {row};
+                foreach (var channel in Channels)
+                {
+                    row.Cells.Add(new ShowSubscriptionCellModel()
+                    {
+                        Channel = channel,
+                        Object = SubscriptionObject.Default,
+                        Subscription = subscriptions.SingleOrDefault(x => x.Channel == channel && x.Object == SubscriptionObject.Default),
+                        Row = row
+                    });
+                }
+
+                model.Rows = new[] { row };
             }
 
             // подписки на тип компонента
             if (obj == SubscriptionObject.ComponentType)
             {
-                var componentTypeGroups = subscriptions.GroupBy(x => x.ComponentTypeId).Select(x=>new
+                var componentTypeGroups = subscriptions.GroupBy(x => x.ComponentTypeId).Select(x => new
                 {
                     ComponentType = x.First().ComponentType,
                     Subscriptions = x.ToArray()
                 })
-                .OrderBy(x=>x.ComponentType.DisplayName)
+                .OrderBy(x => x.ComponentType.DisplayName)
                 .ToArray();
 
                 var rows = new List<SubscriptionsTableRowModel>();
@@ -64,22 +64,22 @@ namespace Zidium.UserAccount.Models.Subscriptions
                 {
                     var row = new SubscriptionsTableRowModel()
                     {
-                        Email = new ShowSubscriptionCellModel()
-                        {
-                            Channel = SubscriptionChannel.Email,
-                            Object = SubscriptionObject.ComponentType,
-                            ObjectId = componentTypeGroup.ComponentType.Id
-                        },
-                        Sms = new ShowSubscriptionCellModel()
-                        {
-                            Channel = SubscriptionChannel.Sms,
-                            Object = SubscriptionObject.ComponentType,
-                            ObjectId = componentTypeGroup.ComponentType.Id
-                        }
+                        Cells = new List<ShowSubscriptionCellModel>(),
+                        Table = model
                     };
 
-                    row.Email.Subscription = componentTypeGroup.Subscriptions.SingleOrDefault(x => x.Channel == SubscriptionChannel.Email);
-                    row.Sms.Subscription = componentTypeGroup.Subscriptions.SingleOrDefault(x => x.Channel == SubscriptionChannel.Sms);
+                    foreach (var channel in Channels)
+                    {
+                        row.Cells.Add(new ShowSubscriptionCellModel()
+                        {
+                            Channel = channel,
+                            Object = SubscriptionObject.ComponentType,
+                            ObjectId = componentTypeGroup.ComponentType.Id,
+                            Subscription = componentTypeGroup.Subscriptions.SingleOrDefault(x => x.Channel == channel),
+                            Row = row
+                        });
+                    }
+
                     rows.Add(row);
                 }
                 model.Rows = rows.ToArray();
@@ -89,11 +89,11 @@ namespace Zidium.UserAccount.Models.Subscriptions
             if (obj == SubscriptionObject.Component)
             {
                 var componentGroups = subscriptions.GroupBy(x => x.ComponentId).Select(x => new
-                    {
-                        Component = x.First().Component,
-                        FullName = ComponentHelper.GetComponentPathText(x.First().Component),
-                        Subscriptions = x.ToArray()
-                    })
+                {
+                    Component = x.First().Component,
+                    FullName = ComponentHelper.GetComponentPathText(x.First().Component),
+                    Subscriptions = x.ToArray()
+                })
                     .OrderBy(x => x.FullName)
                     .ToArray();
 
@@ -102,35 +102,30 @@ namespace Zidium.UserAccount.Models.Subscriptions
                 {
                     var row = new SubscriptionsTableRowModel()
                     {
-                        Email = new ShowSubscriptionCellModel()
-                        {
-                            Channel = SubscriptionChannel.Email,
-                            Object = SubscriptionObject.Component,
-                            ObjectId = componentGroup.Component.Id
-                        },
-                        Sms = new ShowSubscriptionCellModel()
-                        {
-                            Channel = SubscriptionChannel.Sms,
-                            Object = SubscriptionObject.Component,
-                            ObjectId = componentGroup.Component.Id
-                        }
+                        Cells = new List<ShowSubscriptionCellModel>(),
+                        Table = model
                     };
 
-                    row.Email.Subscription = componentGroup.Subscriptions.SingleOrDefault(x => x.Channel == SubscriptionChannel.Email);
-                    row.Sms.Subscription = componentGroup.Subscriptions.SingleOrDefault(x => x.Channel == SubscriptionChannel.Sms);
+                    foreach (var channel in Channels)
+                    {
+                        row.Cells.Add(new ShowSubscriptionCellModel()
+                        {
+                            Channel = channel,
+                            Object = SubscriptionObject.Component,
+                            ObjectId = componentGroup.Component.Id,
+                            Subscription = componentGroup.Subscriptions.SingleOrDefault(x => x.Channel == channel),
+                            Row = row
+                        });
+                    }
+
                     rows.Add(row);
                 }
                 model.Rows = rows.ToArray();
             }
 
-            // родительские связи
-            foreach (var row in model.Rows)
-            {
-                row.Table = model;
-                row.Email.Row = row;
-                row.Sms.Row = row;
-            }
             return model;
         }
+
+        public SubscriptionChannel[] Channels { get; set; }
     }
 }

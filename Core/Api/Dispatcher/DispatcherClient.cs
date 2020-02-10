@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Common.Helpers;
 
@@ -295,6 +294,14 @@ namespace Zidium.Core.Api.Dispatcher
             request.Data = data;
             var dispatcher = DispatcherHelper.GetDispatcherService();
             return dispatcher.SetUnitTestNextTime(request);
+        }
+
+        public SetUnitTestNextStepProcessTimeResponse SetUnitTestNextStepProcessTime(Guid accountId, SetUnitTestNextStepProcessTimeRequestData data)
+        {
+            var request = GetRequest<SetUnitTestNextStepProcessTimeRequest>(accountId);
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.SetUnitTestNextStepProcessTime(request);
         }
 
         public DeleteUnitTestResponse DeleteUnitTest(Guid accountId, Guid unitTestId)
@@ -623,7 +630,7 @@ namespace Zidium.Core.Api.Dispatcher
 
         #region Подписки
 
-        public Zidium.Core.Api.CreateSubscriptionResponse CreateSubscription(Guid accountId, CreateSubscriptionRequestData data)
+        public CreateSubscriptionResponse CreateSubscription(Guid accountId, CreateSubscriptionRequestData data)
         {
             var request = GetRequest<CreateSubscriptionRequest>(accountId);
             request.Data = data;
@@ -653,6 +660,17 @@ namespace Zidium.Core.Api.Dispatcher
             request.Data = data;
             var dispatcher = DispatcherHelper.GetDispatcherService();
             return dispatcher.SendSms(request);
+        }
+
+        public DeleteSubscriptionResponse DeleteSubscription(Guid accountId, Guid subscriptionId)
+        {
+            var request = GetRequest<DeleteSubscriptionRequest>(accountId);
+            request.Data = new DeleteSubscriptionRequestData()
+            {
+                SubscriptionId = subscriptionId
+            };
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.DeleteSubscription(request);
         }
 
         #endregion

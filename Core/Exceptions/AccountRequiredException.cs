@@ -1,6 +1,4 @@
-﻿using Zidium.Core.Common;
-
-namespace Zidium.Core
+﻿namespace Zidium.Core
 {
     public class AccountRequiredException : UserFriendlyException
     {

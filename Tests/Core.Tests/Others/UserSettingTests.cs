@@ -11,7 +11,7 @@ namespace Zidium.Core.Tests.Others
         public void RepositorySetAndGetSettingTest()
         {
             var account = TestHelper.GetTestAccount();
-            var user = TestHelper.GetAccountAdminUser(account.Id);
+            var user = TestHelper.CreateTestUser(account.Id);
             var name = "UserSetting " + DateTime.Now.Ticks;
             var value = "UserSettingValue " + DateTime.Now.Ticks;
             using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
@@ -32,7 +32,7 @@ namespace Zidium.Core.Tests.Others
         public void ShowComponentsAsListSettingTest()
         {
             var account = TestHelper.GetTestAccount();
-            var user = TestHelper.GetAccountAdminUser(account.Id);
+            var user = TestHelper.CreateTestUser(account.Id);
             using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
             {
                 var service = accountContext.GetUserSettingService();
@@ -63,7 +63,7 @@ namespace Zidium.Core.Tests.Others
         public void SendMeNewsSettingTest()
         {
             var account = TestHelper.GetTestAccount();
-            var user = TestHelper.GetAccountAdminUser(account.Id);
+            var user = TestHelper.CreateTestUser(account.Id);
             using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
             {
                 var service = accountContext.GetUserSettingService();
@@ -87,6 +87,37 @@ namespace Zidium.Core.Tests.Others
                 var service = accountContext.GetUserSettingService();
                 var value = service.SendMeNews(user.Id);
                 Assert.True(value);
+            }
+        }
+
+        [Fact]
+        public void TimeZoneOffsetMinutesTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var user = TestHelper.CreateTestUser(account.Id);
+            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var service = accountContext.GetUserSettingService();
+                service.TimeZoneOffsetMinutes(user.Id, 60);
+                accountContext.SaveChanges();
+            }
+            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var service = accountContext.GetUserSettingService();
+                var value = service.TimeZoneOffsetMinutes(user.Id);
+                Assert.Equal(60, value);
+            }
+            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var service = accountContext.GetUserSettingService();
+                service.TimeZoneOffsetMinutes(user.Id, 120);
+                accountContext.SaveChanges();
+            }
+            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            {
+                var service = accountContext.GetUserSettingService();
+                var value = service.TimeZoneOffsetMinutes(user.Id);
+                Assert.Equal(120, value);
             }
         }
 

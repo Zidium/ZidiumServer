@@ -12,7 +12,7 @@
                 {
                     <a href="@(item.EventId.HasValue ? Url.Action("Show", "Events", new { id = item.EventId }) : null)" target="_blank" class="timeline-item"
                        style="display: inline-block; width: @item.WidthStr%; height: 100%; background-color: @item.Color; float: left;"
-                       data-start-date="@item.StartDateStr" data-end-date="@item.EndDateStr" data-count="@item.CountStr"
+                       data-start-date="@item.StartDateStr" data-end-date="@item.EndDateStr" data-count="@item.CountStr" data-duration="@item.DurationStr"
                        data-is-empty="@(!item.EventId.HasValue)" data-message="@item.Message">
                     </a>
                 }
@@ -78,11 +78,14 @@
                 var startDate = item.data('start-date');
                 var endDate = item.data('end-date');
                 var count = item.data('count');
+                var duration = item.data('duration');
                 var isEmpty = item.data('is-empty') === 'True';
                 var message = item.data('message');
 
                 var html = "<div class='text-nowrap bottom10px'>Началось: <b>" + startDate + "</b></div>" +
                     "<div class='text-nowrap bottom10px'>Закончилось: <b>" + endDate + "</b></div>";
+                if (duration != null && duration != '')
+                    html += "<div class='text-nowrap bottom10px'>Длительность: <b>" + duration + "</b></div>";
 
                 if (count != null && count != '')
                     html += "<div class='text-nowrap bottom10px'>Количество: <b>" + count + "</b></div>";
@@ -90,7 +93,7 @@
                 if (isEmpty)
                     html += "<div class='text-nowrap'>В этом промежутке ничего не было</div>";
                 else
-                    html += "<div class='text-nowrap'>" + message + "</div>";
+                    html += "<div class='text-prewrap'>" + message + "</div>";
 
                 return html;
             }

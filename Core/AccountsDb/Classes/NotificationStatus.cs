@@ -9,13 +9,18 @@ namespace Zidium.Core.AccountsDb
         InQueue = 1,
 
         /// <summary>
-        /// Успешно отправлено
+        /// Создана команда на отправку
         /// </summary>
-        Sended = 2,
+        Processed = 2,
 
         /// <summary>
         /// Ошибка отправки
         /// </summary>
-        Error = 3
+        Error = 3,
+
+        /// <summary>
+        /// Успешно отправлено
+        /// </summary>
+        Sent = 4
     }
 }

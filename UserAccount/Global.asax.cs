@@ -66,6 +66,8 @@ namespace Zidium.UserAccount
             ModelBinders.Binders.Add(typeof(ColorStatusSelectorValue), new ColorStatusValueBinder());
             ModelBinders.Binders.Add(typeof(TimeSpan), new TimeSpanBinder());
             ModelBinders.Binders.Add(typeof(TimeSpan?), new TimeSpanBinder());
+            ModelBinders.Binders.Add(typeof(Time), new TimeBinder());
+            ModelBinders.Binders.Add(typeof(Time?), new TimeBinder());
         }
 
         public static IComponentControl ComponentControl { get; protected set; }

@@ -50,8 +50,7 @@ namespace Zidium.Core.AccountsDb
         {
             var repository = Context.GetUserSettingRepository();
             var valueStr = repository.GetValue(userId, ComponentHistoryIntervalSettingName);
-            int result;
-            if (int.TryParse(valueStr, NumberStyles.None, CultureInfo.InvariantCulture, out result))
+            if (int.TryParse(valueStr, NumberStyles.None, CultureInfo.InvariantCulture, out var result))
                 return result;
             return null;
         }
@@ -63,5 +62,28 @@ namespace Zidium.Core.AccountsDb
         }
 
         public static string ComponentHistoryIntervalSettingName = "ComponentHistoryInterval";
+
+        /// <summary>
+        /// Смещение часового пояса относительно UTC, в минутах
+        /// </summary>
+        public int TimeZoneOffsetMinutes(Guid userId)
+        {
+            var repository = Context.GetUserSettingRepository();
+            var valueStr = repository.GetValue(userId, TimeZoneOffsetMinutesSettingName);
+            if (int.TryParse(valueStr, NumberStyles.None, CultureInfo.InvariantCulture, out var result))
+                return result;
+            return 3 * 60; // +03:00 UTC
+        }
+
+        /// <summary>
+        /// Смещение часового пояса относительно UTC, в минутах
+        /// </summary>
+        public void TimeZoneOffsetMinutes(Guid userId, int value)
+        {
+            var repository = Context.GetUserSettingRepository();
+            repository.SetValue(userId, TimeZoneOffsetMinutesSettingName, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static string TimeZoneOffsetMinutesSettingName = "TimeZoneOffsetMinutes";
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 
@@ -12,11 +13,26 @@ namespace Zidium.UserAccount.Models.UnitTests
         public DateTime? ExecutionTime { get; set; }
         public bool IsCustom { get; set; }
         public bool HasExecution => ExecutionTime != null;
+        public string ShowDetailsUrl { get; set; }
+        public Guid? EventId { get; set; }
 
         /// <summary>
         /// Если проверка выключена, то нельзя выполнить проверку
         /// </summary>
         public bool ShowRunButton { get; set; }
+
+        private static string GetShowDetailsUrl(UnitTest unitTest, Event eventObj)
+        {
+            if (unitTest.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+            {
+                var property = eventObj.Properties.FirstOrDefault(x => x.Name == "Permalink");
+                if (property != null)
+                {
+                    return property.Value;
+                }
+            }
+            return null;
+        }
 
         public static OverviewLastResultModel Create(UnitTest unitTest, Event eventObj)
         {
@@ -43,6 +59,8 @@ namespace Zidium.UserAccount.Models.UnitTests
             else
             {
                 // были выполнения
+                model.EventId = eventObj.Id;
+                model.ShowDetailsUrl = GetShowDetailsUrl(unitTest, eventObj);
                 model.ExecutionTime = eventObj.StartDate;
                 model.Message = eventObj.Message;
                 if (model.Message == null)

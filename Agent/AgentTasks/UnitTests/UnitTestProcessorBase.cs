@@ -6,6 +6,7 @@ using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
+using Zidium.Core.Common.TimeService;
 using Zidium.Core.ConfigDb;
 
 namespace Zidium.Agent.AgentTasks
@@ -13,6 +14,8 @@ namespace Zidium.Agent.AgentTasks
     public abstract class UnitTestProcessorBase
     {
         public MultipleDataBaseProcessor DbProcessor { get; protected set; }
+
+        public ITimeService TimeService { get; set; }
 
         protected ILogger Logger;
 
@@ -32,10 +35,11 @@ namespace Zidium.Agent.AgentTasks
             get { return ErrorCount + SuccessCount; }
         }
 
-        protected UnitTestProcessorBase(ILogger logger, CancellationToken cancellationToken)
+        protected UnitTestProcessorBase(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
         {
             Logger = logger;
             DbProcessor = new MultipleDataBaseProcessor(logger, cancellationToken);
+            TimeService = timeService;
         }
 
         public void ProcessAll()
@@ -93,7 +97,7 @@ namespace Zidium.Agent.AgentTasks
         {
             var repository = accountDbContext.GetUnitTestRepository();
             var unitTestTypeId = GetUnitTestTypeId();
-            var tests = repository.GetForProcessing(unitTestTypeId, Now());
+            var tests = repository.GetForProcessing(unitTestTypeId, TimeService.Now());
 
             if (unitTestId.HasValue)
                 tests = tests.Where(t => t.Id == unitTestId.Value).ToList();
@@ -157,69 +161,83 @@ namespace Zidium.Agent.AgentTasks
                         if (result == null)
                         {
                             logger.Warn("Отмена выполнения проверки {0} в аккаунте {1} из-за внутренней проблемы", unitTestId, accountName);
-
                             return;
                         }
 
-                        var failedAttemp = result.Result == UnitTestResult.Alarm;
-
-                        // переопределим цвет проверки
-                        if (result.Result == UnitTestResult.Alarm && unitTest.ErrorColor.HasValue)
+                        // если есть результат выполнения
+                        if (result.ResultRequest != null)
                         {
-                            result.Result = unitTest.ErrorColor.Value;
-                        }
-
-                        result.UnitTestId = unitTestId;
-                        if (result.ActualIntervalSeconds == null)
-                        {
-                            result.ActualIntervalSeconds = unitTest.PeriodSeconds * 2;
-                        }
-
-                        // Если попытка провалилась из-за проблем с сетью, но количество неуспешных попыток не превышено,
-                        // то отправим повторно предыдущий результат
-                        // Если попытка успешная, то сбросим счётчик
-                        var attempCount = unitTest.AttempCount + 1;
-                        var needNextAttemp = false;
-                        if (failedAttemp && result.IsNetworkProblem)
-                        {
-                            if (attempCount < unitTest.AttempMax)
+                            // переопределим цвет проверки
+                            if (result.ResultRequest.Result == UnitTestResult.Alarm && unitTest.ErrorColor.HasValue)
                             {
-                                var previousStatus = unitTest.Bulb.Status;
-                                if (previousStatus == MonitoringStatus.Alarm)
-                                    result.Result = UnitTestResult.Alarm;
-                                else if (previousStatus == MonitoringStatus.Warning)
-                                    result.Result = UnitTestResult.Warning;
-                                else if (previousStatus == MonitoringStatus.Success)
-                                    result.Result = UnitTestResult.Success;
-                                else if (previousStatus == MonitoringStatus.Unknown)
-                                    result.Result = UnitTestResult.Unknown;
-                                result.Message = "Ошибка сети? " + result.Message;
-                                needNextAttemp = true;
+                                result.ResultRequest.Result = unitTest.ErrorColor.Value;
                             }
+
+                            result.ResultRequest.UnitTestId = unitTestId;
+                            if (result.ResultRequest.ActualIntervalSeconds == null)
+                            {
+                                result.ResultRequest.ActualIntervalSeconds = unitTest.PeriodSeconds * 2;
+                            }
+
+                            // Если попытка провалилась из-за проблем с сетью, но количество неуспешных попыток не превышено,
+                            // то отправим повторно предыдущий результат
+                            // Если попытка успешная, то сбросим счётчик
+                            var attempCount = unitTest.AttempCount + 1;
+                            var needNextAttemp = false;
+                            if (result.IsNetworkProblem)
+                            {
+                                if (attempCount < unitTest.AttempMax)
+                                {
+                                    var previousStatus = unitTest.Bulb.Status;
+                                    if (previousStatus == MonitoringStatus.Alarm)
+                                        result.ResultRequest.Result = UnitTestResult.Alarm;
+                                    else if (previousStatus == MonitoringStatus.Warning)
+                                        result.ResultRequest.Result = UnitTestResult.Warning;
+                                    else if (previousStatus == MonitoringStatus.Success)
+                                        result.ResultRequest.Result = UnitTestResult.Success;
+                                    else if (previousStatus == MonitoringStatus.Unknown)
+                                        result.ResultRequest.Result = UnitTestResult.Unknown;
+                                    result.ResultRequest.Message = "Ошибка сети? " + result.ResultRequest.Message;
+                                    needNextAttemp = true;
+                                }
+                            }
+                            else
+                            {
+                                attempCount = 0;
+                            }
+
+                            result.ResultRequest.AttempCount = attempCount;
+
+
+                            // Если попытки не закончились, то запланируем следующую через минуту, а не через штатный интервал
+                            if (needNextAttemp && result.ResultRequest.NextExecutionTime == null)
+                            {
+                                result.ResultRequest.NextExecutionTime = TimeService.Now().AddMinutes(1);
+                            }
+
+                            var response = dispatcher.SendUnitTestResult(accountId, result.ResultRequest);
+                            response.Check();
+
+                            logger.Info(unitTest.Id + " => " + (result.ResultRequest.Result ?? UnitTestResult.Unknown));
+                            SuccessCount++;
                         }
                         else
                         {
-                            attempCount = 0;
-                        }
-
-                        result.AttempCount = attempCount;
-
-                        var response = dispatcher.SendUnitTestResult(accountId, result);
-                        response.Check();
-
-                        // Если попытки не закончились, то запланируем следующую через минуту, а не через штатный интервал
-                        if (needNextAttemp)
-                        {
-                            var response2 = dispatcher.SetUnitTestNextTime(accountId, new SetUnitTestNextTimeRequestData()
+                            // нет результата выполнения
+                            if (result.NextStepProcessTime == null)
                             {
-                                UnitTestId = unitTest.Id,
-                                NextTime = Now().AddMinutes(1)
-                            });
-                            response2.Check();
-                        }
+                                logger.Warn("Отмена выполнения проверки {0} в аккаунте {1} из-за внутренней проблемы", unitTestId, accountName);
+                                return;
+                            }
 
-                        logger.Info(unitTest.Id + " => " + (result.Result ?? UnitTestResult.Unknown));
-                        SuccessCount++;
+                            // результата выполнения нет, т.к. нужно выполнить следующий шаг
+                            var response = dispatcher.SetUnitTestNextStepProcessTime(accountId, new SetUnitTestNextStepProcessTimeRequestData()
+                            {
+                                UnitTestId = unitTestId,
+                                NextStepProcessTime = result.NextStepProcessTime
+                            });
+                            response.Check();
+                        }
                     }
                     catch (OperationCanceledException)
                     {
@@ -251,17 +269,5 @@ namespace Zidium.Agent.AgentTasks
                 logger.Error(exception);
             }
         }
-
-        protected DateTime Now()
-        {
-            return _nowOverride ?? GetDispatcherClient().GetServerTime().Data.Date;
-        }
-
-        public void SetNow(DateTime now)
-        {
-            _nowOverride = now;
-        }
-
-        private DateTime? _nowOverride;
     }
 }

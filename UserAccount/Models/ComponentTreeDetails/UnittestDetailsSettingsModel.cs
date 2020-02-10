@@ -37,5 +37,7 @@ namespace Zidium.UserAccount.Models.ComponentTreeDetails
         public string SslHost { get; set; }
 
         public string SqlQuery { get; set; }
+
+        public int TcpPort { get; set; }
     }
 }

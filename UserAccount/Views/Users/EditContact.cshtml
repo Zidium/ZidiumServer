@@ -1,4 +1,5 @@
-﻿@model Zidium.UserAccount.Models.UserContactModel
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.UserContactModel
 
 @if (Model.ModalMode)
 {
@@ -9,6 +10,12 @@
     ViewBag.Title = "Настройка контакта";
     ViewBag.ActiveMenuItems = "Manage,Users";
 }
+
+<style>
+    #form-edit-contact .smart-col-labels {
+        min-width: 50px;
+    }
+</style>
 
 @if (!Model.ModalMode)
 {
@@ -30,23 +37,38 @@ else
 @Html.HiddenFor(m => m.UserId)
 @Html.HiddenFor(model => model.ModalMode)
 @Html.HiddenFor(model => model.ReturnUrl)
+@Html.HiddenFor(model => model.CommonWebsiteUrl)
 
-@Html.EditorFor(m => m.Type, "LabeledEdit")
-@Html.EditorFor(m => m.Value, "LabeledEdit")
+<div class="smart-container" id="form-edit-contact">
+    @{
+        var form = Html.GetFormBuilder(Model);
+    }
 
-<div class="row" style="text-align: @(Model.ModalMode ? "right" : "left")">
-    <div class="col-sm-12">
-        <input type="submit" value="Сохранить" class="btn btn-primary" />
-        &nbsp;
-        @if (!Model.ModalMode)
-        {
+    @form.GroupFor(m => m.Type).DropDownList(GuiHelper.GetUserContactTypeItems(Model.Type, false)).Partial()
+    @form.GroupFor(m => m.Value).TextBox().Partial()
+
+    @form.Group("").Control(@<text>
+        <a href='@(Model.CommonWebsiteUrl + "/wiki/how-to/subscriptions/messangers")' target="_blank">
+            Как настроить отправку через мессенджеры?
+        </a>
+    </text>).Partial()
+
+    @if (!Model.ModalMode)
+    {
+        @form.Group("Submit").Control(@<text>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
             <a class="btn btn-default" href="@Model.ReturnUrl">Отмена</a>
-        }
-        else
-        {
-            <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
-        }
-    </div>
+        </text>).Partial()
+    }
 </div>
+
+@if (Model.ModalMode)
+{
+    <hr />
+    <div class="text-right top10px">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+}
 
 @{Html.EndForm();}

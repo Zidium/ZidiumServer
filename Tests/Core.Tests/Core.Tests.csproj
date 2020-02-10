@@ -154,6 +154,7 @@
   <ItemGroup>
     <Compile Include="AgentTests\DomainNamePaymentPeriodTests.cs" />
     <Compile Include="AgentTests\HttpTestProcessorTests.cs" />
+    <Compile Include="AgentTests\MessageNotificationTests.cs" />
     <Compile Include="AgentTests\SmsNotificationTests.cs" />
     <Compile Include="AgentTests\HttpNotificationTests.cs" />
     <Compile Include="AgentTests\HttpRequestsProcessorTests.cs" />
@@ -163,6 +164,11 @@
     <Compile Include="AgentTests\SqlCheckProcessorTests.cs" />
     <Compile Include="AgentTests\SslCertificateExpirationDateCheckTests.cs" />
     <Compile Include="AgentTests\TcpPortCheckTests.cs" />
+    <Compile Include="AgentTests\TelegramTests.cs" />
+    <Compile Include="AgentTests\VirusTotal\VirusTotalClientTests.cs" />
+    <Compile Include="AgentTests\VirusTotal\VirusTotalHelperTests.cs" />
+    <Compile Include="AgentTests\VirusTotal\VirusTotalProcessorTests.cs" />
+    <Compile Include="AgentTests\VKontakteTests.cs" />
     <Compile Include="Caching\EfTests.cs" />
     <Compile Include="Caching\ObjectChangesHelperTests.cs" />
     <Compile Include="Caching\OtherCacheTests.cs" />
@@ -207,6 +213,7 @@
     <Compile Include="AgentTests\EmailsTests.cs" />
     <Compile Include="AgentTests\CreateNotificationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\FixedTimeService.cs" />
     <Compile Include="Services\UserServiceTests.cs" />
     <Compile Include="Statuses\ComponentStatusTests.cs" />
     <Compile Include="Statuses\MetricsStatusesTests.cs" />

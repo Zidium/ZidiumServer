@@ -20,8 +20,8 @@ namespace Zidium.Core.Tests.AgentTests
                 OpenConnectionTimeoutMs = 5000
             };
             var result = SqlCheckProcessor.CheckSql(rule);
-            Assert.Equal(UnitTestResult.Warning, result.Result);
-            Assert.Equal("test message", result.Message);
+            Assert.Equal(UnitTestResult.Warning, result.ResultRequest.Result);
+            Assert.Equal("test message", result.ResultRequest.Message);
         }
     }
 }
