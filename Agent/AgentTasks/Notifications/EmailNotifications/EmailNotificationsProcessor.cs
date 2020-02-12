@@ -148,13 +148,13 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     {
                         // Делаем строку:
                         // Причиной стало событие компонента Запуск компонента: Данный ключ отсутствует в словаре
-                        html.Write("Причиной стало событие компонента ");
+                        html.Write("Причиной стало ");
 
                         var eventTypeRepository = accountDbContext.GetEventTypeRepository();
                         var componentEventType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
 
                         var reasonEventUrl = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
-                        html.WriteLink(reasonEventUrl, componentEventType.DisplayName);
+                        html.WriteLink(reasonEventUrl, " событие " + componentEventType.DisplayName);
 
                         if (reasonEvent.Message != null)
                         {
@@ -173,18 +173,15 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     {
                         var componentRepository = accountDbContext.GetComponentRepository();
                         var childComponent = componentRepository.GetById(reasonEvent.OwnerId);
-                        var childComponentUrl = UrlHelper.GetComponentUrl(childComponent.Id, accountName);
 
                         // Делаем строку:
                         // Причиной стал статус ОШИБКА дочернего компонента ВИДЕОКАМЕРА
 
                         html.Write("Причиной стал ");
+                        var title = "статус " + statusName + " дочернего компонента " + childComponent.DisplayName;
 
                         var reasonEventUrl = UrlHelper.GetComponentUrl(childComponent.Id, accountName);
-                        html.WriteLink(reasonEventUrl, "статус " + statusName);
-
-                        html.Write(" дочернего компонента ");
-                        html.WriteLink(childComponentUrl, childComponent.DisplayName);
+                        html.WriteLink(reasonEventUrl, title);
                     }
 
                     // причина - результат проверки
@@ -192,18 +189,16 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     {
                         var unitTestRepository = accountDbContext.GetUnitTestRepository();
                         var unitTest = unitTestRepository.GetById(reasonEvent.OwnerId);
-                        var unitTestUrl = UrlHelper.GetUnitTestUrl(unitTest.Id, accountName);
 
                         // Делаем строку:
                         // Причиной стал РЕЗУЛЬТАТ проверки МОЯ ПРОВЕРКА: Превышен таймаут выполнения запроса
 
                         html.Write("Причиной стал ");
+                        var title = "результат проверки " + unitTest.DisplayName;
 
                         var reasonEventUrl = UrlHelper.GetUnitTestUrl(unitTest.Id, accountName);
-                        html.WriteLink(reasonEventUrl, "результат");
+                        html.WriteLink(reasonEventUrl, title);
 
-                        html.Write(" проверки ");
-                        html.WriteLink(unitTestUrl, unitTest.DisplayName);
                         if (reasonEvent.Message != null)
                         {
                             html.Write(": " + reasonEvent.Message);
@@ -232,10 +227,11 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Делаем строку:
                         // Причиной стало значение метрики CPU, % = 200
 
-                        html.Write("Причиной стало значение метрики ");
+                        html.Write("Причиной стало ");
+                        var title = "значение метрики " + metric.MetricType.DisplayName;
 
                         var reasonEventUrl = UrlHelper.GetMetricUrl(metric.Id, accountName);
-                        html.WriteLink(reasonEventUrl, metric.MetricType.DisplayName);
+                        html.WriteLink(reasonEventUrl, title);
 
                         html.Write(" = ");
                         html.Span(firstValueText, "font-weight: bold, color: " + statusColor);
