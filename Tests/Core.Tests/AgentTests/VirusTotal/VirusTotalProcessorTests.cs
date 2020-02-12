@@ -149,5 +149,40 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(VirusTotalStep.Report, output.NextStep);
             Assert.Equal(scanTime, output.ScanTime);
         }
+
+        /// <summary>
+        /// Тест проверяет случай, когда url ресурса изменился между шагами
+        /// </summary>
+        [Fact]
+        private void ChangeUrlTest()
+        {
+            // scan
+            string url = "http://recursion.ru";
+            var output = processor.Process(new VirusTotalProcessorInputData()
+            {
+                ApiKey = API_KEY,
+                Url = url,
+                NextStep = VirusTotalStep.Scan
+            });
+
+            // report
+            url = "http://recursion.ru?fake=" + DateTime.Now.Ticks; // изменили url между шагами
+            output = processor.Process(new VirusTotalProcessorInputData()
+            {
+                ApiKey = API_KEY,
+                Url = url,
+                NextStep = VirusTotalStep.Report,
+                ScanId = output.ScanId,
+                ScanTime = output.ScanTime
+            });
+
+            // должны вернуться на шаг сканирования
+            Assert.Null(output.ScanId);
+            Assert.NotNull(output.NextStepProcessTime);
+            Assert.Null(output.Result);
+            Assert.Null(output.ErrorCode);
+            Assert.Equal(VirusTotalStep.Scan, output.NextStep);
+            Assert.Null(output.ScanTime);
+        }
     }
 }

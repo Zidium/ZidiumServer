@@ -76,10 +76,11 @@ namespace Zidium.Core.Tests.AgentTests
         }
 
         [Fact]
-        public void FirstTimeTest()
+        public void UrlTimeTest()
         {
+            // scan
             IVirusTotalClient client = new VirusTotalClient();
-            var url = "http://recursion.ru?fake=" + DateTime.Now.Ticks;
+            var url = "https://plant-agro.com";
             SleepLimits();
             var response = client.Scan(new ScanRequest()
             {
@@ -89,7 +90,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(1, response.response_code);
             Assert.NotNull(response.scan_id);
 
-            // 1-ый запрос отчета
+            // report
             SleepLimits();
             var reportResponse1 = client.Report(new ReportRequest()
             {
@@ -98,17 +99,6 @@ namespace Zidium.Core.Tests.AgentTests
                 ScanId = response.scan_id
             });
             Assert.Equal(response.scan_id, reportResponse1.scan_id);
-
-            // 2-ый запрос отчета
-            SleepLimits();
-            var reportResponse2 = client.Report(new ReportRequest()
-            {
-                Apikey = _apiKey,
-                Resource = url,
-                ScanId = response.scan_id
-            });
-            Assert.Equal(response.scan_id, reportResponse2.scan_id);
-            Assert.True(reportResponse2.total > 0);
         }
     }
 }

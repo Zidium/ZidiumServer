@@ -8,7 +8,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 
         public VirusTotalTask()
         {
-            ExecutionPeriod = TimeSpan.FromMinutes(1);
+            ExecutionPeriod = TimeSpan.FromSeconds(20);
             processor = new VirusTotalTaskProcessor(Logger, CancellationToken, TimeService);
         }
 

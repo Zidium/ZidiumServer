@@ -91,49 +91,10 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             return result;
         }
 
-        /*
-        private VirusTotalProcessorOutputData CreateResultFromException(Exception exception)
-        {
-            // VirusTotalApiError
-            VirusTotalException virusTotalException = exception as VirusTotalException;
-            if (virusTotalException != null)
-            {
-                return new VirusTotalProcessorOutputData()
-                {
-                    ErrorCode = VirusTotalErrorCode.VirusTotalApiError,
-                    Message = exception.Message
-                };
-            }
-
-            // ServiceForbidden
-            var webException = exception as WebException;
-            if (webException != null)
-            {
-                var response = webException.Response as HttpWebResponse;
-                if (response != null)
-                {
-                    if (response.StatusCode == HttpStatusCode.Forbidden)
-                    {
-                        return new VirusTotalProcessorOutputData()
-                        {
-                            ErrorCode = VirusTotalErrorCode.ServiceForbidden,
-                            Message = "Нет доступа (проверьте ключ api)"
-                        };
-                    }
-                }
-            }
-
-            // UnknownError
-            return new VirusTotalProcessorOutputData()
-            {
-                ErrorCode = VirusTotalErrorCode.UnknownError,
-                Message = exception.Message
-            };
-        }*/
-
 
         private VirusTotalProcessorOutputData ProcessScanStep(VirusTotalProcessorInputData inputData)
         {
+            logger.Info("Выполняем Scan для " + inputData.Url);
             // проверка входных данных
             if (inputData == null)
             {
@@ -159,7 +120,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 DateTime scanTime = VirusTotalHelper.ParseDateTime(scanResponse.scan_date);
                 return new VirusTotalProcessorOutputData()
                 {
-                    NextStepProcessTime = timeService.Now().AddMinutes(1),
+                    NextStepProcessTime = GetNextStepTime(),
                     ScanId = scanResponse.scan_id,
                     ScanTime = scanTime,
                     NextStep = VirusTotalStep.Report
@@ -209,8 +170,15 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             };
         }
 
+        private DateTime GetNextStepTime()
+        {
+            return timeService.Now().Add(TimeSpan.FromSeconds(20));
+        }
+
         private VirusTotalProcessorOutputData ProcessReportStep(VirusTotalProcessorInputData inputData)
         {
+            logger.Info("Выполняем Report для " + inputData.Url);
+
             // проверка входных данных
             if (inputData == null)
             {
@@ -240,22 +208,36 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 ScanId = inputData.ScanId,
                 Resource = inputData.Url
             });
+
+            // неизвестный ресурс (например, изменился url проверки после шага scan)
+            if (reportResponse.response_code == 0)
+            {
+                logger.Warn("Неизвестный ресурс " + inputData.Url);
+                return new VirusTotalProcessorOutputData()
+                {
+                    NextStep = VirusTotalStep.Scan,
+                    NextStepProcessTime = GetNextStepTime()
+                };
+            }
+
             ValidateResponse(reportResponse);
             var scanTime = VirusTotalHelper.ParseDateTime(reportResponse.scan_date);
 
             // если отчет старый
             if (scanTime < inputData.ScanTime)
             {
+                logger.Warn("Отчет старый");
                 return new VirusTotalProcessorOutputData()
                 {
                     NextStep = VirusTotalStep.Report,
-                    NextStepProcessTime = timeService.Now().AddMinutes(1),
+                    NextStepProcessTime = GetNextStepTime(),
                     ScanId = inputData.ScanId,
                     ScanTime = inputData.ScanTime
                 };
             }
 
             // актуальный отчет
+            logger.Info("Получили актуальный отчет");
             var report = ConvertReport(reportResponse);
             var unitTestResult = CreateUnitTestResult(report);
             VirusTotalErrorCode errorCode = VirusTotalErrorCode.CleanSite;
@@ -300,6 +282,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 {
                     if (response.StatusCode == HttpStatusCode.Forbidden)
                     {
+                        logger.Error("Нет доступа (проверьте ключ api)");
                         return new VirusTotalProcessorOutputData()
                         {
                             Result = new SendUnitTestResultRequestData()
