@@ -1,4 +1,4 @@
-﻿@using Zidium.Core.AccountsDb
+﻿@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
@@ -106,8 +106,7 @@
                 else
                 {
                     <text>@Html.HiddenFor(x => x.ComponentTypeId)</text>
-                    var componentType = FullRequestContext.Current.GetComponentTypeById(Model.ComponentTypeId.Value);
-                    group.Paragraph(componentType.DisplayName);
+                    group.Paragraph(Model.ComponentTypeDisplayName);
                 }
                 group.Render();
             }
@@ -135,8 +134,7 @@
                 else
                 {
                     <text>@Html.HiddenFor(x => x.ComponentId)</text>
-                    var component = FullRequestContext.Current.GetComponentById(Model.ComponentId.Value);
-                    group.Control(@<p class="form-control-static">@Html.ComponentPath(component)</p>);
+                    group.Control(@<p class="form-control-static">@Html.ComponentLink(Model.ComponentId.GetValueOrDefault(), Model.ComponentDisplayName)</p>);
 }
 group.Render();
 }

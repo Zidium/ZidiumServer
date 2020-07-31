@@ -2,7 +2,8 @@
 @using GridMvc.Html
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Controls
-@model Zidium.UserAccount.Models.MetricData.CounterDataListModel
+
+@model Zidium.UserAccount.Models.MetricData.MetricDataListModel
 
 @{
     ViewBag.Title = "История метрики";
@@ -38,16 +39,16 @@
                 AutoRefreshPage = false
             })
         </div>
-        @if (Model.ComponentId.HasValue && Model.CounterId.HasValue)
+        @if (Model.ComponentId.HasValue && Model.MetricTypeId.HasValue)
         {
             <div class="col-sm-6 bottom10px">
                 @Html.Label("Метрика")
-                @Html.CounterSelector("counterId", Model.CounterId, Model.ComponentId.Value, false, false)
+                @Html.CounterSelector("counterId", Model.MetricTypeId, Model.ComponentId.Value, false, false)
             </div>
         }
     </div>
 
-    @if (Model.ComponentId.HasValue && Model.CounterId.HasValue)
+    @if (Model.ComponentId.HasValue && Model.MetricTypeId.HasValue)
     {
         <div class="row">
             <div class="col-sm-3 bottom10px">

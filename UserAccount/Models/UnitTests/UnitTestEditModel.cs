@@ -1,9 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
-using Zidium.Core.Common;
-using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models
@@ -13,15 +10,12 @@ namespace Zidium.UserAccount.Models
         public Guid Id { get; set; }
 
         [Display(Name = "Компонент")]
-        public Component Component { get; set; }
-
-        [Display(Name = "Компонент")]
         [MyRequired]
         [DataType("ComponentTree")]
         public Guid ComponentId { get; set; }
 
         [Display(Name = "Тип")]
-        public UnitTestType UnitTestType { get; set; }
+        public UnitTestTypeForRead UnitTestType { get; set; }
 
         [Display(Name = "Период, сек")]
         public int? PeriodSeconds { get; set; }
@@ -52,15 +46,7 @@ namespace Zidium.UserAccount.Models
         [Display(Name = "Сообщение")]
         public string Message { get; set; }
 
-        public UnitTest UnitTest { get; set; }
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs { get; set; }
 
-        public void InitReadOnlyValues(UnitTest unitTest)
-        {
-            UnitTest = unitTest;
-            UnitTestType = unitTest.Type;
-            Id = unitTest.Id;
-            NoSignalColorDefault = unitTest.Type.NoSignalColor ?? ObjectColor.Red;
-            ActualTimeDefault = TimeSpanHelper.FromSeconds(unitTest.Type.ActualTimeSecs) ?? UnitTestHelper.GetDefaultActualTime();
-        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {

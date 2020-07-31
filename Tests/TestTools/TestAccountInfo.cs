@@ -2,11 +2,13 @@
 using System.Linq;
 using Zidium.Api;
 using Zidium.Api.XmlConfig;
-using Zidium.Core.AccountsDb;
+using Zidium.Core;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.ConfigDb;
+using Zidium.Storage.Ef;
 
 namespace Zidium.TestTools
 {
@@ -23,6 +25,8 @@ namespace Zidium.TestTools
         public string SystemName { get; set; }
 
         public Api.AccessToken Token { get; set; }
+
+        public string ConnectionString { get; set; }
 
         public void SaveAllCaches()
         {
@@ -105,7 +109,7 @@ namespace Zidium.TestTools
 
         public static TestAccountInfo Create(AccountInfo account)
         {
-            return new TestAccountInfo()
+            var result = new TestAccountInfo()
             {
                 Id = account.Id,
                 RootId = account.RootId,
@@ -117,11 +121,17 @@ namespace Zidium.TestTools
                     SecretKey = account.SecretKey
                 }
             };
+
+            var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+            var database = configDbServicesFactory.GetDatabaseService().GetOneById(account.AccountDatabaseId);
+
+            result.ConnectionString = database.ConnectionString;
+            return result;
         }
 
-        public AccountDbContext CreateAccountDbContext()
+        internal AccountDbContext GetAccountDbContext()
         {
-            return AccountDbContext.CreateFromDatabaseId(AccountDataBaseId);
+            return AccountDbContext.CreateFromConnectionString(null, ConnectionString);
         }
 
         public IMetricTypeCacheReadObject GetMetricTypeCache(Guid metricTypeId)
@@ -181,7 +191,7 @@ namespace Zidium.TestTools
 
         public void SetComponentLogConfigIsInfoEnabled(Guid componentId, bool value)
         {
-            using (var accountDbContext = CreateAccountDbContext())
+            using (var accountDbContext = GetAccountDbContext())
             {
                 var componentRow = accountDbContext.Components.First(x => x.Id == componentId);
                 componentRow.LogConfig.IsInfoEnabled = value;

@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Linq;
 using Zidium.Api.Others;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -147,36 +148,75 @@ namespace Zidium.Core.Caching
             return ObjectChangesHelper.HasChanges(oldObj, newObj);
         }
 
-        protected override void AddBatchObject(AccountDbContext accountDbContext, ComponentCacheWriteObject component)
+        protected override void AddBatchObjects(IStorage storage, ComponentCacheWriteObject[] components)
         {
             throw new NotImplementedException();
         }
 
-        protected override void UpdateBatchObject(AccountDbContext accountDbContext, ComponentCacheWriteObject component, bool useCheck)
+        protected override void UpdateBatchObjects(IStorage storage, ComponentCacheWriteObject[] components, bool useCheck)
         {
-            if (component.Response.LastSavedData == null)
+            var entities = components.Select(component =>
             {
-                throw new Exception("component.Response.LastSavedData == null");
-            }
-            var dbEntity = component.Response.LastSavedData.CreateEf();
-            accountDbContext.Components.Attach(dbEntity);
+                var lastData = component.Response.LastSavedData;
 
-            dbEntity.ChildComponentsStatusId = component.ChildComponentsStatusId;
-            dbEntity.ComponentTypeId = component.ComponentTypeId;
-            dbEntity.CreatedDate = component.CreatedDate;
-            dbEntity.DisableComment = component.DisableComment;
-            dbEntity.DisableToDate = component.DisableToDate;
-            dbEntity.DisplayName = component.DisplayName;
-            dbEntity.Enable = component.Enable;
-            dbEntity.EventsStatusId = component.EventsStatusId;
-            dbEntity.ExternalStatusId = component.ExternalStatusId;
-            dbEntity.InternalStatusId = component.InternalStatusId;
-            dbEntity.IsDeleted = component.IsDeleted;
-            dbEntity.ParentEnable = component.ParentEnable;
-            dbEntity.ParentId = component.ParentId;
-            dbEntity.SystemName = component.SystemName;
-            dbEntity.UnitTestsStatusId = component.UnitTestsStatusId;
-            dbEntity.Version = component.Version;
+                if (lastData == null)
+                {
+                    throw new Exception("component.Response.LastSavedData == null");
+                }
+                var entity = lastData.CreateEf();
+
+                if (lastData.ChildComponentsStatusId != component.ChildComponentsStatusId)
+                    entity.ChildComponentsStatusId.Set(component.ChildComponentsStatusId);
+
+                if (lastData.ComponentTypeId != component.ComponentTypeId)
+                    entity.ComponentTypeId.Set(component.ComponentTypeId);
+
+                if (lastData.DisableComment != component.DisableComment)
+                    entity.DisableComment.Set(component.DisableComment);
+
+                if (lastData.DisableToDate != component.DisableToDate)
+                    entity.DisableToDate.Set(component.DisableToDate);
+
+                if (lastData.DisplayName != component.DisplayName)
+                    entity.DisplayName.Set(component.DisplayName);
+
+                if (lastData.Enable != component.Enable)
+                    entity.Enable.Set(component.Enable);
+
+                if (lastData.EventsStatusId != component.EventsStatusId)
+                    entity.EventsStatusId.Set(component.EventsStatusId);
+
+                if (lastData.ExternalStatusId != component.ExternalStatusId)
+                    entity.ExternalStatusId.Set(component.ExternalStatusId);
+
+                if (lastData.InternalStatusId != component.InternalStatusId)
+                    entity.InternalStatusId.Set(component.InternalStatusId);
+
+                if (lastData.MetricsStatusId != component.MetricsStatusId)
+                    entity.MetricsStatusId.Set(component.MetricsStatusId);
+
+                if (lastData.IsDeleted != component.IsDeleted)
+                    entity.IsDeleted.Set(component.IsDeleted);
+
+                if (lastData.ParentEnable != component.ParentEnable)
+                    entity.ParentEnable.Set(component.ParentEnable);
+
+                if (lastData.ParentId != component.ParentId)
+                    entity.ParentId.Set(component.ParentId);
+
+                if (lastData.SystemName != component.SystemName)
+                    entity.SystemName.Set(component.SystemName);
+
+                if (lastData.UnitTestsStatusId != component.UnitTestsStatusId)
+                    entity.UnitTestsStatusId.Set(component.UnitTestsStatusId);
+
+                if (lastData.Version != component.Version)
+                    entity.Version.Set(component.Version);
+
+                return entity;
+            }).ToArray();
+
+            storage.Components.Update(entities);
         }
 
         public override int BatchCount
@@ -184,19 +224,18 @@ namespace Zidium.Core.Caching
             get { return 100; }
         }
 
-        protected override ComponentCacheWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext)
+        protected override ComponentCacheWriteObject LoadObject(AccountCacheRequest request, IStorage storage)
         {
             if (request == null)
             {
                 throw new ArgumentNullException("request");
             }
-            if (accountDbContext == null)
+            if (storage == null)
             {
-                throw new ArgumentNullException("accountDbContext");
+                throw new ArgumentNullException("storage");
             }
-            var repository = accountDbContext.GetComponentRepository();
-            var component = repository.GetByIdOrNull(request.ObjectId);
-            return ComponentCacheWriteObject.Create(component, request.AccountId);
+            var component = storage.Components.GetOneOrNullById(request.ObjectId);
+            return ComponentCacheWriteObject.Create(component, request.AccountId, storage);
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Zidium.Core.AccountsDb;
+﻿using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -7,6 +6,6 @@ namespace Zidium.UserAccount.Models
     {
         public string Search { get; set; }
 
-        public IQueryable<UnitTestType> Items { get; set; }
+        public UnitTestTypeForRead[] Items { get; set; }
     }
 }

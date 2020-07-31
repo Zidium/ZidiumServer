@@ -13,7 +13,8 @@ namespace Zidium.Core.Common.Helpers
         {
             if (_systemToken == null)
             {
-                var account = ConfigDbServicesHelper.GetAccountService().GetSystemAccount();
+                var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+                var account = configDbServicesFactory.GetAccountService().GetSystemAccount();
                 _systemToken = new Zidium.Api.AccessToken()
                 {
                     SecretKey = account.SecretKey
@@ -63,17 +64,20 @@ namespace Zidium.Core.Common.Helpers
         public static Guid GetSystemAccountId()
         {
             if (_systemAccountId == null)
-                _systemAccountId = ConfigDbServicesHelper.GetAccountService().GetSystemAccount().Id;
+            {
+                var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+                _systemAccountId = configDbServicesFactory.GetAccountService().GetSystemAccount().Id;
+            }
             return _systemAccountId.Value;
         }
 
         private static Guid? _systemAccountId;
 
         /// <summary>
-        // Получение специального клиента Api для внутреннего использования
-        // Он будет работать через локальный класс сервиса Api, а не обращаться к Web-сервису Api
-        // Нет смысла тратить ресурсы web-сервиса Api на мониторинг самого Зидиума
-        // Настройки доступа к системному аккаунту берутся не из конфига, а из базы
+        /// Получение специального клиента Api для внутреннего использования
+        /// Он будет работать через локальный класс сервиса Api, а не обращаться к Web-сервису Api
+        /// Нет смысла тратить ресурсы web-сервиса Api на мониторинг самого Зидиума
+        /// Настройки доступа к системному аккаунту берутся не из конфига, а из базы
         /// </summary>
         public static IClient GetInternalSystemClient()
         {

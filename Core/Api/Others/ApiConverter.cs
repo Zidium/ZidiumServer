@@ -1,125 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Xml;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core
 {
     public static class ApiConverter
     {
-        //public static string GetXmlValue(ExtentionPropertyValue value)
-        //{
-        //    if (value == null || value.Value == null)
-        //    {
-        //        return null;
-        //    }
-        //    if (value.DataType == DataType.Binary)
-        //    {
-        //        return Convert.ToBase64String((byte[])value.Value);
-        //    }
-        //    if (value.DataType == DataType.Boolean)
-        //    {
-        //        return XmlConvert.ToString((bool)value.Value);
-        //    }
-        //    if (value.DataType == DataType.DateTime)
-        //    {
-        //        return XmlConvert.ToString((DateTime)value.Value, XmlDateTimeSerializationMode.Local);
-        //    }
-        //    if (value.DataType == DataType.Double)
-        //    {
-        //        return XmlConvert.ToString((Double)value.Value);
-        //    }
-        //    if (value.DataType == DataType.Guid)
-        //    {
-        //        return XmlConvert.ToString((Guid)value.Value);
-        //    }
-        //    if (value.DataType == DataType.Int32)
-        //    {
-        //        return XmlConvert.ToString((Int32)value.Value);
-        //    }
-        //    if (value.DataType == DataType.Int64)
-        //    {
-        //        return XmlConvert.ToString((Int64)value.Value);
-        //    }
-        //    if (value.DataType == DataType.String)
-        //    {
-        //        return (string)value.Value;
-        //    }
-        //    if (value.DataType == DataType.Unknown)
-        //    {
-        //        return (string)value.Value;
-        //    }
-        //    throw new Exception("Неизвестное значение DataType: " + value.DataType);
-        //}
-
-        //public static ExtentionProperty GetExtentionPropertyFromXml(string name, string type, string value)
-        //{
-        //    if (string.IsNullOrEmpty(name))
-        //    {
-        //        throw new Exception("Не задано имя свойства");
-        //    }
-        //    var typeEnum = GetDataType(type);
-        //    object valueObj = null;
-        //    if (string.IsNullOrEmpty(value) == false)
-        //    {
-        //        if (typeEnum == DataType.Binary)
-        //        {
-        //            valueObj = Convert.FromBase64String(value);
-        //        }
-        //        else if (typeEnum == DataType.Boolean)
-        //        {
-        //            valueObj = XmlConvert.ToBoolean(value);
-        //        }
-        //        else if (typeEnum == DataType.DateTime)
-        //        {
-        //            valueObj = XmlConvert.ToDateTime(value, XmlDateTimeSerializationMode.Local);//todo точно такое?
-        //        }
-        //        else if (typeEnum == DataType.Double)
-        //        {
-        //            valueObj = XmlConvert.ToDouble(value);
-        //        }
-        //        else if (typeEnum == DataType.Int32)
-        //        {
-        //            valueObj = XmlConvert.ToInt32(value);
-        //        }
-        //        else if (typeEnum == DataType.Guid)
-        //        {
-        //            valueObj = XmlConvert.ToGuid(value);
-        //        }
-        //        else if (typeEnum == DataType.Int64)
-        //        {
-        //            valueObj = XmlConvert.ToInt64(value);
-        //        }
-        //        else if (typeEnum == DataType.String)
-        //        {
-        //            valueObj = value;
-        //        }
-        //        else if (typeEnum == DataType.Unknown)
-        //        {
-        //            valueObj = value;
-        //        }
-        //        else
-        //        {
-        //            throw new Exception("Неизвестное значение DataType: " + typeEnum);
-        //        }
-        //    }
-        //    return new ExtentionProperty()
-        //    {
-        //        Name = name,
-        //        Value = new ExtentionPropertyValue()
-        //        {
-        //            Value = valueObj,
-        //            DataType = typeEnum
-        //        }
-        //    };
-        //}
-
         public static int? GetSeconds(TimeSpan? timeSpan)
         {
             if (timeSpan == null)
@@ -179,7 +70,7 @@ namespace Zidium.Core
             throw new Exception("Неизвестное значение DataType: " + dataType);
         }
 
-        public static SubscriptionInfo GetSubscriptionInfo(Subscription subscription)
+        public static SubscriptionInfo GetSubscriptionInfo(SubscriptionForRead subscription)
         {
             return new SubscriptionInfo()
             {
@@ -200,7 +91,7 @@ namespace Zidium.Core
             };
         }
 
-        public static WebLogConfig GetLogConfig(LogConfig config)
+        public static WebLogConfig GetLogConfig(LogConfigForRead config)
         {
             return new WebLogConfig()
             {
@@ -216,7 +107,7 @@ namespace Zidium.Core
             };
         }
 
-        public static LogRow GetLogRow(Log log)
+        public static LogRow GetLogRow(LogForRead log, LogPropertyForRead[] properties)
         {
             if (log == null)
             {
@@ -233,12 +124,12 @@ namespace Zidium.Core
             };
             if (log.ParametersCount > 0)
             {
-                logRow.Properties = GetExtentionProperties(log.Parameters);
+                logRow.Properties = GetExtentionProperties(properties);
             }
             return logRow;
         }
 
-        public static Log GetLog(Guid componentId, SendLogData message)
+        public static LogForAdd GetLog(Guid componentId, SendLogData message)
         {
             if (message.Date == null)
             {
@@ -246,9 +137,9 @@ namespace Zidium.Core
             }
             if (message.Level == null)
             {
-                message.Level = LogLevel.Info;
+                message.Level = Storage.LogLevel.Info;
             }
-            var log = new Log()
+            var log = new LogForAdd()
             {
                 Id = Guid.NewGuid(),
                 ComponentId = componentId,
@@ -258,7 +149,7 @@ namespace Zidium.Core
                 Message = message.Message,
                 Context = message.Context,
                 ParametersCount = 0,
-                Parameters = GetLogProperies(message.Properties)
+                Properties = GetLogProperies(message.Properties)
             };
             if (message.Properties != null)
             {
@@ -267,7 +158,7 @@ namespace Zidium.Core
             return log;
         }
 
-        public static MetricInfo GetMetricInfo(Metric metric)
+        public static MetricInfo GetMetricInfo(MetricForRead metric, MetricTypeForRead metricType, BulbForRead metricBulb)
         {
             if (metric == null)
                 return null;
@@ -275,16 +166,16 @@ namespace Zidium.Core
             return new MetricInfo()
             {
                 ComponentId = metric.ComponentId,
-                SystemName = metric.MetricType.SystemName,
+                SystemName = metricType.SystemName,
                 Value = metric.Value,
                 BeginDate = metric.BeginDate,
                 ActualDate = metric.ActualDate,
-                Status = metric.Bulb.Status
+                Status = metricBulb.Status
             };
         }
 
         public static MetricInfo GetMetricInfo(
-            IMetricCacheReadObject metric, 
+            IMetricCacheReadObject metric,
             IMetricTypeCacheReadObject metricType,
             IBulbCacheReadObject bulb)
         {
@@ -312,7 +203,7 @@ namespace Zidium.Core
             };
         }
 
-        public static ComponentTypeInfo GetComponentTypeInfo(ComponentType componentType)
+        public static ComponentTypeInfo GetComponentTypeInfo(ComponentTypeForRead componentType)
         {
             if (componentType == null)
             {
@@ -327,27 +218,13 @@ namespace Zidium.Core
             };
         }
 
-        public static List<ComponentInfo> GetComponentInfoList(IEnumerable<Component> components)
-        {
-            var result = new List<ComponentInfo>();
-            foreach (var component in components)
-            {
-                ComponentInfo info = GetComponentInfo(component);
-                if (info != null)
-                {
-                    result.Add(info);
-                }
-            }
-            return result;
-        }
-
-        public static ComponentInfo GetComponentInfo(Component component)
+        public static ComponentInfo GetComponentInfo(ComponentForRead component, ComponentPropertyForRead[] properties, ComponentTypeForRead componentType)
         {
             if (component == null)
             {
                 return null;
             }
-            var typeDto = GetComponentTypeInfo(component.ComponentType);
+            var typeDto = GetComponentTypeInfo(componentType);
             return new ComponentInfo()
             {
                 CreatedDate = component.CreatedDate,
@@ -357,120 +234,13 @@ namespace Zidium.Core
                 SystemName = component.SystemName,
                 Type = typeDto,
                 Version = component.Version,
-                Properties = GetExtentionProperties(component.Properties)
+                Properties = GetExtentionProperties(properties)
             };
         }
 
-        //public static string GetDbString(ExtentionPropertyValue value)
-        //{
-        //    if (value == null || value.Value == null)
-        //    {
-        //        return null;
-        //    }
-        //    if (value.DataType == DataType.Binary)
-        //    {
-        //        byte[] data = value;
-        //        return Convert.ToBase64String(data);
-        //    }
-        //    if (value.DataType == DataType.Boolean)
-        //    {
-        //        bool data = value;
-        //        return data.ToString(CultureInfo.InvariantCulture);
-        //    }
-        //    if (value.DataType == DataType.DateTime)
-        //    {
-        //        DateTime data = value;
-        //        return data.ToString(CultureHelper.Russian);
-        //    }
-        //    if (value.DataType == DataType.Double)
-        //    {
-        //        double data = value;
-        //        return data.ToString(CultureInfo.InvariantCulture);
-        //    }
-        //    if (value.DataType == DataType.Guid)
-        //    {
-        //        Guid data = value;
-        //        return data.ToString();
-        //    }
-        //    if (value.DataType == DataType.Int32)
-        //    {
-        //        int data = value;
-        //        return data.ToString(CultureInfo.InvariantCulture);
-        //    }
-        //    if (value.DataType == DataType.Int64)
-        //    {
-        //        long data = value;
-        //        return data.ToString(CultureInfo.InvariantCulture);
-        //    }
-        //    if (value.DataType == DataType.String)
-        //    {
-        //        string data = value;
-        //        return data;
-        //    }
-        //    if (value.DataType == DataType.Unknown)
-        //    {
-        //        string data = value;
-        //        return data;
-        //    }
-        //    throw new Exception("Неизвестный DataType: " + value.DataType);
-        //}
-
-        //public static ExtentionPropertyValue GetExtentionPropertyValueFromDbString(DataType type, string dbStringValue)
-        //{
-        //    object value = null;
-        //    if (dbStringValue != null)
-        //    {
-        //        if (type == DataType.Binary)
-        //        {
-        //            value = Convert.FromBase64String(dbStringValue);
-        //        }
-        //        else if (type == DataType.Boolean)
-        //        {
-        //            value = bool.Parse(dbStringValue);
-        //        }
-        //        else if (type == DataType.DateTime)
-        //        {
-        //            value = DateTime.Parse(dbStringValue, CultureHelper.Russian);
-        //        }
-        //        else if (type == DataType.Double)
-        //        {
-        //            value = Double.Parse(dbStringValue, CultureInfo.InvariantCulture);
-        //        }
-        //        else if (type == DataType.Guid)
-        //        {
-        //            value = Guid.Parse(dbStringValue);
-        //        }
-        //        else if (type == DataType.Int32)
-        //        {
-        //            value = Int32.Parse(dbStringValue, CultureInfo.InvariantCulture);
-        //        }
-        //        else if (type == DataType.Int64)
-        //        {
-        //            value = Int64.Parse(dbStringValue, CultureInfo.InvariantCulture);
-        //        }
-        //        else if (type == DataType.String)
-        //        {
-        //            value = dbStringValue;
-        //        }
-        //        else if (type == DataType.Unknown)
-        //        {
-        //            value = dbStringValue;
-        //        }
-        //        else
-        //        {
-        //            throw new Exception("Неизвестный DataType: " + type);
-        //        }
-        //    }
-        //    return new ExtentionPropertyValue()
-        //    {
-        //        DataType = type,
-        //        Value = value
-        //    };
-        //}
-
-        public static ComponentProperty GetComponentProperty(ExtentionPropertyDto property)
+        public static ComponentPropertyForAdd GetComponentProperty(ExtentionPropertyDto property)
         {
-            return new ComponentProperty()
+            return new ComponentPropertyForAdd()
             {
                 Id = Guid.NewGuid(),
                 Name = property.Name,
@@ -479,9 +249,9 @@ namespace Zidium.Core
             };
         }
 
-        public static EventProperty GetEventProperty(ExtentionPropertyDto property)
+        public static EventPropertyForAdd GetEventProperty(ExtentionPropertyDto property)
         {
-            return new EventProperty()
+            return new EventPropertyForAdd()
             {
                 Id = Guid.NewGuid(),
                 Name = property.Name,
@@ -490,13 +260,13 @@ namespace Zidium.Core
             };
         }
 
-        public static LogProperty GetLogProperty(ExtentionPropertyDto property)
+        public static LogPropertyForAdd GetLogProperty(ExtentionPropertyDto property)
         {
             if (property == null)
             {
                 return null;
             }
-            return new LogProperty()
+            return new LogPropertyForAdd()
             {
                 Id = Guid.NewGuid(),
                 DataType = property.Type,
@@ -505,7 +275,7 @@ namespace Zidium.Core
             };
         }
 
-        public static ExtentionPropertyDto GetExtentionProperty(ComponentProperty property)
+        public static ExtentionPropertyDto GetExtentionProperty(ComponentPropertyForRead property)
         {
             if (property == null)
             {
@@ -519,7 +289,7 @@ namespace Zidium.Core
             };
         }
 
-        public static ExtentionPropertyDto GetExtentionProperty(LogProperty property)
+        public static ExtentionPropertyDto GetExtentionProperty(LogPropertyForRead property)
         {
             if (property == null)
             {
@@ -533,7 +303,7 @@ namespace Zidium.Core
             };
         }
 
-        public static ExtentionPropertyDto GetExtentionProperty(EventProperty property)
+        public static ExtentionPropertyDto GetExtentionProperty(EventPropertyForRead property)
         {
             if (property == null)
             {
@@ -547,7 +317,7 @@ namespace Zidium.Core
             };
         }
 
-        public static List<ExtentionPropertyDto> GetExtentionProperties(IEnumerable<ComponentProperty> properties)
+        public static List<ExtentionPropertyDto> GetExtentionProperties(IEnumerable<ComponentPropertyForRead> properties)
         {
             var dtoProperties = new List<ExtentionPropertyDto>();
             if (properties != null)
@@ -561,7 +331,7 @@ namespace Zidium.Core
             return dtoProperties;
         }
 
-        public static List<ExtentionPropertyDto> GetExtentionProperties(IEnumerable<EventProperty> properties)
+        public static List<ExtentionPropertyDto> GetExtentionProperties(IEnumerable<EventPropertyForRead> properties)
         {
             var dtoProperties = new List<ExtentionPropertyDto>();
             if (properties != null)
@@ -575,7 +345,7 @@ namespace Zidium.Core
             return dtoProperties;
         }
 
-        public static List<ExtentionPropertyDto> GetExtentionProperties(IEnumerable<LogProperty> properties)
+        public static List<ExtentionPropertyDto> GetExtentionProperties(IEnumerable<LogPropertyForRead> properties)
         {
             var dtoProperties = new List<ExtentionPropertyDto>();
             if (properties != null)
@@ -589,9 +359,9 @@ namespace Zidium.Core
             return dtoProperties;
         }
 
-        public static List<ComponentProperty> GetComponentProperties(List<ExtentionPropertyDto> propertiesDto)
+        public static List<ComponentPropertyForAdd> GetComponentProperties(List<ExtentionPropertyDto> propertiesDto)
         {
-            var properties = new List<ComponentProperty>();
+            var properties = new List<ComponentPropertyForAdd>();
             if (propertiesDto != null)
             {
                 foreach (var propertyDto in propertiesDto)
@@ -603,36 +373,19 @@ namespace Zidium.Core
             return properties;
         }
 
-        public static List<EventProperty> GetEventProperties(List<ExtentionPropertyDto> propertiesDto)
+        public static EventPropertyForAdd[] GetEventProperties(List<ExtentionPropertyDto> propertiesDto)
         {
-            var properties = new List<EventProperty>();
-            if (propertiesDto != null)
-            {
-                foreach (var propertyDto in propertiesDto)
-                {
-                    var property = GetEventProperty(propertyDto);
-                    properties.Add(property);
-                }
-            }
-            return properties;
+            return propertiesDto.Select(GetEventProperty).ToArray();
         }
 
-        public static List<LogProperty> GetLogProperies(List<ExtentionPropertyDto> propertiesDto)
+        public static LogPropertyForAdd[] GetLogProperies(List<ExtentionPropertyDto> propertiesDto)
         {
-            var properties = new List<LogProperty>();
             if (propertiesDto == null)
-            {
-                return properties;
-            }
-            foreach (var propertyDto in propertiesDto)
-            {
-                var property = GetLogProperty(propertyDto);
-                properties.Add(property);
-            }
-            return properties;
+                return new LogPropertyForAdd[0];
+            return propertiesDto.Select(GetLogProperty).ToArray();
         }
 
-        public static EventInfo GetEventInfo(Event eventObj, EventType eventType)
+        public static EventInfo GetEventInfo(EventForRead eventObj, EventTypeForRead eventType, EventPropertyForRead[] properties)
         {
             var result = new EventInfo()
             {
@@ -652,7 +405,7 @@ namespace Zidium.Core
                 Category = eventObj.Category,
                 IsUserHandled = eventObj.IsUserHandled,
                 LastStatusEventId = eventObj.LastStatusEventId,
-                Properties = GetExtentionProperties(eventObj.Properties)
+                Properties = GetExtentionProperties(properties)
             };
             return result;
         }
@@ -674,7 +427,7 @@ namespace Zidium.Core
             };
         }
 
-        public static StatusDataInfo GetStatusDataInfo(Bulb data)
+        public static StatusDataInfo GetStatusDataInfo(BulbForRead data)
         {
             if (data == null)
             {
@@ -728,9 +481,9 @@ namespace Zidium.Core
             };
         }
 
-        public static AddPingUnitTestResponseData AddPingUnitTestResponseData(UnitTest unitTest)
+        public static AddPingUnitTestResponseData AddPingUnitTestResponseData(UnitTestForRead unitTest, UnitTestPingRuleForRead rule)
         {
-            if (unitTest == null || unitTest.PingRule == null)
+            if (unitTest == null || rule == null)
             {
                 return null;
             }
@@ -742,15 +495,15 @@ namespace Zidium.Core
                 DisplayName = unitTest.DisplayName,
                 PeriodSeconds = unitTest.PeriodSeconds ?? 0,
                 ErrorColor = unitTest.ErrorColor,
-                Host = unitTest.PingRule.Host,
-                TimeoutMs = unitTest.PingRule.TimeoutMs,
+                Host = rule.Host,
+                TimeoutMs = rule.TimeoutMs,
                 AttempMax = unitTest.AttempMax
             };
         }
 
-        public static AddHttpUnitTestResponseData AddHttpUnitTestResponseData(UnitTest unitTest)
+        public static AddHttpUnitTestResponseData AddHttpUnitTestResponseData(UnitTestForRead unitTest, HttpRequestUnitTestRuleForRead[] rules)
         {
-            if (unitTest == null || unitTest.HttpRequestUnitTest == null || unitTest.HttpRequestUnitTest.Rules == null)
+            if (unitTest == null || rules == null)
             {
                 return null;
             }
@@ -763,7 +516,7 @@ namespace Zidium.Core
                 PeriodSeconds = unitTest.PeriodSeconds ?? 0,
                 ErrorColor = unitTest.ErrorColor,
                 AttempMax = unitTest.AttempMax,
-                Rules = unitTest.HttpRequestUnitTest.Rules.Select(t => new AddHttpUnitTestRuleResponseData()
+                Rules = rules.Select(t => new AddHttpUnitTestRuleResponseData()
                 {
                     SortNumber = t.SortNumber,
                     DisplayName = t.DisplayName,

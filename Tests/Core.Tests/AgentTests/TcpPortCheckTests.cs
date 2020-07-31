@@ -1,5 +1,4 @@
-﻿using System;
-using Xunit;
+﻿using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.TcpPortChecks;
 
 namespace Zidium.Core.Tests.AgentTests

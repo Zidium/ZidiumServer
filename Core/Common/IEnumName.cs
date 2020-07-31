@@ -1,4 +1,4 @@
-﻿using Zidium.Core.AccountsDb.Classes;
+﻿using Zidium.Storage;
 
 namespace Zidium.Core.Common
 {

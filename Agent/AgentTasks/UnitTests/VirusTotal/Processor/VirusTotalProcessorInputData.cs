@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor
 {
@@ -14,5 +14,10 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor
         public string ScanId { get; set; }
 
         public VirusTotalStep NextStep { get; set; }
+
+        /// <summary>
+        /// Номер попытки
+        /// </summary>
+        public int AttempCount { get; set; }
     }
 }

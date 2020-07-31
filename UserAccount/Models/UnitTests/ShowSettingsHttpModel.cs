@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models.UnitTests
@@ -32,7 +31,7 @@ namespace Zidium.UserAccount.Models.UnitTests
 
         public string ErrorFragment { get; set; }
 
-        private static KeyValueRowModel ConvertToKeyValueRow(HttpRequestUnitTestRuleData data)
+        private static KeyValueRowModel ConvertToKeyValueRow(HttpRequestUnitTestRuleDataForRead data)
         {
             return new KeyValueRowModel()
             {
@@ -42,9 +41,9 @@ namespace Zidium.UserAccount.Models.UnitTests
             };
         }
 
-        private static List<KeyValueRowModel> GetRuleDatas(HttpRequestUnitTestRule rule, HttpRequestUnitTestRuleDataType type)
+        private static List<KeyValueRowModel> GetRuleDatas(HttpRequestUnitTestRuleForRead rule, HttpRequestUnitTestRuleDataType type, IStorage storage)
         {
-            var datas = rule.Datas.Where(x => x.Type == type).ToList();
+            var datas = storage.HttpRequestUnitTestRuleDatas.GetByRuleId(rule.Id).Where(x => x.Type == type).ToArray();
             var rows = new List<KeyValueRowModel>();
             foreach (var data in datas)
             {
@@ -54,14 +53,14 @@ namespace Zidium.UserAccount.Models.UnitTests
             return rows;
         }
 
-        public static ShowSettingsHttpModel Create(UnitTest unitTest)
+        public static ShowSettingsHttpModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
-            }          
+            }
 
-            var rule = unitTest.HttpRequestUnitTest.Rules.First();
+            var rule = storage.HttpRequestUnitTestRules.GetByUnitTestId(unitTest.Id).First();
 
             var model = new ShowSettingsHttpModel()
             {
@@ -74,9 +73,9 @@ namespace Zidium.UserAccount.Models.UnitTests
                 SuccessFragment = rule.SuccessHtml,
                 ErrorFragment = rule.ErrorHtml
             };
-            model.RequestHeaders = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestHeader);
-            model.WebFormDatas = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.WebFormData);
-            model.RequestCookies = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestCookie);
+            model.RequestHeaders = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestHeader, storage);
+            model.WebFormDatas = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.WebFormData, storage);
+            model.RequestCookies = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestCookie, storage);
            
             return model;
         }

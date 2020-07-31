@@ -4,24 +4,24 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 {
     public class VirusTotalTask : AgentTaskBase
     {
-        private VirusTotalTaskProcessor processor;
+        private readonly VirusTotalTaskProcessor _processor;
 
         public VirusTotalTask()
         {
             ExecutionPeriod = TimeSpan.FromSeconds(20);
-            processor = new VirusTotalTaskProcessor(Logger, CancellationToken, TimeService);
+            _processor = new VirusTotalTaskProcessor(Logger, CancellationToken, TimeService);
         }
 
         protected override AgentTaskResult Do()
         {
-            processor.ProcessAll();
+            _processor.ProcessAll();
 
             var result = string.Format(
                 "Ошибок {0}, успешно {1}",
-                processor.ErrorCount,
-                processor.SuccessCount);
+                _processor.ErrorCount,
+                _processor.SuccessCount);
 
-            return GetResult(processor.DbProcessor, result);
+            return GetResult(_processor.DbProcessor, result);
         }
     }
 }

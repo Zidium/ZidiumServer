@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug Local</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>
     </ProductVersion>
@@ -56,18 +56,17 @@
       <HintPath>..\packages\BeginCollectionItem.1.2.1.0\lib\net35\BeginCollectionItem.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.4.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.4.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="GridMvc">
       <HintPath>..\packages\Grid.Mvc.3.0.0\lib\net40\GridMvc.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
@@ -80,8 +79,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.3.0\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Extensions.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -155,7 +157,7 @@
     <Compile Include="Controllers\ComponentHistoryController.cs" />
     <Compile Include="Controllers\ComponentTreeController.cs" />
     <Compile Include="Controllers\ComponentTreeDetailsController.cs" />
-    <Compile Include="Controllers\ContextController.cs" />
+    <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\DebugController.cs" />
     <Compile Include="Controllers\DefectsController.cs" />
     <Compile Include="Controllers\Examples\SmartExamplesController.cs" />
@@ -229,6 +231,7 @@
     <Compile Include="Models\ComponentTreeDetails\MetricDetailsStateModel.cs" />
     <Compile Include="Models\ComponentTreeDetails\UnittestDetailsStateModel.cs" />
     <Compile Include="Models\ComponentTreeDetails\UnittestDetailsModel.cs" />
+    <Compile Include="Models\Controls\ComponentBreadCrumbsModel.cs" />
     <Compile Include="Models\Controls\FormGroupBuider.cs" />
     <Compile Include="Models\Controls\FormGroupModel.cs" />
     <Compile Include="Models\Controls\FormGroupRender.cs" />
@@ -238,7 +241,10 @@
     <Compile Include="Models\ComponentTreeDetails\ComponentDetailsStateModel.cs" />
     <Compile Include="Models\ComponentTreeDetails\ComponentDetailsSubscriptionsModel.cs" />
     <Compile Include="Models\ComponentTreeDetails\ComponentDetailsUnittestsModel.cs" />
+    <Compile Include="Models\Controls\MetricBreadCrumbsModel.cs" />
     <Compile Include="Models\Controls\TimeSelectorModel.cs" />
+    <Compile Include="Models\Controls\UnitTestBreadCrumbsModel.cs" />
+    <Compile Include="Models\Defects\DefectControlModel.cs" />
     <Compile Include="Models\Defects\DefectsIndexItemModel.cs" />
     <Compile Include="Models\Dialogs\DeleteConfirmationAjaxModel.cs" />
     <Compile Include="Models\Dialogs\DeleteConfirmationModel.cs" />
@@ -248,6 +254,7 @@
     <Compile Include="Models\Dialogs\DisableDialogGetModel.cs" />
     <Compile Include="Models\Dialogs\DisableDialogPostModel.cs" />
     <Compile Include="Models\Dialogs\SimpleModalDialogLayoutModel.cs" />
+    <Compile Include="Models\Events\GetEventRowPropertiesModel.cs" />
     <Compile Include="Models\EventTypes\EventTypeLastEventModel.cs" />
     <Compile Include="Models\EventTypes\EventTypeShowModel.cs" />
     <Compile Include="Models\Examples\Smart\Example1PartialModel.cs" />
@@ -322,7 +329,6 @@
     <Compile Include="Models\Subscriptions\SubscriptionsTableModel.cs" />
     <Compile Include="Models\Binders\TimeSpanBinder.cs" />
     <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Controllers\BugTrackerController.cs" />
     <Compile Include="Controllers\ChecksController.cs" />
     <Compile Include="Controllers\ComponentsController.cs" />
     <Compile Include="Controllers\ComponentTypesController.cs" />
@@ -333,7 +339,6 @@
     <Compile Include="Controllers\EventTypesController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\HttpRequestCheckController.cs" />
-    <Compile Include="Controllers\JsonController.cs" />
     <Compile Include="Controllers\LogsController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
     <Compile Include="Controllers\DomainNamePaymentPeriodChecksController.cs" />
@@ -353,19 +358,15 @@
     <Compile Include="Helpers\TempMessageType.cs" />
     <Compile Include="Models\Binders\ColorStatusValueBinder.cs" />
     <Compile Include="Models\Binders\DateTimeModelBinder.cs" />
-    <Compile Include="Models\BugTracker\BugTrackerEventModel.cs" />
-    <Compile Include="Models\BugTracker\BugTrackerModel.cs" />
     <Compile Include="Models\CheckModels\AddModel.cs" />
     <Compile Include="Models\CheckModels\CheckSimpleBaseModel.cs" />
     <Compile Include="Models\CheckModels\ResultsModel.cs" />
     <Compile Include="Models\CheckModels\UnitTestCommonSettingsModel.cs" />
     <Compile Include="Models\Metrics\EditModel.cs" />
-    <Compile Include="Models\Components\ComponentCounterShowModel.cs" />
     <Compile Include="Models\Components\ComponentShowModel.cs" />
     <Compile Include="Models\Components\ComponentMiniStatusModel.cs" />
     <Compile Include="Models\Components\ComponentsMiniListItemModel.cs" />
     <Compile Include="Models\Components\ComponentsMiniListModel.cs" />
-    <Compile Include="Models\Components\ComponentStateControlModel.cs" />
     <Compile Include="Models\Components\CreateNewInFolderModel.cs" />
     <Compile Include="Models\Components\StatesModel.cs" />
     <Compile Include="Models\Components\StatesModelRow.cs" />
@@ -406,21 +407,15 @@
     <Compile Include="Models\Controls\EnumSelectorModel.cs" />
     <Compile Include="Models\Controls\SelectorModel.cs" />
     <Compile Include="Models\Controls\TextFilterModel.cs" />
-    <Compile Include="Models\MetricData\CounterDataListModel.cs" />
-    <Compile Include="Models\MetricData\MetricGraphDataItem.cs" />
-    <Compile Include="Models\MetricData\MetricGraphDataModel.cs" />
+    <Compile Include="Models\MetricsData\MetricDataListModel.cs" />
+    <Compile Include="Models\MetricsData\MetricGraphDataItem.cs" />
+    <Compile Include="Models\MetricsData\MetricGraphDataModel.cs" />
     <Compile Include="Models\Metrics\ShowModel.cs" />
     <Compile Include="Models\MetricTypes\EditModel.cs" />
     <Compile Include="Models\Metrics\ValuesModel.cs" />
     <Compile Include="Models\MetricTypes\ListModel.cs" />
     <Compile Include="Models\MetricTypes\ShowModel.cs" />
     <Compile Include="Models\Dashboard\DashboardComponentsInfoModel.cs" />
-    <Compile Include="Models\Dashboard\DashboardEventModel.cs" />
-    <Compile Include="Models\Dashboard\DashboardEventTypesByPeriodLineModel.cs" />
-    <Compile Include="Models\Dashboard\DashboardEventsByPeriodLineModel.cs" />
-    <Compile Include="Models\Dashboard\DashboardEventTypesByPeriodModel.cs" />
-    <Compile Include="Models\Dashboard\DashboardEventsByPeriodModel.cs" />
-    <Compile Include="Models\Dashboard\DashboardEventsByTypeModel.cs" />
     <Compile Include="Models\Dashboard\DashboardModel.cs" />
     <Compile Include="Models\Controls\DateSelectorModel.cs" />
     <Compile Include="Models\DomainNamePaymentPeriodCheckModels\EditSimpleModel.cs" />
@@ -434,9 +429,6 @@
     <Compile Include="Models\PingChecksModels\EditSimpleModel.cs" />
     <Compile Include="Models\SqlCheckModels\EditSimpleModel.cs" />
     <Compile Include="Models\SslCertificateExpirationDateChecksModels\EditModel.cs" />
-    <Compile Include="Models\Errors\AlreadyDeletedException.cs" />
-    <Compile Include="Models\Errors\CantDeleteSystemObjectException.cs" />
-    <Compile Include="Models\Errors\CantEditSystemObjectException.cs" />
     <Compile Include="Models\Events\ShowEventModel.cs" />
     <Compile Include="Models\Events\EventsListEventModel.cs" />
     <Compile Include="Models\Events\EventsListModel.cs" />
@@ -446,7 +438,6 @@
     <Compile Include="Models\EventTypes\EventTypeIgnoreModel.cs" />
     <Compile Include="Models\EventTypes\EventTypeProcessModel.cs" />
     <Compile Include="Models\EventTypes\EventTypesListModel.cs" />
-    <Compile Include="Models\HttpRequestCheckModels\HttpRequestEditModel.cs" />
     <Compile Include="Models\AccountModels\LogonModel.cs" />
     <Compile Include="Models\Notifications\NotificationDetailsModel.cs" />
     <Compile Include="Models\Notifications\NotificationsListItemModel.cs" />
@@ -459,7 +450,6 @@
     <Compile Include="Models\Reports\Starts\StartsReportModel.cs" />
     <Compile Include="Models\SqlCheckModels\EditModel.cs" />
     <Compile Include="Models\SslCertificateExpirationDateChecksModels\EditSimpleModel.cs" />
-    <Compile Include="Models\States\ComponentStateModel.cs" />
     <Compile Include="Models\Subscriptions\SubscriptionEditModel.cs" />
     <Compile Include="Models\Timeline\TimelineItemModel.cs" />
     <Compile Include="Models\Timeline\TimelineModel.cs" />
@@ -485,11 +475,11 @@
     <Compile Include="Models\UnitTests\ShowSettingsSslModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsTcpPortModel.cs" />
     <Compile Include="Models\UnitTests\ShowSettingsVirusTotalModel.cs" />
+    <Compile Include="Models\UnitTests\ShowStatusesModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestAddModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestEditModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestResult2Model.cs" />
     <Compile Include="Models\UnitTests\UnitTestResultEventDto.cs" />
-    <Compile Include="Models\UnitTests\UnitTestResultModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestSetResultModel.cs" />
     <Compile Include="Models\UnitTests\UnitTestsListItemLevel2Model.cs" />
     <Compile Include="Models\UnitTests\UnitTestsListItemLevel1Model.cs" />
@@ -500,6 +490,7 @@
     <Compile Include="Models\Users\AddUserModel.cs" />
     <Compile Include="Models\Users\ChangePasswordEndModel.cs" />
     <Compile Include="Models\Users\ChangePasswordModel.cs" />
+    <Compile Include="Models\Users\IndexModel.cs" />
     <Compile Include="Models\Users\ShowUserModel.cs" />
     <Compile Include="Models\Users\UserContactModel.cs" />
     <Compile Include="Models\Users\UserModels.cs" />
@@ -723,7 +714,6 @@
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Views\Components\ComponentStatusControl.cshtml" />
     <Content Include="Views\Errors\ObjectNotFoundError.cshtml" />
     <Content Include="Views\Errors\AccessDeniedError.cshtml" />
     <Content Include="Views\Events\GetEventRowProperties.cshtml" />
@@ -750,7 +740,6 @@
     <Content Include="Views\SqlChecks\Edit.cshtml" />
     <Content Include="Views\DomainNamePaymentPeriodChecks\Edit.cshtml" />
     <Content Include="Views\Shared\_Styles.cshtml" />
-    <Content Include="Views\UnitTests\ResultDetails.cshtml" />
     <Content Include="Views\SslCertificateExpirationDateChecks\Edit.cshtml" />
     <Content Include="Views\Shared\_Menu.cshtml" />
     <Content Include="Views\Components\States.cshtml" />
@@ -760,7 +749,6 @@
     <Content Include="Views\Controls\TimeSpanSelector.cshtml" />
     <Content Include="Views\Components\Show.cshtml" />
     <Content Include="Views\Controls\ColorCircleWithNumber.cshtml" />
-    <Content Include="Views\Components\EnableComponentDialog.cshtml" />
     <Content Include="Views\HttpRequestCheck\EditSimple.cshtml" />
     <Content Include="Views\DomainNamePaymentPeriodChecks\EditSimple.cshtml" />
     <Content Include="Views\SslCertificateExpirationDateChecks\EditSimple.cshtml" />
@@ -798,7 +786,6 @@
     <Content Include="Views\Shared\_SimpleModalDialogLayout.cshtml" />
     <Content Include="Views\Events\ChangeImportance.cshtml" />
     <Content Include="Views\Metrics\SetActualValue.cshtml" />
-    <Content Include="Views\Controls\ComponentPath.cshtml" />
     <Content Include="Views\Home\QuickSetMobilePhone.cshtml" />
     <Content Include="Views\Checks\ShowCheckCommonSettings.cshtml" />
     <Content Include="Views\PingChecks\Show.cshtml" />
@@ -903,6 +890,7 @@
     <Content Include="Views\VirusTotal\Show.cshtml" />
     <Content Include="Views\UnitTests\OverviewSettingsVirusTotal.cshtml" />
     <Content Include="Views\UnitTests\ShowSettingsVirusTotal.cshtml" />
+    <Content Include="Views\UnitTests\ShowStatuses.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Errors\UserFriendlyError.cshtml" />
@@ -949,7 +937,6 @@
     <Content Include="Views\Users\UserContactData.cshtml" />
     <Content Include="Views\Users\UserContactRow.cshtml" />
     <Content Include="Views\Users\Show.cshtml" />
-    <Content Include="Views\BugTracker\Index.cshtml" />
     <Content Include="Views\EventTypes\Index.cshtml" />
     <Content Include="Views\EventTypes\Show.cshtml" />
     <Content Include="Views\EventTypes\Edit.cshtml" />
@@ -991,6 +978,10 @@
       <Project>{1e7f3895-5bce-4df5-aa33-3e4e8843e0eb}</Project>
       <Name>Api.1.0</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{77142E43-4B60-47BC-9C84-C6FE43247966}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Core.ConfigDb\Core.ConfigDb.csproj">
       <Project>{a75855ad-0c1a-41b7-bfe5-d13a9721b000}</Project>
       <Name>Core.ConfigDb</Name>
@@ -998,6 +989,14 @@
     <ProjectReference Include="..\Core\Core.csproj">
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Storage\Storage.Ef\Storage.Ef.csproj">
+      <Project>{f1adee86-7705-474a-9e1e-fd086391445d}</Project>
+      <Name>Storage.Ef</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Storage\Storage\Storage.csproj">
+      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Name>Storage</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -1071,7 +1070,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>16997</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:60002</IISUrl>
+          <IISUrl>https://localhost:60002</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
@@ -1081,24 +1080,7 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Включите восстановление пакетов NuGet, чтобы загрузить их. Дополнительные сведения см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
   <Target Name="AfterBuild">
     <RemoveDir Directories="obj" />
   </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target> -->
 </Project>

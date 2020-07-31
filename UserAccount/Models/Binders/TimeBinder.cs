@@ -18,7 +18,7 @@ namespace Zidium.UserAccount.Binders
             if (string.IsNullOrEmpty(value))
                 return null;
 
-            var controller = (ContextController) controllerContext.Controller;
+            var controller = (BaseController) controllerContext.Controller;
             try
             {
                 return Time.Parse(value);

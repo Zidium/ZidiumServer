@@ -115,14 +115,14 @@
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Storage\Storage.Ef\Storage.Ef.csproj">
+      <Project>{f1adee86-7705-474a-9e1e-fd086391445d}</Project>
+      <Name>Storage.Ef</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Storage\Storage\Storage.csproj">
+      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Name>Storage</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

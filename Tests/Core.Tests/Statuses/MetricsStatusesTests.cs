@@ -4,7 +4,7 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.OutdatedMetrics;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Statuses
@@ -50,7 +50,7 @@ namespace Zidium.Core.Tests.Statuses
             // сделаем так, чтобы метрики протухли
             component.SendMetric(cpuMetricType.SystemName, 10, TimeSpan.FromSeconds(1));
             component.SendMetric(hddMetricType.SystemName, 5, TimeSpan.FromSeconds(1));
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
             account.SaveAllCaches();
 
             // обновим статус метрик
@@ -59,7 +59,7 @@ namespace Zidium.Core.Tests.Statuses
             account.SaveAllCaches();
 
             // проверим, что в БД статус протух
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var componentDb = accountDbContext.Components.Find(component.Info.Id);
 
@@ -107,14 +107,16 @@ namespace Zidium.Core.Tests.Statuses
             // создадим метрику без правил
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            component.SendMetric("x", 100, TimeSpan.FromHours(1));
+            var metricName = "Metric." + Guid.NewGuid();
+
+            component.SendMetric(metricName, 100, TimeSpan.FromHours(1));
 
             // все серое, т.к. нет правил метрики
             TestHelper.CheckExternalStatus(account.Id, component, MonitoringStatus.Unknown);
-            TestHelper.CheckMetricaStatus(account.Id, component, "x", MonitoringStatus.Unknown);
+            TestHelper.CheckMetricaStatus(account.Id, component, metricName, MonitoringStatus.Unknown);
 
             // сделаем так, чтобы метрика протухла
-            component.SendMetric("x", 100, TimeSpan.FromSeconds(1));
+            component.SendMetric(metricName, 100, TimeSpan.FromSeconds(1));
             Thread.Sleep(2000);
 
             // обновим статус метрики
@@ -122,12 +124,14 @@ namespace Zidium.Core.Tests.Statuses
             metricProcessor.ProcessAccount(account.Id);
 
             // метрика должна стать красной
-            TestHelper.CheckMetricaStatus(account.Id, component, "x", MonitoringStatus.Alarm);
+            TestHelper.CheckMetricaStatus(account.Id, component, metricName, MonitoringStatus.Alarm);
             TestHelper.CheckExternalStatus(account.Id, component, MonitoringStatus.Alarm);
 
+            TestHelper.CheckActualStatusEventsCount(account, component.Info.Id);
+
             // сделаем метрику серой
-            component.SendMetric("x", 100, TimeSpan.FromHours(1));
-            TestHelper.CheckMetricaStatus(account.Id, component, "x", MonitoringStatus.Unknown);
+            component.SendMetric(metricName, 100, TimeSpan.FromHours(1));
+            TestHelper.CheckMetricaStatus(account.Id, component, metricName, MonitoringStatus.Unknown);
             TestHelper.CheckExternalStatus(account.Id, component, MonitoringStatus.Unknown);
 
             // у каждой колбаски должно быть только 1 актуальное событие

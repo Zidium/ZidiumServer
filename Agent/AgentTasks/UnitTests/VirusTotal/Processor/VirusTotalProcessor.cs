@@ -5,9 +5,9 @@ using System.Linq;
 using System.Net;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 {
@@ -175,6 +175,16 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             return timeService.Now().Add(TimeSpan.FromSeconds(20));
         }
 
+        private DateTime GetNextStepTime(int attempCount)
+        {
+            var pause = TimeSpan.FromSeconds(30 * attempCount);
+            if (pause > TimeSpan.FromHours(1))
+            {
+                pause = TimeSpan.FromHours(1);
+            }
+            return timeService.Now().Add(pause);
+        }
+
         private VirusTotalProcessorOutputData ProcessReportStep(VirusTotalProcessorInputData inputData)
         {
             logger.Info("Выполняем Report для " + inputData.Url);
@@ -230,7 +240,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 return new VirusTotalProcessorOutputData()
                 {
                     NextStep = VirusTotalStep.Report,
-                    NextStepProcessTime = GetNextStepTime(),
+                    NextStepProcessTime = GetNextStepTime(inputData.AttempCount), // увеличиваем паузу с ростом ошибок
                     ScanId = inputData.ScanId,
                     ScanTime = inputData.ScanTime
                 };

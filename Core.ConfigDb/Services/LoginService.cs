@@ -1,79 +1,51 @@
 using System;
-using System.Linq;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.ConfigDb
 {
     internal class LoginService : ILoginService
     {
+        public LoginService(IAccountService accountService)
+        {
+            _accountService = accountService;
+        }
+
+        private readonly IAccountService _accountService;
+
         public LoginInfo[] GetAllByLogin(string login)
         {
-            using (var context = AccountDbContext.CreateFromConnectionString(DatabaseService.ConnectionString))
-            {
-                var userRepository = context.GetUserRepository();
-                var users = userRepository.QueryAll().Where(t => t.Login == login).ToArray();
-                return users.Select(GetLoginInfo).ToArray();
-            }
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            var accountStorage = accountStorageFactory.GetStorageByAccountId(_accountService.GetSystemAccount().Id);
+            var user = accountStorage.Users.GetOneOrNullByLogin(login);
+
+            if (user == null)
+                return new LoginInfo[0];
+
+            return new[] { GetLoginInfo(user) };
         }
 
         public LoginInfo GetOneById(Guid id)
         {
-            using (var context = AccountDbContext.CreateFromConnectionString(DatabaseService.ConnectionString))
-            {
-                var userRepository = context.GetUserRepository();
-                var user = userRepository.GetById(id);
-                return GetLoginInfo(user);
-            }
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            var accountStorage = accountStorageFactory.GetStorageByAccountId(_accountService.GetSystemAccount().Id);
+            var user = accountStorage.Users.GetOneById(id);
+            return GetLoginInfo(user);
         }
 
         public LoginInfo GetOneOrNullById(Guid id)
         {
-            using (var context = AccountDbContext.CreateFromConnectionString(DatabaseService.ConnectionString))
-            {
-                var userRepository = context.GetUserRepository();
-                var user = userRepository.GetByIdOrNull(id);
-                return GetLoginInfo(user);
-            }
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            var accountStorage = accountStorageFactory.GetStorageByAccountId(_accountService.GetSystemAccount().Id);
+            var user = accountStorage.Users.GetOneOrNullById(id);
+            return GetLoginInfo(user);
         }
 
         public LoginInfo GetOneOrNull(Guid accountId, string login)
         {
-            using (var context = AccountDbContext.CreateFromConnectionString(DatabaseService.ConnectionString))
-            {
-                var userRepository = context.GetUserRepository();
-                var user = userRepository.GetOneOrNullByLogin(login);
-                return GetLoginInfo(user);
-            }
-        }
-
-        public LoginInfo Add(Guid id, Guid accountId, string login)
-        {
-            return new LoginInfo()
-            {
-                Id = id,
-                Account = new AccountService().GetSystemAccount(),
-                Login = login
-            };
-        }
-
-        public LoginInfo UpdateLogin(Guid id, string login)
-        {
-            return new LoginInfo()
-            {
-                Id = id,
-                Account = new AccountService().GetSystemAccount(),
-                Login = login
-            };
-        }
-
-        public LoginInfo UpdateLastEntryDate(Guid id, DateTime date)
-        {
-            return null;
-        }
-
-        public LoginInfo UpdateUserAgentTag(Guid id, Guid userAgentTag)
-        {
-            return null;
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            var accountStorage = accountStorageFactory.GetStorageByAccountId(_accountService.GetSystemAccount().Id);
+            var user = accountStorage.Users.GetOneOrNullByLogin(login);
+            return GetLoginInfo(user);
         }
 
         public void Delete(Guid id)
@@ -85,16 +57,33 @@ namespace Zidium.Core.ConfigDb
             return null;
         }
 
-        private LoginInfo GetLoginInfo(User user)
+        private LoginInfo GetLoginInfo(UserForRead user)
         {
             if (user == null)
                 return null;
+
             return new LoginInfo()
             {
                 Id = user.Id,
-                Account = new AccountService().GetSystemAccount(),
+                AccountId = _accountService.GetSystemAccount().Id,
                 Login = user.Login
             };
+        }
+
+        public void Add(Guid id, Guid accountId, string login)
+        {
+        }
+
+        public void UpdateLogin(Guid id, string login)
+        {
+        }
+
+        public void UpdateLastEntryDate(Guid id, DateTime date)
+        {
+        }
+
+        public void UpdateUserAgentTag(Guid id, Guid userAgentTag)
+        {
         }
     }
 }

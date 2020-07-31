@@ -154,6 +154,15 @@
             }
         }
 
+        public static int? EventsMaxDeleteCount
+        {
+            get
+            {
+                var val = GetConfigurationValue("EventsMaxDeleteCount", false);
+                return !string.IsNullOrEmpty(val) ? int.Parse(val) : (int?) null;
+            }
+        }
+
         private static string GetConfigurationValue(string key, bool required = true)
         {
             var service = Assembly.GetEntryAssembly();

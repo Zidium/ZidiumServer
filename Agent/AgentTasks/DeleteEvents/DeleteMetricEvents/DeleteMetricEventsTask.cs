@@ -12,7 +12,13 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         protected override AgentTaskResult Do()
         {
+            var maxDeleteCount = ServiceConfiguration.EventsMaxDeleteCount;
+
             var processor = new DeleteMetricEventsProcessor(Logger, CancellationToken);
+
+            if (maxDeleteCount.HasValue)
+                processor.MaxDeleteCount = maxDeleteCount.Value;
+
             processor.Process();
 
             var result = string.Format(

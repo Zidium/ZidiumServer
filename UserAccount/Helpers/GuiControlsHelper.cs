@@ -1,6 +1,8 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Web.Mvc;
 using System.Web.Mvc.Html;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Helpers
@@ -12,19 +14,22 @@ namespace Zidium.UserAccount.Helpers
             return htmlHelper.Partial("~/Views/Controls/ObjectStatus.cshtml", model);
         }
 
-        public static MvcHtmlString PartialComponentBreadCrumbs(this HtmlHelper htmlHelper, Component component)
+        public static MvcHtmlString PartialComponentBreadCrumbs(this HtmlHelper htmlHelper, Guid componentId, IStorage storage)
         {
-            return htmlHelper.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", component);
+            var model = ComponentBreadCrumbsModel.Create(componentId, storage);
+            return htmlHelper.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", model);
         }
 
-        public static MvcHtmlString PartialUnitTestBreadCrumbs(this HtmlHelper htmlHelper, UnitTest unitTest)
+        public static MvcHtmlString PartialUnitTestBreadCrumbs(this HtmlHelper htmlHelper, Guid unitTestId, IStorage storage)
         {
-            return htmlHelper.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", unitTest);
+            var model = UnitTestBreadCrumbsModel.Create(unitTestId, storage);
+            return htmlHelper.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", model);
         }
 
-        public static MvcHtmlString PartialMetricBreadCrumbs(this HtmlHelper htmlHelper, Metric metric)
+        public static MvcHtmlString PartialMetricBreadCrumbs(this HtmlHelper htmlHelper, Guid metricId, IStorage storage)
         {
-            return htmlHelper.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", metric);
+            var model = MetricBreadCrumbsModel.Create(metricId, storage);
+            return htmlHelper.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", model);
         }
     }
 }

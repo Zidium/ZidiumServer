@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Linq;
 using Zidium.Api.Others;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -108,40 +109,72 @@ namespace Zidium.Core.Caching
             return ObjectChangesHelper.HasChanges(oldObj, newObj);
         }
 
-        protected override void AddBatchObject(AccountDbContext accountDbContext, MetricCacheWriteObject writeObject)
+        protected override void AddBatchObjects(IStorage storage, MetricCacheWriteObject[] writeObjects)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        protected override void UpdateBatchObject(AccountDbContext accountDbContext, MetricCacheWriteObject metric, bool useCheck)
+        protected override void UpdateBatchObjects(IStorage storage, MetricCacheWriteObject[] metrics, bool useCheck)
         {
-            var oldMetric = metric.Response.LastSavedData;
-            if (oldMetric == null)
+            var entities = metrics.Select(metric =>
             {
-                throw new Exception("oldMetric == null");
-            }
+                var lastData = metric.Response.LastSavedData;
+                if (lastData == null)
+                {
+                    throw new Exception("oldMetric == null");
+                }
 
-            var dbEntity = oldMetric.CreateEf();
-            accountDbContext.Metrics.Attach(dbEntity);
+                var entity = lastData.CreateEf();
 
-            dbEntity.ActualDate = metric.ActualDate;
-            dbEntity.BeginDate = metric.BeginDate;
-            dbEntity.ComponentId = metric.ComponentId;
-            dbEntity.CreateDate = metric.CreateDate;
-            dbEntity.Enable = metric.Enable;
-            dbEntity.DisableComment = metric.DisableComment;
-            dbEntity.DisableToDate = metric.DisableToDate;
-            dbEntity.IsDeleted = metric.IsDeleted;
-            dbEntity.MetricTypeId = metric.MetricTypeId;
-            dbEntity.ParentEnable = metric.ParentEnable;
-            dbEntity.StatusDataId = metric.StatusDataId;
-            dbEntity.Value = metric.Value;
-            dbEntity.ConditionAlarm = metric.ConditionRed;
-            dbEntity.ConditionWarning = metric.ConditionYellow;
-            dbEntity.ConditionSuccess = metric.ConditionGreen;
-            dbEntity.ActualTimeSecs = TimeSpanHelper.GetSeconds(metric.ActualTime);
-            dbEntity.NoSignalColor = metric.NoSignalColor;
-            dbEntity.ConditionElseColor = metric.ElseColor;
+                if (lastData.ActualDate != metric.ActualDate)
+                    entity.ActualDate.Set(metric.ActualDate);
+
+                if (lastData.BeginDate != metric.BeginDate)
+                    entity.BeginDate.Set(metric.BeginDate);
+
+                if (lastData.Enable != metric.Enable)
+                    entity.Enable.Set(metric.Enable);
+
+                if (lastData.DisableComment != metric.DisableComment)
+                    entity.DisableComment.Set(metric.DisableComment);
+
+                if (lastData.DisableToDate != metric.DisableToDate)
+                    entity.DisableToDate.Set(metric.DisableToDate);
+
+                if (lastData.IsDeleted != metric.IsDeleted)
+                    entity.IsDeleted.Set(metric.IsDeleted);
+
+                if (lastData.ParentEnable != metric.ParentEnable)
+                    entity.ParentEnable.Set(metric.ParentEnable);
+
+                if (lastData.StatusDataId != metric.StatusDataId)
+                    entity.StatusDataId.Set(metric.StatusDataId);
+
+                if (lastData.Value != metric.Value)
+                    entity.Value.Set(metric.Value);
+
+                if (lastData.ConditionRed != metric.ConditionRed)
+                    entity.ConditionAlarm.Set(metric.ConditionRed);
+
+                if (lastData.ConditionYellow != metric.ConditionYellow)
+                    entity.ConditionWarning.Set(metric.ConditionYellow);
+
+                if (lastData.ConditionGreen != metric.ConditionGreen)
+                    entity.ConditionSuccess.Set(metric.ConditionGreen);
+
+                if (lastData.ActualTime != metric.ActualTime)
+                    entity.ActualTimeSecs.Set(TimeSpanHelper.GetSeconds(metric.ActualTime));
+
+                if (lastData.NoSignalColor != metric.NoSignalColor)
+                    entity.NoSignalColor.Set(metric.NoSignalColor);
+
+                if (lastData.ElseColor != metric.ElseColor)
+                    entity.ConditionElseColor.Set(metric.ElseColor);
+
+                return entity;
+            }).ToArray();
+
+            storage.Metrics.Update(entities);
         }
 
         public override int BatchCount
@@ -149,10 +182,9 @@ namespace Zidium.Core.Caching
             get { return 100; }
         }
 
-        protected override MetricCacheWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext)
+        protected override MetricCacheWriteObject LoadObject(AccountCacheRequest request, IStorage storage)
         {
-            var repository = accountDbContext.GetMetricRepository();
-            var metric = repository.GetByIdOrNull(request.ObjectId);
+            var metric = storage.Metrics.GetOneOrNullById(request.ObjectId);
             return MetricCacheWriteObject.Create(metric, request.AccountId);
         }
     }

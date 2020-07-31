@@ -6,6 +6,8 @@ using Zidium.Agent.AgentTasks;
 using Xunit;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.TimeService;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -126,7 +128,7 @@ namespace Zidium.Core.Tests.AgentTests
             var component = account.CreateRandomComponentControl();
 
             // создадим проверку доменного имени
-            var unitTestType = account.GetClient().GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.DomainNameTestType.SystemName);
+            var unitTestType = account.GetClient().GetOrCreateUnitTestTypeControl(SystemUnitTestType.DomainNameTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "UnitTest." + DateTime.Now.Ticks);
 
             unitTest.GetState().Check();
@@ -141,9 +143,9 @@ namespace Zidium.Core.Tests.AgentTests
                 PeriodSeconds = (int)TimeSpan.FromDays(1).TotalSeconds
             }).Check();
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var domainNameRule = new UnitTestDomainNamePaymentPeriodRule()
+                var domainNameRule = new DbUnitTestDomainNamePaymentPeriodRule()
                 {
                     UnitTestId = unitTestId,
                     WarningDaysCount = 10,
@@ -166,7 +168,7 @@ namespace Zidium.Core.Tests.AgentTests
             account.SaveAllCaches();
 
             // проверим дату след выполнения
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var test = accountDbContext.UnitTests.First(x => x.Id == unitTestId);
                 Assert.NotNull(test.NextExecutionDate);

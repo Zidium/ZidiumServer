@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Zidium.Api;
 using Xunit;
-using Zidium.Core.AccountsDb;
+using Zidium.Api;
+using Zidium.Core.Common.Helpers;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
-using EventCategory = Zidium.Core.Api.EventCategory;
 
 namespace Zidium.Core.Tests.Statuses
 {
@@ -208,29 +208,29 @@ namespace Zidium.Core.Tests.Statuses
             Assert.Equal(MonitoringStatus.Alarm, statusResponse.Data.Status);
         }
         
-        private Bulb GetExternalStatus(TestAccountInfo account, IComponentControl componentControl)
-        {
-            using (var accountDbContext = account.CreateAccountDbContext())
-            {
-                var id = componentControl.Info.Id;
-                var component = accountDbContext.Components.Single(x => x.Id == id);
-                var status = component.ExternalStatus;
-                var r = status.Status;
-                return status;
-            }    
-        }
+        //private Bulb GetExternalStatus(TestAccountInfo account, IComponentControl componentControl)
+        //{
+        //    using (var accountDbContext = account.GetAccountDbContext())
+        //    {
+        //        var id = componentControl.Info.Id;
+        //        var component = accountDbContext.Components.Single(x => x.Id == id);
+        //        var status = component.ExternalStatus;
+        //        var r = status.Status;
+        //        return status;
+        //    }    
+        //}
 
-        private Bulb GetInternalStatus(TestAccountInfo account, IComponentControl componentControl)
-        {
-            using (var accountDbContext = account.CreateAccountDbContext())
-            {
-                var id = componentControl.Info.Id;
-                var component = accountDbContext.Components.Single(x => x.Id == id);
-                var status = component.InternalStatus;
-                var r = status.Status;
-                return status;
-            }
-        }
+        //private Bulb GetInternalStatus(TestAccountInfo account, IComponentControl componentControl)
+        //{
+        //    using (var accountDbContext = account.GetAccountDbContext())
+        //    {
+        //        var id = componentControl.Info.Id;
+        //        var component = accountDbContext.Components.Single(x => x.Id == id);
+        //        var status = component.InternalStatus;
+        //        var r = status.Status;
+        //        return status;
+        //    }
+        //}
 
         private void CheckStatus(
             TestAccountInfo account, 
@@ -348,21 +348,21 @@ namespace Zidium.Core.Tests.Statuses
             CheckStatus(account, child2, MonitoringStatus.Warning, MonitoringStatus.Warning);
         }
 
-        private List<Event> GetEvents(TestAccountInfo account, Guid componentId, Guid ownerId, bool ignoreCheck = false)
+        private List<DbEvent> GetEvents(TestAccountInfo account, Guid componentId, Guid ownerId, bool ignoreCheck = false)
         {
             account.SaveAllCaches();
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var component = accountDbContext.Components.Single(x => x.Id == componentId);
-                using (var storageDbContext = account.CreateAccountDbContext())
+                using (var storageDbContext = account.GetAccountDbContext())
                 {
                     var events = storageDbContext.Events.Where(x => x.OwnerId == ownerId).OrderBy(t => t.CreateDate).ToList();
                     foreach (var eventObj in events)
                     {
                         // самое первое событие не имеет ссылки на статус
                         if (eventObj.StartDate == component.CreatedDate ||
-                            eventObj.Importance == Core.Api.EventImportance.Unknown)
+                            eventObj.Importance == Storage.EventImportance.Unknown)
                         {
                             continue;
                         }
@@ -376,7 +376,7 @@ namespace Zidium.Core.Tests.Statuses
                             {
                                 continue;
                             }
-                            if (eventObj.Category == EventCategory.ComponentExternalStatus)
+                            if (eventObj.Category == Storage.EventCategory.ComponentExternalStatus)
                             {
                                 continue;
                             }
@@ -389,25 +389,25 @@ namespace Zidium.Core.Tests.Statuses
             } 
         }
 
-        private void Check4Events(List<Event> events)
+        private void Check4Events(List<DbEvent> events)
         {
             // должно быть 4 результата = серый, зеленый, красный, зеленый
             Assert.Equal(4, events.Count);
 
-            Assert.True(events[0].Duration > TimeSpan.Zero);
-            Assert.Equal(events[0].Importance, Core.Api.EventImportance.Unknown);
+            Assert.True(EventHelper.GetDuration(events[0].StartDate, events[0].ActualDate, DateTime.Now) > TimeSpan.Zero);
+            Assert.Equal(events[0].Importance, Storage.EventImportance.Unknown);
             Assert.Equal(events[0].EndDate, events[1].StartDate);
 
-            Assert.True(events[1].Duration > TimeSpan.Zero);
-            Assert.Equal(events[1].Importance, Core.Api.EventImportance.Success);
+            Assert.True(EventHelper.GetDuration(events[1].StartDate, events[1].ActualDate, DateTime.Now) > TimeSpan.Zero);
+            Assert.Equal(events[1].Importance, Storage.EventImportance.Success);
             Assert.Equal(events[1].EndDate, events[2].StartDate);
 
-            Assert.True(events[2].Duration > TimeSpan.Zero);
-            Assert.Equal(events[2].Importance, Core.Api.EventImportance.Alarm);
+            Assert.True(EventHelper.GetDuration(events[2].StartDate, events[2].ActualDate, DateTime.Now) > TimeSpan.Zero);
+            Assert.Equal(events[2].Importance, Storage.EventImportance.Alarm);
             Assert.Equal(events[2].EndDate, events[3].StartDate);
 
             //Assert.Equal(events[2].Duration, TimeSpan.Zero);
-            Assert.Equal(events[3].Importance, Core.Api.EventImportance.Success);
+            Assert.Equal(events[3].Importance, Storage.EventImportance.Success);
         }
 
         [Fact]
@@ -451,7 +451,7 @@ namespace Zidium.Core.Tests.Statuses
 
             var events = GetEvents(account, component.Info.Id, component.Info.Id);
             var externalStatuses = events
-                .Where(x => x.Category == Api.EventCategory.ComponentExternalStatus)
+                .Where(x => x.Category == Storage.EventCategory.ComponentExternalStatus)
                 .OrderBy(x => x.CreateDate)
                 .ToList();
         }
@@ -475,8 +475,8 @@ namespace Zidium.Core.Tests.Statuses
             Thread.Sleep(100);
             unitTest.SendResult(UnitTestResult.Success, TimeSpan.FromDays(1)).Check();
 
-            Component componentObj = null;
-            using (var accountDbContext = account.CreateAccountDbContext())
+            DbComponent componentObj = null;
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 componentObj = accountDbContext.Components.Single(x => x.Id == component.Info.Id);
 
@@ -484,14 +484,14 @@ namespace Zidium.Core.Tests.Statuses
                 var unitTestEvents = GetEvents(account, component.Info.Id, unitTest.Info.Id);
 
                 var unitTestResults = unitTestEvents
-                    .Where(x=>x.Category == Core.Api.EventCategory.UnitTestStatus)
+                    .Where(x=>x.Category == Storage.EventCategory.UnitTestStatus)
                     .OrderBy(x=>x.CreateDate)
                     .ToList();
 
                 Check4Events(unitTestResults);
 
                 var unitTestStatuses = unitTestEvents
-                    .Where(x=>x.Category == Core.Api.EventCategory.UnitTestStatus)
+                    .Where(x=>x.Category == Storage.EventCategory.UnitTestStatus)
                     .OrderBy(x => x.CreateDate)
                     .ToList();
 
@@ -501,7 +501,7 @@ namespace Zidium.Core.Tests.Statuses
                 var componentEvents = GetEvents(account, componentObj.Id, componentObj.Id);
 
                 var unitTestsStatuses = componentEvents
-                    .Where(x => x.Category == Core.Api.EventCategory.ComponentUnitTestsStatus)
+                    .Where(x => x.Category == Storage.EventCategory.ComponentUnitTestsStatus)
                     .OrderBy(x => x.CreateDate)
                     .ToList();
 
@@ -509,7 +509,7 @@ namespace Zidium.Core.Tests.Statuses
 
                 // проверим внутренний статус компонента
                 var internalStatuses = componentEvents
-                    .Where(x => x.Category == Core.Api.EventCategory.ComponentInternalStatus)
+                    .Where(x => x.Category == Storage.EventCategory.ComponentInternalStatus)
                     .OrderBy(x => x.CreateDate)
                     .ToList();
 
@@ -517,7 +517,7 @@ namespace Zidium.Core.Tests.Statuses
 
                 // проверим внешний статус компонента
                 var externalStatuses = componentEvents
-                    .Where(x=>x.Category == Core.Api.EventCategory.ComponentExternalStatus)
+                    .Where(x=>x.Category == Storage.EventCategory.ComponentExternalStatus)
                     .OrderBy(x => x.CreateDate)
                     .ToList();
 
@@ -526,17 +526,17 @@ namespace Zidium.Core.Tests.Statuses
             }
         }
 
-        private List<Event> _oldEvents = new List<Event>();
+        private List<DbEvent> _oldEvents = new List<DbEvent>();
 
-        private List<Event> GetNewEvents(TestAccountInfo account, Guid componentId)
+        private List<DbEvent> GetNewEvents(TestAccountInfo account, Guid componentId)
         {
             var events = GetEvents(account, componentId, componentId, true);
             return GetNewEvents(events);
         } 
 
-        private List<Event> GetNewEvents(List<Event> events)
+        private List<DbEvent> GetNewEvents(List<DbEvent> events)
         {
-            var newEvents = new List<Event>();
+            var newEvents = new List<DbEvent>();
             foreach (var eventObj in events)
             {
                 if (_oldEvents.Any(x => x.Id == eventObj.Id))
@@ -620,9 +620,9 @@ namespace Zidium.Core.Tests.Statuses
 
             // у эти колбасок статус success
             var successEvents = events4
-                .Where(x => x.Category == Core.Api.EventCategory.ComponentExternalStatus
-                            || x.Category == Core.Api.EventCategory.ComponentInternalStatus
-                            || x.Category == Core.Api.EventCategory.ComponentEventsStatus)
+                .Where(x => x.Category == Storage.EventCategory.ComponentExternalStatus
+                            || x.Category == Storage.EventCategory.ComponentInternalStatus
+                            || x.Category == Storage.EventCategory.ComponentEventsStatus)
                 .ToList();
             Assert.Equal(3, successEvents.Count);
             foreach (var successEvent in successEvents)
@@ -633,9 +633,9 @@ namespace Zidium.Core.Tests.Statuses
 
             // у эти колбасок статус unknown
             var unknownEvents = events4
-                .Where(x => x.Category == Core.Api.EventCategory.ComponentUnitTestsStatus
-                            || x.Category == Core.Api.EventCategory.ComponentMetricsStatus
-                            || x.Category == Core.Api.EventCategory.ComponentChildsStatus)
+                .Where(x => x.Category == Storage.EventCategory.ComponentUnitTestsStatus
+                            || x.Category == Storage.EventCategory.ComponentMetricsStatus
+                            || x.Category == Storage.EventCategory.ComponentChildsStatus)
                 .ToList();
             Assert.Equal(3, unknownEvents.Count);
             foreach (var unknownEvent in unknownEvents)
@@ -680,22 +680,22 @@ namespace Zidium.Core.Tests.Statuses
             var events = GetEvents(account, component.Info.Id, component.Info.Id);
             
             var statuses = events
-                .Where(x => x.Category == Core.Api.EventCategory.ComponentExternalStatus)
+                .Where(x => x.Category == Storage.EventCategory.ComponentExternalStatus)
                 .OrderBy(x => x.CreateDate)
                 .ToList();
 
             Assert.Equal(4, statuses.Count);
 
-            Assert.Equal(statuses[0].Importance, Core.Api.EventImportance.Unknown);
-            Assert.True(statuses[0].Duration > TimeSpan.Zero);
+            Assert.Equal(statuses[0].Importance, Storage.EventImportance.Unknown);
+            Assert.True(EventHelper.GetDuration(statuses[0].StartDate, statuses[0].ActualDate, DateTime.Now) > TimeSpan.Zero);
 
-            Assert.Equal(statuses[1].Importance, Core.Api.EventImportance.Alarm);
-            Assert.True(statuses[1].Duration > TimeSpan.Zero);
+            Assert.Equal(statuses[1].Importance, Storage.EventImportance.Alarm);
+            Assert.True(EventHelper.GetDuration(statuses[1].StartDate, statuses[1].ActualDate, DateTime.Now) > TimeSpan.Zero);
 
-            Assert.Equal(statuses[2].Importance, Core.Api.EventImportance.Unknown);
-            Assert.True(statuses[2].Duration > TimeSpan.Zero);
+            Assert.Equal(statuses[2].Importance, Storage.EventImportance.Unknown);
+            Assert.True(EventHelper.GetDuration(statuses[2].StartDate, statuses[2].ActualDate, DateTime.Now) > TimeSpan.Zero);
 
-            Assert.Equal(statuses[3].Importance, Core.Api.EventImportance.Alarm);
+            Assert.Equal(statuses[3].Importance, Storage.EventImportance.Alarm);
         }
     }
 }

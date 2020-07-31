@@ -5,8 +5,7 @@ using System.Net;
 using System.Threading;
 using NLog;
 using Zidium.Api.Dto;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -17,7 +16,11 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected override SubscriptionChannel[] Channels { get; } = new[] { SubscriptionChannel.Http };
 
-        public static string GetNotificationJson(Component component, Event eventObj)
+        public static string GetNotificationJson(
+            ComponentForRead component, 
+            ComponentPropertyForRead[] componentProperties, 
+            EventForRead eventObj,
+            EventPropertyForRead[] eventProperties)
         {
             var jsonObject = new
             {
@@ -26,7 +29,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     Id = component.Id,
                     SystemName = component.SystemName,
                     DisplayName = component.DisplayName,
-                    Properties = component.Properties.Select(t => new
+                    Properties = componentProperties.Select(t => new
                     {
                         Name = t.Name,
                         Value = t.Value,
@@ -39,7 +42,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     Importance = eventObj.Importance.ToString(),
                     StartDate = eventObj.StartDate,
                     EndDate = eventObj.EndDate,
-                    Properties = eventObj.Properties.Select(t => new
+                    Properties = eventProperties.Select(t => new
                     {
                         Name = t.Name,
                         Value = t.Value,
@@ -52,24 +55,29 @@ namespace Zidium.Agent.AgentTasks.Notifications
         }
 
         protected override void Send(ILogger logger,
-            Notification notification,
-            AccountDbContext accountDbContext,
-            string accountName, Guid accountId)
+            NotificationForRead notification,
+            IStorage storage,
+            string accountName, Guid accountId, NotificationForUpdate notificationForUpdate)
         {
-            var httpNotification = notification.NotificationHttp;
-            var eventObj = notification.Event;
+            var httpNotification = storage.NotificationsHttp.GetByNotificationId(notification.Id);
+            var eventObj = storage.Events.GetOneById(notification.EventId);
             
             if (eventObj == null)
             {
                 throw new Exception("Event is null");
             }
-            
-            if (httpNotification.Json == null)
+
+            var json = httpNotification.Json;
+            if (json == null)
             {
-                var componentRepository = accountDbContext.GetComponentRepository();
-                var component = componentRepository.GetById(notification.Event.OwnerId);
-                httpNotification.Json = GetNotificationJson(component, eventObj);
-                accountDbContext.SaveChanges();
+                var component = storage.Components.GetOneById(eventObj.OwnerId);
+                var componentProperties = storage.ComponentProperties.GetByComponentId(component.Id);
+                var eventProperties = storage.EventProperties.GetByEventId(eventObj.Id);
+                json = GetNotificationJson(component, componentProperties, eventObj, eventProperties);
+
+                var httpNotificationForUpdate = httpNotification.GetForUpdate();
+                httpNotificationForUpdate.Json.Set(json);
+                storage.NotificationsHttp.Update(httpNotificationForUpdate);
             }
 
             try
@@ -82,7 +90,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                 {
-                    streamWriter.Write(httpNotification.Json);
+                    streamWriter.Write(json);
                     streamWriter.Close();
                 }
             }

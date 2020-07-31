@@ -3,8 +3,9 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.DeleteEvents;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
@@ -246,13 +247,13 @@ namespace Zidium.Core.Single.Tests
 
         protected void AddEvent(Guid accountId, Guid ownerId, DateTime date, EventCategory category, Guid eventTypeId)
         {
-            using (var storageDbContext = AccountDbContext.CreateFromAccountId(accountId))
+            using (var storageDbContext = TestHelper.GetAccountDbContext(accountId))
             {
-                var _event = new Event()
+                var _event = new DbEvent()
                 {
+                    Id = Guid.NewGuid(),
                     OwnerId = ownerId,
                     Category = category,
-                    Id = Guid.NewGuid(),
                     StartDate = date,
                     CreateDate = date,
                     EndDate = date,
@@ -261,7 +262,7 @@ namespace Zidium.Core.Single.Tests
                     EventTypeId = eventTypeId
                 };
 
-                _event.Properties.Add(new EventProperty()
+                _event.Properties.Add(new DbEventProperty()
                 {
                     Id = Guid.NewGuid(),
                     EventId = _event.Id,

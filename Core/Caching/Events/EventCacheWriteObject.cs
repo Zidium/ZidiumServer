@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zidium.Api.Others;
-using Zidium.Core.Api;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -43,7 +42,7 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Предыдущая важность. Используется для событий статусов.
         /// </summary>
-        public EventImportance PreviousImportance { get; set; }
+        public EventImportance PreviousImportance { get; private set; }
 
         /// <summary>
         /// Счетчик - сколько раз случалось событие
@@ -78,7 +77,7 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Признак "событие - пробел" (пробел между колбасками)
         /// </summary>
-        public bool IsSpace { get; set; }
+        public bool IsSpace { get; private set; }
 
         /// <summary>
         /// Время последнего изменения события.
@@ -98,12 +97,12 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Версия компонента на момент появления события
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; private set; }
 
         /// <summary>
         /// Версия в виде числа для сравнений
         /// </summary>
-        public long? VersionLong { get; set; }
+        public long? VersionLong { get; private set; }
 
         /// <summary>
         /// Категория события
@@ -165,13 +164,6 @@ namespace Zidium.Core.Caching
             _newStatuses = statuses;
         }
 
-        private List<EventProperty> _newEventProperties = new List<EventProperty>();
-
-        public List<EventProperty> NewEventProperties
-        {
-            get { return _newEventProperties; }
-        } 
-
         public override EventCacheWriteObject GetCopy()
         {
             var copy = base.GetCopy();
@@ -210,40 +202,13 @@ namespace Zidium.Core.Caching
                    + 16; // FirstReasonEventId
         }
 
-        public Event CreateEfEvent()
+        public EventForUpdate CreateEfEvent()
         {
-            var result = new Event()
-            {
-                Id = Id,
-                Count = Count,
-                StartDate = StartDate,
-                Version = Version,
-                VersionLong = VersionLong,
-                OwnerId = OwnerId,
-                PreviousImportance = PreviousImportance,
-                Message = Message,
-                LastUpdateDate = LastUpdateDate,
-                LastStatusEventId = LastStatusEventId,
-                LastNotificationDate = LastNotificationDate,
-                JoinKeyHash = JoinKeyHash,
-                IsUserHandled = IsUserHandled,
-                IsSpace = IsSpace,
-                Importance = Importance,
-                EventTypeId = EventTypeId,
-                EndDate = EndDate,
-                CreateDate = CreateDate,
-                Category = Category,
-                ActualDate = ActualDate,
-                FirstReasonEventId = FirstReasonEventId
-            };
-            foreach (var property in NewEventProperties)
-            {
-                result.Properties.Add(property);
-            }
+            var result = new EventForUpdate(Id);
             return result;
         }
 
-        private static EventCacheWriteObject CreateInternal(Event eventObj, Guid accountId)
+        private static EventCacheWriteObject CreateInternal(EventForRead eventObj, Guid accountId)
         {
             if (eventObj == null)
             {
@@ -297,7 +262,8 @@ namespace Zidium.Core.Caching
             return result;
         }
 
-        public static EventCacheWriteObject CreateForAdd(Event eventObj, Guid accountId)
+        /*
+        public static EventCacheWriteObject CreateForAdd(EventForRead eventObj, Guid accountId)
         {
             if (eventObj == null)
             {
@@ -312,8 +278,9 @@ namespace Zidium.Core.Caching
             }
             return result;
         }
+        */
 
-        public static EventCacheWriteObject CreateForUpdate(Event eventObj, Guid accountId)
+        public static EventCacheWriteObject CreateForUpdate(EventForRead eventObj, Guid accountId)
         {
             if (eventObj == null)
             {

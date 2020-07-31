@@ -45,14 +45,12 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
 
         public void ProcessAccount(ForEachAccountData data)
         {
-            data.AccountDbContext.Database.CommandTimeout = 0;
             var stopWatch = Stopwatch.StartNew();
 
-            var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
-            var tariffLimit = accountTariffRepository.GetHardTariffLimit();
+            var tariffLimit = data.Storage.TariffLimits.GetHardTariffLimit();
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-tariffLimit.MetricsMaxDays));
 
-            var metricHistoryRepository = data.AccountDbContext.GetMetricHistoryRepository();
+            var metricHistoryRepository = data.Storage.MetricHistory;
 
             long deletedCount = 0;
             while (true)

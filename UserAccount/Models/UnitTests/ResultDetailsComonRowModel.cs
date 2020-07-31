@@ -1,5 +1,4 @@
 ﻿using System;
-using Zidium.Core.Api;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {

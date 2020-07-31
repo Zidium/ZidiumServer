@@ -5,6 +5,7 @@ using Zidium.Agent.AgentTasks.UnitTests.TcpPortChecks;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -17,12 +18,12 @@ namespace Zidium.Agent.AgentTasks
        
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.TcpPortTestType.Id;
+            return SystemUnitTestType.TcpPortTestType.Id;
         }
 
         protected override UnitTestExecutionInfo GetResult(Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+            IStorage storage,
+            UnitTestForRead unitTest,
             ILogger logger,
             string accountName,
             CancellationToken token)
@@ -32,7 +33,7 @@ namespace Zidium.Agent.AgentTasks
                 throw new ArgumentNullException("unitTest");
             }
 
-            var rule = unitTest.TcpPortRule;
+            var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(unitTest.Id);
             if (rule == null)
             {
                 return null; // Правило ещё не сохранено
@@ -55,7 +56,7 @@ namespace Zidium.Agent.AgentTasks
             {
                 exception.Data.Add("AccountId", accountId);
                 exception.Data.Add("UnitTestId", rule.UnitTestId);
-                exception.Data.Add("UnitTestName", rule.UnitTest.DisplayName);
+                exception.Data.Add("UnitTestName", unitTest.DisplayName);
                 exception.Data.Add("Address", rule.Host);
                 exception.Data.Add("Port", rule.Port);
                 logger.Error(exception);

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks.DeleteLogs;
-using Zidium.Core.AccountsDb;
 using Xunit;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
@@ -39,7 +39,7 @@ namespace Zidium.Core.Single.Tests
             }).Check();
 
             // Выполним предварительную очистку лога
-            var processor = new DeleteLogsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteLogsProcessor(NLog.LogManager.GetCurrentClassLogger(), new CancellationToken());
             processor.Process(account.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
@@ -47,20 +47,20 @@ namespace Zidium.Core.Single.Tests
 
             var oldDate = DateTime.Now.AddDays(-31);
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var message = "test log message " + Guid.NewGuid();
 
-                var log = new Log()
+                var log = new DbLog()
                 {
                     ComponentId = component.Info.Id,
                     Id = Guid.NewGuid(),
                     Date = oldDate,
-                    Level = Api.LogLevel.Debug,
+                    Level = LogLevel.Debug,
                     Message = message,
                     ParametersCount = 1
                 };
-                log.Parameters.Add(new LogProperty()
+                log.Parameters.Add(new DbLogProperty()
                 {
                     Id = Guid.NewGuid(),
                     LogId = log.Id,
@@ -71,12 +71,12 @@ namespace Zidium.Core.Single.Tests
                 });
                 accountDbContext.Logs.Add(log);
 
-                log = new Log()
+                log = new DbLog()
                 {
                     ComponentId = component.Info.Id,
                     Id = Guid.NewGuid(),
                     Date = DateTime.Now,
-                    Level = Api.LogLevel.Debug,
+                    Level = LogLevel.Debug,
                     Message = message,
                     ParametersCount = 0
                 };

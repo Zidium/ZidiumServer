@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Zidium.Core.AccountsDb;
+﻿using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.MetricTypes
 {
@@ -7,6 +6,6 @@ namespace Zidium.UserAccount.Models.MetricTypes
     {
         public string Search { get; set; }
 
-        public IQueryable<MetricType> Items { get; set; }
+        public MetricTypeForRead[] Items { get; set; }
     }
 }

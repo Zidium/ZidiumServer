@@ -1,7 +1,7 @@
 ﻿@using Zidium.Core
 @using Zidium.Core.AccountsDb
-@using Zidium.Core.Api
 @using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 
 @model Zidium.UserAccount.Models.Subscriptions.EditComponentSubscriptionsModel
@@ -209,14 +209,14 @@
         <td>Пользователь</td>
     </tr>
     <tr>
-        <td>@Html.ComponentPath(Model.Component)</td>
-        <td>@Model.Component.ComponentType.DisplayName</td>
+        <td>@Html.ComponentLink(Model.Component.Id, Model.ComponentFullName)</td>
+        <td>@Model.ComponentType.DisplayName</td>
         <td>
-            @Model.User.FioOrLogin
+            @Model.User.FioOrLogin()
             <div style="margin-top: 5px;">
-                @if (Model.User.UserContacts != null)
+                @if (Model.UserContacts != null)
                 {
-                    foreach (var contact in Model.User.UserContacts)
+                    foreach (var contact in Model.UserContacts)
                     {
                         <div class="user-contact">@contact.Value</div>
                     }

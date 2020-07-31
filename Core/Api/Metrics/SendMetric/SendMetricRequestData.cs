@@ -13,6 +13,7 @@ namespace Zidium.Core.Api
 
         public double? ActualIntervalSecs { get; set; }
 
+        // TODO Move to extension type
         public Int64 GetSize()
         {
             return DataSizeHelper.DbMetricRecordOverhead;

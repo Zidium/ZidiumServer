@@ -1,8 +1,11 @@
-﻿@using Zidium.Core.Common
+﻿@using Zidium.Storage
+
 @model Zidium.UserAccount.Models.Controls.ColorStatusSelectorModel
+
 @{
     string divId = Model.PropertyName + "_Div";
 }                      
+
 <div id ="@divId">
     <input type="hidden" name="@Model.PropertyName" id="@Model.PropertyName" />
     <div class="btn-group">

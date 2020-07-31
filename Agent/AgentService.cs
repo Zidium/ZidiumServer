@@ -21,12 +21,14 @@ using Zidium.Agent.AgentTasks.SendEMails;
 using Zidium.Agent.AgentTasks.SendSms;
 using Zidium.Api;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
 using System.Linq;
 using Zidium.Agent.AgentTasks.SendMessages;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
+using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace Zidium.Agent
 {
@@ -36,8 +38,8 @@ namespace Zidium.Agent
         private List<AgentTaskBase> _agentTasks;
         protected CancellationTokenSource TokenSource;
         protected IComponentControl ComponentControl;
-        protected Timer ContextCountTimer;
-        protected TimeSpan ContextCountTimerInterval = TimeSpan.FromMinutes(5);
+        // protected Timer ContextCountTimer;
+        // protected TimeSpan ContextCountTimerInterval = TimeSpan.FromMinutes(5);
         protected ILogger Logger;
 
         protected void InitMonitoring()
@@ -74,15 +76,22 @@ namespace Zidium.Agent
         public bool Start()
         {
             // Приложение не должно накатывать миграции или создавать базы
-            AccountDbContext.DisableMigrations();
+            StorageFactory.DisableMigrations();
 
             Initialization.SetServices();
+            DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+
+            if (DispatcherHelper.UseLocalDispatcher())
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
+            else
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new RemoteAccountStorageFactory());
+
             InitMonitoring();
 
             try
             {
                 // запускаем периодический сбор данных о количестве используемых контекстов
-                ContextCountTimer = new Timer(SaveContextsCount, null, 0, (int) ContextCountTimerInterval.TotalMilliseconds);
+                // ContextCountTimer = new Timer(SaveContextsCount, null, 0, (int) ContextCountTimerInterval.TotalMilliseconds);
 
                 // создаем список фоновых задач
                 _agentTasks = !ServiceConfiguration.DummyMode ? new List<AgentTaskBase>()
@@ -156,7 +165,7 @@ namespace Zidium.Agent
 
         public new void Stop()
         {
-            ContextCountTimer.Dispose();
+            // ContextCountTimer.Dispose();
 
             // даем всем задачам команду останавливаться
             TokenSource.Cancel();
@@ -171,7 +180,7 @@ namespace Zidium.Agent
             Logger.Info("Все задачи остановлены");
 
             // финальный сбор статистики
-            SaveContextsCount(null);
+            // SaveContextsCount(null);
 
             Logger.Info("Агент остановлен");
             Client.Instance.Flush();
@@ -187,6 +196,8 @@ namespace Zidium.Agent
             Stop();
         }
 
+        // TODO Collect storage stats
+        /*
         protected void SaveContextsCount(object state)
         {
             var actualInterval = TimeSpan.FromHours(1);
@@ -194,5 +205,6 @@ namespace Zidium.Agent
             ComponentControl.SendMetric("Contexts.Account.Active", AccountDbContext.ActiveCount, actualInterval);
             ComponentControl.SendMetric("Contexts.Account.Max", AccountDbContext.MaxActiveCount, actualInterval);
         }
+        */
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Web;
 using System.Web.Mvc;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount

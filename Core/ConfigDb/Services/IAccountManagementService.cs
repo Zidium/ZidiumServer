@@ -1,11 +1,16 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Core.ConfigDb
 {
     public interface IAccountManagementService
     {
+        /// <summary>
+        /// Создание нового аккаунта
+        /// </summary>
+        Guid CreateAccount(CreateAccountData data);
+
         /// <summary>
         /// Регистрация аккаунта - шаг 1
         /// </summary>

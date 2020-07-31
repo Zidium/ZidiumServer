@@ -1,10 +1,7 @@
 ﻿@using Zidium.Core.AccountsDb
-@using Zidium.Core.Api
 @using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
-@using Zidium.UserAccount.Models.UnitTests
-@using Zidium.UserAccount.Models.Controls;
 
 @model UnitTestResult2Model
 
@@ -12,11 +9,11 @@
     ViewBag.Title = Model.PageTitle;
     ViewBag.ActiveMenuItems = "UnitTests";
 
-    string overviewCurrentStatusUrl = Url.Action("OverviewCurrentStatus", new { id = Model.UnitTest.Id });
+    var overviewCurrentStatusUrl = Url.Action("OverviewCurrentStatus", new { id = Model.UnitTest.Id });
 }
 
 @section styles {
-    <style>        
+    <style>
         .info-table-column {
             float: left;
             position: relative;
@@ -47,30 +44,12 @@
             margin-right: 15px;
         }
 
-        #table-statuses {
-            width: auto;
-            margin-top: 10px;
-        }
-
-        #last-statuses-caption {
-            margin-right: 15px;
-        }
-
-        #table-statuses .status-duration {
-            color: #999;
-            font-size: 10px;
-        }
-
-        #table-statuses .status-count {
-            color: #999;
-            font-size: 10px;
-        }
     </style>
 }
 
 <p class="submenu-title">@Model.PageTitle</p>
 <div class="zi-bread-crumbs">
-    @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTest)
+    @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTestBreadCrumbs)
 </div>
 <br />
 @*<hr class="submenu" />*@
@@ -101,31 +80,31 @@ else
                     @Html.PartialReloadedTile(Url.Action("OverviewLastResult", new { id = Model.UnitTest.Id }))
                 </div>
                 <div class="col-md-4 tiles-column">
-                    @if (Model.UnitTest.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+                    @if (Model.UnitTest.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsHttp", new { id = Model.UnitTest.Id }))</text>
                     }
-                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.PingTestType.Id)
+                    else if (Model.UnitTest.TypeId == SystemUnitTestType.PingTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsPing", new { id = Model.UnitTest.Id }))</text>
                     }
-                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+                    else if (Model.UnitTest.TypeId == SystemUnitTestType.TcpPortTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsTcpPort", new { id = Model.UnitTest.Id }))</text>
                     }
-                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+                    else if (Model.UnitTest.TypeId == SystemUnitTestType.DomainNameTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsDomain", new { id = Model.UnitTest.Id }))</text>
                     }
-                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.SslTestType.Id)
+                    else if (Model.UnitTest.TypeId == SystemUnitTestType.SslTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsSsl", new { id = Model.UnitTest.Id }))</text>
                     }
-                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+                    else if (Model.UnitTest.TypeId == SystemUnitTestType.SqlTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsSql", new { id = Model.UnitTest.Id }))</text>
                     }
-                    else if (Model.UnitTest.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+                    else if (Model.UnitTest.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
                     {
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsVirusTotal", new { id = Model.UnitTest.Id }))</text>
                     }
@@ -134,60 +113,17 @@ else
                         <text>@Html.PartialReloadedTile(Url.Action("OverviewSettingsCustom", new { id = Model.UnitTest.Id }))</text>
                     }
                 </div>
-            </div>            
+            </div>
             <div class="row tiles-row">
                 <div class="col-sm-12 tiles-column">
                     @Html.PartialReloadedTile(Url.Action("OverviewStatusDiagram", new { id = Model.UnitTest.Id }))
                 </div>
-            </div>            
+            </div>
         </div>
 
         <!-- Вкладка - статусы -->
         <div role="tabpanel" class="tab-pane" id="statuses">
-
-            <span class="pageHeader1" id="last-statuses-caption">Последние @UnitTestResultModel.LastStatusesMaxCount статусов</span>
-            <a href="@Url.Action("Index", "Events", new { category = EventCategory.UnitTestStatus, unitTestId = Model.UnitTest.Id })" class="btn btn-default">Все статусы</a>
-            <a href="@Url.Action("Index", "Events", new { category = EventCategory.UnitTestResult, unitTestId = Model.UnitTest.Id })" class="btn btn-default">Все результаты</a>
-
-            @if (Model.Statuses.Length > 0)
-            {
-                <table class="table simpleTableClear" id="table-statuses">
-                    <thead>
-                        <tr>
-                            <th class="column-date">Начало</th>
-                            <th class="column-date">Окончание</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var status in Model.Statuses)
-                        {
-                            var color = GuiHelper.GetStrongFgColor(status.Importance);
-                            <tr style="color: @color">
-                                <td>
-                                    @DateTimeHelper.GetRussianDateTime(status.StartDate)
-                                    <br />
-                                    <span class="status-duration">@GuiHelper.TimeSpanAs2UnitString(status.Duration)</span>
-                                </td>
-                                <td>
-                                    @DateTimeHelper.GetRussianDateTime(status.EndDate)
-                                    <br />
-                                    <span class="status-count">
-                                        @status.Count раз
-                                    </span>
-                                </td>
-                                <td>
-                                    <a title="@status.Message" href="@Url.Action("Show", "Events", new { id = status.LastStatusEventId})">@status.Message</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p id="table-statuses">Нет истории выполнения</p>
-            }
+            @Html.PartialReloadedTile(Url.Action("ShowStatuses", new { id = Model.UnitTest.Id }))            
         </div>
 
         <!-- Вкладка - результаты выполнений -->
@@ -197,7 +133,7 @@ else
 
         <!-- Вкладка настройки -->
         <div role="tabpanel" class="tab-pane" id="settings">
-            @Html.Action("ShowSettings", new { id=Model.UnitTest.Id})
+            @Html.Action("ShowSettings", new { id = Model.UnitTest.Id })
         </div>
 
         <div role="tabpanel" class="tab-pane" id="others">
@@ -206,7 +142,7 @@ else
                 <div class="info-table-column">
                     <p>
                         <span class="simple-text-header">Дата начала статуса:</span>
-                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTest.Bulb.StartDate)</span>
+                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTestBulb.StartDate)</span>
                     </p>
                     <p>
                         <span class="simple-text-header">Последняя проверка:</span>
@@ -214,11 +150,11 @@ else
                     </p>
                     <p>
                         <span class="simple-text-header">Длительность:</span>
-                        <span class="simple-text-value">@GuiHelper.TimeSpanAsString(Model.UnitTest.Bulb.GetDuration(DateTime.Now))</span>
+                        <span class="simple-text-value">@GuiHelper.TimeSpanAsString(Model.UnitTestBulb.GetDuration(Model.Now))</span>
                     </p>
                     <p>
                         <span class="simple-text-header">Количество обновлений:</span>
-                        <span class="simple-text-value">@Model.UnitTest.Bulb.Count</span>
+                        <span class="simple-text-value">@Model.UnitTestBulb.Count</span>
                     </p>
 
                 </div>
@@ -230,13 +166,13 @@ else
                     </p>
                     <p>
                         <span class="simple-text-header">Компонент:</span>
-                        @Html.ComponentLink(Model.UnitTest.Component)
+                        @Html.ComponentLink(Model.Component.Id, Model.Component.DisplayName)
                     </p>
                     <p>
                         <span class="simple-text-header">Тип проверки:</span>
-                        <a href="@Url.Action("Show", "UnitTestTypes", new { id = Model.UnitTest.TypeId })">@Model.UnitTest.Type.DisplayName</a>
+                        <a href="@Url.Action("Show", "UnitTestTypes", new { id = Model.UnitTest.TypeId })">@Model.UnitTestType.DisplayName</a>
                     </p>
-                    @if (SystemUnitTestTypes.IsSystem(Model.UnitTest.TypeId))
+                    @if (SystemUnitTestType.IsSystem(Model.UnitTest.TypeId))
                     {
                         <p>
                             <span class="simple-text-header">Следующая проверка:</span>
@@ -245,9 +181,9 @@ else
                     }
                     <p>
                         <span class="simple-text-header">Актуальна до:</span>
-                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTest.Bulb.ActualDate)</span>
+                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTestBulb.ActualDate)</span>
                     </p>
-                    @if (SystemUnitTestTypes.IsSystem(Model.UnitTest.TypeId) == false)
+                    @if (!SystemUnitTestType.IsSystem(Model.UnitTest.TypeId))
                     {
                         // интервал актуальности показываем только для пользовательских проверок
                         var actualTime = TimeSpanHelper.FromSeconds(Model.UnitTest.ActualTimeSecs);
@@ -263,17 +199,14 @@ else
                             }
                         </p>
                     }
-                    @if (Model.UnitTest.HttpRequestUnitTest != null)
+                    @if (!string.IsNullOrEmpty(Model.LastRunErrorMessage))
                     {
-                        var rule = Model.UnitTest.HttpRequestUnitTest.Rules.First();
-                        if (!string.IsNullOrEmpty(rule.LastRunErrorMessage))
-                        {
-                            <p>
-                                <span class="simple-text-header">Последняя ошибка:</span>
-                                <span class="simple-text-value">@rule.LastRunErrorMessage</span>
-                            </p>
-                        }
+                        <p>
+                            <span class="simple-text-header">Последняя ошибка:</span>
+                            <span class="simple-text-value">@Model.LastRunErrorMessage</span>
+                        </p>
                     }
+
                 </div>
 
             </div>
@@ -285,12 +218,11 @@ else
 <script>
 
     function reloadTiles() {
-        console.log("reloadTiles");
         reloadedTiles.reload(".reloaded-tile");
     }
 
     $(function () {
         setInterval(reloadTiles, 3000);
-    });    
+    });
 
 </script>

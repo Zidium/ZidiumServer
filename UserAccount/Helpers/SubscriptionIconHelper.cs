@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Helpers
 {
     public static class SubscriptionIconHelper
     {
-        public static string GetImageUrl(Subscription subscription)
+        public static string GetImageUrl(SubscriptionForRead subscription)
         {
             if (subscription == null)
             {
@@ -36,7 +35,7 @@ namespace Zidium.UserAccount.Helpers
             return "";
         }
 
-        public static string GetComment(Subscription subscription)
+        public static string GetComment(SubscriptionForRead subscription)
         {
             if (subscription == null)
             {
@@ -65,7 +64,7 @@ namespace Zidium.UserAccount.Helpers
             return "";
         }
 
-        public static string GetShortComment(Subscription subscription)
+        public static string GetShortComment(SubscriptionForRead subscription)
         {
             if (subscription == null)
             {
@@ -94,7 +93,7 @@ namespace Zidium.UserAccount.Helpers
             return "";
         }
 
-        public static MvcHtmlString GetImgHtml(Subscription subscription)
+        public static MvcHtmlString GetImgHtml(SubscriptionForRead subscription)
         {
             if (subscription == null)
             {

@@ -31,7 +31,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.TcpPortChecks
             // проверка соединения
             try
             {
-                using (TcpClient client = new TcpClient())
+                using (var client = new TcpClient())
                 {
                     //int timeoutMs = (int)inputData.Timeout.TotalMilliseconds;
                     //client.SendTimeout = timeoutMs;

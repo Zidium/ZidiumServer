@@ -4,8 +4,9 @@
 // modifications, this file may also be moved to any location, as long as it
 // remains a part of its current project.
 
-using Zidium.Core.AccountsDb;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace Zidium.Core.Single.Tests
 {
@@ -14,9 +15,11 @@ namespace Zidium.Core.Single.Tests
         internal static void Run()
         {
             // Тесты не должны накатывать миграции или создавать базы
-            AccountDbContext.DisableMigrations();
+            StorageFactory.DisableMigrations();
 
             Initialization.SetServices();
+            DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+            DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
         }
     }
 }

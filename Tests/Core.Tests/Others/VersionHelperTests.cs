@@ -1,5 +1,5 @@
-﻿using Zidium.Core.Common;
-using Xunit;
+﻿using Xunit;
+using Zidium.Common;
 
 namespace Zidium.Core.Tests.Others
 {

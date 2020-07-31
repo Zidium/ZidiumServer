@@ -1,6 +1,8 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.UnitTests
+
 @model OverviewSettingsSqlModel
+
 @{ 
     string periodText = GuiHelper.TimeSpanAsString(Model.Period);
     string timeoutText = GuiHelper.TimeSpanAsString(Model.Timeout);

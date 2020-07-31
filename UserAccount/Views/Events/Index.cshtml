@@ -1,9 +1,10 @@
-﻿@using Zidium.Core.Api
-@using Zidium.UserAccount.Helpers
+﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using GridMvc.Html
 @using GridMvc.Sorting
+@using Zidium.Storage
 @using Zidium.UserAccount.Models.Controls
+
 @model EventsListModel
 
 @{
@@ -83,7 +84,7 @@
             <div class="col-sm-12">
                 <span class="simple-text-header">Проверка</span>
                 <br/>
-                @Html.PartialUnitTestBreadCrumbs(Model.UnitTest)
+                @Html.PartialUnitTestBreadCrumbs(Model.UnitTest.Id, Model.Storage)
             </div>
             @*<div class="col-sm-6">
                 <span class="simple-text-header">Компонент</span>
@@ -98,7 +99,7 @@
             <div class="col-sm-12">
                 <span class="simple-text-header">Метрика</span>
                 <br/>
-                @Html.PartialMetricBreadCrumbs(Model.Metric)
+                @Html.PartialMetricBreadCrumbs(Model.Metric.Id, Model.Storage)
             </div>
             @*<div class="col-sm-6">
                 <span class="simple-text-header">Компонент</span>

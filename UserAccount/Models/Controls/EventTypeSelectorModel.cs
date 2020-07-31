@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Web.Mvc;
-using Zidium.Core.Common;
 
 namespace Zidium.UserAccount.Models
 {
@@ -35,16 +34,14 @@ namespace Zidium.UserAccount.Models
                 string result = null;
                 if (EventTypeId.HasValue)
                 {
-                    using (var databasesContext = new DatabasesContext())
+
+                    var storage = FullRequestContext.Current.Controller.GetStorage();
+                    var eventType = storage.EventTypes.GetOneById(EventTypeId.Value);
+                    if (eventType != null)
                     {
-                        var context = databasesContext.GetAccountDbContext(AccountId);
-                        var repository = context.GetEventTypeRepository();
-                        var eventType = repository.GetById(EventTypeId.Value);
-                        if (eventType != null)
-                        {
-                            result = eventType.DisplayName;
-                        }
+                        result = eventType.DisplayName;
                     }
+
                 }
                 return result;
             }

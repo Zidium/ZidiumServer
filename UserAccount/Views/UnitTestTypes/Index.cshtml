@@ -1,6 +1,7 @@
 ﻿@using GridMvc.Html
 @using GridMvc.Sorting
 @using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.UnitTestTypeListModel
 
 @{
@@ -50,7 +51,7 @@
                 }
              </text>).Encoded(false).Sanitized(false).Css("text-center");
     }
-}).Sortable().Selectable(false).WithPaging(50)
+}).Selectable(false)
 
 @section Scripts
 {

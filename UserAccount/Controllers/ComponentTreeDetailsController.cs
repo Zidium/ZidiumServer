@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.ComponentTreeDetails;
 using Zidium.UserAccount.Models.ExtentionProperties;
@@ -12,21 +10,20 @@ using Zidium.UserAccount.Models.ExtentionProperties;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ComponentTreeDetailsController : ContextController
+    public class ComponentTreeDetailsController : BaseController
     {
         /// <summary>
         /// Контейнер разделов детализации по компоненту
         /// </summary>
         public ActionResult ComponentDetails(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(id);
+            var component = GetStorage().Components.GetOneById(id);
 
             var model = new ComponentDetailsModel()
             {
                 Id = component.Id,
                 Name = component.DisplayName,
-                CanEdit = CurrentUser.CanEditCommonData() && !component.IsRoot
+                CanEdit = CurrentUser.CanEditCommonData() && !component.IsRoot()
             };
 
             return PartialView(model);
@@ -37,22 +34,24 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult ComponentDetailsState(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(id);
+            var storage = GetStorage();
+            var component = storage.Components.GetOneById(id);
+            var bulb = storage.Bulbs.GetOneById(component.ExternalStatusId);
+            var showInfo = storage.Gui.GetComponentShow(id, MvcApplication.GetServerDateTime());
 
-            var eventsMiniStatus = ComponentsController.GetEventsMiniStatusModel(id, CurrentAccountDbContext);
-            var unittestsMiniStatus = ComponentsController.GetUnittestsMiniStatusModel(CurrentUser.AccountId, id, CurrentAccountDbContext);
-            var metricsMiniStatus = ComponentsController.GetMetricsMiniStatusModel(CurrentUser.AccountId, id, CurrentAccountDbContext);
-            var childsMiniStatus = ComponentsController.GetChildsMiniStatusModel(CurrentUser.AccountId, id, CurrentAccountDbContext);
+            var eventsMiniStatus = ComponentsController.GetEventsMiniStatusModel(id, showInfo);
+            var unittestsMiniStatus = ComponentsController.GetUnittestsMiniStatusModel(CurrentUser.AccountId, id, showInfo);
+            var metricsMiniStatus = ComponentsController.GetMetricsMiniStatusModel(CurrentUser.AccountId, id, showInfo);
+            var childsMiniStatus = ComponentsController.GetChildsMiniStatusModel(CurrentUser.AccountId, id, showInfo);
 
             var model = new ComponentDetailsStateModel()
             {
                 Id = id,
                 SystemName = component.SystemName,
-                Status = component.ExternalStatus.Status,
-                StatusEventId = component.ExternalStatus.StatusEventId,
-                StatusDuration = component.ExternalStatus.GetDuration(MvcApplication.GetServerDateTime()),
-                CanEdit = CurrentUser.CanEditCommonData() && !component.IsRoot,
+                Status = bulb.Status,
+                StatusEventId = bulb.StatusEventId,
+                StatusDuration = bulb.GetDuration(MvcApplication.GetServerDateTime()),
+                CanEdit = CurrentUser.CanEditCommonData() && !component.IsRoot(),
                 IsEnabled = component.Enable,
                 EventsMiniStatus = eventsMiniStatus,
                 UnittestsMiniStatus = unittestsMiniStatus,
@@ -80,47 +79,52 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult ComponentDetailsUnittests(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
+            var storage = GetStorage();
 
-            var unittests = repository.QueryAll()
-                .Where(t => t.ComponentId == id)
-                .Include("Type")
-                .Include("Bulb")
-                .ToArray();
+            var unittests = storage.UnitTests.GetByComponentId(id);
+            var unittestTypes = storage.UnitTestTypes.GetMany(unittests.Select(t => t.TypeId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
+            var bulbs = storage.Bulbs.GetMany(unittests.Select(t => t.StatusDataId).ToArray()).ToDictionary(a => a.Id, b => b);
+
+            var data = unittests.Select(t => new
+            {
+                UnitTest = t,
+                UnitTestType = unittestTypes[t.TypeId],
+                Bulb = bulbs[t.StatusDataId]
+            }).ToArray();
 
             var now = MvcApplication.GetServerDateTime();
 
-            var systemUnittests = unittests
-                .Where(t => t.Type.IsSystem)
+            var systemUnittests = data
+                .Where(t => t.UnitTestType.IsSystem)
                 .Select(t => new ComponentDetailsUnittestsModel.SystemUnittest()
                 {
-                    Id = t.Id,
+                    Id = t.UnitTest.Id,
                     Status = t.Bulb.Status,
                     StatusDuration = t.Bulb.GetDuration(now),
-                    Name = t.DisplayName,
-                    TypeName = t.Type.DisplayName,
+                    Name = t.UnitTest.DisplayName,
+                    TypeName = t.UnitTestType.DisplayName,
                     LastResultDate = t.Bulb.EndDate,
                     LastResult = t.Bulb.GetUnitTestMessage(),
-                    Interval = TimeSpan.FromSeconds(t.PeriodSeconds ?? 0),
-                    IsEnabled = t.Enable
+                    Interval = TimeSpan.FromSeconds(t.UnitTest.PeriodSeconds ?? 0),
+                    IsEnabled = t.UnitTest.Enable
                 })
                 .OrderByDescending(t => t.Status)
                 .ThenBy(t => t.Name)
                 .ToArray();
 
-            var userUnittests = unittests
-                .Where(t => !t.Type.IsSystem)
+            var userUnittests = data
+                .Where(t => !t.UnitTestType.IsSystem)
                 .Select(t => new ComponentDetailsUnittestsModel.UserUnittest()
                 {
-                    Id = t.Id,
+                    Id = t.UnitTest.Id,
                     Status = t.Bulb.Status,
                     StatusDuration = t.Bulb.GetDuration(now),
-                    Name = t.DisplayName,
+                    Name = t.UnitTest.DisplayName,
                     LastResultDate = t.Bulb.EndDate,
                     LastResult = t.Bulb.GetUnitTestMessage(),
                     ActualDate = t.Bulb.ActualDate,
                     ActualInterval = t.Bulb.ActualDate - now,
-                    IsEnabled = t.Enable
+                    IsEnabled = t.UnitTest.Enable
                 })
                 .OrderByDescending(t => t.Status)
                 .ThenBy(t => t.Name)
@@ -154,28 +158,33 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult ComponentDetailsMetrics(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetMetricRepository();
+            var storage = GetStorage();
 
-            var metrics = repository.QueryAll()
-                .Where(t => t.ComponentId == id)
-                .Include("MetricType")
-                .Include("Bulb")
-                .ToArray();
+            var metrics = storage.Metrics.GetByComponentId(id);
+            var metricTypes = storage.MetricTypes.GetMany(metrics.Select(t => t.MetricTypeId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
+            var bulbs = storage.Bulbs.GetMany(metrics.Select(t => t.StatusDataId).ToArray()).ToDictionary(a => a.Id, b => b);
+
+            var data = metrics.Select(t => new
+            {
+                Metric = t,
+                MetricType = metricTypes[t.MetricTypeId],
+                Bulb = bulbs[t.StatusDataId]
+            }).ToArray();
 
             var now = MvcApplication.GetServerDateTime();
 
-            var metricInfos = metrics
+            var metricInfos = data
                 .Select(t => new ComponentDetailsMetricsModel.MetricInfo()
                 {
-                    Id = t.Id,
+                    Id = t.Metric.Id,
                     Status = t.Bulb.Status,
                     StatusDuration = t.Bulb.GetDuration(now),
                     Name = t.MetricType.DisplayName,
                     LastResultDate = t.Bulb.EndDate,
-                    LastResult = t.Value,
+                    LastResult = t.Metric.Value,
                     ActualDate = t.Bulb.ActualDate,
                     ActualInterval = t.Bulb.ActualDate - now,
-                    IsEnabled = t.Enable,
+                    IsEnabled = t.Metric.Enable,
                     HasSignal = t.Bulb.HasSignal
                 })
                 .OrderByDescending(t => t.Status)
@@ -197,13 +206,15 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult ComponentDetailsInfo(Guid id)
         {
-            var component = GetComponentById(id);
+            var storage = GetStorage();
+            var component = storage.Components.GetOneById(id);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
             var model = new ComponentDetailsInfoModel()
             {
                 ComponentId = id,
                 SystemName = component.SystemName,
                 TypeId = component.ComponentTypeId,
-                TypeName = component.ComponentType.DisplayName,
+                TypeName = componentType.DisplayName,
                 CreateTime = component.CreatedDate
             };
             return PartialView(model);
@@ -239,7 +250,7 @@ namespace Zidium.UserAccount.Controllers
             };
             var levelFilter = levels.Where(x => x >= level.Value).ToArray();
 
-            var messages = CurrentAccountDbContext.GetLogRepository()
+            var messages = GetStorage().Logs
                 .GetLastRecords(id, null, levelFilter, null, count.Value)
                 .ToArray();
 
@@ -263,26 +274,25 @@ namespace Zidium.UserAccount.Controllers
             var toDate = MvcApplication.GetServerDateTime();
             var fromDate = TimelineHelper.IntervalToStartDate(toDate, interval);
 
-            var eventTypeRepository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventTypes = eventTypeRepository.QueryAll().Select(t => new { t.Id, t.DisplayName }).ToDictionary(t => t.Id, t => t);
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var storage = GetStorage();
 
-            var query = eventRepository.QueryAllByAccount()
-                .Where(t => t.OwnerId == id && t.StartDate <= toDate && t.ActualDate >= fromDate);
-
+            EventCategory[] categories;
             if (all)
-                query = query.Where(t => t.Category == EventCategory.ApplicationError || t.Category == EventCategory.ComponentEvent);
+                categories = new[] { EventCategory.ApplicationError, EventCategory.ComponentEvent };
             else
-                query = query.Where(t => t.Category == EventCategory.ApplicationError);
+                categories = new[] { EventCategory.ApplicationError };
 
-            var events = query
+            var events = storage.Events.Filter(id, categories, fromDate, toDate);
+            var eventTypes = storage.EventTypes.GetMany(events.Select(t => t.EventTypeId).Distinct().ToArray()).ToDictionary(t => t.Id, t => t);
+
+            var data = events
                 .GroupBy(t => t.EventTypeId)
                 .Select(t => new
                 {
                     Id = t.Key,
                     Importance = t.Max(z => z.Importance),
                     Count = t.Sum(z => z.Count),
-                    LastMessage = t.OrderByDescending(z => z.StartDate).FirstOrDefault().Message
+                    LastMessage = t.OrderByDescending(z => z.StartDate).FirstOrDefault()?.Message
                 })
                 .ToArray();
 
@@ -291,7 +301,7 @@ namespace Zidium.UserAccount.Controllers
                 FromDate = fromDate,
                 ToDate = toDate,
                 HideUptime = true,
-                Items = events
+                Items = data
                     .Select(t => new
                     {
                         Id = t.Id,
@@ -327,8 +337,7 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult UnittestDetails(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unittest = repository.GetById(id);
+            var unittest = GetStorage().UnitTests.GetOneById(id);
 
             var model = new UnittestDetailsModel()
             {
@@ -345,40 +354,69 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult UnittestDetailsState(Guid id)
         {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unittest = unitTestRepository.GetById(id);
+            var storage = GetStorage();
+            var unittest = storage.UnitTests.GetOneById(id);
+            var bulb = storage.Bulbs.GetOneById(unittest.StatusDataId);
 
             var model = new UnittestDetailsStateModel()
             {
                 Id = id,
-                Status = unittest.Bulb.Status,
-                StatusEventId = unittest.Bulb.StatusEventId,
-                StatusDuration = unittest.Bulb.GetDuration(MvcApplication.GetServerDateTime()),
-                CanRun = unittest.IsSystemType,
+                Status = bulb.Status,
+                StatusEventId = bulb.StatusEventId,
+                StatusDuration = bulb.GetDuration(MvcApplication.GetServerDateTime()),
+                CanRun = unittest.IsSystemType(),
                 CanEdit = CurrentUser.CanEditCommonData(),
                 IsEnabled = unittest.Enable,
                 TypeId = unittest.TypeId,
-                LastExecutionDate = unittest.Bulb.EndDate,
-                LastExecutionResult = unittest.Bulb.GetUnitTestMessage()
+                LastExecutionDate = bulb.EndDate,
+                LastExecutionResult = bulb.GetUnitTestMessage()
             };
 
-            if (model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
-                model.RuleData = unittest.HttpRequestUnitTest?.Rules.FirstOrDefault()?.Url;
-            else if (model.TypeId == SystemUnitTestTypes.PingTestType.Id)
-                model.RuleData = unittest.PingRule?.Host;
-            else if (model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
-                model.RuleData = unittest.DomainNamePaymentPeriodRule?.Domain;
-            else if (model.TypeId == SystemUnitTestTypes.SslTestType.Id)
-                model.RuleData = unittest.SslCertificateExpirationDateRule?.Url;
-            else if (model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
-                model.RuleData = unittest.SqlRule?.Query;
-
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var lastExecutionResultEvent = eventRepository.QueryAll(unittest.Id).Where(t => t.Category == EventCategory.UnitTestResult).OrderByDescending(t => t.StartDate).FirstOrDefault();
-
-            if (lastExecutionResultEvent != null && lastExecutionResultEvent.Properties.Count > 0)
+            if (model.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
             {
-                model.LastExecutionResultProperties = ExtentionPropertiesModel.Create(lastExecutionResultEvent);
+                var rules = storage.HttpRequestUnitTestRules.GetByUnitTestId(unittest.Id);
+                model.RuleData = rules.FirstOrDefault()?.Url;
+            }
+            else if (model.TypeId == SystemUnitTestType.PingTestType.Id)
+            {
+                var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.RuleData = rule?.Host;
+            }
+            else if (model.TypeId == SystemUnitTestType.TcpPortTestType.Id)
+            {
+                var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.RuleData = rule?.Host + ":" + rule?.Port;
+            }
+            else if (model.TypeId == SystemUnitTestType.DomainNameTestType.Id)
+            {
+                var rule = storage.DomainNamePaymentPeriodRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.RuleData = rule?.Domain;
+            }
+            else if (model.TypeId == SystemUnitTestType.SslTestType.Id)
+            {
+                var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.RuleData = rule?.Url;
+            }
+            else if (model.TypeId == SystemUnitTestType.SqlTestType.Id)
+            {
+                var rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.RuleData = rule?.Query;
+            }
+            else if (model.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
+            {
+                var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.RuleData = rule?.Url;
+            }
+
+            var lastExecutionResultEvent = storage.Events.GetLastEvent(unittest.Id, EventCategory.UnitTestResult);
+
+            if (lastExecutionResultEvent != null)
+            {
+                {
+                    var properties = storage.EventProperties.GetByEventId(lastExecutionResultEvent.Id);
+                    if (properties.Length > 0)
+                        model.LastExecutionResultProperties = ExtentionPropertiesModel.Create(properties);
+                }
             }
 
             return PartialView(model);
@@ -389,47 +427,60 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult UnitTestDetailsSettings(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unittest = repository.GetById(id);
-            var unitTestType = unittest.Type;
+            var storage = GetStorage();
+            var unittest = storage.UnitTests.GetOneById(id);
+            var unitTestType = storage.UnitTestTypes.GetOneById(unittest.TypeId);
 
             var model = new UnittestDetailsSettingsModel()
             {
                 Id = unittest.Id,
                 TypeName = unitTestType.DisplayName,
                 Name = unittest.DisplayName,
-                IsSystem = unittest.IsSystemType,
+                IsSystem = unittest.IsSystemType(),
                 ExecutionInterval = unittest.PeriodSeconds != null ? TimeSpan.FromSeconds(unittest.PeriodSeconds.Value) : (TimeSpan?)null,
                 ActualInterval = unittest.ActualTimeSecs != null ? TimeSpan.FromSeconds(unittest.ActualTimeSecs.Value) : (TimeSpan?)null,
                 TypeId = unittest.TypeId,
                 NoSignalColor = unittest.NoSignalColor ?? unitTestType.NoSignalColor ?? ObjectColor.Red
             };
 
-            if (model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+            if (model.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
             {
-                model.HttpUrl = unittest.HttpRequestUnitTest?.Rules.FirstOrDefault()?.Url;
-                model.HttpTimeout = TimeSpan.FromSeconds(unittest.HttpRequestUnitTest?.Rules.FirstOrDefault()?.TimeoutSeconds ?? 0);
+                var rules = storage.HttpRequestUnitTestRules.GetByUnitTestId(unittest.Id);
+                model.HttpUrl = rules.FirstOrDefault()?.Url;
+                model.HttpTimeout = TimeSpan.FromSeconds(rules.FirstOrDefault()?.TimeoutSeconds ?? 0);
             }
-            else if (model.TypeId == SystemUnitTestTypes.PingTestType.Id)
+            else if (model.TypeId == SystemUnitTestType.PingTestType.Id)
             {
-                model.PingHost = unittest.PingRule?.Host;
-                model.PingTimeout = TimeSpan.FromMilliseconds(unittest.PingRule?.TimeoutMs ?? 0);
+                var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.PingHost = rule?.Host;
+                model.PingTimeout = TimeSpan.FromMilliseconds(rule?.TimeoutMs ?? 0);
             }
-            else if (model.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+            else if (model.TypeId == SystemUnitTestType.TcpPortTestType.Id)
             {
-                model.PingHost = unittest.TcpPortRule.Host;
-                model.TcpPort = unittest.TcpPortRule.Port;
+                var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.PingHost = rule?.Host;
+                model.TcpPort = rule?.Port ?? 0;
             }
-            else if (model.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+            else if (model.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
             {
-                model.HttpUrl = unittest.VirusTotalRule.Url;
+                var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.HttpUrl = rule.Url;
             }
-            else if (model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
-                model.DomainName = unittest.DomainNamePaymentPeriodRule?.Domain;
-            else if (model.TypeId == SystemUnitTestTypes.SslTestType.Id)
-                model.SslHost = unittest.SslCertificateExpirationDateRule?.Url;
-            else if (model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
-                model.SqlQuery = unittest.SqlRule?.Query;
+            else if (model.TypeId == SystemUnitTestType.DomainNameTestType.Id)
+            {
+                var rule = storage.DomainNamePaymentPeriodRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.DomainName = rule?.Domain;
+            }
+            else if (model.TypeId == SystemUnitTestType.SslTestType.Id)
+            {
+                var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.SslHost = rule?.Url;
+            }
+            else if (model.TypeId == SystemUnitTestType.SqlTestType.Id)
+            {
+                var rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(unittest.Id);
+                model.SqlQuery = rule?.Query;
+            }
 
             return PartialView(model);
         }
@@ -439,16 +490,12 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult UnittestDetailsHistory(Guid id)
         {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unittest = unitTestRepository.GetById(id);
-
             var model = new UnittestDetailsHistoryModel()
             {
-                Id = unittest.Id
+                Id = id
             };
 
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var statusEvents = eventRepository.QueryAll(unittest.Id).Where(t => t.Category == EventCategory.UnitTestStatus).OrderByDescending(t => t.StartDate).Take(10).ToArray();
+            var statusEvents = GetStorage().Events.GetLastEvents(id, EventCategory.UnitTestStatus, 10);
 
             var now = MvcApplication.GetServerDateTime();
             model.Statuses = statusEvents.Select(t => new UnittestDetailsHistoryModel.StatusModel()
@@ -469,16 +516,12 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult UnittestDetailsResults(Guid id)
         {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unittest = unitTestRepository.GetById(id);
-
             var model = new UnittestDetailsResultsModel()
             {
-                Id = unittest.Id
+                Id = id
             };
 
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var resultEvents = eventRepository.QueryAll(unittest.Id).Where(t => t.Category == EventCategory.UnitTestResult).OrderByDescending(t => t.StartDate).Take(10).ToArray();
+            var resultEvents = GetStorage().Events.GetLastEvents(id, EventCategory.UnitTestResult, 10);
 
             model.Results = resultEvents.Select(t => new UnittestDetailsResultsModel.ResultModel()
             {
@@ -496,13 +539,14 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult MetricDetails(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = repository.GetById(id);
+            var storage = GetStorage();
+            var metric = storage.Metrics.GetOneById(id);
+            var metricType = storage.MetricTypes.GetOneById(metric.MetricTypeId);
 
             var model = new MetricDetailsModel()
             {
                 Id = metric.Id,
-                Name = metric.MetricType.DisplayName,
+                Name = metricType.DisplayName,
                 CanEdit = CurrentUser.CanEditCommonData()
             };
 
@@ -514,22 +558,23 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult MetricDetailsState(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = repository.GetById(id);
+            var storage = GetStorage();
+            var metric = storage.Metrics.GetOneById(id);
+            var bulb = storage.Bulbs.GetOneById(metric.StatusDataId);
             var now = MvcApplication.GetServerDateTime();
 
             var model = new MetricDetailsStateModel()
             {
                 Id = metric.Id,
-                Status = metric.Bulb.Status,
-                StatusEventId = metric.Bulb.StatusEventId,
-                StatusDuration = metric.Bulb.GetDuration(now),
-                LastResultDate = metric.Bulb.EndDate,
+                Status = bulb.Status,
+                StatusEventId = bulb.StatusEventId,
+                StatusDuration = bulb.GetDuration(now),
+                LastResultDate = bulb.EndDate,
                 Value = metric.Value,
-                ActualDate = metric.Bulb.ActualDate,
-                ActualInterval = metric.Bulb.ActualDate - now,
+                ActualDate = bulb.ActualDate,
+                ActualInterval = bulb.ActualDate - now,
                 IsEnabled = metric.Enable,
-                HasSignal = metric.Bulb.HasSignal,
+                HasSignal = bulb.HasSignal,
                 CanEdit = CurrentUser.CanEditCommonData()
             };
 
@@ -541,12 +586,9 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult MetricDetailsHistory(Guid id)
         {
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = metricRepository.GetById(id);
-
             var model = new MetricDetailsHistoryModel()
             {
-                Id = metric.Id
+                Id = id
             };
 
             return PartialView(model);
@@ -557,14 +599,10 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult MetricDetailsValues(Guid id)
         {
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = metricRepository.GetById(id);
+            var storage = GetStorage();
+            var metric = storage.Metrics.GetOneById(id);
 
-            var metricHistoryRepository = CurrentAccountDbContext.GetMetricHistoryRepository();
-            var rows = metricHistoryRepository
-                .QueryAllByMetricType(metric.ComponentId, metric.MetricTypeId)
-                .OrderByDescending(t => t.BeginDate)
-                .Take(10);
+            var rows = storage.MetricHistory.GetLast(metric.ComponentId, metric.MetricTypeId, 10);
 
             var model = new MetricDetailsValuesModel()
             {
@@ -586,12 +624,9 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult EventsDetails(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(id);
-
             var model = new EventsDetailsModel()
             {
-                Id = component.Id
+                Id = id
             };
 
             return PartialView(model);

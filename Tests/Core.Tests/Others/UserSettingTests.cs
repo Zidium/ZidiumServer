@@ -14,18 +14,12 @@ namespace Zidium.Core.Tests.Others
             var user = TestHelper.CreateTestUser(account.Id);
             var name = "UserSetting " + DateTime.Now.Ticks;
             var value = "UserSettingValue " + DateTime.Now.Ticks;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var repository = accountContext.GetUserSettingRepository();
-                repository.SetValue(user.Id, name, value);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var repository = accountContext.GetUserSettingRepository();
-                var settingValue = repository.GetValue(user.Id, name);
-                Assert.Equal(value, settingValue);
-            }
+            var storage = TestHelper.GetStorage(account.Id);
+
+            storage.UserSettings.SetValue(user.Id, name, value);
+
+            var settingValue = storage.UserSettings.GetValue(user.Id, name);
+            Assert.Equal(value, settingValue);
         }
 
         [Fact]
@@ -33,30 +27,18 @@ namespace Zidium.Core.Tests.Others
         {
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.CreateTestUser(account.Id);
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                service.ShowComponentsAsList(user.Id, false);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                var value = service.ShowComponentsAsList(user.Id);
-                Assert.False(value);
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                service.ShowComponentsAsList(user.Id, true);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                var value = service.ShowComponentsAsList(user.Id);
-                Assert.True(value);
-            }
+            var storage = TestHelper.GetStorage(account.Id);
+
+            var service = new UserSettingService(storage);
+            service.ShowComponentsAsList(user.Id, false);
+
+            var value = service.ShowComponentsAsList(user.Id);
+            Assert.False(value);
+
+            service.ShowComponentsAsList(user.Id, true);
+
+            value = service.ShowComponentsAsList(user.Id);
+            Assert.True(value);
         }
 
         [Fact]
@@ -64,30 +46,18 @@ namespace Zidium.Core.Tests.Others
         {
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.CreateTestUser(account.Id);
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                service.SendMeNews(user.Id, false);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                var value = service.SendMeNews(user.Id);
-                Assert.False(value);
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                service.SendMeNews(user.Id, true);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                var value = service.SendMeNews(user.Id);
-                Assert.True(value);
-            }
+            var storage = TestHelper.GetStorage(account.Id);
+
+            var service = new UserSettingService(storage);
+            service.SendMeNews(user.Id, false);
+
+            var value = service.SendMeNews(user.Id);
+            Assert.False(value);
+
+            service.SendMeNews(user.Id, true);
+
+            value = service.SendMeNews(user.Id);
+            Assert.True(value);
         }
 
         [Fact]
@@ -95,30 +65,18 @@ namespace Zidium.Core.Tests.Others
         {
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.CreateTestUser(account.Id);
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                service.TimeZoneOffsetMinutes(user.Id, 60);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                var value = service.TimeZoneOffsetMinutes(user.Id);
-                Assert.Equal(60, value);
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                service.TimeZoneOffsetMinutes(user.Id, 120);
-                accountContext.SaveChanges();
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var service = accountContext.GetUserSettingService();
-                var value = service.TimeZoneOffsetMinutes(user.Id);
-                Assert.Equal(120, value);
-            }
+            var storage = TestHelper.GetStorage(account.Id);
+
+            var service = new UserSettingService(storage);
+            service.TimeZoneOffsetMinutes(user.Id, 60);
+
+            var value = service.TimeZoneOffsetMinutes(user.Id);
+            Assert.Equal(60, value);
+
+            service.TimeZoneOffsetMinutes(user.Id, 120);
+
+            value = service.TimeZoneOffsetMinutes(user.Id);
+            Assert.Equal(120, value);
         }
 
     }

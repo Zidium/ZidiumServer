@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
 {

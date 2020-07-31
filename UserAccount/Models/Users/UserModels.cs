@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -51,7 +50,7 @@ namespace Zidium.UserAccount.Models
         [Display(Name = "Часовой пояс")]
         public int TimeZoneOffsetMinutes { get; set; }
 
-        public List<UserContact> Contacts { get; set; }
+        public UserContactForRead[] Contacts { get; set; }
 
     }
 }

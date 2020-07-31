@@ -1,9 +1,19 @@
-﻿using Zidium.Core.AccountsDb;
+﻿using System;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
     public class LogIndexModel : LogFiltersModel
     {
-        public Component Component { get; set; }
+        public ComponentInfo Component { get; set; }
+
+        public class ComponentInfo
+        {
+            public Guid Id;
+
+            public string DisplayName;
+
+            public LogConfigForRead LogConfig;
+        }
     }
 }

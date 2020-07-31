@@ -52,7 +52,7 @@ namespace ApiTests_1._0.Metrics
             //var counterActualDate = counterBeginDate.AddDays(1);
 
             var sendResponse = component.SendMetric(counterName, counterValue, TimeSpan.FromDays(1));
-            Assert.True(sendResponse.Success);
+            sendResponse.Check();
 
             getResponse = component.GetMetrics();
             Assert.True(getResponse.Success);

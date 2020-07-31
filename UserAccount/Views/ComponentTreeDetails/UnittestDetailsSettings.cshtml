@@ -1,6 +1,6 @@
 ﻿@using Zidium.Core.AccountsDb
 @using Zidium.Core.Common.Helpers
-@using Zidium.Core.Common
+
 @model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsSettingsModel
 
 <div class="row">
@@ -40,7 +40,7 @@
 
 
 
-@if (Model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+@if (Model.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
 {
     <p>
         <span class="simple-text-header">Http-запрос</span><br />
@@ -51,7 +51,7 @@
         <span class="simple-text-value">@TimeSpanHelper.GetOneUnitString(Model.HttpTimeout)</span>
     </p>
 }
-else if (Model.TypeId == SystemUnitTestTypes.PingTestType.Id)
+else if (Model.TypeId == SystemUnitTestType.PingTestType.Id)
 {
     <p>
         <span class="simple-text-header">Хост</span><br />
@@ -62,35 +62,35 @@ else if (Model.TypeId == SystemUnitTestTypes.PingTestType.Id)
         <span class="simple-text-value">@TimeSpanHelper.GetOneUnitString(Model.PingTimeout)</span>
     </p>
 }
-else if (Model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+else if (Model.TypeId == SystemUnitTestType.DomainNameTestType.Id)
 {
     <p>
         <span class="simple-text-header">Домен</span><br />
         <span class="simple-text-value">@Model.DomainName</span>
     </p>
 }
-else if (Model.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+else if (Model.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
 {
     <p>
         <span class="simple-text-header">Url ресурса</span><br />
         <a target="_blank" href="@Model.HttpUrl">@Model.HttpUrl</a>
     </p>
 }
-else if (Model.TypeId == SystemUnitTestTypes.SslTestType.Id)
+else if (Model.TypeId == SystemUnitTestType.SslTestType.Id)
 {
     <p>
         <span class="simple-text-header">Сайт</span><br />
         <a target="_blank" href="@Model.SslHost">@Model.SslHost</a>
     </p>
 }
-else if (Model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+else if (Model.TypeId == SystemUnitTestType.SqlTestType.Id)
 {
     <p>
         <span class="simple-text-header">Sql-запрос</span><br />
         <span class="simple-text-value text-wordbreak">@Model.SqlQuery</span>
     </p>
 }
-else if (Model.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+else if (Model.TypeId == SystemUnitTestType.TcpPortTestType.Id)
 {
     <p>
         <span class="simple-text-header">Хост</span><br />

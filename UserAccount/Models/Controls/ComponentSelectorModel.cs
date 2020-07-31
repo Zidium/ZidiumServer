@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.Common;
+using Zidium.Core.AccountsDb;
 
 namespace Zidium.UserAccount.Models
 {
@@ -49,13 +49,9 @@ namespace Zidium.UserAccount.Models
             {
                 if (ComponentId.HasValue && ComponentId.Value != Guid.Empty)
                 {
-                    using (var databasesContext = new DatabasesContext())
-                    {
-                        var context = databasesContext.GetAccountDbContext(AccountId); // todo нужно брать из текущего пользователя
-                        var repository = context.GetComponentRepository();
-                        var component = repository.GetById(ComponentId.Value);
-                        ComponentFullName = ShowAsList ? component.DisplayName : component.GetFullDisplayName();
-                    }
+                    var storage = FullRequestContext.Current.Controller.GetStorage();
+                    var component = storage.Components.GetOneById(ComponentId.Value);
+                    ComponentFullName = ShowAsList ? component.DisplayName : new ComponentService(storage).GetFullDisplayName(component);
                 }
             }
             return ComponentFullName;
@@ -69,13 +65,9 @@ namespace Zidium.UserAccount.Models
             {
                 if (ComponentId.HasValue)
                 {
-                    using (var databasesContext = new DatabasesContext())
-                    {
-                        var context = databasesContext.GetAccountDbContext(AccountId); // todo нужно брать из текущего пользователя
-                        var repository = context.GetComponentRepository();
-                        var component = repository.GetById(ComponentId.Value);
-                        ComponentName = component.DisplayName;
-                    }
+                    var storage = FullRequestContext.Current.Controller.GetStorage();
+                    var component = storage.Components.GetOneById(ComponentId.Value);
+                    ComponentName = component.DisplayName;
                 }
             }
             return ComponentName;

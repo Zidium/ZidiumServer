@@ -1,54 +1,95 @@
 ﻿using System;
+using System.Linq;
 using Zidium.Api.Others;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
     public class UnitTestCacheStorage : AccountDbCacheStorageBase<UnitTestCacheResponse, IUnitTestCacheReadObject, UnitTestCacheWriteObject>
     {
-        protected override UnitTestCacheWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext)
+        protected override UnitTestCacheWriteObject LoadObject(AccountCacheRequest request, IStorage storage)
         {
-            var repository = accountDbContext.GetUnitTestRepository();
-            var data = repository.GetByIdOrNull(request.ObjectId);
+            var data = storage.UnitTests.GetOneOrNullById(request.ObjectId);
             return UnitTestCacheWriteObject.Create(data, request.AccountId);
         }
 
-        protected override void AddBatchObject(AccountDbContext accountDbContext, UnitTestCacheWriteObject writeObject)
+        protected override void AddBatchObjects(IStorage storage, UnitTestCacheWriteObject[] writeObjects)
         {
             throw new NotImplementedException();
         }
 
-        protected override void UpdateBatchObject(AccountDbContext accountDbContext, UnitTestCacheWriteObject unitTest, bool useCheck)
+        protected override void UpdateBatchObjects(IStorage storage, UnitTestCacheWriteObject[] unitTests, bool useCheck)
         {
-            if (unitTest.Response.LastSavedData == null)
+            var entities = unitTests.Select(unitTest =>
             {
-                throw new Exception("unitTest.Response.LastSavedData == null");
-            }
-            var dbEntity = unitTest.Response.LastSavedData.CreateEf();
-            accountDbContext.UnitTests.Attach(dbEntity);
+                var lastData = unitTest.Response.LastSavedData;
+                if (lastData == null)
+                {
+                    throw new Exception("unitTest.Response.LastSavedData == null");
+                }
+                var entity = lastData.CreateEf();
 
-            dbEntity.IsDeleted = unitTest.IsDeleted;
-            dbEntity.ComponentId = unitTest.ComponentId;
-            dbEntity.CreateDate = unitTest.CreateDate;
-            dbEntity.DisplayName = unitTest.DisplayName;
-            dbEntity.Enable = unitTest.Enable;
-            dbEntity.DisableComment = unitTest.DisableComment;
-            dbEntity.DisableToDate = unitTest.DisableToDate;
-            dbEntity.ErrorColor = unitTest.ErrorColor;
-            dbEntity.IsDeleted = unitTest.IsDeleted;
-            dbEntity.NextExecutionDate = unitTest.NextExecutionDate;
-            dbEntity.ParentEnable = unitTest.ParentEnable;
-            dbEntity.PeriodSeconds = unitTest.PeriodSeconds;
-            dbEntity.SimpleMode = unitTest.SimpleMode;
-            dbEntity.StatusDataId = unitTest.StatusDataId;
-            dbEntity.SystemName = unitTest.SystemName;
-            dbEntity.NoSignalColor = unitTest.NoSignalColor;
-            dbEntity.ActualTimeSecs = TimeSpanHelper.GetSeconds(unitTest.ActualTime);
-            dbEntity.LastExecutionDate = unitTest.LastExecutionDate;
-            dbEntity.AttempCount = unitTest.AttempCount;
-            dbEntity.AttempMax = unitTest.AttempMax;
+                if (lastData.ComponentId != unitTest.ComponentId)
+                    entity.ComponentId.Set(unitTest.ComponentId);
+
+                if (lastData.DisplayName != unitTest.DisplayName)
+                    entity.DisplayName.Set(unitTest.DisplayName);
+
+                if (lastData.Enable != unitTest.Enable)
+                    entity.Enable.Set(unitTest.Enable);
+
+                if (lastData.DisableComment != unitTest.DisableComment)
+                    entity.DisableComment.Set(unitTest.DisableComment);
+
+                if (lastData.DisableToDate != unitTest.DisableToDate)
+                    entity.DisableToDate.Set(unitTest.DisableToDate);
+
+                if (lastData.ErrorColor != unitTest.ErrorColor)
+                    entity.ErrorColor.Set(unitTest.ErrorColor);
+
+                if (lastData.IsDeleted != unitTest.IsDeleted)
+                    entity.IsDeleted.Set(unitTest.IsDeleted);
+
+                if (lastData.NextExecutionDate != unitTest.NextExecutionDate)
+                    entity.NextExecutionDate.Set(unitTest.NextExecutionDate);
+
+                if (lastData.ParentEnable != unitTest.ParentEnable)
+                    entity.ParentEnable.Set(unitTest.ParentEnable);
+
+                if (lastData.PeriodSeconds != unitTest.PeriodSeconds)
+                    entity.PeriodSeconds.Set(unitTest.PeriodSeconds);
+
+                if (lastData.SimpleMode != unitTest.SimpleMode)
+                    entity.SimpleMode.Set(unitTest.SimpleMode);
+
+                if (lastData.StatusDataId != unitTest.StatusDataId)
+                    entity.StatusDataId.Set(unitTest.StatusDataId);
+
+                if (lastData.SystemName != unitTest.SystemName)
+                    entity.SystemName.Set(unitTest.SystemName);
+
+                if (lastData.NoSignalColor != unitTest.NoSignalColor)
+                    entity.NoSignalColor.Set(unitTest.NoSignalColor);
+
+                if (lastData.ActualTime != unitTest.ActualTime)
+                    entity.ActualTimeSecs.Set(TimeSpanHelper.GetSeconds(unitTest.ActualTime));
+
+                if (lastData.LastExecutionDate != unitTest.LastExecutionDate)
+                    entity.LastExecutionDate.Set(unitTest.LastExecutionDate);
+
+                if (lastData.AttempCount != unitTest.AttempCount)
+                    entity.AttempCount.Set(unitTest.AttempCount);
+
+                if (lastData.AttempMax != unitTest.AttempMax)
+                    entity.AttempMax.Set(unitTest.AttempMax);
+
+                return entity;
+            }).ToArray();
+
+            storage.UnitTests.Update(entities);
         }
 
         public override int BatchCount

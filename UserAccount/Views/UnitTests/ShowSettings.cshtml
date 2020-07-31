@@ -1,11 +1,9 @@
 ﻿@using Zidium.Core.AccountsDb
-@using Zidium.Core.Api
-@using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Helpers
-@using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.UnitTests
-@using Zidium.UserAccount.Models.Controls;
+
 @model ShowSettingsModel
+
 @{
     string periodText = GuiHelper.TimeSpanAsString(Model.Period);
 }
@@ -58,31 +56,31 @@
 
     </div>
 
-    @if (Model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+    @if (Model.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
     {
         <text>@Html.Action("ShowSettingsHttp", new { id = Model.Id })</text>
     }
-    else if (Model.TypeId == SystemUnitTestTypes.PingTestType.Id)
+    else if (Model.TypeId == SystemUnitTestType.PingTestType.Id)
     {
         <text>@Html.Action("ShowSettingsPing", new { id = Model.Id })</text>
     }
-    else if (Model.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+    else if (Model.TypeId == SystemUnitTestType.TcpPortTestType.Id)
     {
         <text>@Html.Action("ShowSettingsTcpPort", new { id = Model.Id })</text>
     }
-    else if (Model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+    else if (Model.TypeId == SystemUnitTestType.DomainNameTestType.Id)
     {
         <text>@Html.Action("ShowSettingsDomain", new { id = Model.Id })</text>
     }
-    else if (Model.TypeId == SystemUnitTestTypes.SslTestType.Id)
+    else if (Model.TypeId == SystemUnitTestType.SslTestType.Id)
     {
         <text>@Html.Action("ShowSettingsSsl", new { id = Model.Id })</text>
     }
-    else if (Model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+    else if (Model.TypeId == SystemUnitTestType.SqlTestType.Id)
     {
         <text>@Html.Action("ShowSettingsSql", new { id = Model.Id })</text>
     }
-    else if (Model.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+    else if (Model.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
     {
         <text>@Html.Action("ShowSettingsVirusTotal", new { id = Model.Id })</text>
     }

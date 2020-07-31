@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
@@ -14,7 +17,7 @@ using Zidium.UserAccount.Models.Events;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class EventsController : ContextController
+    public class EventsController : BaseController
     {
         /// <summary>
         /// Вывод списка событий
@@ -33,6 +36,8 @@ namespace Zidium.UserAccount.Controllers
             string dataType = null,
             string versionFrom = null)
         {
+            var storage = GetStorage();
+
             var model = new EventsListModel()
             {
                 ComponentId = componentId,
@@ -42,90 +47,47 @@ namespace Zidium.UserAccount.Controllers
                 Search = search,
                 FromDate = fromDate,
                 ToDate = toDate,
-                VersionFrom = versionFrom
+                VersionFrom = versionFrom,
+                Storage = storage
             };
 
-            IQueryable<Event> eventsQuery;
-
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-
+            Guid? ownerId = null;
             if (componentId.HasValue)
             {
-                eventsQuery = eventRepository.QueryAll(componentId.Value);
+                ownerId = componentId.Value;
             }
             else if (unitTestId.HasValue)
             {
-                model.UnitTest = CurrentAccountDbContext.GetUnitTestRepository().GetById(unitTestId.Value);
-                eventsQuery = eventRepository.QueryAll(unitTestId.Value);
+                model.UnitTest = storage.UnitTests.GetOneById(unitTestId.Value);
+                ownerId = unitTestId.Value;
             }
             else if (metricId.HasValue)
             {
-                model.Metric = CurrentAccountDbContext.GetMetricRepository().GetById(metricId.Value);
-                eventsQuery = eventRepository.QueryAll(metricId.Value);
-            }
-            else
-            {
-                if (componentTypeId.HasValue)
-                {
-                    // поиск по типу компонента
-                    var componentIds = componentRepository
-                        .QueryAll()
-                        .Where(t => t.ComponentTypeId == componentTypeId)
-                        .Select(t => t.Id)
-                        .ToArray();
-                    eventsQuery = eventRepository.QueryAllByComponentId(componentIds);
-                }
-                else
-                {
-                    //  все события аккаунта
-                    eventsQuery = eventRepository.QueryAllByAccount();
-                }
+                model.Metric = storage.Metrics.GetOneById(metricId.Value);
+                ownerId = metricId.Value;
             }
 
-            if (eventTypeId.HasValue)
-            {
-                eventsQuery = eventsQuery.Where(t => t.EventTypeId == eventTypeId.Value);
-            }
+            var categories = category.HasValue
+                ? new[] { category.Value }
+                : new[] { EventCategory.ApplicationError, EventCategory.ComponentEvent };
 
-            if (category.HasValue)
-            {
-                eventsQuery = eventsQuery.Where(t => t.Category == category.Value);
-            }
-            else
-            {
-                var categories = new[]
-                        {
-                            EventCategory.ApplicationError, 
-                            EventCategory.ComponentEvent
-                        };
-                eventsQuery = eventsQuery.Where(t => categories.Contains(t.Category));
-            }
+            var importanceLevels = model.Color.Checked ? color.GetSelectedEventImportances() : null;
+            var maxCount = dataType != "xml" ? 100 : 10000;
 
-            if (model.Color.Checked)
-            {
-                var importanceLevels = color.GetSelectedEventImportances();
-                eventsQuery = eventsQuery.Where(t => importanceLevels.Contains(t.Importance));
-            }
+            var events = storage.Events.Filter(
+                ownerId,
+                componentTypeId,
+                eventTypeId,
+                categories,
+                importanceLevels,
+                fromDate,
+                toDate,
+                search,
+                versionFrom,
+                maxCount
+                );
 
-            if (fromDate.HasValue)
-                eventsQuery = eventsQuery.Where(t => t.ActualDate >= fromDate.Value);
-
-            if (toDate.HasValue)
-                eventsQuery = eventsQuery.Where(t => t.StartDate <= toDate.Value);
-
-            if (!string.IsNullOrEmpty(search))
-                eventsQuery = eventsQuery.Where(t => t.Message != null && t.Message.Contains(search));
-
-            if (!string.IsNullOrEmpty(versionFrom))
-            {
-                var versionFromLong = VersionHelper.FromString(versionFrom) ?? -1;
-                eventsQuery = eventsQuery.Where(t => (t.VersionLong ?? long.MaxValue) > versionFromLong);
-            }
-
-            eventsQuery = eventsQuery.OrderByDescending(t => t.StartDate);
-
-            var eventsModel = eventsQuery.Select(t => new EventsListItemModel()
+            var eventsModel = events.Select(t => new EventsListItemModel()
             {
                 Id = t.Id,
                 Message = t.Message,
@@ -138,25 +100,22 @@ namespace Zidium.UserAccount.Controllers
                 ActualDate = t.ActualDate,
                 Count = t.Count,
                 JoinKey = t.JoinKeyHash
-            });
+            }).ToArray();
 
             model.Events = eventsModel;
 
-            model.Components = componentRepository
-                .QueryAllWithDeleted()
-                .ToArray()
+            var componentService = new ComponentService(storage);
+            model.Components = storage.Components.GetMany(model.Events.Select(t => t.OwnerId).Distinct().ToArray())
                 .Select(t => new EventsListComponentModel()
                 {
                     Id = t.Id,
                     DisplayName = t.DisplayName,
                     SystemName = t.SystemName,
-                    FullName = t.GetFullDisplayName()
+                    FullName = componentService.GetFullDisplayName(t)
                 })
                 .ToDictionary(t => t.Id, t => t);
 
-            var eventTypeRepository = CurrentAccountDbContext.GetEventTypeRepository();
-            model.EventTypes = eventTypeRepository
-                .QueryAllWithDeleted()
+            model.EventTypes = storage.EventTypes.GetMany(model.Events.Select(t => t.EventTypeId).Distinct().ToArray())
                 .Select(t => new EventsListEventTypeModel()
                 {
                     Id = t.Id,
@@ -166,37 +125,36 @@ namespace Zidium.UserAccount.Controllers
                     Category = t.Category
                 })
                 .ToDictionary(t => t.Id, t => t);
-            
 
             if (dataType == "xml")
             {
-                var xmlEvents = model.GetXmlEvents(CurrentAccountDbContext);
+                var xmlEvents = GetXmlEvents(model, GetStorage());
                 return new ActionXmlFileResult(xmlEvents, "events.xml");
             }
 
             return View(model);
         }
-        
+
         /// <summary>
         /// Вывод полной информации о событии
         /// </summary>
         public ActionResult Show(Guid id)
         {
             var model = new ShowEventModel();
-            model.Init(id, CurrentUser, CurrentAccountDbContext);
+            model.Init(id, CurrentUser, GetStorage());
             return View(model);
         }
 
-        protected void CheckEditingPermissions(EventType eventType)
+        protected void CheckEditingPermissions(EventTypeForRead eventType)
         {
             if (eventType.IsSystem)
-                throw new CantEditSystemObjectException(eventType.Id, Naming.EventType);
+                throw new UserFriendlyException("Нельзя изменять системный тип события");
         }
 
         [CanEditAllData]
         public ActionResult ChangeImportance(Guid id)
         {
-            var eventObj = GetEventById(id);
+            var eventObj = GetStorage().Events.GetOneById(id);
             var model = new ChangeImportanceModel()
             {
                 EventId = id,
@@ -213,7 +171,7 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                var eventType = GetEventTypeById(model.EventTypeId);
+                var eventType = GetStorage().EventTypes.GetOneById(model.EventTypeId);
                 if (model.EventTypeId == Guid.Empty)
                 {
                     throw new UserFriendlyException("Не удалось получить ИД типа события");
@@ -259,14 +217,18 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult GetEventRowProperties(Guid id)
         {
-            var eventObj = GetEventById(id);
-            return View(eventObj);
+            var model = new GetEventRowPropertiesModel()
+            {
+                Event = GetStorage().Events.GetOneById(id),
+                Properties = GetStorage().EventProperties.GetByEventId(id)
+            };
+            return View(model);
         }
 
         [CanEditAllData]
         public ActionResult Add(Guid componentId, string returnUrl)
         {
-            var component = GetComponentById(componentId);
+            var component = GetStorage().Components.GetOneById(componentId);
             var model = new AddEventModel()
             {
                 ComponentId = component.Id,
@@ -283,11 +245,10 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                var component = GetComponentById(model.ComponentId);
                 var client = GetDispatcherClient();
                 var response = client.SendEvent(CurrentUser.AccountId, new SendEventData()
                 {
-                    ComponentId = component.Id,
+                    ComponentId = model.ComponentId,
                     TypeSystemName = model.EventType,
                     TypeDisplayName = model.EventType,
                     Message = model.Message,
@@ -317,12 +278,12 @@ namespace Zidium.UserAccount.Controllers
                 period = ReportPeriod.Day;
             }
             model.PeriodRange = ReportPeriodHelper.GetRange(period.Value);
-            model.Load(CurrentUser.AccountId, CurrentAccountDbContext);
+            model.Load(CurrentUser.AccountId, GetStorage());
             return View(model);
         }
 
         public ActionResult ErrorStatictics(
-            ReportPeriod? period, 
+            ReportPeriod? period,
             Guid? componentId,
             ErrorStatisticsModel.ShowMode? mode)
         {
@@ -330,20 +291,97 @@ namespace Zidium.UserAccount.Controllers
             {
                 ComponentId = componentId,
                 Period = period ?? ReportPeriod.Day,
-                Mode  = mode ?? ErrorStatisticsModel.ShowMode.NotProcessed
+                Mode = mode ?? ErrorStatisticsModel.ShowMode.NotProcessed
             };
-            model.LoadData(CurrentUser.AccountId, CurrentAccountDbContext);
+            model.LoadData(CurrentUser.AccountId, GetStorage());
             return View(model);
         }
 
+        // TODO Convert to normal method
         public ActionResult GetDefectControlHtml(Guid eventTypeId)
         {
-            var eventType = GetEventTypeById(eventTypeId);
-            var html = RazorHelper.GetViewAsString("~/Views/Defects/DefectControl.cshtml", eventType);
+            var eventType = GetStorage().EventTypes.GetOneById(eventTypeId);
+            var defect = eventType.DefectId != null ? GetStorage().Defects.GetOneById(eventType.DefectId.Value) : null;
+            var lastChange = defect != null ? GetStorage().DefectChanges.GetLastByDefectId(defect.Id) : null;
+
+            var model = new Models.Defects.DefectControlModel()
+            {
+                EventType = eventType,
+                Defect = defect,
+                LastChange = lastChange
+            };
+
+            var html = RazorHelper.GetViewAsString("~/Views/Defects/DefectControl.cshtml", model);
             return GetSuccessJsonResponse(new
             {
                 html = html
             });
+        }
+
+        // TODO Move to controller
+        private EventXmlData[] GetXmlEvents(EventsListModel model, IStorage storage)
+        {
+            // загрузим все свойства
+            var eventIdArray = model.Events.Select(x => x.Id).ToArray();
+
+            var allProperties = storage.EventProperties.GetByEventIds(eventIdArray);
+
+            var eventPropertiesGroups = allProperties
+                .GroupBy(x => x.EventId)
+                .ToDictionary(x => x.Key, x => x.ToArray());
+
+            var events = new List<EventXmlData>();
+            foreach (var item in model.Events)
+            {
+                // тип события
+                EventsListEventTypeModel eventType = null;
+                model.EventTypes.TryGetValue(item.EventTypeId, out eventType);
+                if (eventType == null)
+                {
+                    continue;
+                }
+
+                // компонент
+                EventsListComponentModel component = null;
+                model.Components.TryGetValue(item.OwnerId, out component);
+                if (component == null)
+                {
+                    continue;
+                }
+
+                var eventObj = new EventXmlData()
+                {
+                    Id = item.Id,
+                    EventTypeId = eventType.Id,
+                    Count = item.Count,
+                    ActualDate = item.ActualDate,
+                    EndDate = item.EndDate,
+                    EventTypeDisplayName = eventType.DisplayName,
+                    EventTypeSystemName = eventType.SystemName,
+                    JoinKeyHash = item.JoinKey,
+                    Message = item.Message,
+                    Category = item.Category.ToString(),
+                    StartDate = item.StartDate,
+                    TypeCode = eventType.Code,
+                    OwnerId = item.OwnerId,
+                    ComponentId = component.Id,
+                    ComponentSystemName = component.SystemName,
+                    ComponentDisplayName = component.DisplayName
+                };
+
+                EventPropertyForRead[] eventProperties = null;
+                if (eventPropertiesGroups.TryGetValue(eventObj.Id, out eventProperties))
+                {
+                    eventObj.Properties = eventProperties.Select(x => new EventPropertyXml()
+                    {
+                        Key = x.Name,
+                        Type = x.DataType.ToString(),
+                        Value = x.Value
+                    }).ToArray();
+                }
+                events.Add(eventObj);
+            }
+            return events.ToArray();
         }
 
         // Для unit-тестов

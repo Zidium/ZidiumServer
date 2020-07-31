@@ -1,6 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models
@@ -13,7 +12,11 @@ namespace Zidium.UserAccount.Models
         
         public Guid? ComponentTypeId { get; set; }
 
+        public string ComponentTypeDisplayName { get; set; }
+
         public Guid? ComponentId { get; set; }
+
+        public string ComponentDisplayName { get; set; }
 
         public SubscriptionObject Object { get; set; }
         

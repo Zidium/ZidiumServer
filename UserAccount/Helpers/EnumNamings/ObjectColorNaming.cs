@@ -1,4 +1,4 @@
-﻿using Zidium.Core.Common;
+﻿using Zidium.Storage;
 
 namespace Zidium.UserAccount.Helpers
 {

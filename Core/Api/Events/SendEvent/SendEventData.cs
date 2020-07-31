@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {
@@ -61,7 +62,8 @@ namespace Zidium.Core.Api
         /// Расширенные свойства
         /// </summary>
         public List<ExtentionPropertyDto> Properties { get; set; }
-
+                      
+        // TODO Move to extension type
         public long GetSize()
         {
             long size = DataSizeHelper.DbEventRecordOverhead;

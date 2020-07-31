@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -14,8 +16,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -23,8 +26,8 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
             return View(model);
         }
 
@@ -47,8 +50,7 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(model.Id.Value, GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
         }
@@ -56,7 +58,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
             return View(model);
         }
 
@@ -70,50 +72,54 @@ namespace Zidium.UserAccount.Controllers
 
             model.Period = TimeSpan.FromDays(1);
 
-            var unitTest = SaveSimpleCheck(model);
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
+            return GetSuccessJsonResponse(unitTestId);
         }
-
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
-        {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            return unitTestRepository.QueryAll()
-                .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.DomainNameTestType.Id && t.DomainNamePaymentPeriodRule != null && t.DomainNamePaymentPeriodRule.Domain == model.Domain && t.IsDeleted == false);
-        }
-
 
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Оплата домена " + model.Domain;
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.DomainNamePaymentPeriodRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                unitTest.DomainNamePaymentPeriodRule = new UnitTestDomainNamePaymentPeriodRule()
+                var rule = storage.DomainNamePaymentPeriodRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
                 {
-                    AlarmDaysCount = 14,
-                    WarningDaysCount = 30
-                };
+                    var newRule = new UnitTestDomainNamePaymentPeriodRuleForAdd()
+                    {
+                        UnitTestId = unitTestId,
+                        AlarmDaysCount = 14,
+                        WarningDaysCount = 30
+                    };
+                    storage.DomainNamePaymentPeriodRules.Add(newRule);
+                }
+
+                var ruleForUpdate = new UnitTestDomainNamePaymentPeriodRuleForUpdate(unitTestId);
+                ruleForUpdate.Domain.Set(model.Domain);
+                storage.DomainNamePaymentPeriodRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            unitTest.DomainNamePaymentPeriodRule.Domain = model.Domain;
         }
 
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            model.Domain = unitTest.DomainNamePaymentPeriodRule.Domain;
+            var rule = storage.DomainNamePaymentPeriodRules.GetOneByUnitTestId(unitTest.Id);
+            model.Domain = rule.Domain;
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.DomainNameTestType.Id;
+            return SystemUnitTestType.DomainNameTestType.Id;
         }
 
 
@@ -122,7 +128,7 @@ namespace Zidium.UserAccount.Controllers
         public DomainNamePaymentPeriodChecksController() { }
 
         public DomainNamePaymentPeriodChecksController(Guid accountId, Guid userId) : base(accountId, userId) { }
-        
+
         protected override string GetComponentSystemName(EditSimpleModel model)
         {
             return ComponentHelper.GetSystemNameByHost(model.Domain);

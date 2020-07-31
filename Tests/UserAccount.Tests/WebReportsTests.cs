@@ -5,8 +5,10 @@ using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Xunit;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
+using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
@@ -20,6 +22,7 @@ namespace Zidium.UserAccount.Tests
             var user = TestHelper.GetAccountAdminUser(account.Id);
             var component = account.CreateRandomComponentControl();
             var dispatcher = DispatcherHelper.GetDispatcherService();
+            var yesterdayDate = DateTime.Now.AddDays(-1);
 
             // Отправим событие о запуске вчера
             var eventType = TestHelper.GetOrCreateEventType(
@@ -33,7 +36,7 @@ namespace Zidium.UserAccount.Tests
                 Data = new SendEventData()
                 {
                     ComponentId = component.Info.Id,
-                    StartDate = DateTime.Now.AddDays(-1),
+                    StartDate = yesterdayDate,
                     TypeSystemName = eventType.SystemName,
                     Category = EventCategory.ComponentEvent,
                     Version = "1.2.3.4",
@@ -83,7 +86,7 @@ namespace Zidium.UserAccount.Tests
             // Проверим отчёт без фильтров
             using (var controller = new ReportsController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Starts(component.Type.Info.Id);
+                var result = (ViewResultBase)controller.Starts(component.Type.Info.Id, fromDate: GuiHelper.GetUrlDateTimeString(yesterdayDate));
                 var model = (StartsReportModel)result.Model;
 
                 Assert.Null(model.Error);

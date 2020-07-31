@@ -14,7 +14,7 @@ namespace Zidium.Core.ConfigDb
         /// <summary>
         /// Обновление аккаунта
         /// </summary>
-        AccountInfo Update(UpdateAccountRequestData data);
+        void Update(UpdateAccountRequestData data);
 
         /// <summary>
         /// Получение аккаунта по системному имени

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {

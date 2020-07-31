@@ -1,7 +1,7 @@
-﻿@using System.ComponentModel.DataAnnotations
-@using Zidium.Core.Common
+﻿@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Controls
+
 @model dynamic
 
 @{
@@ -14,7 +14,7 @@
     }
     var placeholder = ViewData.ModelMetadata.Description ?? ViewData.ModelMetadata.DisplayName;
     var colClass = "smart-col-fields";
-    if (type == typeof(TimeSpan) || type == typeof(int) || type == typeof(DatabaseProviderType) || type == typeof(ObjectColor))
+    if (type == typeof(TimeSpan) || type == typeof(int) || type == typeof(SqlRuleDatabaseProviderType) || type == typeof(ObjectColor))
     {
         colClass += " smart-col-fixed";
     }
@@ -78,7 +78,7 @@
                 {
                     @Html.TimeSelector(m => m)
                 }
-                else if (ViewData.ModelMetadata.DataTypeName == DataType.Password.ToString())
+                else if (ViewData.ModelMetadata.DataTypeName == System.ComponentModel.DataAnnotations.DataType.Password.ToString())
                 {
                     @Html.PasswordFor(m => m, new { @class = "form-control", placeholder = @placeholder })
                 }

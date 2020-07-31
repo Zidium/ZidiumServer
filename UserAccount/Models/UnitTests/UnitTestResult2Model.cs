@@ -1,47 +1,67 @@
-﻿using Zidium.Core.AccountsDb;
+﻿using System;
+using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
     public class UnitTestResult2Model
     {
-        public UnitTest UnitTest { get; private set; }        
-        
-        public Event[] Statuses { get; set; }
+        public UnitTestForRead UnitTest { get; private set; }        
 
-        public void Init(UnitTest unitTest, Event[] statuses)
+        public UnitTestTypeForRead UnitTestType { get; set; }
+        
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs;
+
+        public ComponentForRead Component;
+
+        public DateTime Now;
+
+        public BulbForRead UnitTestBulb;
+
+        public string LastRunErrorMessage;
+
+        // TODO Move to controller
+        public void Init(UnitTestForRead unitTest)
         {
             UnitTest = unitTest;
-            Statuses = statuses;
         }
 
+        // TODO Move to controller
         public string PageTitle
         {
             get
             {
-                UnitTestType type = UnitTest.Type;
-                if (type.IsSystem == false)
+                if (!UnitTestType.IsSystem)
                 {
                     return "Пользовательская проверка: " + UnitTest.DisplayName;
                 }
-                if (type.Id == SystemUnitTestTypes.HttpUnitTestType.Id)
+                if (UnitTestType.Id == SystemUnitTestType.HttpUnitTestType.Id)
                 {
                     return "Проверка HTTP: " + UnitTest.DisplayName;
                 }
-                if (type.Id == SystemUnitTestTypes.SqlTestType.Id)
+                if (UnitTestType.Id == SystemUnitTestType.SqlTestType.Id)
                 {
                     return "Проверка SQL: " + UnitTest.DisplayName;
                 }
-                if (type.Id == SystemUnitTestTypes.PingTestType.Id)
+                if (UnitTestType.Id == SystemUnitTestType.PingTestType.Id)
                 {
                     return "Проверка ping: " + UnitTest.DisplayName;
                 }
-                if (type.Id == SystemUnitTestTypes.SslTestType.Id)
+                if (UnitTestType.Id == SystemUnitTestType.SslTestType.Id)
                 {
                     return "Проверка SSL сертификата: " + UnitTest.DisplayName;
                 }
-                if (type.Id == SystemUnitTestTypes.DomainNameTestType.Id)
+                if (UnitTestType.Id == SystemUnitTestType.DomainNameTestType.Id)
                 {
                     return "Проверка домена: " + UnitTest.DisplayName;
+                }
+                if (UnitTestType.Id == SystemUnitTestType.TcpPortTestType.Id)
+                {
+                    return "Проверка TCP-порта: " + UnitTest.DisplayName;
+                }
+                if (UnitTestType.Id == SystemUnitTestType.VirusTotalTestType.Id)
+                {
+                    return "Проверка Virus Total: " + UnitTest.DisplayName;
                 }
                 return "Проверка: " + UnitTest.DisplayName;
             }

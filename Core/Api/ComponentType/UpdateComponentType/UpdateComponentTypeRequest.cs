@@ -1,6 +1,6 @@
 ﻿namespace Zidium.Core.Api
 {
-    public class UpdateComponentTypeRequest : RequestT<UpdateComponentTypeData>
+    public class UpdateComponentTypeRequest : RequestT<UpdateComponentTypeRequestData>
     {
     }
 }

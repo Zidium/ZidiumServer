@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {
@@ -23,7 +24,7 @@ namespace Zidium.Core.Api
         /// <summary>
         /// Уровни важности. Если не заполнено, то не учитывается в поиске.
         /// </summary>
-        public List<EventImportance> Importance { get; set; }
+        public EventImportance[] Importance { get; set; }
 
         /// <summary>
         /// Системное имя типа
@@ -45,5 +46,6 @@ namespace Zidium.Core.Api
         /// Категория события
         /// </summary>
         public EventCategory? Category { get; set; }
+
     }
 }

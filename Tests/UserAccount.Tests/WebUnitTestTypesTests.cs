@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Web.Mvc;
 using Xunit;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -22,7 +22,7 @@ namespace Zidium.UserAccount.Tests
             // Проверим список без фильтров
             using (var controller = new UnitTestTypesController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index();
+                var result = (ViewResultBase)controller.Index(unitTestType.Id.ToString());
                 var model = (UnitTestTypeListModel)result.Model;
                 Assert.True(model.Items.Any(t => t.Id == unitTestType.Id));
             }
@@ -147,7 +147,7 @@ namespace Zidium.UserAccount.Tests
             // Проверим, что тип есть в списке
             using (var controller = new UnitTestTypesController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index();
+                var result = (ViewResultBase)controller.Index(unitTestType.Id.ToString());
                 var listModel = (UnitTestTypeListModel)result.Model;
                 Assert.True(listModel.Items.Any(t => t.Id == unitTestType.Id));
             }
@@ -168,7 +168,7 @@ namespace Zidium.UserAccount.Tests
             // Проверим, что типа нет в списке
             using (var controller = new UnitTestTypesController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index();
+                var result = (ViewResultBase)controller.Index(unitTestType.Id.ToString());
                 var listModel = (UnitTestTypeListModel)result.Model;
                 Assert.False(listModel.Items.Any(t => t.Id == unitTestType.Id));
             }

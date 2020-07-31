@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {

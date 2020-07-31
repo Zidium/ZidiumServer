@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
@@ -14,31 +15,50 @@ using Zidium.UserAccount.Models.Metrics;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class MetricsController : ContextController
+    public class MetricsController : BaseController
     {
         public ActionResult Show(Guid id)
         {
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = metricRepository.GetById(id);
+            var metric = GetStorage().Metrics.GetOneById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
+            var component = GetStorage().Components.GetOneById(metric.ComponentId);
+            var bulb = GetStorage().Bulbs.GetOneById(metric.StatusDataId);
+            var componentService = new ComponentService(GetStorage());
 
-            var storageContext = CurrentAccountDbContext;
-            var metricHistoryRepository = storageContext.GetMetricHistoryRepository();
-            var values = metricHistoryRepository.QueryAllByMetricType(metric.ComponentId, metric.MetricTypeId)
-                .OrderByDescending(t => t.BeginDate)
-                .Take(ShowModel.LastValuesCountMax)
-                .ToList();
+            var values = GetStorage().MetricHistory.GetLast(metric.ComponentId, metric.MetricTypeId, ShowModel.LastValuesCountMax);
 
-            var actualTimeSecs = metric.ActualTimeSecs ?? metric.MetricType.ActualTimeSecs;
+            var actualTimeSecs = metric.ActualTimeSecs ?? metricType.ActualTimeSecs;
             var model = new ShowModel()
             {
-                Metric = metric,
-                ConditionRed = metric.ConditionAlarm ?? metric.MetricType.ConditionAlarm ?? "не задано",
-                ConditionYellow = metric.ConditionWarning ?? metric.MetricType.ConditionWarning ?? "не задано",
-                ConditionGreen = metric.ConditionSuccess ?? metric.MetricType.ConditionSuccess ?? "не задано",
-                ElseColor = metric.ConditionElseColor ?? metric.MetricType.ConditionElseColor,
-                NoSignalColor = metric.NoSignalColor ?? metric.MetricType.NoSignalColor,
+                Metric = new ShowModel.MetricInfo()
+                {
+                    Id = metric.Id,
+                    MetricTypeId = metric.MetricTypeId,
+                    DisplayName = metricType.DisplayName,
+                    Value = metric.Value,
+                    Component = new ShowModel.ComponentInfo()
+                    {
+                        Id = component.Id,
+                        FullName = componentService.GetFullDisplayName(component)
+                    },
+                    Bulb = new ShowModel.BulbInfo()
+                    {
+                        Status = bulb.Status,
+                        ActualDate = bulb.ActualDate,
+                        StartDate = bulb.StartDate,
+                        Count = bulb.Count,
+                        Duration = bulb.GetDuration(Now()),
+                        EndDate = bulb.EndDate
+                    }
+                },
+                ConditionRed = metric.ConditionAlarm ?? metricType.ConditionAlarm ?? "не задано",
+                ConditionYellow = metric.ConditionWarning ?? metricType.ConditionWarning ?? "не задано",
+                ConditionGreen = metric.ConditionSuccess ?? metricType.ConditionSuccess ?? "не задано",
+                ElseColor = metric.ConditionElseColor ?? metricType.ConditionElseColor,
+                NoSignalColor = metric.NoSignalColor ?? metricType.NoSignalColor,
                 ActualInterval = actualTimeSecs.HasValue ? TimeSpan.FromSeconds(actualTimeSecs.Value) : (TimeSpan?)null,
-                Values = values
+                Values = values,
+                MetricBreadCrumbs = MetricBreadCrumbsModel.Create(metric.Id, GetStorage())
             };
 
             return View(model);
@@ -54,21 +74,18 @@ namespace Zidium.UserAccount.Controllers
             };
             if (id.HasValue)
             {
-                var metric = GetMetricById(id.Value);
-                if (metric != null)
-                {
-                    model.Metric = metric;
-                    model.MetricType = metric.MetricType;
-                    model.Id = metric.Id;
-                    model.ComponentId = metric.ComponentId;
-                    model.MetricTypeId = metric.MetricTypeId;
-                    model.ConditionRed = metric.ConditionAlarm;
-                    model.ConditionYellow = metric.ConditionWarning;
-                    model.ConditionGreen = metric.ConditionSuccess;
-                    model.ElseColor = ColorStatusSelectorValue.FromColor(metric.ConditionElseColor);
-                    model.ActualTime = TimeSpanHelper.FromSeconds(metric.ActualTimeSecs);
-                }
+                var metric = GetStorage().Metrics.GetOneById(id.Value);
+                model.Id = metric.Id;
+                model.ComponentId = metric.ComponentId;
+                model.MetricTypeId = metric.MetricTypeId;
+                model.ConditionRed = metric.ConditionAlarm;
+                model.ConditionYellow = metric.ConditionWarning;
+                model.ConditionGreen = metric.ConditionSuccess;
+                model.ElseColor = ColorStatusSelectorValue.FromColor(metric.ConditionElseColor);
+                model.ActualTime = TimeSpanHelper.FromSeconds(metric.ActualTimeSecs);
             }
+            RestoreEditModel(model);
+
             return View(model);
         }
 
@@ -77,15 +94,16 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(EditModel model)
         {
+            RestoreEditModel(model);
+
             if (!ModelState.IsValid)
                 return View(model);
 
             try
             {
-                var component = GetComponentById(model.ComponentId.Value);
                 if (model.Id == null)
                 {
-                    var oldMetric = component.Metrics.FirstOrDefault(x => x.IsDeleted == false && x.MetricTypeId == model.MetricTypeId);
+                    var oldMetric = GetStorage().Metrics.GetByComponentId(model.ComponentId.Value).FirstOrDefault(x => x.MetricTypeId == model.MetricTypeId);
                     if (oldMetric != null)
                     {
                         ModelState.AddModelError("MetricTypeId", "Метрика данного типа уже есть у компонента");
@@ -113,7 +131,7 @@ namespace Zidium.UserAccount.Controllers
                 }
                 else
                 {
-                    var metricType = GetMetricTypeById(model.MetricTypeId.Value);
+                    var metricType = GetStorage().MetricTypes.GetOneById(model.MetricTypeId.Value);
                     var createData = new CreateMetricRequestData()
                     {
                         ComponentId = model.ComponentId.Value,
@@ -138,40 +156,44 @@ namespace Zidium.UserAccount.Controllers
             catch (UserFriendlyException exception)
             {
                 SetCommonError(exception);
-                if (model.Id.HasValue)
-                {
-                    model.Metric = GetMetricById(model.Id.Value);
-                }
                 return View(model);
+            }
+        }
+
+        private void RestoreEditModel(EditModel model)
+        {
+            if (model.Id.HasValue)
+            {
+                if (model.MetricTypeId.HasValue)
+                    model.MetricType = GetStorage().MetricTypes.GetOneById(model.MetricTypeId.Value);
+                model.MetricBreadCrumbs = MetricBreadCrumbsModel.Create(model.Id.Value, GetStorage());
             }
         }
 
         public ActionResult Values(Guid? metricTypeId, Guid? componentId, ColorStatusSelectorValue color)
         {
-            var repository = CurrentAccountDbContext.GetMetricRepository();
-            var query = repository.QueryAll()
-                .Include("Component")
-                .Include("MetricType");
+            var statuses = color.Checked ? color.GetSelectedMonitoringStatuses() : null;
 
-            if (metricTypeId.HasValue)
-                query = query.Where(t => t.MetricTypeId == metricTypeId.Value);
-
-            if (componentId.HasValue)
-                query = query.Where(t => t.ComponentId == componentId.Value);
-            
-            if (color.Checked)
-            {
-                var colors = color.GetSelectedMonitoringStatuses();
-                query = query.Where(t => colors.Contains(t.Bulb.Status));
-            }
-            query = query.OrderBy(t => t.Component.DisplayName).ThenBy(t => t.MetricType.DisplayName);
+            var metrics = GetStorage().Metrics.Filter(metricTypeId, componentId, statuses, 100);
+            var metricTypes = GetStorage().MetricTypes.GetMany(metrics.Select(t => t.MetricTypeId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
+            var bulbs = GetStorage().Bulbs.GetMany(metrics.Select(t => t.StatusDataId).ToArray()).ToDictionary(a => a.Id, b => b);
 
             var model = new ValuesModel()
             {
                 Color = color,
                 MetricTypeId = metricTypeId,
                 ComponentId = componentId,
-                Items = query
+                Items = metrics.Select(t => new ValuesModel.MetricInfo()
+                {
+                    Id = t.Id,
+                    Value = t.Value,
+                    DisplayName = metricTypes[t.MetricTypeId].DisplayName,
+                    Status = bulbs[t.StatusDataId].Status,
+                    ActualDate = t.ActualDate,
+                    BeginDate = t.BeginDate,
+                    ComponentId = t.ComponentId,
+                    ComponentBreadCrumbs = ComponentBreadCrumbsModel.Create(t.ComponentId, GetStorage())
+                }).ToArray()
             };
 
             return View(model);
@@ -180,11 +202,13 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var metric = GetMetricById(id);
+            var metric = GetStorage().Metrics.GetOneById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
+
             var model = new DeleteConfirmationAjaxModel()
             {
                 Title = "Удаление метрики",
-                Message = "Вы действительно хотите удалить метрику " + metric.MetricType.SystemName + "?",
+                Message = "Вы действительно хотите удалить метрику " + metricType.DisplayName + "?",
             };
             return View("Dialogs/DeleteConfirmationAjax", model);
         }
@@ -265,11 +289,13 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult SetActualValue(Guid id)
         {
-            var metric = GetMetricById(id);
+            var metric = GetStorage().Metrics.GetOneById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
+
             var model = new SetActualValueModel()
             {
                 Id = metric.Id,
-                MetricTypeName = metric.MetricType.DisplayName
+                MetricTypeName = metricType.DisplayName
             };
             return View(model);
         }
@@ -280,7 +306,9 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                var metric = GetMetricById(model.Id);
+                var metric = GetStorage().Metrics.GetOneById(model.Id);
+                var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
+
                 var client = GetDispatcherClient();
 
                 // парсим число
@@ -300,7 +328,7 @@ namespace Zidium.UserAccount.Controllers
                 var data = new SendMetricRequestData()
                 {
                     ComponentId = metric.ComponentId,
-                    Name = metric.MetricType.SystemName,
+                    Name = metricType.SystemName,
                     Value = value
                 };
                 if (model.ActualTime.HasValue)
@@ -320,11 +348,13 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult DeleteAjax(Guid id)
         {
-            var metric = GetMetricById(id);
+            var metric = GetStorage().Metrics.GetOneById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
+
             var model = new DeleteDialogAjaxModel()
             {
                 Id = metric.Id,
-                Message = "Вы действительно хотите удалить метрику " + metric.MetricType.DisplayName + "?"
+                Message = "Вы действительно хотите удалить метрику " + metricType.DisplayName + "?"
             };
             return PartialView("Dialogs/DeleteDialogAjaxNew", model);
         }
@@ -345,10 +375,9 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult DisableAjax(Guid id)
         {
-            var metric = GetMetricById(id);
             var model = new DisableDialogAjaxModel()
             {
-                Id = metric.Id,
+                Id = id,
                 Message = "На какое время выключить метрику?",
                 Interval = DisableDialogAjaxModel.DisableInterval.Forever
             };

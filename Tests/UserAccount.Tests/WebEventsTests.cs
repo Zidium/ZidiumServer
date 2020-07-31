@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Xunit;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models.Events;
@@ -56,13 +56,13 @@ namespace Zidium.UserAccount.Tests
             {
                 controller.ChangeImportance(model);
             }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var eventTypeRepository = accountContext.GetEventTypeRepository();
-                eventType = eventTypeRepository.GetById(model.EventTypeId);
-                Assert.Equal(model.EventTypeId, eventType.Id);
+                var dbEventType = accountContext.EventTypes.Find(model.EventTypeId);
+                Assert.NotNull(dbEventType);
+                Assert.Equal(model.EventTypeId, dbEventType.Id);
                 Assert.Equal(model.Version, event_.Version);
-                Assert.Equal(model.Importance, eventType.ImportanceForOld);
+                Assert.Equal(model.Importance, dbEventType.ImportanceForOld);
             }
         }
 

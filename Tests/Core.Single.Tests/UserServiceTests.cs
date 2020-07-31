@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using Xunit;
-using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.TestTools;
@@ -15,13 +14,12 @@ namespace Zidium.Core.Single.Tests
             // Удалим всех пользователей, кроме админа
             var account = TestHelper.GetTestAccount();
             var admin = TestHelper.GetAccountAdminUser(account.Id);
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                foreach (var existingUser in userRepository.QueryAll().ToArray())
+                foreach (var existingUser in context.Users.ToArray())
                 {
                     if (existingUser.Id != admin.Id)
-                        userRepository.Remove(existingUser);
+                        context.Users.Remove(existingUser);
                 }
             }
 
@@ -31,30 +29,24 @@ namespace Zidium.Core.Single.Tests
             var user = TestHelper.CreateTestUser(account.Id, password);
 
             // Проверим, что в аккаунте 1 админ
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                var adminUsers = userRepository.QueryAll().Where(t => t.Roles.Any(x => x.RoleId == RoleId.AccountAdministrators)).ToArray();
+                var adminUsers = context.Users.Where(t => t.Roles.Any(x => x.RoleId == SystemRole.AccountAdministrators.Id)).ToArray();
                 Assert.Equal(1, adminUsers.Length);
-                admin = adminUsers[0];
             }
 
             // Проверим, что нельзя удалить единственного админа
-            using (var contexts = new DatabasesContext())
+            var storage = TestHelper.GetStorage(account.Id);
+            var service = new UserService(storage);
+            Assert.Throws<CantDeleteLastAdminException>(() =>
             {
-                var service = new UserService(contexts);
-                Assert.Throws<CantDeleteLastAdminException>(() =>
-                {
-                    service.DeleteUser(service.GetById(account.Id, admin.Id), account.Id);
-                });
-                contexts.SaveChanges();
-            }
+                service.DeleteUser(admin.Id, account.Id);
+            });
 
             // Проверим, что админ остался
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                var existingUser = userRepository.QueryAll().FirstOrDefault(t => t.Id == admin.Id);
+                var existingUser = context.Users.FirstOrDefault(t => t.Id == admin.Id);
                 Assert.NotNull(existingUser);
             }
         }
@@ -65,42 +57,38 @@ namespace Zidium.Core.Single.Tests
             // Удалим всех пользователей, кроме админа
             var account = TestHelper.GetTestAccount();
             var admin = TestHelper.GetAccountAdminUser(account.Id);
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                foreach (var existingUser in userRepository.QueryAll().ToArray())
+                foreach (var existingUser in context.Users.ToArray())
                 {
                     if (existingUser.Id != admin.Id)
-                        userRepository.Remove(existingUser);
+                        context.Users.Remove(existingUser);
                 }
             }
 
             // Проверим, что в аккаунте 1 админ
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                var adminUsers = userRepository.QueryAll().Where(t => t.Roles.Any(x => x.RoleId == RoleId.AccountAdministrators)).ToArray();
+                var adminUsers = context.Users.Where(t => t.Roles.Any(x => x.RoleId == SystemRole.AccountAdministrators.Id)).ToArray();
                 Assert.Equal(1, adminUsers.Length);
-                admin = adminUsers[0];
             }
 
             // Проверим, что нельзя удалить права админа у единственного админа
-            using (var contexts = new DatabasesContext())
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var service = new UserService(contexts);
+                var storage = TestHelper.GetStorage(account.Id);
+                var service = new UserService(storage);
                 Assert.Throws<CantRemoveAdminRoleFromLastAdmin>(() =>
                 {
-                    var existingAdmin = service.GetById(account.Id, admin.Id);
-                    service.RemoveUserRole(existingAdmin, existingAdmin.Roles.First(t => t.RoleId == RoleId.AccountAdministrators), account.Id);
+                    var existingAdmin = context.Users.Find(admin.Id);
+                    service.RemoveUserRole(existingAdmin.Id, existingAdmin.Roles.First(t => t.RoleId == SystemRole.AccountAdministrators.Id).Id, account.Id);
                 });
-                contexts.SaveChanges();
             }
 
             // Проверим, что пользователь с правами администратора остался
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                var adminUsers = userRepository.QueryAll().Where(t => t.Roles.Any(x => x.RoleId == RoleId.AccountAdministrators)).ToArray();
+                var adminUsers = context.Users.Where(t => t.Roles.Any(x => x.RoleId == SystemRole.AccountAdministrators.Id)).ToArray();
                 Assert.Equal(1, adminUsers.Length);
             }
         }

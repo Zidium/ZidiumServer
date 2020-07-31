@@ -1,14 +1,9 @@
 ﻿@using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsLogModel
+
 <style>
-    .log-message {
-        max-height: 20px;
-        overflow-x: hidden;
-        overflow-y: hidden;
-        text-overflow: ellipsis;
-        white-space: pre-wrap;
-    }
     .log-details-btn {
         display: block;
         height: 16px;
@@ -16,15 +11,34 @@
         background: url("/Content/css-treeview.png") no-repeat;
         background-position: 0 0px;
     }
+
     .log-details-opened {
         background-position: -16px 0px !important;
     }
-    .log-details-row td{
+
+    .log-details-row td {
         border-top: 0 !important;
     }
+
+    #log-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+        #log-table .log-message-cell {
+            overflow-x: hidden;
+            overflow-y: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #log-table .log-message {
+            word-break: break-all;
+        }
 </style>
+
 <div id="component-logs-wrapper">
-    <a href="@Url.Action("Index", "Logs", new{componentId = Model.ComponentId})" 
+    <a href="@Url.Action("Index", "Logs", new{componentId = Model.ComponentId})"
        class="btn btn-default">Открыть</a>
     <div style="margin-top: 10px;">
         @if (Model.Messages.Length == 0)
@@ -34,7 +48,7 @@
         else
         {
             <p>Последние 10 записей:</p>
-            <table id="log-table" class="simpleTable" style="width: 100%">
+            <table id="log-table" class="simpleTable">
                 @foreach (var message in Model.Messages)
                 {
                     var css = GuiHelper.GetLogLevelTextCssClass(message.Level);
@@ -48,8 +62,8 @@
                         <td style="width: 150px;">
                             <span class="@css" style="white-space: nowrap;">@DateTimeHelper.GetRussianDateTime(message.Time)</span>
                         </td>
-                        <td>
-                            <div class="log-message @css">@message.Message</div>
+                        <td class="log-message-cell">
+                            <span class="log-message @css">@message.Message</span>
                         </td>
                     </tr>
                 }

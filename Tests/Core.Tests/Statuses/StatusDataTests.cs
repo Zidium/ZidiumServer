@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Linq;
 using Xunit;
-using Zidium.Api;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Statuses
 {
     public class StatusDataTests
     {
-        private void CheckReasonAndStatusEvents(Event reason, Event status)
-        {
-            Assert.Equal(reason.Id, status.FirstReasonEventId);
-            Assert.True(reason.StatusEvents.Any(x => x.Id == status.Id));
-            Assert.True(status.ReasonEvents.Any(x => x.Id == reason.Id));
-        }
-
         [Fact]
         public void Statuses()
         {
@@ -26,7 +19,7 @@ namespace Zidium.Core.Tests.Statuses
             account.SaveAllCaches();
 
             var error = componentControl.CreateApplicationError("Error", "error msg")
-                    .SetImportance(EventImportance.Success)
+                    .SetImportance(Zidium.Api.EventImportance.Success)
                     .SetJoinInterval(TimeSpan.FromHours(1));
 
             var response1 = error.Send();
@@ -39,7 +32,7 @@ namespace Zidium.Core.Tests.Statuses
             Guid eventId = response2.Data.EventId;
             account.SaveAllCaches();
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var component = accountDbContext.Components.Single(x => x.Id == componentControl.Info.Id);
                 // ошибка
@@ -55,8 +48,8 @@ namespace Zidium.Core.Tests.Statuses
                 Assert.Equal(eventsBulb.StatusEventId, eventObj.LastStatusEventId);
                 var eventsBulbStatus = accountDbContext.Events.Single(x => x.Id == eventsBulb.StatusEventId);
                 Assert.Equal(1, eventsBulbStatus.StatusEvents.Count);
-                Assert.Equal(eventsBulbStatus.StatusEvents.First().Category, Core.Api.EventCategory.ComponentInternalStatus);
-                Assert.Equal(eventsBulbStatus.ReasonEvents.First().Category, Core.Api.EventCategory.ApplicationError);
+                Assert.Equal(eventsBulbStatus.StatusEvents.First().Category, EventCategory.ComponentInternalStatus);
+                Assert.Equal(eventsBulbStatus.ReasonEvents.First().Category, EventCategory.ApplicationError);
                 Assert.Equal(eventsBulb.FirstEventId, eventsBulbStatus.ReasonEvents.First().Id);
                 Assert.True(eventsBulbStatus.FirstReasonEventId.HasValue);
                 Assert.True(eventsBulb.FirstEventId.HasValue);
@@ -92,5 +85,13 @@ namespace Zidium.Core.Tests.Statuses
 
             }
         }
+
+        private void CheckReasonAndStatusEvents(DbEvent reason, DbEvent status)
+        {
+            Assert.Equal(reason.Id, status.FirstReasonEventId);
+            Assert.True(reason.StatusEvents.Any(x => x.Id == status.Id));
+            Assert.True(status.ReasonEvents.Any(x => x.Id == reason.Id));
+        }
+
     }
 }

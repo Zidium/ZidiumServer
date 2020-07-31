@@ -3,8 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Xunit;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels;
@@ -36,17 +35,16 @@ namespace Zidium.UserAccount.Tests
             }
 
             // Посмотрим, как создалась проверка и правило
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.QueryAll()
+                var unitTest = accountContext.UnitTests
                     .FirstOrDefault(t => t.DomainNamePaymentPeriodRule != null && t.DomainNamePaymentPeriodRule.Domain == model.Domain);
 
                 Assert.NotNull(unitTest);
                 Assert.Equal(unitTest.ErrorColor, UnitTestResult.Alarm);
                 Assert.Equal(unitTest.NoSignalColor, ObjectColor.Gray);
                 Assert.Null(unitTest.ActualTimeSecs);
-                Assert.Equal(SystemUnitTestTypes.DomainNameTestType.Id, unitTest.TypeId);
+                Assert.Equal(SystemUnitTestType.DomainNameTestType.Id, unitTest.TypeId);
                 Assert.Equal((int)TimeSpan.FromDays(1).TotalSeconds, unitTest.PeriodSeconds);
                 Assert.Equal(30, unitTest.DomainNamePaymentPeriodRule.WarningDaysCount);
                 Assert.Equal(14, unitTest.DomainNamePaymentPeriodRule.AlarmDaysCount);
@@ -65,18 +63,17 @@ namespace Zidium.UserAccount.Tests
 
             model.Domain = Guid.NewGuid().ToString();
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 using (var controller = new DomainNamePaymentPeriodChecksController(account.Id, user.Id))
                 {
                     controller.EditSimple(model);
 
                     // Посмотрим, как изменилась проверка и правило
-                    var unitTestRepository = accountContext.GetUnitTestRepository();
-                    var unitTest = unitTestRepository.GetByIdOrNull(unitTestId);
+                    var unitTest = accountContext.UnitTests.Find(unitTestId);
 
                     Assert.NotNull(unitTest);
-                    Assert.Equal(SystemUnitTestTypes.DomainNameTestType.Id, unitTest.TypeId);
+                    Assert.Equal(SystemUnitTestType.DomainNameTestType.Id, unitTest.TypeId);
                     Assert.Equal((int)TimeSpan.FromDays(1).TotalSeconds, unitTest.PeriodSeconds);
                     Assert.Equal(model.Domain, unitTest.DomainNamePaymentPeriodRule.Domain);
 

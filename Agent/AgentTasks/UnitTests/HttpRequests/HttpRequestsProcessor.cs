@@ -6,10 +6,12 @@ using System.Text;
 using System.Threading;
 using NLog;
 using Zidium.Agent.AgentTasks.UnitTests.HttpRequests;
+using Zidium.Core.AccountDb;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.HttpRequests
 {
@@ -22,47 +24,55 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.HttpUnitTestType.Id;
+            return SystemUnitTestType.HttpUnitTestType.Id;
         }
 
-        protected override UnitTestExecutionInfo GetResult(Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+        protected override UnitTestExecutionInfo GetResult(
+            Guid accountId,
+            IStorage storage,
+            UnitTestForRead unitTest,
             ILogger logger,
             string accountName,
             CancellationToken token)
         {
-            var rules = unitTest.HttpRequestUnitTest.Rules
-                .Where(x => x.IsDeleted == false)
+            var rules = storage.HttpRequestUnitTestRules.GetByUnitTestId(unitTest.Id)
                 .OrderBy(x => x.SortNumber)
-                .ToList();
+                .ToArray();
 
-            logger.Debug("Найдено правил " + rules.Count);
-            if (rules.Count > 0)
+            if (logger.IsDebugEnabled)
+                logger.Debug("Найдено правил " + rules.Length);
+
+            if (rules.Length > 0)
             {
+                var httpRequestUnitTest = storage.HttpRequestUnitTests.GetOneByUnitTestId(unitTest.Id);
+
                 // Проверим наличие баннера, если это нужно
-                if (unitTest.HttpRequestUnitTest.LastBannerCheck == null ||
-                    unitTest.HttpRequestUnitTest.LastBannerCheck.Value <= DateTime.Now.AddHours(-24))
+                if (httpRequestUnitTest.LastBannerCheck == null ||
+                    httpRequestUnitTest.LastBannerCheck.Value <= DateTime.Now.AddHours(-24))
                 {
-                    var bannerResultData = CheckForBanner(accountId, accountDbContext, unitTest, logger);
+                    var bannerResultData = CheckForBanner(accountId, storage, unitTest, httpRequestUnitTest, logger);
 
                     if (bannerResultData != null)
                         return bannerResultData;
                 }
 
-                var resultData = new Core.Api.SendUnitTestResultRequestData();
-                resultData.Properties = new List<ExtentionPropertyDto>();
+                var resultData = new SendUnitTestResultRequestData
+                {
+                    Properties = new List<ExtentionPropertyDto>()
+                };
 
                 foreach (var rule in rules)
                 {
                     token.ThrowIfCancellationRequested();
 
-                    var ruleResult = ProcessRule(rule, logger, accountName);
+                    var ruleResult = ProcessRule(rule, logger, accountName, storage, unitTest);
 
                     if (ruleResult.ErrorCode == HttpRequestErrorCode.UnknownError)
                     {
                         // если произошла неизвестная ошибка, то не обновляем статус проверки
-                        logger.Debug("Выход из-за неизвестной ошибки");
+                        if (logger.IsDebugEnabled)
+                            logger.Debug("Выход из-за неизвестной ошибки");
+
                         return new UnitTestExecutionInfo()
                         {
                             IsNetworkProblem = true
@@ -70,21 +80,23 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     }
 
                     // обновим правило
-                    rule.LastRunErrorCode = ruleResult.ErrorCode;
-                    rule.LastRunTime = ruleResult.StartDate;
-                    rule.LastRunDurationMs = (int)(ruleResult.EndDate - ruleResult.StartDate).TotalMilliseconds;
-                    rule.LastRunErrorMessage = ruleResult.ErrorMessage;
+                    var ruleForUpdate = rule.GetForUpdate();
+                    ruleForUpdate.LastRunErrorCode.Set(ruleResult.ErrorCode);
+                    ruleForUpdate.LastRunTime.Set(ruleResult.StartDate);
+                    ruleForUpdate.LastRunDurationMs.Set((int)(ruleResult.EndDate - ruleResult.StartDate).TotalMilliseconds);
+                    ruleForUpdate.LastRunErrorMessage.Set(ruleResult.ErrorMessage);
+                    storage.HttpRequestUnitTestRules.Update(ruleForUpdate);
 
                     // сохраним информацию об ошибке
                     if (ruleResult.ErrorCode != HttpRequestErrorCode.Success)
                     {
                         resultData.Properties.AddValue("Rule", rule.DisplayName);
-                        resultData.Properties.AddValue("ErrorMessage", rule.LastRunErrorMessage);
-                        resultData.Properties.AddValue("ErrorCode", rule.LastRunErrorCode.ToString());
+                        resultData.Properties.AddValue("ErrorMessage", ruleResult.ErrorMessage);
+                        resultData.Properties.AddValue("ErrorCode", ruleResult.ErrorCode.ToString());
                         resultData.Properties.AddValue("RequestMethod", rule.Method.ToString());
                         resultData.Properties.AddValue("TimeoutMs", (rule.TimeoutSeconds ?? 0) * 1000);
 
-                        var duration = (int)((ruleResult.EndDate - ruleResult.StartDate).TotalMilliseconds);
+                        var duration = (int)(ruleResult.EndDate - ruleResult.StartDate).TotalMilliseconds;
                         resultData.Properties.AddValue("ExecutionTimeMs", duration);
 
                         if (ruleResult.Request != null)
@@ -102,10 +114,8 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                         }
 
                         resultData.Result = UnitTestResult.Alarm;
-                        var errorMessage = rule.DisplayName + ". " + rule.LastRunErrorMessage;
+                        var errorMessage = rule.DisplayName + ". " + ruleResult.ErrorMessage;
                         resultData.Message = errorMessage;
-
-                        accountDbContext.SaveChanges();
 
                         return new UnitTestExecutionInfo()
                         {
@@ -118,9 +128,6 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 resultData.Result = UnitTestResult.Success;
                 resultData.Message = "Успешно";
 
-                // сохраним изменения статусов правил
-                accountDbContext.SaveChanges();
-
                 return new UnitTestExecutionInfo()
                 {
                     ResultRequest = resultData
@@ -129,7 +136,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
 
             return new UnitTestExecutionInfo()
             {
-                ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                ResultRequest = new SendUnitTestResultRequestData()
                 {
                     Result = UnitTestResult.Unknown,
                     Message = "Укажите хотя бы один запрос (правило) для проверки"
@@ -137,7 +144,12 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             };
         }
 
-        protected HttpRequestResultInfo ProcessRule(HttpRequestUnitTestRule rule, ILogger logger, string accountName)
+        protected HttpRequestResultInfo ProcessRule(
+            HttpRequestUnitTestRuleForRead rule, 
+            ILogger logger,
+            string accountName, 
+            IStorage storage,
+            UnitTestForRead unitTest)
         {
             var processor = new HttpTestProcessor(logger);
             var inputData = new HttpTestInputData()
@@ -156,11 +168,13 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             {
                 inputData.Body = Encoding.UTF8.GetBytes(rule.Body);
             }
-            if (rule.Datas != null)
+
+            var ruleDatas = storage.HttpRequestUnitTestRuleDatas.GetByRuleId(rule.Id);
+            if (ruleDatas.Length > 0)
             {
                 // данные формы
-                var formDatas = rule.GetWebFormsDatas();
-                if (formDatas.Count > 0)
+                var formDatas = ruleDatas.GetWebFormsDatas();
+                if (formDatas.Length > 0)
                 {
                     var pars = new Dictionary<string, string>();
                     foreach (var formData in formDatas)
@@ -174,8 +188,8 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 }
 
                 // куки
-                var cookies = rule.GetRequestCookies();
-                if (cookies.Count > 0)
+                var cookies = ruleDatas.GetRequestCookies();
+                if (cookies.Length > 0)
                 {
                     CookieCollection cookieCollection = new CookieCollection();
                     foreach (var cookie in cookies)
@@ -187,8 +201,8 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 }
 
                 // заголовки
-                var headers = rule.GetRequestHeaders();
-                if (headers.Count > 0)
+                var headers = ruleDatas.GetRequestHeaders();
+                if (headers.Length > 0)
                 {
                     var pars = new Dictionary<string, string>();
                     foreach (var header in headers)
@@ -208,9 +222,10 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 Rule = rule,
                 StartDate = DateTime.Now
             };
+
             try
             {
-                HttpTestOutputData outputData = processor.Process(inputData);
+                var outputData = processor.Process(inputData);
                 result.StartDate = outputData.StartDate;
                 result.EndDate = outputData.EndDate;
                 result.ErrorCode = outputData.ErrorCode;
@@ -222,10 +237,10 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             }
             catch (Exception exception)
             {
-                exception.Data.Add("UnitTestId", rule.HttpRequestUnitTest.UnitTestId);
+                exception.Data.Add("UnitTestId", unitTest.Id);
                 exception.Data.Add("RuleId", rule.Id);
                 exception.Data.Add("RuleName", rule.DisplayName);
-                exception.Data.Add("UnitTestName", rule.HttpRequestUnitTest.UnitTest.DisplayName);
+                exception.Data.Add("UnitTestName", unitTest.DisplayName);
                 logger.Error(exception);
 
                 result.ErrorCode = HttpRequestErrorCode.UnknownError;
@@ -243,15 +258,19 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
 
         protected UnitTestExecutionInfo CheckForBanner(
             Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+            IStorage storage,
+            UnitTestForRead unitTest,
+            HttpRequestUnitTestForRead httpRequestUnitTest,
             ILogger logger)
         {
-            logger.Debug("Поиск баннера Zidium для проверки " + unitTest.DisplayName);
+            if (logger.IsDebugEnabled)
+                logger.Debug("Поиск баннера Zidium для проверки " + unitTest.DisplayName);
+
             UnitTestExecutionInfo result = null;
 
             // Из всех правил получим главные уникальные страницы сайтов
-            var urls = unitTest.HttpRequestUnitTest.Rules.Select(t =>
+            var rules = storage.HttpRequestUnitTestRules.GetByUnitTestId(unitTest.Id);
+            var urls = rules.Select(t =>
             {
                 var uri = new Uri(t.Url);
                 return uri.Scheme + @"://" + uri.Authority;
@@ -262,11 +281,15 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             string noBannerUrl = null;
             foreach (var url in urls)
             {
-                logger.Debug("Поиск баннера Zidium на странице " + url);
+                if (logger.IsDebugEnabled)
+                    logger.Debug("Поиск баннера Zidium на странице " + url);
+
                 try
                 {
                     var hasPageBanner = BannerHelper.FindBanner(url);
-                    logger.Debug("Результат: " + hasPageBanner + ", страница: " + url);
+
+                    if (logger.IsDebugEnabled)
+                        logger.Debug("Результат: " + hasPageBanner + ", страница: " + url);
 
                     if (!hasPageBanner)
                     {
@@ -277,7 +300,9 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 }
                 catch (Exception exception)
                 {
-                    logger.Debug("Ошибка проверки баннера " + url + ": " + exception.Message);
+                    if (logger.IsDebugEnabled)
+                        logger.Debug("Ошибка проверки баннера " + url + ": " + exception.Message);
+
                     noBannerUrl = url;
                     hasBanner = false;
                     break;
@@ -314,7 +339,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 else
                     logger.Info("Баннер Zidium подтверждён для проверки " + unitTest.DisplayName);
             }
-            accountDbContext.SaveChanges();
+
             return result;
         }
     }

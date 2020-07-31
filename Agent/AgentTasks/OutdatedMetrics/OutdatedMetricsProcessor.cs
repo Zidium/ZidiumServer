@@ -14,6 +14,8 @@ namespace Zidium.Agent.AgentTasks.OutdatedMetrics
 
         public int Count;
 
+        public int MaxUpdateCount = 100;
+
         public OutdatedMetricsProcessor(ILogger logger, CancellationToken cancellationToken)
         {
             Logger = logger;
@@ -51,19 +53,20 @@ namespace Zidium.Agent.AgentTasks.OutdatedMetrics
             {
                 data.CancellationToken.ThrowIfCancellationRequested();
 
-                const int maxCount = 100;
-                var response = dispatcher.CalculateMetrics(data.Account.Id, maxCount);
+                var response = dispatcher.CalculateMetrics(data.Account.Id, MaxUpdateCount);
                 if (response.Success)
                 {
                     var updateCount = response.Data.UpdateCount;
                     Interlocked.Add(ref Count, updateCount);
                     if (updateCount == 0)
                     {
-                        data.Logger.Trace("Обновлено статусов метрик: " + updateCount);
+                        if (data.Logger.IsTraceEnabled)
+                            data.Logger.Trace("Обновлено статусов метрик: " + updateCount);
                         return;
                     }
-                    data.Logger.Debug("Обновлено статусов метрик: " + updateCount);
-                    if (updateCount < maxCount)
+                    if (data.Logger.IsDebugEnabled)
+                        data.Logger.Debug("Обновлено статусов метрик: " + updateCount);
+                    if (updateCount < MaxUpdateCount)
                     {
                         return;
                     }

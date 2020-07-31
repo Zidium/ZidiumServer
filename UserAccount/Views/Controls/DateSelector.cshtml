@@ -33,7 +33,7 @@ else
         var control = $('#@textboxId');
         var hidden = $('#@Model.Name');
         var dateSelector = new DateSelector(control, hidden,
-            '@ContextController.MomentDateTimeDisplayFormat', '@ContextController.MomentDateTimeParamFormat', function () {
+            '@BaseController.MomentDateTimeDisplayFormat', '@BaseController.MomentDateTimeParamFormat', function () {
                 if ('@Model.AutoRefreshPage.ToString()' == 'True') {
                     document.location.href = SetQueryParamFromControlExact(document.location.href, control, '@Model.Name');
                 }

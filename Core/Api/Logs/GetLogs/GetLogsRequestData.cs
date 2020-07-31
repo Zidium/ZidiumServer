@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {
@@ -23,7 +23,7 @@ namespace Zidium.Core.Api
         /// <summary>
         /// Уровни важности. Если не заполнено, то не учитывается в поиске.
         /// </summary>
-        public List<LogLevel> Levels { get; set; }
+        public LogLevel[] Levels { get; set; }
 
         /// <summary>
         /// Контекст для поиска. Выполняется поиск сообщений, у которых контекст начинается с указанной строки
@@ -50,5 +50,6 @@ namespace Zidium.Core.Api
         /// Не может быть больше 1000.
         /// </summary>
         public int? MaxCount { get; set; }
+
     }
 }

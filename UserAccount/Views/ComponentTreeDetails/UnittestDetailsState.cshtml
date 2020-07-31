@@ -1,6 +1,7 @@
 ﻿@using Zidium.Core.AccountsDb
 @using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsStateModel
 
 <p>   
@@ -33,31 +34,31 @@
 <p>
     @if (Model.RuleData != null)
     {
-        if (Model.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+        if (Model.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
         {
             <span class="simple-text-value">Выполняет Http-запрос</span>
             <br/>
             <a target="_blank" href="@Model.RuleData">@Model.RuleData</a>
         }
-        else if (Model.TypeId == SystemUnitTestTypes.PingTestType.Id)
+        else if (Model.TypeId == SystemUnitTestType.PingTestType.Id)
         {
             <span class="simple-text-value">Выполняет Ping-запрос</span>
             <br/>
             <span>@Model.RuleData</span>
         }
-        else if (Model.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+        else if (Model.TypeId == SystemUnitTestType.DomainNameTestType.Id)
         {
             <span class="simple-text-value">Проверяет дату окончания регистрации домена</span>
             <br/>
             <a target="_blank" href="@Model.RuleData">@Model.RuleData</a>
         }
-        else if (Model.TypeId == SystemUnitTestTypes.SslTestType.Id)
+        else if (Model.TypeId == SystemUnitTestType.SslTestType.Id)
         {
             <span class="simple-text-value">Проверяет дату окончания Ssl-сертификата</span>
             <br/>
             <a target="_blank" href="@Model.RuleData">@Model.RuleData</a>
         }
-        else if (Model.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+        else if (Model.TypeId == SystemUnitTestType.SqlTestType.Id)
         {
             <span class="simple-text-value">Выполняет Sql-запрос</span>
             <br/>

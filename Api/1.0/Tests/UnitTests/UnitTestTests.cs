@@ -49,7 +49,7 @@ namespace ApiTests_1._0.UnitTests
                 Result = UnitTestResult.Success
             };
             var sendResponse = unitTest.SendResult(message);
-            Assert.True(sendResponse.Success);
+            sendResponse.Check();
 
             // 3 - запросим статус нашей проверки
             checkResponse = client.ApiService.GetUnitTestState(unitTestId);
@@ -130,7 +130,8 @@ namespace ApiTests_1._0.UnitTests
         }
 
         /// <summary>
-        /// Был баг = при отправке 2-х результатов проверки подряд у новой проверки создавался дубль в событиях (из-за того, что при создании результата не запоминалось его EventId)
+        /// Был баг = при отправке 2-х результатов проверки подряд у новой проверки создавался дубль в событиях
+        /// (из-за того, что при создании результата не запоминалось его EventId)
         /// </summary>
         [Fact]
         public void BugTest()

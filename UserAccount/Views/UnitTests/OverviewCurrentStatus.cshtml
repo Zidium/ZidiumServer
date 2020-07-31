@@ -1,12 +1,14 @@
-﻿@using Zidium.Core.Api
-@using Zidium.UserAccount.Helpers
+﻿@using Zidium.UserAccount.Helpers
 @using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Models.UnitTests
+
 @model OverviewCurrentStatusModel
+
 @{
-    string textCss = GuiHelper.GetComponentStatusTextCssClass(Model.Status);
-    string durationText = TimeSpanHelper.Get2UnitsString(Model.StatusDuration);
+    var durationText = TimeSpanHelper.Get2UnitsString(Model.StatusDuration);
 }
+
 <div class="tiles-box" style="display: flex; flex-direction:column;">
     <div style="flex: 1 0 auto;">
         <div class="tiles-box-header1">Текущий статус</div>
@@ -57,7 +59,7 @@
                 else
                 {
                     <button type="button" id="disableBtn" class="btn btn-default" data-ajax-url="@Url.Action("Disable", new { id = Model.UnitTestId })">
-                        <span class="glyphicon glyphicon-play-circle aria-hidden="true" style="margin-right: 10px;"></span>Выключить
+                        <span class="glyphicon glyphicon-play-circle" aria-hidden="true" style="margin-right: 10px;"></span>Выключить
                     </button>
                 }
             </div>

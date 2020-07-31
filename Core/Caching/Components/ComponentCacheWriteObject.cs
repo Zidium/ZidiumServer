@@ -2,6 +2,7 @@
 using System.Linq;
 using Zidium.Api.Others;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -46,7 +47,7 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Дата и время создания компонента
         /// </summary>
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; private set; }
 
         /// <summary>
         /// Отображаемое название компонента
@@ -126,7 +127,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public bool IsRoot
         {
-            get { return ComponentTypeId == SystemComponentTypes.Root.Id; }
+            get { return ComponentTypeId == SystemComponentType.Root.Id; }
         }
 
         /// <summary>
@@ -134,7 +135,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public bool IsFolder
         {
-            get { return ComponentTypeId == SystemComponentTypes.Folder.Id; }
+            get { return ComponentTypeId == SystemComponentType.Folder.Id; }
         }
 
         /// <summary>
@@ -178,29 +179,9 @@ namespace Zidium.Core.Caching
             }
         }
 
-        public Component CreateEf()
+        public ComponentForUpdate CreateEf()
         {
-            return new Component()
-            {
-                Id = Id,
-                CreatedDate = CreatedDate,
-                ComponentTypeId = ComponentTypeId,
-                DisableComment = DisableComment,
-                DisableToDate = DisableToDate,
-                DisplayName = DisplayName,
-                Enable = Enable,
-                IsDeleted = IsDeleted,
-                ParentEnable = ParentEnable,
-                ParentId = ParentId,
-                SystemName = SystemName,
-                Version = Version,
-                ExternalStatusId = ExternalStatusId,
-                InternalStatusId = InternalStatusId,
-                ChildComponentsStatusId = ChildComponentsStatusId,
-                EventsStatusId = EventsStatusId,
-                MetricsStatusId = MetricsStatusId,
-                UnitTestsStatusId = UnitTestsStatusId
-            };
+            return new ComponentForUpdate(Id);
         }
 
         public Guid[] GetAllStatusesIds()
@@ -216,7 +197,7 @@ namespace Zidium.Core.Caching
             };
         }
 
-        public static ComponentCacheWriteObject Create(Component component, Guid accountId)
+        public static ComponentCacheWriteObject Create(ComponentForRead component, Guid accountId, IStorage storage)
         {
             if (component == null)
             {
@@ -246,30 +227,28 @@ namespace Zidium.Core.Caching
             };
 
             // обновим ParentEnable
-            if (component.Parent != null)
+            if (component.ParentId != null)
             {
-                cache.ParentEnable = component.Parent.CanProcess;
+                var parent = storage.Components.GetOneById(component.ParentId.Value);
+                cache.ParentEnable = parent.CanProcess();
             }
 
             // загрузим детей
-            var childs = component.Childs
-                .Where(x => x.IsDeleted == false)
+            var childs = storage.Components.GetChilds(component.Id)
                 .Select(x => new CacheObjectReference(x.Id, x.SystemName))
                 .ToArray();
 
             cache.WriteChilds.AddRange(childs);
 
             // загрузим метрики
-            var metrics = component.Metrics
-                .Where(x => x.IsDeleted == false)
-                .Select(x => new CacheObjectReference(x.Id, x.MetricType.Id.ToString())) // могут быть проблемы из-за того, что в кэше и БД разное имя типа метрики
+            var metrics = storage.Metrics.GetByComponentId(component.Id)
+                .Select(x => new CacheObjectReference(x.Id, x.MetricTypeId.ToString())) // могут быть проблемы из-за того, что в кэше и БД разное имя типа метрики
                 .ToArray();
 
             cache.WriteMetrics.AddRange(metrics);
 
             // загрузим юнит-тесты
-            var unitTests = component.UnitTests
-                .Where(x => x.IsDeleted == false)
+            var unitTests = storage.UnitTests.GetByComponentId(component.Id)
                 .Select(x => new CacheObjectReference(x.Id, x.SystemName))
                 .ToArray();
 

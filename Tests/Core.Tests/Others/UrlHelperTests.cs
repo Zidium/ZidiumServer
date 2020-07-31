@@ -1,6 +1,5 @@
 ﻿using System;
 using Xunit;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Others
@@ -53,16 +52,12 @@ namespace Zidium.Core.Tests.Others
         [Fact]
         public void GetSubscriptionEditUrlTest()
         {
-            var user = new User()
-            {
-                Id = Guid.NewGuid()
-            };
-            var component = new Component()
-            {
-                Id = Guid.NewGuid()
-            };
-            var result = UrlHelper.GetSubscriptionEditUrl(component, user, "test", "http://lk.zidium.net");
-            var url = $"http://lk.zidium.net/Subscriptions/EditComponentSubscriptions?componentId={component.Id}&userId={user.Id}";
+            var userId = Guid.NewGuid();
+
+            var componentId = Guid.NewGuid();
+
+            var result = UrlHelper.GetSubscriptionEditUrl(componentId, userId, "test", "http://lk.zidium.net");
+            var url = $"http://lk.zidium.net/Subscriptions/EditComponentSubscriptions?componentId={componentId}&userId={userId}";
             Assert.Equal(url, result);
         }
 

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models.CheckModels
@@ -13,15 +15,13 @@ namespace Zidium.UserAccount.Models.CheckModels
     {
         public Guid? Id { get; set; }
 
-        public UnitTest UnitTest { get; set; }
-
         [Display(Name = "Название")]
         public string CheckName { get; set; }
 
         public Guid? ComponentId { get; set; }
 
         [Display(Name = "Компонент")]
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
         [Display(Name = "Период")]
         public TimeSpan? Period { get; set; }
@@ -37,32 +37,21 @@ namespace Zidium.UserAccount.Models.CheckModels
 
         public string Action { get; set; }
 
-        protected AccountDbContext AccountDbContext
-        {
-            get { return FullRequestContext.Current.AccountDbContext; }
-        }
+        public bool Enable;
 
         protected UserInfo User
         {
             get { return FullRequestContext.Current.CurrentUser; }
         }
 
-        public UnitTest GetUnitTest(Guid id)
-        {
-            var repository = AccountDbContext.GetUnitTestRepository();
-            var result = repository.GetById(id);
-            UnitTest = result;
-            Id = id;
-            return result;
-        }
-
-        public void Load(Guid? id, Guid? componentId)
+        public void Load(Guid? id, Guid? componentId, IStorage storage)
         {
             if (id.HasValue)
             {
-                var test = GetUnitTest(id.Value);
+                var test = storage.UnitTests.GetOneById(id.Value);
                 CheckName = test.DisplayName;
                 ComponentId = test.ComponentId;
+                Enable = test.Enable;
                 Period = TimeSpan.FromSeconds(test.PeriodSeconds ?? 0);
                 ActualTime = TimeSpanHelper.FromSeconds(test.ActualTimeSecs);
                 NoSignalColor = ColorStatusSelectorValue.FromColor(test.NoSignalColor);
@@ -80,6 +69,7 @@ namespace Zidium.UserAccount.Models.CheckModels
                 CheckName = DefaultCheckName;
                 ErrorColor = ColorStatusSelectorValue.FromUnitTestResultStatus(UnitTestResult.Alarm);
                 NoSignalColor = ColorStatusSelectorValue.FromUnitTestResultStatus(UnitTestResult.Alarm);
+                Enable = true;
             }
         }
 
@@ -101,7 +91,7 @@ namespace Zidium.UserAccount.Models.CheckModels
             {
                 throw new UserFriendlyException("Укажите название проверки");
             }
-            if (SystemUnitTestTypes.CanEditPeriod(UnitTestTypeId))
+            if (SystemUnitTestType.CanEditPeriod(UnitTestTypeId))
             {
                 // например для доменной проверки НЕльзя указывать период
                 if (Period == null)
@@ -123,11 +113,6 @@ namespace Zidium.UserAccount.Models.CheckModels
 
         public void Validate()
         {
-            // инициализруем свойство UnitTest, иначе если в ValidateCommonSettings будет ошибка, то вьюшка кинет исключение
-            if (Id.HasValue)
-            {
-                GetUnitTest(Id.Value);
-            }
             ValidateCommonSettings();
             ValidateRule();
         }
@@ -150,16 +135,10 @@ namespace Zidium.UserAccount.Models.CheckModels
                         AttempMax = 2
                     });
 
-                unitTestResponse.Check();
-
-                GetUnitTest(unitTestResponse.Data.Id);
-            }
-            else
-            {
-                GetUnitTest(Id.Value);
+                Id = unitTestResponse.Data.Id;
             }
 
-            var isSystem = SystemUnitTestTypes.IsSystem(UnitTest.TypeId);
+            var isSystem = SystemUnitTestType.IsSystem(UnitTestTypeId);
 
             // обновим данные юнит-теста
             var updateResponse = dispatcher.UpdateUnitTest(
@@ -168,11 +147,11 @@ namespace Zidium.UserAccount.Models.CheckModels
                 {
                     ComponentId = ComponentId,
                     DisplayName = CheckName,
-                    PeriodSeconds = Period != null ? Period.Value.TotalSeconds : (double?)null,
+                    PeriodSeconds = Period?.TotalSeconds,
                     ActualTime = !isSystem ? TimeSpanHelper.GetSeconds(ActualTime) : null,
                     ErrorColor = ErrorColor.GetSelectedUnitTestResultStatuses().FirstOrDefault(),
-                    NoSignalColor = !isSystem ? NoSignalColor.GetSelectedColors().FirstOrDefault() : Core.Common.ObjectColor.Gray,
-                    UnitTestId = UnitTest.Id,
+                    NoSignalColor = !isSystem ? NoSignalColor.GetSelectedColors().FirstOrDefault() : ObjectColor.Gray,
+                    UnitTestId = Id,
                     SimpleMode = false
                 });
 
@@ -180,11 +159,9 @@ namespace Zidium.UserAccount.Models.CheckModels
 
             var setNextTime = new SetUnitTestNextTimeRequestData()
             {
-                UnitTestId = UnitTest.Id
+                UnitTestId = Id
             };
             dispatcher.SetUnitTestNextTime(User.AccountId, setNextTime).Check();
-
-            GetUnitTest(UnitTest.Id);
         }
     }
 }

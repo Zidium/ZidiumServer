@@ -4,8 +4,8 @@ using System.Net;
 using System.Threading;
 using NLog;
 using Zidium.Api.Dto;
-using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.SendMessages
 {

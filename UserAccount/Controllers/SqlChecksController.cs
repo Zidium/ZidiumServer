@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.SqlChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -14,8 +17,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -23,8 +27,8 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
             return View(model);
         }
 
@@ -45,8 +49,7 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
         }
@@ -54,7 +57,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
             return View(model);
         }
 
@@ -77,14 +80,14 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
             }
 
-            var unitTest = SaveSimpleCheck(model);
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
+            return GetSuccessJsonResponse(unitTestId);
         }
 
         protected string GetDbName(string connectionString)
@@ -93,31 +96,37 @@ namespace Zidium.UserAccount.Controllers
             return builder.DataSource + "/" + builder.InitialCatalog;
         }
 
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
-        {
-            return null; // Всегда создаём новую
-        }
-
-       
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Sql-запрос: " + model.Name;
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.SqlRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                unitTest.SqlRule = new UnitTestSqlRule()
+                var rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
                 {
-                    Provider = Core.Common.DatabaseProviderType.MsSql,
-                    OpenConnectionTimeoutMs = 3000,
-                    CommandTimeoutMs = 30000
-                };
+                    var ruleForAdd = new UnitTestSqlRuleForAdd()
+                    {
+                        UnitTestId = unitTestId,
+                        Provider = SqlRuleDatabaseProviderType.MsSql,
+                        OpenConnectionTimeoutMs = 3000,
+                        CommandTimeoutMs = 30000
+                    };
+                    storage.UnitTestSqlRules.Add(ruleForAdd);
+                    rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(unitTestId);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.ConnectionString.Set(model.ConnectionString);
+                ruleForUpdate.Query.Set(model.Query);
+                ruleForUpdate.Provider.Set(model.Provider);
+                storage.UnitTestSqlRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            unitTest.SqlRule.ConnectionString = model.ConnectionString;
-            unitTest.SqlRule.Query = model.Query;
-            unitTest.SqlRule.Provider = model.Provider;
         }
 
         public override string GetComponentDisplayName(EditSimpleModel model)
@@ -137,26 +146,27 @@ namespace Zidium.UserAccount.Controllers
 
         protected override string GetTypeDisplayName(EditSimpleModel model)
         {
-            return SystemComponentTypes.DataBase.DisplayName;
+            return SystemComponentType.Database.DisplayName;
         }
 
         protected override string GetTypeSystemName(EditSimpleModel model)
         {
-            return SystemComponentTypes.DataBase.SystemName;
+            return SystemComponentType.Database.SystemName;
         }
 
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            model.ConnectionString = unitTest.SqlRule.ConnectionString;
-            model.Query = unitTest.SqlRule.Query;
+            var rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            model.ConnectionString = rule.ConnectionString;
+            model.Query = rule.Query;
             if (unitTest.DisplayName.StartsWith("Sql-запрос: "))
                 model.Name = unitTest.DisplayName.Substring(12);
-            model.Provider = unitTest.SqlRule.Provider;
+            model.Provider = rule.Provider;
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.SqlTestType.Id;
+            return SystemUnitTestType.SqlTestType.Id;
         }
 
         /// <summary>

@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -12,17 +12,15 @@ namespace Zidium.UserAccount.Models.UnitTests
         public int Port { get; set; }
         public bool Opened { get; set; }
 
-        public static OverviewSettingsTcpPortModel Create(UnitTest unitTest)
+        public static OverviewSettingsTcpPortModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var rule = unitTest.TcpPortRule;
-            if (rule == null)
-            {
-                throw new Exception("unittest TcpPortRule data is null");
-            }
+
+            var rule = storage.UnitTestTcpPortRules.GetOneByUnitTestId(unitTest.Id);
+            
             return new OverviewSettingsTcpPortModel()
             {
                 UnitTestId = unitTest.Id,

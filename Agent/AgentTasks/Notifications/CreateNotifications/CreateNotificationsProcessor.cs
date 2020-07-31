@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Threading;
 using NLog;
@@ -8,79 +7,14 @@ using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
-using EventCategory = Zidium.Core.Api.EventCategory;
-using EventImportance = Zidium.Core.Api.EventImportance;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
     public class CreateNotificationsProcessor
     {
-        public class StatusInfo
-        {
-            public Guid EventId;
-
-            public Component Component;
-
-            public DateTime CreateDate;
-
-            public Guid ComponentId;
-
-            public EventCategory Category;
-
-            public TimeSpan Duration;
-
-            public EventImportance Importance;
-
-            public EventImportance PreviousImportance;
-
-            public static StatusInfo Create(Event eventObj, Component component, DateTime now)
-            {
-                if (eventObj == null)
-                {
-                    throw new ArgumentNullException("eventObj");
-                }
-                if (component == null)
-                {
-                    throw new ArgumentNullException("component");
-                }
-                return new StatusInfo()
-                {
-                    Category = eventObj.Category,
-                    EventId = eventObj.Id,
-                    ComponentId = eventObj.OwnerId,
-                    Component = component,
-                    Duration = eventObj.GetDuration(now),
-                    Importance = eventObj.Importance,
-                    CreateDate = eventObj.CreateDate,
-                    PreviousImportance = eventObj.PreviousImportance
-                };
-            }
-
-            public static StatusInfo Create(Bulb bulb, Component component, DateTime now)
-            {
-                if (bulb == null)
-                {
-                    throw new ArgumentNullException("bulb");
-                }
-                if (component == null)
-                {
-                    throw new ArgumentNullException("component");
-                }
-                return new StatusInfo()
-                {
-                    Category = bulb.EventCategory,
-                    EventId = bulb.StatusEventId,
-                    ComponentId = bulb.ComponentId.Value,
-                    Component = component,
-                    Duration = bulb.GetDuration(now),
-                    Importance = EventImportanceHelper.Get(bulb.Status),
-                    CreateDate = bulb.StartDate,
-                    PreviousImportance = EventImportanceHelper.Get(bulb.PreviousStatus)
-                };
-            }
-        }
-
         protected ILogger Logger;
 
         public MultipleDataBaseProcessor DbProcessor { get; protected set; }
@@ -106,7 +40,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     if (data.Account.Type != AccountType.Test)
                         ProcessAccount(
                             data.Account.Id,
-                            data.AccountDbContext,
+                            data.Storage,
                             data.Logger);
                 });
 
@@ -116,51 +50,43 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         public void ProcessAccount(Guid accountId, Guid? componentId = null, Guid? userId = null)
         {
-            using (var dbContext = new DatabasesContext())
-            {
-                var accountDbContext = dbContext.GetAccountDbContext(accountId);
-                ProcessAccount(accountId, accountDbContext, Logger, componentId, userId);
-            }
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            var storage = accountStorageFactory.GetStorageByAccountId(accountId);
+            ProcessAccount(accountId, storage, Logger, componentId, userId);
         }
 
         protected void ProcessAccount(
             Guid accountId,
-            AccountDbContext accountDbContext,
+            IStorage storage,
             ILogger logger,
             Guid? componentId = null,
             Guid? userId = null)
         {
-            // Получим все включенные подписки аккаунта
-            var subscriptionsRepository = accountDbContext.GetSubscriptionRepository();
-
-            var subscriptions = subscriptionsRepository.QueryAll();
+            // Получим все подписки аккаунта
+            var subscriptions = storage.Subscriptions.GetAll();
             var userToSubscriptions = subscriptions.GroupBy(x => x.UserId).ToDictionary(x => x.Key, y => y.ToArray());
 
             // получим всех пользователей с их часовыми поясами
-            var userSettingService = accountDbContext.GetUserSettingService();
-            var users = accountDbContext.GetUserRepository().QueryAll()
-                .Select(t => t.Id)
+            var userSettingService = new UserSettingService(storage);
+            var users = storage.Users.GetForNotifications()
                 .ToArray()
                 .Select(t => new UserInfo()
                 {
-                    Id = t,
-                    TimeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(t)
+                    Id = t.Id,
+                    Login = t.Login,
+                    CreateDate = t.CreateDate,
+                    TimeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(t.Id)
                 })
                 .ToArray();
 
             if (userId.HasValue)
                 users = users.Where(t => t.Id == userId.Value).ToArray();
 
-            //получим все компоненты, т.к. для каждого нужно проверить наличие уведомлений по его текущему статусу
-            var componentRepository = accountDbContext.GetComponentRepository();
-            var components = componentRepository.QueryAll().ToDictionary(a => a.Id, b => b);
-
             // обработка старых статусов
             ProcessAccountArchivedStatuses(
                 accountId,
-                accountDbContext,
+                storage,
                 users,
-                components,
                 userToSubscriptions,
                 logger,
                 componentId);
@@ -168,35 +94,27 @@ namespace Zidium.Agent.AgentTasks.Notifications
             // обработка текущих статусов
             ProcessAccountCurrentStatuses(
                 accountId,
-                accountDbContext,
+                storage,
                 users,
                 userToSubscriptions,
                 logger,
                 componentId);
 
-            // сохраняем изменения
-            accountDbContext.SaveChanges();
         }
 
         protected void ProcessAccountArchivedStatuses(
             Guid accountId,
-            AccountDbContext accountDbContext,
+            IStorage storage,
             UserInfo[] users,
-            Dictionary<Guid, Component> components,
-            Dictionary<Guid, Subscription[]> userToSubscriptions,
+            Dictionary<Guid, SubscriptionForRead[]> userToSubscriptions,
             ILogger logger,
             Guid? componentId = null)
         {
+            //получим все компоненты, т.к. для каждого нужно проверить наличие уведомлений по его текущему статусу
+            var components = storage.Components.GetForNotifications(componentId).ToDictionary(a => a.Id, b => b);
+
             // получим архивные статусы
-            var archivedStatusRepository = accountDbContext.GetArchivedStatusRepository();
-
-            var archivedStatuses = archivedStatusRepository
-                .GetTop(EventMaxCount)
-                .Include(x => x.Event)
-                .ToArray();
-
-            if (componentId.HasValue)
-                archivedStatuses = archivedStatuses.Where(t => t.Event.OwnerId == componentId.Value).ToArray();
+            var archivedStatuses = storage.ArchivedStatuses.GetForNotifications(componentId, EventMaxCount);
 
             var now = Now();
             var statuses = new List<StatusInfo>(archivedStatuses.Length);
@@ -213,7 +131,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 }
 
                 // удалим, чтобы больше не обрабатывать
-                archivedStatusRepository.Delete(archivedStatus);
+                storage.ArchivedStatuses.Delete(archivedStatus.Id);
 
                 var status = StatusInfo.Create(eventObj, component, now);
                 statuses.Add(status);
@@ -224,40 +142,31 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 users,
                 userToSubscriptions,
                 statuses,
-                accountDbContext,
+                storage,
                 logger);
         }
 
         protected void ProcessAccountCurrentStatuses(
             Guid accountId,
-            AccountDbContext accountDbContext,
+            IStorage storage,
             UserInfo[] users,
-            Dictionary<Guid, Subscription[]> userToSubscriptions,
+            Dictionary<Guid, SubscriptionForRead[]> userToSubscriptions,
             ILogger logger,
             Guid? componentId = null)
         {
             // получим колбаски компонентов
-            var statusDatas = accountDbContext.Bulbs
-                .Where(x => x.EventCategory == EventCategory.ComponentExternalStatus
-                            && x.IsDeleted == false
-                            && x.Component.IsDeleted == false)
-                .ToArray();
+            var bulbs = storage.Bulbs.GetForNotifications();
 
             if (componentId.HasValue)
-                statusDatas = statusDatas.Where(t => t.ComponentId == componentId.Value).ToArray();
+                bulbs = bulbs.Where(t => t.ComponentId == componentId.Value).ToArray();
 
             var now = Now();
-            var statuses = new List<StatusInfo>(statusDatas.Length);
-            foreach (var statusData in statusDatas)
+            var statuses = new List<StatusInfo>(bulbs.Length);
+            foreach (var bulb in bulbs)
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
 
-                var component = statusData.Component;
-                if (component == null)
-                {
-                    continue;
-                }
-                var status = StatusInfo.Create(statusData, component, now);
+                var status = StatusInfo.Create(bulb, now);
                 statuses.Add(status);
             }
 
@@ -266,16 +175,16 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 users,
                 userToSubscriptions,
                 statuses,
-                accountDbContext,
+                storage,
                 logger);
         }
 
         protected void ProcessAccountInternal(
             Guid accountId,
             UserInfo[] users,
-            Dictionary<Guid, Subscription[]> userToSubscriptions,
+            Dictionary<Guid, SubscriptionForRead[]> userToSubscriptions,
             List<StatusInfo> statuses,
-            AccountDbContext accountDbContext,
+            IStorage storage,
             ILogger logger)
         {
             var cancellationToken = DbProcessor.CancellationToken;
@@ -283,40 +192,16 @@ namespace Zidium.Agent.AgentTasks.Notifications
             // Обработаем каждый статус
             foreach (var status in statuses)
             {
-                logger.Debug("Обрабатываем событие: " + status.EventId);
+                if (logger.IsDebugEnabled)
+                    logger.Debug("Обрабатываем событие: " + status.EventId);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                // Получим компонент
-                var component = status.Component;
-                if (component == null)
-                {
-                    logger.Trace("component == null");
-                    continue;
-                }
-
-                // статус о выключенном компоненте мы должны получить, поэтому фильтр ниже закоментирован
-
-                //if (component.Enable == false)
-                //{
-                //    if (isTraceEnabled)
-                //    {
-                //        log.Trace("component.Enable == false");
-                //    }
-                //    continue;
-                //}
-
-                // Пропускаем удалённые
-                if (component.IsDeleted)
-                {
-                    logger.Trace("component.IsDeleted");
-                    continue;
-                }
-
                 // Пропускаем корневой (причина?)
-                if (component.IsRoot)
+                if (status.ComponentTypeId == SystemComponentType.Root.Id)
                 {
-                    logger.Trace("component.IsRoot");
+                    if (logger.IsTraceEnabled)
+                        logger.Trace("component.IsRoot");
                     continue;
                 }
 
@@ -338,7 +223,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                             if (subscription == null)
                             {
                                 // ищем подписку на тип события
-                                subscription = channelSubscriptions.FirstOrDefault(x => x.ComponentTypeId == status.Component.ComponentTypeId);
+                                subscription = channelSubscriptions.FirstOrDefault(x => x.ComponentTypeId == status.ComponentTypeId);
                                 if (subscription == null)
                                 {
                                     // ищем дефолтную подписку
@@ -356,8 +241,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                                 UserId = user.Id
                                             });
 
-                                        var repository = accountDbContext.GetSubscriptionRepository();
-                                        subscription = repository.GetById(response.Data.Id);
+                                        subscription = storage.Subscriptions.GetOneById(response.Data.Id);
                                     }
                                 }
                             }
@@ -365,25 +249,29 @@ namespace Zidium.Agent.AgentTasks.Notifications
                             // проверим подписку
                             if (subscription != null)
                             {
-                                logger.Trace("Проверяем подписку " + subscription.Id + ", событие " + status.EventId + " и компонент " + component.Id);
+                                if (logger.IsTraceEnabled)
+                                    logger.Trace("Проверяем подписку " + subscription.Id + ", событие " + status.EventId + " и компонент " + status.ComponentId);
 
                                 // если отправка запрещена
                                 if (subscription.IsEnabled == false)
                                 {
-                                    logger.Trace("False by IsEnabled");
+                                    if (logger.IsTraceEnabled)
+                                        logger.Trace("False by IsEnabled");
                                     continue;
                                 }
 
                                 // подписка шлет уведомления только по событиям, которые создались после создания подписки
                                 if (status.CreateDate < subscription.LastUpdated)
                                 {
-                                    logger.Trace("False by LastUpdated");
+                                    if (logger.IsTraceEnabled)
+                                        logger.Trace("False by LastUpdated");
                                     continue;
                                 }
 
                                 if (status.Category != EventCategory.ComponentExternalStatus)
                                 {
-                                    logger.Trace("False by Category");
+                                    if (logger.IsTraceEnabled)
+                                        logger.Trace("False by Category");
                                     continue;
                                 }
 
@@ -393,7 +281,8 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                     var eventDuration = (int)status.Duration.TotalSeconds;
                                     if (eventDuration < subscription.DurationMinimumInSeconds.Value)
                                     {
-                                        logger.Trace("False by DurationMinimumInSeconds");
+                                        if (logger.IsTraceEnabled)
+                                            logger.Trace("False by DurationMinimumInSeconds");
                                         continue;
                                     }
                                 }
@@ -410,30 +299,33 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                     var toTime = TimeSpan.FromMinutes(subscription.SendIntervalToHour.Value * 60 + subscription.SendIntervalToMinute.Value);
                                     if (nowForUserTime < fromTime || nowForUserTime > toTime)
                                     {
-                                        logger.Trace("False by SendInterval");
+                                        if (logger.IsTraceEnabled)
+                                            logger.Trace("False by SendInterval");
                                         continue;
                                     }
                                 }
 
-                                logger.Debug("Создаем уведомления для подписки: " + subscription.Id);
+                                if (logger.IsDebugEnabled)
+                                    logger.Debug("Создаем уведомления для подписки: " + subscription.Id);
                                 cancellationToken.ThrowIfCancellationRequested();
 
-                                List<UserContact> contacts;
+                                UserContactForRead[] contacts;
 
                                 if (subscription.Channel == SubscriptionChannel.Email)
-                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.Email);
+                                    contacts = UserHelper.GetUserContactsOfType(user.Id, user.Login, user.CreateDate, UserContactType.Email, storage);
                                 else if (subscription.Channel == SubscriptionChannel.Sms)
-                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.MobilePhone);
+                                    contacts = UserHelper.GetUserContactsOfType(user.Id, user.Login, user.CreateDate, UserContactType.MobilePhone, storage);
                                 else if (subscription.Channel == SubscriptionChannel.Http)
-                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.Http);
+                                    contacts = UserHelper.GetUserContactsOfType(user.Id, user.Login, user.CreateDate, UserContactType.Http, storage);
                                 else if (subscription.Channel == SubscriptionChannel.Telegram)
-                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.Telegram);
+                                    contacts = UserHelper.GetUserContactsOfType(user.Id, user.Login, user.CreateDate, UserContactType.Telegram, storage);
                                 else if (subscription.Channel == SubscriptionChannel.VKontakte)
-                                    contacts = UserHelper.GetUserContactsOfType(subscription.User, UserContactType.VKontakte);
+                                    contacts = UserHelper.GetUserContactsOfType(user.Id, user.Login, user.CreateDate, UserContactType.VKontakte, storage);
                                 else
-                                    contacts = new List<UserContact>();
+                                    contacts = new UserContactForRead[0];
 
-                                logger.Debug("Адресов для уведомлений " + contacts.Count);
+                                if (logger.IsDebugEnabled)
+                                    logger.Debug("Адресов для уведомлений " + contacts.Length);
 
                                 foreach (var contact in contacts)
                                 {
@@ -442,10 +334,12 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                         continue;
 
                                     var address = contact.Value;
-                                    logger.Debug("Создаём уведомление на адрес: " + address);
 
-                                    var lastComponentNotification = component.LastNotifications.FirstOrDefault(
-                                        x => x.Address == address && x.Type == subscription.Channel);
+                                    if (logger.IsDebugEnabled)
+                                        logger.Debug("Создаём уведомление на адрес: " + address);
+
+                                    var lastComponentNotification = status.LastComponentNotifications
+                                        .FirstOrDefault(x => x.Address == address && x.Type == subscription.Channel);
 
                                     var isImportanceColor = status.Importance >= subscription.Importance;
 
@@ -455,30 +349,25 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                         // первое уведомление о важном статусе
                                         if (lastComponentNotification == null)
                                         {
-                                            logger.Info("Первое уведомление на адрес " + address + " для компонента " + component.Id);
-                                            lastComponentNotification = new LastComponentNotification()
+                                            logger.Info("Первое уведомление на адрес " + address + " для компонента " + status.ComponentId);
+                                            lastComponentNotification = new ComponentGetForNotificationsInfo.LastComponentNotificationInfo()
                                             {
-                                                Id = Guid.NewGuid(),
-                                                Address = address,
-                                                Component = component,
-                                                ComponentId = component.Id,
+                                                Id = Guid.Empty,
                                                 CreateDate = Now(),
-                                                EventId = status.EventId,
-                                                EventImportance = status.Importance,
                                                 Type = subscription.Channel,
-                                                NotificationId = Guid.Empty
+                                                EventImportance = status.Importance,
+                                                EventId = status.EventId,
+                                                Address = address
                                             };
-                                            component.LastNotifications.Add(lastComponentNotification);
 
                                             AddNotification(
                                                 lastComponentNotification,
                                                 status,
                                                 subscription,
-                                                accountDbContext,
+                                                storage,
                                                 NotificationReason.NewImportanceStatus);
 
                                             continue;
-
                                         }
 
                                         // тот же важный статус
@@ -497,13 +386,15 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                                         lastComponentNotification,
                                                         status,
                                                         subscription,
-                                                        accountDbContext,
+                                                        storage,
                                                         NotificationReason.Reminder);
 
                                                     continue;
                                                 }
                                             }
-                                            logger.Debug("Уже есть уведомление о событии " + status.EventId + " на адрес " + address);
+
+                                            if (logger.IsDebugEnabled)
+                                                logger.Debug("Уже есть уведомление о событии " + status.EventId + " на адрес " + address);
                                         }
                                         else // новый важный статус
                                         {
@@ -513,9 +404,8 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                                 lastComponentNotification,
                                                 status,
                                                 subscription,
-                                                accountDbContext,
+                                                storage,
                                                 NotificationReason.NewImportanceStatus);
-
                                         }
                                     }
                                     else // НЕ важное событие
@@ -530,7 +420,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                                 lastComponentNotification,
                                                 status,
                                                 subscription,
-                                                accountDbContext,
+                                                storage,
                                                 NotificationReason.BetterStatus);
                                         }
                                         else
@@ -558,49 +448,66 @@ namespace Zidium.Agent.AgentTasks.Notifications
         }
 
         protected void AddNotification(
-            LastComponentNotification lastComponentNotification,
+            ComponentGetForNotificationsInfo.LastComponentNotificationInfo lastComponentNotification,
             StatusInfo statusInfo,
-            Subscription subscription,
-            AccountDbContext accountDbContext,
+            SubscriptionForRead subscription,
+            IStorage storage,
             NotificationReason reason)
         {
-
-            var realEvent = accountDbContext.Events.Find(statusInfo.EventId);
-            if (realEvent == null)
-            {
-                return;
-            }
-
             Interlocked.Increment(ref CreatedNotificationsCount);
 
-            var newNotification = new Notification()
+            using (var transaction = storage.BeginTransaction())
             {
-                Id = Guid.NewGuid(),
-                Address = lastComponentNotification.Address,
-                CreationDate = Now(),
-                EventId = statusInfo.EventId,
-                Status = NotificationStatus.InQueue,
-                SubscriptionId = subscription.Id,
-                Type = lastComponentNotification.Type,
-                UserId = subscription.UserId,
-                Reason = reason
-            };
-
-            if (newNotification.Type == SubscriptionChannel.Http)
-            {
-                newNotification.NotificationHttp = new NotificationHttp()
+                var newNotification = new NotificationForAdd()
                 {
-                    Notification = newNotification
-                    //Json = GetNotificationJson(lastComponentNotification.Component, eventObj)
+                    Id = Guid.NewGuid(),
+                    Address = lastComponentNotification.Address,
+                    CreationDate = Now(),
+                    EventId = statusInfo.EventId,
+                    Status = NotificationStatus.InQueue,
+                    SubscriptionId = subscription.Id,
+                    Type = lastComponentNotification.Type,
+                    UserId = subscription.UserId,
+                    Reason = reason
                 };
+                storage.Notifications.Add(newNotification);
+
+                if (lastComponentNotification.Id == Guid.Empty)
+                {
+                    var lastComponentNotificationForAdd = new LastComponentNotificationForAdd()
+                    {
+                        Id = Guid.NewGuid(),
+                        Address = lastComponentNotification.Address,
+                        ComponentId = statusInfo.ComponentId,
+                        CreateDate = lastComponentNotification.CreateDate,
+                        EventId = lastComponentNotification.EventId,
+                        EventImportance = lastComponentNotification.EventImportance,
+                        Type = lastComponentNotification.Type,
+                        NotificationId = newNotification.Id
+                    };
+                    storage.LastComponentNotifications.Add(lastComponentNotificationForAdd);
+                    lastComponentNotification.Id = lastComponentNotificationForAdd.Id;
+                }
+
+                if (newNotification.Type == SubscriptionChannel.Http)
+                {
+                    var newNotificationHttp = new NotificationHttpForAdd()
+                    {
+                        NotificationId = newNotification.Id,
+                        // Json = GetNotificationJson(lastComponentNotification.Component, eventObj)
+                    };
+                    storage.NotificationsHttp.Add(newNotificationHttp);
+                }
+
+                var lastComponentNotificationForUpdate = new LastComponentNotificationForUpdate(lastComponentNotification.Id);
+                lastComponentNotificationForUpdate.EventImportance.Set(statusInfo.Importance);
+                lastComponentNotificationForUpdate.CreateDate.Set(newNotification.CreationDate);
+                lastComponentNotificationForUpdate.EventId.Set(newNotification.EventId);
+                lastComponentNotificationForUpdate.NotificationId.Set(newNotification.Id);
+                storage.LastComponentNotifications.Update(lastComponentNotificationForUpdate);
+
+                transaction.Commit();
             }
-
-            var notificationRepository = accountDbContext.GetNotificationRepository();
-            notificationRepository.Add(newNotification);
-
-            lastComponentNotification.Update(newNotification, statusInfo.Importance);
-
-            accountDbContext.SaveChanges();
         }
 
         protected DateTime Now()
@@ -622,7 +529,65 @@ namespace Zidium.Agent.AgentTasks.Notifications
         {
             public Guid Id;
 
+            public string Login;
+
+            public DateTime CreateDate;
+
             public int TimeZoneOffsetMinutes;
         }
+
+        protected class StatusInfo
+        {
+            public Guid EventId;
+
+            public DateTime CreateDate;
+
+            public Guid ComponentId;
+
+            public Guid ComponentTypeId;
+
+            public ComponentGetForNotificationsInfo.LastComponentNotificationInfo[] LastComponentNotifications;
+
+            public EventCategory Category;
+
+            public TimeSpan Duration;
+
+            public EventImportance Importance;
+
+            public EventImportance PreviousImportance;
+
+            public static StatusInfo Create(ArchivedStatusGetForNotificationsInfo.EventInfo eventObj, ComponentGetForNotificationsInfo component, DateTime now)
+            {
+                return new StatusInfo()
+                {
+                    Category = eventObj.Category,
+                    EventId = eventObj.Id,
+                    ComponentId = component.Id,
+                    ComponentTypeId = component.ComponentTypeId,
+                    LastComponentNotifications = component.LastComponentNotifications.ToArray(),
+                    Duration = EventHelper.GetDuration(eventObj.StartDate, eventObj.ActualDate, now),
+                    Importance = eventObj.Importance,
+                    CreateDate = eventObj.CreateDate,
+                    PreviousImportance = eventObj.PreviousImportance
+                };
+            }
+
+            public static StatusInfo Create(BulbGetForNotificationsInfo bulb, DateTime now)
+            {
+                return new StatusInfo()
+                {
+                    Category = bulb.Category,
+                    EventId = bulb.StatusEventId,
+                    ComponentId = bulb.ComponentId,
+                    ComponentTypeId = bulb.ComponentTypeId,
+                    LastComponentNotifications = bulb.LastComponentNotifications.ToArray(),
+                    Duration = BulbExtensions.GetDuration(bulb.StartDate, bulb.ActualDate, now),
+                    Importance = EventImportanceHelper.Get(bulb.Status),
+                    CreateDate = bulb.StartDate,
+                    PreviousImportance = EventImportanceHelper.Get(bulb.PreviousStatus)
+                };
+            }
+        }
+
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Metrics
 {
     public class ShowModel
     {
-        public Metric Metric { get; set; }
+        public MetricInfo Metric { get; set; }
 
         public string ConditionRed { get; set; }
 
@@ -23,6 +21,45 @@ namespace Zidium.UserAccount.Models.Metrics
 
         public const int LastValuesCountMax = 20;
 
-        public List<MetricHistory> Values { get; set; }
+        public MetricBreadCrumbsModel MetricBreadCrumbs { get; set; }
+
+        public MetricHistoryForRead[] Values { get; set; }
+
+        public class MetricInfo
+        {
+            public Guid Id;
+
+            public Guid MetricTypeId;
+
+            public string DisplayName;
+
+            public BulbInfo Bulb;
+
+            public ComponentInfo Component;
+
+            public double? Value;
+        }
+
+        public class BulbInfo
+        {
+            public MonitoringStatus Status;
+
+            public TimeSpan Duration;
+
+            public DateTime StartDate;
+
+            public DateTime EndDate;
+
+            public DateTime ActualDate;
+
+            public int Count;
+        }
+
+        public class ComponentInfo
+        {
+            public Guid Id;
+
+            public string FullName;
+        }
     }
 }

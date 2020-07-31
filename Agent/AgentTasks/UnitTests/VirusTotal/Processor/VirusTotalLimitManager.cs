@@ -6,28 +6,53 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 {
     public class VirusTotalLimitManager
     {
-        private Dictionary<string, DateTime> lastApiCallTime = new Dictionary<string, DateTime>();
+        private Dictionary<string, LimitData> lastApiCallTime = new Dictionary<string, LimitData>();
 
         public void SleepByLimits(string apikey)
         {
-            if (lastApiCallTime.ContainsKey(apikey) == false)
-            {
-                // первый вызов
-                lastApiCallTime.Add(apikey, DateTime.Now);
-                return;
-            }
+            LimitData data = GetLimitData(apikey);
+            data.Sleep();
+        }
 
-            // The Public API is limited to 4 requests per minute
-            // Перестрахуемся, будем делать вызовы раз в 20 сек (3 запроса в минуту)
-            var sleepDuration = TimeSpan.FromSeconds(20);
-            DateTime lastTime = lastApiCallTime[apikey];
-            var duration = DateTime.Now - lastTime;
-            if (duration < sleepDuration)
+        private LimitData GetLimitData(string apiKey)
+        {
+            lock (this)
             {
-                var sleepTime = sleepDuration - duration;
-                Thread.Sleep(sleepTime); // нужно засыпать по 1 сек и проверять cancelation
+                if (lastApiCallTime.TryGetValue(apiKey, out LimitData data))
+                {
+                    return data;
+                }
+                data = new LimitData();
+                lastApiCallTime.Add(apiKey, data);
+                return data;
             }
-            lastApiCallTime[apikey] = DateTime.Now;
+        }
+
+        private class LimitData
+        {
+            private DateTime? lastTime;
+
+            public void Sleep()
+            {
+                lock (this)
+                {
+                    if (lastTime == null)
+                    {
+                        lastTime = DateTime.Now;
+                        return;
+                    }
+                    // The Public API is limited to 4 requests per minute
+                    // Перестрахуемся, будем делать вызовы раз в 30 сек (2 запроса в минуту)
+                    var sleepDuration = TimeSpan.FromSeconds(30);
+                    var duration = DateTime.Now - lastTime.Value;
+                    if (duration < sleepDuration)
+                    {
+                        var sleepTime = sleepDuration - duration;
+                        Thread.Sleep(sleepTime); // нужно засыпать по 1 сек и проверять cancelation
+                    }
+                    lastTime = DateTime.Now;
+                }
+            }
         }
     }
 }

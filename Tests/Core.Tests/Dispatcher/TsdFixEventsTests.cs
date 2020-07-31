@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Xunit;
-using Zidium.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
-using EventCategory = Zidium.Core.Api.EventCategory;
-using ThreadTaskQueue = Zidium.Api.ThreadTaskQueue;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -34,7 +32,7 @@ namespace Zidium.Core.Tests.Dispatcher
             {
                 var errorEvent = component
                     .CreateComponentEvent("Диагностика ТСД")
-                    .SetImportance(EventImportance.Success)
+                    .SetImportance(Zidium.Api.EventImportance.Success)
                     .SetJoinInterval(TimeSpan.Zero);
 
                 var response = errorEvent.Send();
@@ -43,7 +41,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 Thread.Sleep(period);
             }
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 // у колбасы событий должно быть только 2 статуса
                 var events = accountDbContext
@@ -79,7 +77,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = account.CreateRandomComponentControl();
             const int threadCount = 5;
             var queue = new ThreadTaskQueue(threadCount);
-            var responses = new List<SendEventResponse>();
+            var responses = new List<Zidium.Api.SendEventResponse>();
             var action = new ThreadStart(() =>
             {
                 var response = component
@@ -109,11 +107,11 @@ namespace Zidium.Core.Tests.Dispatcher
 
         private void SendTsdEvent(object componentObj)
         {
-            var component = componentObj as IComponentControl;
+            var component = componentObj as Zidium.Api.IComponentControl;
 
             var response = component
                 .CreateComponentEvent("test")
-                .SetImportance(EventImportance.Success)
+                .SetImportance(Zidium.Api.EventImportance.Success)
                 .SetJoinInterval(TimeSpan.FromSeconds(4))
                 .Send();
 
@@ -126,7 +124,7 @@ namespace Zidium.Core.Tests.Dispatcher
         private void UpdateTsdStatus(object componentObj)
         {
             Thread.Sleep(1000 + RandomHelper.GetRandomInt32(0, 7000));
-            var component = componentObj as IComponentControl;
+            var component = componentObj as Zidium.Api.IComponentControl;
             var accountId = tsdAccountId;
             var componentId = component.Info.Id;
             var dispatcherClient = new DispatcherClient("Test");
@@ -141,7 +139,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
         /// <summary>
         /// Была ошибка в UpdateLastStatusId связанная с тем, при одновременной обработке события
-        /// Создавалис дубли в eventObj.StatusEvents.Add(statusEvent);
+        /// Создавались дубли в eventObj.StatusEvents.Add(statusEvent);
         /// Т.к. не выполняось условие 
         /// if (eventObj.Id == Guid.Empty || eventObj.LastStatusEventId == statusEvent.Id)
         /// {

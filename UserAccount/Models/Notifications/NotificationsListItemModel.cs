@@ -1,6 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -10,13 +9,13 @@ namespace Zidium.UserAccount.Models
 
         public DateTime CreationDate { get; set; }
 
-        public Event Event { get; set; }
+        public EventForRead Event { get; set; }
 
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
         public string Address { get; set; }
 
-        public User User { get; set; }
+        public UserForRead User { get; set; }
 
         public SubscriptionChannel Channel { get; set; }
 
@@ -28,6 +27,6 @@ namespace Zidium.UserAccount.Models
 
         public DateTime? NextDate { get; set; }
 
-        public EventType EventType { get; set; }
+        public EventTypeForRead EventType { get; set; }
     }
 }

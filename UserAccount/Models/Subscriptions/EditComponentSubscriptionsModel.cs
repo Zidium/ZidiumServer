@@ -1,23 +1,28 @@
 ﻿using System;
 using System.Linq;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
     public class EditComponentSubscriptionsModel
     {
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
-        public User User { get; set; }
+        public string ComponentFullName { get; set; }
 
-        public Subscription[] AllSubscriptions { get; set; }
+        public ComponentTypeForRead ComponentType { get; set; }
+
+        public UserForRead User { get; set; }
+
+        public UserContactForRead[] UserContacts { get; set; }
+
+        public SubscriptionForRead[] AllSubscriptions { get; set; }
         
         public string CommonWebsiteUrl { get; set; }
 
         public class SubscriptionColumnData
         {
-            public Subscription Subscription { get; set; }
+            public SubscriptionForRead Subscription { get; set; }
 
             public bool Selected { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Web;
 using Zidium.Api.Others;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common
 {
@@ -63,9 +64,9 @@ namespace Zidium.Core.Common
             StringBuilder.AppendLine(Tab + Tab + "<td style='border-top: 1px solid lightgray; padding: 5px;'>" + (preFormat ? "<span style='margin-top: 0px; margin-bottom: 0px;white-space: pre-wrap;word-break: break-all;'>" : "") + content + (preFormat ? "</span>" : "") + "</td>");
         }
 
-        public void WriteExtentionPropertyRow(string name, string value, Api.DataType type, bool preFormat = false)
+        public void WriteExtentionPropertyRow(string name, string value, DataType type, bool preFormat = false)
         {
-            if (type == Api.DataType.Binary)
+            if (type == DataType.Binary)
             {
                 value = "бинарные данные"; //todo
             }

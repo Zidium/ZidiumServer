@@ -2,7 +2,7 @@
 using Xunit;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.DispatcherLayer;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
@@ -13,47 +13,41 @@ namespace Zidium.Core.Tests.Caching
         public void SendUnitTestAfterEnablingComponentTest()
         {
             // Создадим отключенный компонент и проверку до создания диспетчера
-            Component component;
             Guid unitTestId;
             var account = TestHelper.GetTestAccount();
-            using (var dispatcherContext = DispatcherContext.Create())
+            var componentService = new ComponentService(TestHelper.GetStorage(account.Id));
+            var component = componentService.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
             {
-                var testAccountContext = dispatcherContext.GetAccountDbContext(account.Id);
-                var componentService = dispatcherContext.ComponentService;
-                component = componentService.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
-                {
-                    DisplayName = Guid.NewGuid().ToString(),
-                    SystemName = Guid.NewGuid().ToString(),
-                    TypeId = SystemComponentTypes.Others.Id
-                });
-                componentService.DisableComponent(account.Id, component.Id, null, null);
+                DisplayName = Guid.NewGuid().ToString(),
+                SystemName = Guid.NewGuid().ToString(),
+                TypeId = SystemComponentType.Others.Id
+            });
+            componentService.DisableComponent(account.Id, component.Id, null, null);
 
-                var unitTestTypeService = dispatcherContext.UnitTestTypeService;
-                var unitTestType = unitTestTypeService.GetOrCreateUnitTestType(account.Id, new GetOrCreateUnitTestTypeRequestData()
-                {
-                    SystemName = "Main",
-                    DisplayName = "Main"
-                });
+            var unitTestTypeService = new UnitTestTypeService(TestHelper.GetStorage(account.Id));
+            var unitTestType = unitTestTypeService.GetOrCreateUnitTestType(account.Id, new GetOrCreateUnitTestTypeRequestData()
+            {
+                SystemName = "Main",
+                DisplayName = "Main"
+            });
 
-                var unitTestService = dispatcherContext.UnitTestService;
-                var unitTestCache = unitTestService.GetOrCreateUnitTest(account.Id, new GetOrCreateUnitTestRequestData()
-                {
-                    ComponentId = component.Id,
-                    SystemName = Guid.NewGuid().ToString(),
-                    DisplayName = Guid.NewGuid().ToString(),
-                    UnitTestTypeId = unitTestType.Id
-                });
+            var unitTestService = new UnitTestService(TestHelper.GetStorage(account.Id));
+            var unitTestCache = unitTestService.GetOrCreateUnitTest(account.Id, new GetOrCreateUnitTestRequestData()
+            {
+                ComponentId = component.Id,
+                SystemName = Guid.NewGuid().ToString(),
+                DisplayName = Guid.NewGuid().ToString(),
+                UnitTestTypeId = unitTestType.Id
+            });
 
-                unitTestId = unitTestCache.Id;
+            unitTestId = unitTestCache.Id;
 
-                unitTestService.SendUnitTestResult(account.Id, new SendUnitTestResultRequestData()
-                {
-                    UnitTestId = unitTestCache.Id,
-                    Result = UnitTestResult.Unknown,
-                    ActualIntervalSeconds = 60
-                });
-            }
-
+            unitTestService.SendUnitTestResult(account.Id, new SendUnitTestResultRequestData()
+            {
+                UnitTestId = unitTestCache.Id,
+                Result = UnitTestResult.Unknown,
+                ActualIntervalSeconds = 60
+            });
             // Создадим диспетчер
             var dispatcher = TestHelper.GetDispatcherClient();
 

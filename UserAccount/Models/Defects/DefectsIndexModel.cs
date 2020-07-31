@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Zidium.Core.AccountsDb.Classes;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Defects
 {
@@ -40,7 +40,7 @@ namespace Zidium.UserAccount.Models.Defects
         public static readonly DefectStatus[] InWorkStatuses = new[]
         {
             DefectStatus.Open,
-            DefectStatus.ReOpen,
+            DefectStatus.Reopened,
             DefectStatus.InProgress
         };
     }

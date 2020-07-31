@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Others;
@@ -12,7 +14,7 @@ using Zidium.UserAccount.Models.Users;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class UsersController : ContextController
+    public class UsersController : BaseController
     {
         /// <summary>
         /// Вывод списка пользователей
@@ -20,15 +22,24 @@ namespace Zidium.UserAccount.Controllers
         [CanManageAccount]
         public ActionResult Index()
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var usersList = repository.QueryAll().OrderBy(x => x.Login);
-            return View(usersList);
+            var users = GetStorage().Users.GetAll().OrderBy(x => x.Login).ToArray();
+            var model = new IndexModel()
+            {
+                Users = users.Select(t => new IndexModel.UserInfo()
+                {
+                    Id = t.Id,
+                    DisplayName = t.DisplayName,
+                    Login = t.Login,
+                    Post = t.Post,
+                    Role = GetStorage().Roles.GetByUserId(t.Id).FirstOrDefault()?.DisplayName
+                }).ToArray()
+            };
+            return View(model);
         }
 
         public ActionResult Show(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var user = repository.GetById(id);
+            var user = GetStorage().Users.GetOneById(id);
 
             if (!CurrentUser.CanManageAccount() && user.Id != CurrentUser.Id)
                 throw new NoAccessToPageException();
@@ -38,16 +49,15 @@ namespace Zidium.UserAccount.Controllers
                 Id = user.Id,
                 Login = user.Login,
                 DisplayName = user.DisplayName,
-                Contacts = user.UserContacts.ToList(),
-                Role = user.Roles.Any() ? user.Roles.First().Role.DisplayName : "нет"
+                Contacts = GetStorage().UserContacts.GetByUserId(user.Id),
+                Role = GetStorage().Roles.GetByUserId(user.Id).FirstOrDefault()?.DisplayName
             };
 
-            var userSettingService = CurrentAccountDbContext.GetUserSettingService();
+            var userSettingService = new UserSettingService(GetStorage());
             model.SendMeNews = userSettingService.SendMeNews(user.Id);
 
             var timeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(user.Id);
-            var timeZoneRepository = CurrentAccountDbContext.GetTimeZoneRepository();
-            var timeZone = timeZoneRepository.GetOneByOffsetMinutes(timeZoneOffsetMinutes);
+            var timeZone = GetStorage().TimeZones.GetOneByOffsetMinutes(timeZoneOffsetMinutes);
             model.TimeZone = timeZone.Name;
 
             return View(model);
@@ -79,7 +89,7 @@ namespace Zidium.UserAccount.Controllers
                 if (string.IsNullOrWhiteSpace(model.DisplayName))
                 {
                     var modelState = new ModelStateHelper<AddUserModel>(ModelState);
-                    modelState.AddErrorFor(x=>x.DisplayName, "Значение не должно быть пустым");
+                    modelState.AddErrorFor(x => x.DisplayName, "Значение не должно быть пустым");
                 }
             }
 
@@ -88,30 +98,33 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                var user = new User()
+                var user = new UserForAdd()
                 {
+                    Id = Guid.NewGuid(),
                     Login = model.Login,
                     DisplayName = model.DisplayName,
                     Post = model.Post
                 };
 
-                var userService = new UserService(DbContext);
+                var userService = new UserService(GetStorage());
 
                 // обновим роль
+                var roles = new List<UserRoleForAdd>();
+
                 if (model.RoleId.HasValue)
                 {
-                    userService.AddUserRole(user, new UserRole()
+                    roles.Add(new UserRoleForAdd()
                     {
+                        Id = Guid.NewGuid(),
+                        UserId = user.Id,
                         RoleId = model.RoleId.Value
                     });
                 }
 
-                userService.CreateUser(user, CurrentUser.AccountId);
+                userService.CreateUser(user, new List<UserContactForAdd>(), roles, CurrentUser.AccountId);
 
-                var userSettingService = CurrentAccountDbContext.GetUserSettingService();
+                var userSettingService = new UserSettingService(GetStorage());
                 userSettingService.TimeZoneOffsetMinutes(user.Id, model.TimeZoneOffsetMinutes);
-
-                DbContext.SaveChanges();
             }
             catch (UserFriendlyException e)
             {
@@ -128,8 +141,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var user = repository.GetById(id);
+            var user = GetStorage().Users.GetOneById(id);
 
             if (!CurrentUser.CanManageAccount() && user.Id != CurrentUser.Id)
                 throw new NoAccessToPageException();
@@ -140,11 +152,11 @@ namespace Zidium.UserAccount.Controllers
                 Login = user.Login,
                 DisplayName = user.DisplayName,
                 Post = user.Post,
-                RoleId = user.Roles.Any() ? user.Roles.First().RoleId : (Guid?) null,
-                Contacts = user.UserContacts.ToList()
+                RoleId = GetStorage().Roles.GetByUserId(user.Id).FirstOrDefault()?.Id,
+                Contacts = GetStorage().UserContacts.GetByUserId(user.Id)
             };
 
-            var userSettingService = CurrentAccountDbContext.GetUserSettingService();
+            var userSettingService = new UserSettingService(GetStorage());
             model.SendMeNews = userSettingService.SendMeNews(user.Id);
             model.TimeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(user.Id);
 
@@ -159,13 +171,12 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult Edit(EditUserModel model)
         {
-            var userService = new UserService(DbContext);
-            var user = userService.GetById(CurrentUser.AccountId, model.Id);
+            var user = GetStorage().Users.GetOneById(model.Id);
 
             if (!CurrentUser.CanManageAccount() && user.Id != CurrentUser.Id)
                 throw new NoAccessToPageException();
 
-            model.Contacts = user.UserContacts.ToList();
+            model.Contacts = GetStorage().UserContacts.GetByUserId(user.Id);
 
             if (ModelState.IsValid)
             {
@@ -181,35 +192,39 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                user.Login = model.Login;
-                user.DisplayName = model.DisplayName;
-                user.Post = model.Post;
+                var userForUpdate = user.GetForUpdate();
+                userForUpdate.Login.Set(model.Login);
+                userForUpdate.DisplayName.Set(model.DisplayName);
+                userForUpdate.Post.Set(model.Post);
+                GetStorage().Users.Update(userForUpdate);
+
+                var userService = new UserService(GetStorage());
 
                 // обновим роль, если она поменялась
                 if (CurrentUser.CanManageAccount())
                 {
-                    if (user.Roles.First().RoleId != model.RoleId)
+                    var roles = GetStorage().UserRoles.GetByUserId(user.Id);
+                    if (roles.Length > 0 && roles.First().RoleId != model.RoleId)
                     {
-                        foreach (var role in user.Roles.ToArray())
+                        foreach (var role in roles)
                         {
-                            userService.RemoveUserRole(user, role, CurrentUser.AccountId);
+                            userService.RemoveUserRole(user.Id, role.Id, CurrentUser.AccountId);
                         }
 
                         if (model.RoleId.HasValue)
-                            userService.AddUserRole(user, new UserRole()
+                            userService.AddUserRole(user.Id, new UserRoleForAdd()
                             {
+                                Id = Guid.NewGuid(),
                                 RoleId = model.RoleId.Value
                             });
                     }
                 }
 
-                userService.UpdateUserLogin(user);
+                userService.UpdateUserLogin(user.Id, model.Login);
 
-                var userSettingService = CurrentAccountDbContext.GetUserSettingService();
+                var userSettingService = new UserSettingService(GetStorage());
                 userSettingService.SendMeNews(user.Id, model.SendMeNews);
                 userSettingService.TimeZoneOffsetMinutes(user.Id, model.TimeZoneOffsetMinutes);
-
-                DbContext.SaveChanges();
             }
             catch (UserFriendlyException e)
             {
@@ -226,14 +241,13 @@ namespace Zidium.UserAccount.Controllers
         [CanManageAccount]
         public ActionResult Delete(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var user = repository.GetById(id);
+            var user = GetStorage().Users.GetOneById(id);
             var model = new DeleteConfirmationModel()
             {
                 Id = user.Id.ToString(),
                 Title = "Удаление пользователя",
                 ModalMode = Request.IsAjaxRequest(),
-                Message = "Вы действительно хотите удалить этого пользователя?",
+                Message = "Вы действительно хотите удалить пользователя" + user.Login + "?",
                 ReturnUrl = Url.Action("Index")
             };
             return View("~/Views/Shared/Dialogs/DeleteConfirmation.cshtml", model);
@@ -247,9 +261,9 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(DeleteConfirmationModel model)
         {
-            var userService = new UserService(DbContext);
-            var user = userService.GetById(CurrentUser.AccountId, Guid.Parse(model.Id));
-            userService.DeleteUser(user, CurrentUser.AccountId);
+            var user = GetStorage().Users.GetOneById(Guid.Parse(model.Id));
+            var userService = new UserService(GetStorage());
+            userService.DeleteUser(user.Id, CurrentUser.AccountId);
 
             return RedirectToAction("Index");
         }
@@ -260,8 +274,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult EditContact(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var contact = repository.GetContactById(id);
+            var contact = GetStorage().UserContacts.GetOneById(id);
 
             if (!CurrentUser.CanManageAccount() && contact.UserId != CurrentUser.Id)
                 throw new NoAccessToPageException();
@@ -274,7 +287,7 @@ namespace Zidium.UserAccount.Controllers
                 UserId = contact.UserId,
                 Type = contact.Type,
                 Value = contact.Value,
-                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
+                CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl()
             };
             return View(model);
         }
@@ -289,13 +302,16 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var contact = repository.GetContactById(model.Id);
+
+            var contact = GetStorage().UserContacts.GetOneById(model.Id);
 
             if (!CurrentUser.CanManageAccount() && contact.UserId != CurrentUser.Id)
                 throw new NoAccessToPageException();
 
-            repository.EditContactById(model.Id, model.Type, model.Value);
+            var contactForUpdate = contact.GetForUpdate();
+            contactForUpdate.Type.Set(model.Type);
+            contactForUpdate.Value.Set(model.Value);
+            GetStorage().UserContacts.Update(contactForUpdate);
 
             if (model.ModalMode)
                 return PartialView("UserContactData", contact);
@@ -309,8 +325,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult AddContact(Guid userId)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var user = repository.GetById(userId);
+            var user = GetStorage().Users.GetOneById(userId);
 
             if (!CurrentUser.CanManageAccount() && user.Id != CurrentUser.Id)
                 throw new NoAccessToPageException();
@@ -320,7 +335,7 @@ namespace Zidium.UserAccount.Controllers
                 ModalMode = Request.IsAjaxRequest(),
                 ReturnUrl = Url.Action("Edit", new { id = userId.ToString() }),
                 UserId = user.Id,
-                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
+                CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl()
             };
             return View(model);
         }
@@ -335,14 +350,22 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            var repository = CurrentAccountDbContext.GetUserRepository();
+
             var userId = model.UserId;
-            var user = repository.GetById(userId);
+            var user = GetStorage().Users.GetOneById(userId);
 
             if (!CurrentUser.CanManageAccount() && user.Id != CurrentUser.Id)
                 throw new NoAccessToPageException();
 
-            var contact = repository.AddContactToUser(user.Id, model.Type, model.Value, MvcApplication.GetServerDateTime());
+            var contactForAdd = new UserContactForAdd()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Type = model.Type,
+                Value = model.Value,
+                CreateDate = MvcApplication.GetServerDateTime()
+            };
+            var contact = GetStorage().UserContacts.GetOneById(contactForAdd.Id);
 
             if (model.ModalMode)
                 return PartialView("UserContactRow", contact);
@@ -356,8 +379,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult DeleteContact(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var contact = repository.GetContactById(id);
+            var contact = GetStorage().UserContacts.GetOneById(id);
 
             if (!CurrentUser.CanManageAccount() && contact.UserId != CurrentUser.Id)
                 throw new NoAccessToPageException();
@@ -367,7 +389,7 @@ namespace Zidium.UserAccount.Controllers
                 Id = id.ToString(),
                 Title = "Удаление контакта",
                 ModalMode = Request.IsAjaxRequest(),
-                Message = "Вы действительно хотите удалить этот контакт?",
+                Message = "Вы действительно хотите удалить контакт" + contact.Value + "?",
                 ReturnUrl = Url.Action("Edit", new { id = contact.UserId }),
                 AjaxUpdateTargetId = "uct_" + id,
                 OnAjaxSuccess = "HideModal"
@@ -383,13 +405,12 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult DeleteContact(DeleteConfirmationModel model)
         {
-            var repository = CurrentAccountDbContext.GetUserRepository();
-            var contact = repository.GetContactById(Guid.Parse(model.Id));
+            var contact = GetStorage().UserContacts.GetOneById(Guid.Parse(model.Id));
 
             if (!CurrentUser.CanManageAccount() && contact.UserId != CurrentUser.Id)
                 throw new NoAccessToPageException();
 
-            repository.DeleteContactById(contact.Id);
+            GetStorage().UserContacts.Delete(contact.Id);
 
             if (model.ModalMode)
                 return new EmptyResult();
@@ -400,7 +421,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult ChangePasswordDialog(Guid id)
         {
-            var user = GetUserById(id);
+            var user = GetStorage().Users.GetOneById(id);
             var model = new ChangePasswordModel()
             {
                 UserId = user.Id,
@@ -418,15 +439,15 @@ namespace Zidium.UserAccount.Controllers
                 var state = new ModelStateHelper<ChangePasswordModel>(ModelState);
                 if (string.IsNullOrWhiteSpace(model.Password))
                 {
-                    state.AddErrorFor(x=>x.Password, "Не указан новый пароль");
+                    state.AddErrorFor(x => x.Password, "Не указан новый пароль");
                 }
                 else if (model.Password != model.PasswordConfirm)
                 {
-                    state.AddErrorFor(x=>x.PasswordConfirm, "Отличается от нового пароля");
+                    state.AddErrorFor(x => x.PasswordConfirm, "Отличается от нового пароля");
                 }
                 if (ModelState.IsValid)
                 {
-                    var userService = new UserService(DbContext);
+                    var userService = new UserService(GetStorage());
                     userService.SetNewPassword(CurrentUser.AccountId, model.UserId, model.Password);
                     var endModel = new ChangePasswordEndModel()
                     {
@@ -447,9 +468,9 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult StartResetPassword(Guid id)
         {
-            var userService = new UserService(DbContext);
+            var userService = new UserService(GetStorage());
             userService.StartResetPassword(id);
-            var user = GetUserById(id);
+            var user = GetStorage().Users.GetOneById(id);
             var message = $"На адрес {user.Login} отправлено письмо с одноразовой ссылкой на смену пароля";
             this.SetTempMessage(TempMessageType.Success, message);
             return RedirectToAction("Edit", new { Id = id });
@@ -457,7 +478,7 @@ namespace Zidium.UserAccount.Controllers
 
         public JsonResult CheckNewLogin(AddUserModel model)
         {
-            var login = ConfigDbServicesHelper.GetLoginService().GetOneOrNull(CurrentUser.AccountId, model.Login);
+            var login = GetConfigDbServicesFactory().GetLoginService().GetOneOrNull(CurrentUser.AccountId, model.Login);
             if (login != null)
                 return Json("Пользователь с таким EMail уже существует", JsonRequestBehavior.AllowGet);
             return Json(true, JsonRequestBehavior.AllowGet);
@@ -465,16 +486,12 @@ namespace Zidium.UserAccount.Controllers
 
         public JsonResult CheckExistingLogin(EditUserModel model)
         {
-            var login = ConfigDbServicesHelper.GetLoginService().GetOneOrNull(CurrentUser.AccountId, model.Login);
-            if (login != null)
+            var login = GetConfigDbServicesFactory().GetLoginService().GetOneOrNull(CurrentUser.AccountId, model.Login);
+            if (login != null && login.AccountId == CurrentUser.AccountId)
             {
-                using (var accountContext = AccountDbContext.CreateFromAccountId(login.Account.Id))
-                {
-                    var userRepository = accountContext.GetUserRepository();
-                    var user = userRepository.GetOneOrNullByLogin(model.Login);
-                    if (user != null && user.Id != model.Id)
-                        return Json("Пользователь с таким EMail уже существует", JsonRequestBehavior.AllowGet);
-                }
+                var user = GetStorage().Users.GetOneOrNullByLogin(model.Login);
+                if (user != null && user.Id != model.Id)
+                    return Json("Пользователь с таким EMail уже существует", JsonRequestBehavior.AllowGet);
             }
             return Json(true, JsonRequestBehavior.AllowGet);
         }

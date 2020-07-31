@@ -1,11 +1,8 @@
-﻿@using Zidium.Core.AccountsDb
-@using Zidium.Core.Api
-@using Zidium.Core.Common.Helpers
-@using Zidium.UserAccount.Helpers
-@using Zidium.UserAccount.Models
+﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.UnitTests
-@using Zidium.UserAccount.Models.Controls;
+
 @model ShowSettingsHttpModel
+
 @{
     string timeoutText = GuiHelper.TimeSpanAsString(Model.Timeout);
 }

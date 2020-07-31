@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Xunit;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
@@ -20,12 +20,9 @@ namespace Zidium.Core.Tests.Dispatcher
             var componentType = TestHelper.CreateRandomComponentType(account.Id);
 
             // Должны появиться подписки на него
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var subscriptionRepository = context.GetSubscriptionRepository();
-                
-                var subscriptions = subscriptionRepository
-                    .QueryAll()
+                var subscriptions = context.Subscriptions
                     .Where(t => t.UserId == user.Id)
                     .ToArray();
 
@@ -46,12 +43,9 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим нового пользователя
             var user = TestHelper.CreateTestUser(account.Id);
             
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var subscriptionRepository = context.GetSubscriptionRepository();
-
-                var subscriptions = subscriptionRepository
-                    .QueryAll()
+                var subscriptions = context.Subscriptions
                     .Where(t => t.UserId == user.Id)
                     .ToArray();
 
@@ -68,12 +62,9 @@ namespace Zidium.Core.Tests.Dispatcher
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.CreateTestUser(account.Id);
 
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var subscriptionRepository = context.GetSubscriptionRepository();
-
-                var subscriptions = subscriptionRepository
-                    .QueryAll()
+                var subscriptions = context.Subscriptions
                     .Where(t => t.UserId == user.Id)
                     .ToArray();
 
@@ -89,12 +80,12 @@ namespace Zidium.Core.Tests.Dispatcher
                 Assert.Equal(24 * 60 * 60, forAll.ResendTimeInSeconds);
 
                 // Корень - уведомления отключены
-                var forRoot = subscriptions.FirstOrDefault(t => t.Object == SubscriptionObject.ComponentType && t.ComponentTypeId == SystemComponentTypes.Root.Id);
+                var forRoot = subscriptions.FirstOrDefault(t => t.Object == SubscriptionObject.ComponentType && t.ComponentTypeId == SystemComponentType.Root.Id);
                 Assert.NotNull(forRoot);
                 Assert.False(forRoot.IsEnabled);
 
                 // Папки - уведомления отключены
-                var forFolder = subscriptions.FirstOrDefault(t => t.Object == SubscriptionObject.ComponentType && t.ComponentTypeId == SystemComponentTypes.Folder.Id);
+                var forFolder = subscriptions.FirstOrDefault(t => t.Object == SubscriptionObject.ComponentType && t.ComponentTypeId == SystemComponentType.Folder.Id);
                 Assert.NotNull(forFolder);
                 Assert.False(forFolder.IsEnabled);
             }

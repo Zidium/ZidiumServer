@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Xunit;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -18,49 +18,49 @@ namespace Zidium.UserAccount.Tests
         {
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.GetAccountAdminUser(account.Id);
-            var accountContext = AccountDbContext.CreateFromAccountId(account.Id);
-            var eventTypeRepository = accountContext.GetEventTypeRepository();
+            var storage = TestHelper.GetStorage(account.Id);
+            var guid = Guid.NewGuid().ToString();
 
             // Создадим три типа событий
             // ComponentEvent, Info
-            var eventType1 = new EventType()
+            var eventType1ForAdd = new EventTypeForAdd()
             {
                 Category = EventCategory.ComponentEvent,
                 DisplayName = "Тестовый тип события " + DateTime.Now.Ticks + " ComponentEvent, Info",
                 ImportanceForNew = EventImportance.Success,
                 JoinIntervalSeconds = 0,
-                SystemName = "EventType.Test " + DateTime.Now.Ticks + " ComponentEvent, Info"
+                SystemName = "EventType.Test " + guid + " ComponentEvent, Info"
             };
-            eventType1 = eventTypeRepository.GetOrCreate(eventType1);
+            var eventType1 = new EventTypeService(storage).GetOrCreate(eventType1ForAdd, account.Id);
 
             // ComponentEvent, Alarm
-            var eventType2 = new EventType()
+            var eventType2ForAdd = new EventTypeForAdd()
             {
                 Category = EventCategory.ComponentEvent,
                 DisplayName = "Тестовый тип события " + DateTime.Now.Ticks + " ComponentEvent, Alarm",
                 ImportanceForNew = EventImportance.Alarm,
                 JoinIntervalSeconds = 0,
-                SystemName = "EventType.Test " + DateTime.Now.Ticks + " ComponentEvent, Alarm"
+                SystemName = "EventType.Test " + guid + " ComponentEvent, Alarm"
             };
-            eventType2 = eventTypeRepository.GetOrCreate(eventType2);
+            var eventType2 = new EventTypeService(storage).GetOrCreate(eventType2ForAdd, account.Id);
 
             // ApplicationError, Alarm
-            var eventType3 = new EventType()
+            var eventType3ForAdd = new EventTypeForAdd()
             {
                 Category = EventCategory.ApplicationError,
                 DisplayName = "Тестовый тип события " + DateTime.Now.Ticks + " ApplicationError, Alarm",
                 ImportanceForNew = EventImportance.Alarm,
                 JoinIntervalSeconds = 0,
-                SystemName = "EventType.Test " + DateTime.Now.Ticks + " ApplicationError, Alarm"
+                SystemName = "EventType.Test " + guid + " ApplicationError, Alarm"
             };
-            eventType3 = eventTypeRepository.GetOrCreate(eventType3);
+            var eventType3 = new EventTypeService(storage).GetOrCreate(eventType3ForAdd, account.Id);
 
             // Проверим, что на странице без фильтров есть только типы с категорией ComponentEvent
             using (var controller = new EventTypesController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index();
+                var result = (ViewResultBase)controller.Index(search: guid);
                 var model = (EventTypesListModel)result.Model;
-                var types = model.EventTypes.ToList();
+                var types = model.EventTypes;
                 Assert.True(types.Any(t => t.Id == eventType1.Id));
                 Assert.True(types.Any(t => t.Id == eventType2.Id));
                 Assert.False(types.Any(t => t.Id == eventType3.Id));
@@ -69,7 +69,7 @@ namespace Zidium.UserAccount.Tests
             // Проверим фильтр по категории
             using (var controller = new EventTypesController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index(category: "ApplicationError");
+                var result = (ViewResultBase)controller.Index(category: "ApplicationError", search: guid);
                 var model = (EventTypesListModel)result.Model;
                 Assert.False(model.EventTypes.Any(t => t.Id == eventType1.Id));
                 Assert.False(model.EventTypes.Any(t => t.Id == eventType2.Id));
@@ -79,7 +79,7 @@ namespace Zidium.UserAccount.Tests
             // Проверим фильтр по важности
             using (var controller = new EventTypesController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index(importance: "Alarm");
+                var result = (ViewResultBase)controller.Index(importance: "Alarm", search: guid);
                 var model = (EventTypesListModel)result.Model;
                 Assert.False(model.EventTypes.Any(t => t.Id == eventType1.Id));
                 Assert.True(model.EventTypes.Any(t => t.Id == eventType2.Id));
@@ -102,27 +102,6 @@ namespace Zidium.UserAccount.Tests
                 Assert.False(model.EventTypes.Any(t => t.Id == eventType1.Id));
                 Assert.False(model.EventTypes.Any(t => t.Id == eventType2.Id));
                 Assert.True(model.EventTypes.Any(t => t.Id == eventType3.Id));
-            }
-
-            //Проверим фильтр по удалённым
-            eventTypeRepository.Remove(eventType2);
-
-            using (var controller = new EventTypesController(account.Id, user.Id))
-            {
-                var result = (ViewResultBase)controller.Index();
-                var model = (EventTypesListModel)result.Model;
-                Assert.True(model.EventTypes.Any(t => t.Id == eventType1.Id));
-                Assert.False(model.EventTypes.Any(t => t.Id == eventType2.Id));
-                Assert.False(model.EventTypes.Any(t => t.Id == eventType3.Id));
-            }
-
-            using (var controller = new EventTypesController(account.Id, user.Id))
-            {
-                var result = (ViewResultBase)controller.Index(showDeleted: 1);
-                var model = (EventTypesListModel)result.Model;
-                Assert.True(model.EventTypes.Any(t => t.Id == eventType1.Id));
-                Assert.True(model.EventTypes.Any(t => t.Id == eventType2.Id));
-                Assert.False(model.EventTypes.Any(t => t.Id == eventType3.Id));
             }
 
         }
@@ -173,18 +152,20 @@ namespace Zidium.UserAccount.Tests
             {
                 controller.Add(model);
             }
-            var accountContext = AccountDbContext.CreateFromAccountId(account.Id);
-            var eventTypeRepository = accountContext.GetEventTypeRepository();
-            var eventType = eventTypeRepository.GetOneOrNullBySystemName(model.SystemName);
-            Assert.NotNull(eventType);
-            Assert.Equal(model.DisplayName, eventType.DisplayName);
-            Assert.Equal(model.SystemName, eventType.SystemName);
-            Assert.Equal(model.Category, eventType.Category);
-            Assert.Equal(model.JoinInterval, TimeSpanHelper.FromSeconds(eventType.JoinIntervalSeconds));
-            Assert.Equal(model.OldVersion, eventType.OldVersion);
-            Assert.Equal(model.ImportanceForOld, eventType.ImportanceForOld);
-            Assert.Equal(model.ImportanceForNew, eventType.ImportanceForNew);
-            Assert.Equal(model.IsSystem, eventType.IsSystem);
+
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
+            {
+                var eventType = accountContext.EventTypes.FirstOrDefault(t => t.SystemName == model.SystemName);
+                Assert.NotNull(eventType);
+                Assert.Equal(model.DisplayName, eventType.DisplayName);
+                Assert.Equal(model.SystemName, eventType.SystemName);
+                Assert.Equal(model.Category, eventType.Category);
+                Assert.Equal(model.JoinInterval, TimeSpanHelper.FromSeconds(eventType.JoinIntervalSeconds));
+                Assert.Equal(model.OldVersion, eventType.OldVersion);
+                Assert.Equal(model.ImportanceForOld, eventType.ImportanceForOld);
+                Assert.Equal(model.ImportanceForNew, eventType.ImportanceForNew);
+                Assert.Equal(model.IsSystem, eventType.IsSystem);
+            }
         }
 
         [Fact]
@@ -219,61 +200,57 @@ namespace Zidium.UserAccount.Tests
             {
                 controller.Edit(model);
             }
-            var accountContext = AccountDbContext.CreateFromAccountId(account.Id);
-            var eventTypeRepository = accountContext.GetEventTypeRepository();
-            eventType = eventTypeRepository.GetById(model.Id);
-            Assert.Equal(model.Id, eventType.Id);
-            Assert.Equal(model.DisplayName, eventType.DisplayName);
-            Assert.Equal(model.SystemName, eventType.SystemName);
-            Assert.Equal(model.Category, eventType.Category);
-            Assert.Equal(model.JoinInterval, TimeSpanHelper.FromSeconds(eventType.JoinIntervalSeconds));
-            Assert.Equal(model.OldVersion, eventType.OldVersion);
-            Assert.Equal(model.ImportanceForOld, eventType.ImportanceForOld);
-            Assert.Equal(model.ImportanceForNew, eventType.ImportanceForNew);
-            Assert.Equal(model.IsSystem, eventType.IsSystem);
+
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
+            {
+                var dbEventType = accountContext.EventTypes.Find(model.Id);
+                Assert.NotNull(dbEventType);
+                Assert.Equal(model.Id, dbEventType.Id);
+                Assert.Equal(model.DisplayName, dbEventType.DisplayName);
+                Assert.Equal(model.SystemName, dbEventType.SystemName);
+                Assert.Equal(model.Category, dbEventType.Category);
+                Assert.Equal(model.JoinInterval, TimeSpanHelper.FromSeconds(dbEventType.JoinIntervalSeconds));
+                Assert.Equal(model.OldVersion, dbEventType.OldVersion);
+                Assert.Equal(model.ImportanceForOld, dbEventType.ImportanceForOld);
+                Assert.Equal(model.ImportanceForNew, dbEventType.ImportanceForNew);
+                Assert.Equal(model.IsSystem, dbEventType.IsSystem);
+            }
         }
-        
+
         [Fact]
         public void EventTypeDeleteTest()
         {
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.GetAccountAdminUser(account.Id);
+            var storage = TestHelper.GetStorage(account.Id);
 
             DeleteConfirmationModel model;
-            string systemName;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var eventTypeRepository = new EventTypeRepository(accountContext);
-                var eventType = new EventType()
-                {
-                    Category = EventCategory.ComponentEvent,
-                    DisplayName = "Тестовый тип события " + DateTime.Now.Ticks,
-                    ImportanceForNew = EventImportance.Success,
-                    JoinIntervalSeconds = 0,
-                    SystemName = "EventType.Test " + DateTime.Now.Ticks
-                };
-                eventType = eventTypeRepository.GetOrCreate(eventType);
-                systemName = eventType.SystemName;
 
-                using (var controller = new EventTypesController(account.Id, user.Id))
-                {
-                    var result = (ViewResultBase)controller.Delete(eventType.Id);
-                    model = (DeleteConfirmationModel)result.Model;
-                }
-                using (var controller = new EventTypesController(account.Id, user.Id))
-                {
-                    controller.Delete(model);
-                }
+            var eventTypeForAdd = new EventTypeForAdd()
+            {
+                Category = EventCategory.ComponentEvent,
+                DisplayName = "Тестовый тип события " + DateTime.Now.Ticks,
+                ImportanceForNew = EventImportance.Success,
+                JoinIntervalSeconds = 0,
+                SystemName = "EventType.Test " + DateTime.Now.Ticks
+            };
+            var eventType = new EventTypeService(storage).GetOrCreate(eventTypeForAdd, account.Id);
+
+            using (var controller = new EventTypesController(account.Id, user.Id))
+            {
+                var result = (ViewResultBase)controller.Delete(eventType.Id);
+                model = (DeleteConfirmationModel)result.Model;
+            }
+            using (var controller = new EventTypesController(account.Id, user.Id))
+            {
+                controller.Delete(model);
             }
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var eventTypeRepository = new EventTypeRepository(accountContext);
-                var eventType = eventTypeRepository.GetById(Guid.Parse(model.Id));
-                Assert.NotNull(eventType);
-                Assert.True(eventType.IsDeleted);
-                eventType = eventTypeRepository.GetOneOrNullBySystemName(systemName);
-                Assert.Null(eventType);
+                var dbEventType = accountContext.EventTypes.Find(Guid.Parse(model.Id));
+                Assert.NotNull(dbEventType);
+                Assert.True(dbEventType.IsDeleted);
             }
         }
     }

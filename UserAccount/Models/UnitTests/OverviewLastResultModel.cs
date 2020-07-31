@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -21,11 +21,11 @@ namespace Zidium.UserAccount.Models.UnitTests
         /// </summary>
         public bool ShowRunButton { get; set; }
 
-        private static string GetShowDetailsUrl(UnitTest unitTest, Event eventObj)
+        private static string GetShowDetailsUrl(UnitTestForRead unitTest, EventForRead eventObj, IStorage storage)
         {
-            if (unitTest.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
             {
-                var property = eventObj.Properties.FirstOrDefault(x => x.Name == "Permalink");
+                var property = storage.EventProperties.GetByEventId(eventObj.Id).FirstOrDefault(x => x.Name == "Permalink");
                 if (property != null)
                 {
                     return property.Value;
@@ -34,20 +34,21 @@ namespace Zidium.UserAccount.Models.UnitTests
             return null;
         }
 
-        public static OverviewLastResultModel Create(UnitTest unitTest, Event eventObj)
+        public static OverviewLastResultModel Create(UnitTestForRead unitTest, EventForRead eventObj, IStorage storage)
         {
+            var bulb = storage.Bulbs.GetOneById(unitTest.StatusDataId);
             var model = new OverviewLastResultModel()
             {
                 UnitTestId = unitTest.Id,
-                Status = unitTest.Bulb.Status,
+                Status = bulb.Status,
                 ShowRunButton = true,
-                IsCustom = SystemUnitTestTypes.IsSystem(unitTest.TypeId)==false
+                IsCustom = SystemUnitTestType.IsSystem(unitTest.TypeId) == false
             };
-            if (unitTest.Bulb.Status== Core.Api.MonitoringStatus.Disabled)
+            if (bulb.Status == MonitoringStatus.Disabled)
             {
                 model.ShowRunButton = false;
             }
-            if (SystemUnitTestTypes.IsSystem(unitTest.TypeId) == false)
+            if (SystemUnitTestType.IsSystem(unitTest.TypeId) == false)
             {
                 model.ShowRunButton = false;
             }
@@ -60,7 +61,7 @@ namespace Zidium.UserAccount.Models.UnitTests
             {
                 // были выполнения
                 model.EventId = eventObj.Id;
-                model.ShowDetailsUrl = GetShowDetailsUrl(unitTest, eventObj);
+                model.ShowDetailsUrl = GetShowDetailsUrl(unitTest, eventObj, storage);
                 model.ExecutionTime = eventObj.StartDate;
                 model.Message = eventObj.Message;
                 if (model.Message == null)

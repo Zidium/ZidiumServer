@@ -1,6 +1,6 @@
 ﻿using System;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -13,13 +13,14 @@ namespace Zidium.UserAccount.Models.UnitTests
         public string DisableComment { get; set; }
         public DateTime? DisableEndTime { get; set; }
 
-        public static OverviewCurrentStatusModel Create(UnitTest unitTest)
+        public static OverviewCurrentStatusModel Create(UnitTestForRead unitTest, IStorage storage)
         {
+            var bulb = storage.Bulbs.GetOneById(unitTest.StatusDataId);
             var model = new OverviewCurrentStatusModel();
             model.UnitTestId = unitTest.Id;
-            model.Status = unitTest.Bulb.Status;
-            model.StatusId = unitTest.Bulb.StatusEventId;
-            model.StatusDuration = unitTest.Bulb.GetDuration(DateTime.Now);
+            model.Status = bulb.Status;
+            model.StatusId = bulb.StatusEventId;
+            model.StatusDuration = bulb.GetDuration(DateTime.Now);
             model.DisableComment = unitTest.DisableComment;
             model.DisableEndTime = unitTest.DisableToDate;
             return model;

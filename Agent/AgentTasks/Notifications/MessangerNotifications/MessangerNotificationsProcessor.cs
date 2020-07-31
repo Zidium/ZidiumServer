@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -24,44 +23,50 @@ namespace Zidium.Agent.AgentTasks.Notifications
             SubscriptionChannel.VKontakte
         };
 
-        protected override void Send(
-            ILogger logger,
-            Notification notification,
-            AccountDbContext accountDbContext,
+        protected override void Send(ILogger logger,
+            NotificationForRead notification,
+            IStorage storage,
             string accountName,
-            Guid accountId)
+            Guid accountId, 
+            NotificationForUpdate notificationForUpdate)
         {
-            var componentRepository = accountDbContext.GetComponentRepository();
-            var component = componentRepository.GetById(notification.Event.OwnerId);
+            var eventObj = storage.Events.GetOneById(notification.EventId);
+            var component = storage.Components.GetOneById(eventObj.OwnerId);
 
             // составляем тело письма
-            var body = GetStatusEventText(logger, notification, component, accountDbContext, accountName);
+            var body = GetStatusEventText(logger, notification, component, eventObj, storage, accountName);
 
             // сохраняем письмо в очередь
-            var messageCommandRepository = accountDbContext.GetSendMessageCommandRepository();
-            var command = new SendMessageCommand()
+            var command = new SendMessageCommandForAdd()
             {
                 Id = Guid.NewGuid(),
+                Status = MessageStatus.InQueue,
+                CreateDate = DateTime.Now,
                 Body = body,
                 To = notification.Address,
                 Channel = notification.Type,
                 ReferenceId = notification.Id
             };
-            messageCommandRepository.Add(command);
+            storage.SendMessageCommands.Add(command);
 
             // заполним ссылку на письмо в уведомлении
-            notification.SendMessageCommand = command;
+            notificationForUpdate.SendMessageCommandId.Set(command.Id);
         }
 
-        protected Event GetRecentReasonEvent(Event statusEvent, AccountDbContext accountDbContext)
+        protected EventForRead GetRecentReasonEvent(EventForRead statusEvent, IStorage storage)
         {
-            var repository = accountDbContext.GetEventRepository();
-            return repository.GetRecentReasonEvent(statusEvent);
+            var service = new EventService(storage);
+            return service.GetRecentReasonEvent(statusEvent);
         }
 
-        protected string GetStatusEventText(ILogger logger, Notification notification, Component component, AccountDbContext accountDbContext, string accountName)
+        protected string GetStatusEventText(
+            ILogger logger, 
+            NotificationForRead notification, 
+            ComponentForRead component,
+            EventForRead statusEvent,
+            IStorage storage, 
+            string accountName)
         {
-            var statusEvent = notification.Event;
             var text = new StringBuilder();
 
             // Делаем строку:
@@ -78,13 +83,13 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
             text.Append(" - ");
 
-            var componentPathText = ComponentHelper.GetComponentPathText(component);
+            var componentPathText = ComponentHelper.GetComponentPathText(component, storage);
             text.AppendLine(componentPathText);
 
             // Причину показываем, только если статус стал опаснее
-            if (statusEvent.ImportanceHasGrown)
+            if (statusEvent.ImportanceHasGrown())
             {
-                var reasonEvent = GetRecentReasonEvent(statusEvent, accountDbContext);
+                var reasonEvent = GetRecentReasonEvent(statusEvent, storage);
 
                 if (reasonEvent != null)
                 {
@@ -93,8 +98,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     // причина - ошибка компонента
                     if (reasonEvent.Category == EventCategory.ApplicationError)
                     {
-                        var eventTypeRepository = accountDbContext.GetEventTypeRepository();
-                        var errorType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+                        var errorType = storage.EventTypes.GetOneById(reasonEvent.EventTypeId);
                         var errorTitle = "Ошибка " + (errorType.Code ?? errorType.DisplayName);
                         text.AppendLine(errorTitle);
                         var urlText = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
@@ -104,8 +108,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     // причина - событие компонента
                     if (reasonEvent.Category == EventCategory.ComponentEvent)
                     {
-                        var eventTypeRepository = accountDbContext.GetEventTypeRepository();
-                        var componentEventType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+                        var componentEventType = storage.EventTypes.GetOneById(reasonEvent.EventTypeId);
                         var errorTitle = "Событие компонента " + componentEventType.DisplayName;
                         text.AppendLine(errorTitle);
                         var urlText = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
@@ -115,8 +118,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     // причина - статус дочернего компонента
                     if (reasonEvent.Category == EventCategory.ComponentExternalStatus)
                     {
-                        var componentRepository = accountDbContext.GetComponentRepository();
-                        var childComponent = componentRepository.GetById(reasonEvent.OwnerId);
+                        var childComponent = storage.Components.GetOneById(reasonEvent.OwnerId);
                         var errorTitle = "Статус " + statusName + " дочернего компонента " + childComponent.DisplayName;
                         text.AppendLine(errorTitle);
                         var urlText = UrlHelper.GetComponentUrl(childComponent.Id, accountName);
@@ -126,8 +128,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     // причина - результат проверки
                     if (reasonEvent.Category == EventCategory.UnitTestResult)
                     {
-                        var unitTestRepository = accountDbContext.GetUnitTestRepository();
-                        var unitTest = unitTestRepository.GetById(reasonEvent.OwnerId);
+                        var unitTest = storage.UnitTests.GetOneById(reasonEvent.OwnerId);
                         var errorTitle = "Результат проверки " + unitTest.DisplayName;
                         text.AppendLine(errorTitle);
                         var urlText = UrlHelper.GetUnitTestUrl(unitTest.Id, accountName);
@@ -137,21 +138,17 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     // причина - значение метрики
                     if (reasonEvent.Category == EventCategory.MetricStatus)
                     {
-                        var metricRepository = accountDbContext.GetMetricRepository();
-                        var metric = metricRepository.GetById(reasonEvent.OwnerId);
-                        var metricHistoryRepository = accountDbContext.GetMetricHistoryRepository();
+                        var metric = storage.Metrics.GetOneById(reasonEvent.OwnerId);
+                        var metricType = storage.MetricTypes.GetOneById(metric.MetricTypeId);
 
-                        var firstValue = metricHistoryRepository.GetAllByStatus(reasonEvent.Id)
-                                .OrderBy(x => x.BeginDate)
-                                .FirstOrDefault();
+                        var firstValue = storage.MetricHistory.GetFirstByStatusEventId(reasonEvent.Id);
                         var firstValueText = firstValue != null ? firstValue.Value.ToString() : "null";
 
-                        var errorTitle = "Значение метрики " + metric.MetricType.DisplayName + " = " + firstValueText;
+                        var errorTitle = "Значение метрики " + metricType.DisplayName + " = " + firstValueText;
                         text.AppendLine(errorTitle);
                         var urlText = UrlHelper.GetMetricUrl(metric.Id, accountName);
                         text.AppendLine(urlText);
                     }
-
                 }
             }
             else

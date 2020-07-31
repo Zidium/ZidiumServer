@@ -3,8 +3,11 @@ using System.Web;
 using NLog;
 using Zidium.Api;
 using Zidium.Core;
+using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace Zidium.ApiHttpService
 {
@@ -12,6 +15,7 @@ namespace Zidium.ApiHttpService
     {
         protected void InitMonitoring()
         {
+            // TODO Remove database usage and dependency
             var client = SystemAccountHelper.GetInternalSystemClient();
             client.EventPreparer = new HttpServiceEventPreparer();
 
@@ -33,7 +37,17 @@ namespace Zidium.ApiHttpService
 
         protected void Application_Start(object sender, EventArgs e)
         {
+            // Приложение не должно накатывать миграции или создавать базы
+            StorageFactory.DisableMigrations();
+
             Initialization.SetServices();
+            DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+
+            if (DispatcherHelper.UseLocalDispatcher())
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
+            else
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new RemoteAccountStorageFactory());
+
             InitMonitoring();
         }
 

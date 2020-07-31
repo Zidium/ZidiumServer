@@ -5,9 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
 {
@@ -118,6 +119,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 request.MaximumResponseHeadersLength = 500;
                 request.Timeout = timeOutSeconds * 1000;
                 request.ReadWriteTimeout = timeOutSeconds * 1000;
+                request.KeepAlive = false;
 
                 // добавим заголовки HTTP
                 if (inputData.Headers != null)
@@ -297,11 +299,22 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
 
             // html body
             var html = string.Empty;
-            var responseStream = response.GetResponseStream();
-            if (responseStream != null)
+            using (var responseStream = response.GetResponseStream())
             {
-                var streamReader = new StreamReader(responseStream, Encoding.UTF8); //todo почему всегда Encoding.UTF8?
-                html = streamReader.ReadToEnd();
+                if (responseStream != null)
+                {
+                    var streamReader = new StreamReader(responseStream, Encoding.UTF8); //todo почему всегда Encoding.UTF8?
+                    var task = streamReader.ReadToEndAsync();
+                    var executedTask = Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))).Result;
+                    if (executedTask == task)
+                    {
+                        html = task.Result;
+                    }
+                    else
+                    {
+                        responseStream.Close();
+                    }
+                }
             }
 
             outputData.ResponseHtml = html;

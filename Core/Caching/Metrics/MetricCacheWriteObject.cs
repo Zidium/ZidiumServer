@@ -1,7 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -17,12 +16,12 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Ссылка на компоненты
         /// </summary>
-        public Guid ComponentId { get; set; }
+        public Guid ComponentId { get; private set; }
 
         /// <summary>
         /// Ссылка на тип метрики
         /// </summary>
-        public Guid MetricTypeId { get; set; }
+        public Guid MetricTypeId { get; private set; }
         
         /// <summary>
         /// Признак удалённого
@@ -74,7 +73,7 @@ namespace Zidium.Core.Caching
         public ObjectColor? NoSignalColor { get; set; }
 
 
-        public DateTime? CreateDate { get; set; }
+        public DateTime? CreateDate { get; private set; }
 
         /// <summary>
         /// Текущее значение
@@ -89,33 +88,12 @@ namespace Zidium.Core.Caching
 
         public Guid StatusDataId { get; set; }
 
-        public Metric CreateEf()
+        public MetricForUpdate CreateEf()
         {
-            return new Metric()
-            {
-                Id = Id,
-                Enable = Enable,
-                DisableComment = DisableComment,
-                DisableToDate = DisableToDate,
-                IsDeleted = IsDeleted,
-                ParentEnable = ParentEnable,
-                CreateDate = CreateDate,
-                Value = Value,
-                BeginDate = BeginDate,
-                ComponentId = ComponentId,
-                ActualDate = ActualDate,
-                MetricTypeId = MetricTypeId,
-                StatusDataId = StatusDataId,
-                NoSignalColor = NoSignalColor,
-                ConditionAlarm = ConditionRed,
-                ConditionWarning = ConditionYellow,
-                ConditionSuccess = ConditionGreen,
-                ConditionElseColor = ElseColor,
-                ActualTimeSecs = TimeSpanHelper.GetSeconds(ActualTime)
-            };
+            return new MetricForUpdate(Id);
         }
 
-        public static MetricCacheWriteObject Create(Metric metric, Guid accountId)
+        public static MetricCacheWriteObject Create(MetricForRead metric, Guid accountId)
         {
             if (metric == null)
             {

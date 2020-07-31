@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Web.Mvc;
 using Xunit;
-using Zidium.Core.AccountsDb;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -31,14 +31,15 @@ namespace Zidium.UserAccount.Tests
                 controller.Add(model);
             }
 
-            var accountContext = AccountDbContext.CreateFromAccountId(account.Id);
-            var repository = accountContext.GetComponentTypeRepository();
-            var componentType = repository.GetOneOrNullBySystemName(model.SystemName);
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
+            {
+                var componentType = accountContext.ComponentTypes.FirstOrDefault(t => t.SystemName == model.SystemName);
 
-            Assert.NotNull(componentType);
-            Assert.False(componentType.IsSystem);
-            Assert.Equal(model.SystemName, componentType.SystemName);
-            Assert.Equal(model.DisplayName, componentType.DisplayName);
+                Assert.NotNull(componentType);
+                Assert.False(componentType.IsSystem);
+                Assert.Equal(model.SystemName, componentType.SystemName);
+                Assert.Equal(model.DisplayName, componentType.DisplayName);
+            }
         }
 
         [Fact]
@@ -64,12 +65,12 @@ namespace Zidium.UserAccount.Tests
             }
 
             // Проверим, что компонент удалился
-            var accountContext = AccountDbContext.CreateFromAccountId(account.Id);
-            var repository = accountContext.GetComponentTypeRepository();
-            var componentType = repository.GetByIdOrNull(componentTypeInfo.Id);
-            Assert.NotNull(componentType);
-            Assert.True(componentType.IsDeleted);
-
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
+            {
+                var componentType = accountContext.ComponentTypes.Find(componentTypeInfo.Id);
+                Assert.NotNull(componentType);
+                Assert.True(componentType.IsDeleted);
+            }
         }
 
     }

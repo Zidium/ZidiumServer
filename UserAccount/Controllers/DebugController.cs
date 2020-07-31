@@ -3,7 +3,7 @@
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class DebugController : ContextController
+    public class DebugController : BaseController
     {
         [ValidateInput(false)]
         [HttpPost]

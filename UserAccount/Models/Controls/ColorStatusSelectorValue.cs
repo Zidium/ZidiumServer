@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models.Controls
@@ -52,12 +51,12 @@ namespace Zidium.UserAccount.Models.Controls
         public ObjectColor? GetSelectedOne()
         {
             var colors = GetSelectedColors();
-            if (colors.Count == 0)
+            if (colors.Length == 0)
                 return null;
             return colors.First();
         }
 
-        public List<ObjectColor> GetSelectedColors()
+        public ObjectColor[] GetSelectedColors()
         {
             var colors = new List<ObjectColor>();
             if (Checked)
@@ -79,10 +78,10 @@ namespace Zidium.UserAccount.Models.Controls
                     colors.Add(ObjectColor.Gray);
                 }
             }
-            return colors;
+            return colors.ToArray();
         }
 
-        public List<UnitTestResult> GetSelectedUnitTestResultStatuses()
+        public UnitTestResult[] GetSelectedUnitTestResultStatuses()
         {
             var statuses = new List<UnitTestResult>();
             if (Checked)
@@ -104,10 +103,10 @@ namespace Zidium.UserAccount.Models.Controls
                     statuses.Add(UnitTestResult.Unknown);
                 }
             }
-            return statuses;
+            return statuses.ToArray();
         }
 
-        public List<EventImportance> GetSelectedEventImportances()
+        public EventImportance[] GetSelectedEventImportances()
         {
             var statuses = new List<EventImportance>();
             if (Checked)
@@ -129,10 +128,10 @@ namespace Zidium.UserAccount.Models.Controls
                     statuses.Add(EventImportance.Unknown);
                 }
             }
-            return statuses;
+            return statuses.ToArray();
         }
 
-        public List<MonitoringStatus> GetSelectedMonitoringStatuses()
+        public MonitoringStatus[] GetSelectedMonitoringStatuses()
         {
             var statuses = new List<MonitoringStatus>();
             if (Checked)
@@ -155,7 +154,7 @@ namespace Zidium.UserAccount.Models.Controls
                     statuses.Add(MonitoringStatus.Disabled);
                 }
             }
-            return statuses;
+            return statuses.ToArray();
         }
 
         public static ColorStatusSelectorValue FromUnitTestResultStatus(UnitTestResult? status)

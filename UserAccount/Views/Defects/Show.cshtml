@@ -2,31 +2,33 @@
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
+
 @model Zidium.UserAccount.Models.Defects.ShowDefectModel
 
 @{
     ViewBag.ActiveMenuItems = "Defects";
     var defect = Model.Defect;
-    var title = "Дефект " + Model.Defect.GetCode();
+    var title = "Дефект " + Model.Defect.Number;
     if (string.IsNullOrEmpty(defect.Title) == false)
     {
         title += ": " + defect.Title;
     }
     ViewBag.Title = title;
     var eventType = Model.EventType;
-    var changes = defect.Changes.OrderByDescending(x => x.Date).ToArray();
+    var changes = Model.Changes;
+    var lastChange = changes.First();
     var showEventTypeUrl = string.Empty;
     if (eventType != null)
     {
         showEventTypeUrl = Url.Action("Show", "EventTypes", new {id = eventType.Id});
     }
     var enumName = FullRequestContext.Current.EnumName;
-    var duration = DateTime.Now - defect.LastChange.Date;
+    var duration = DateTime.Now - lastChange.Date;
     var statusModel = new ObjectStatusModel()
     {
-        Text = enumName.GetName(Model.Defect.LastChange.Status)
+        Text = enumName.GetName(lastChange.Status)
     };
-    statusModel.SetColor(defect.LastChange.Status);
+    statusModel.SetColor(lastChange.Status);
 }
 <style>
     .event-div {
@@ -53,10 +55,10 @@
             </div>
         </td>
         <td style="min-width: 220px; padding-left: 30px; vertical-align: top; padding-top: 0px;">
-            @if (defect.LastChange != null)
+            @if (lastChange != null)
             {
-                <div>@defect.LastChange.User.FioOrLogin <span style="margin-left: 20px;">@defect.LastChange.Date.ToString("dd.MM.yyyy HH:mm")</span></div>
-                <div style="font-weight: bold; white-space: pre">@defect.LastChange.Comment</div>
+                <div>@Model.LastChangeUser <span style="margin-left: 20px;">@lastChange.Date.ToString("dd.MM.yyyy HH:mm")</span></div>
+                <div style="font-weight: bold; white-space: pre">@lastChange.Comment</div>
             }
         </td>
     </tr>
@@ -84,7 +86,7 @@
         <td>
             <div style="font-weight: bold">Ответственный</div>
             <div style="white-space: nowrap">
-                <span>@defect.ResponsibleUser.FioOrLogin</span>
+                <span>@Model.ResponsibleUser</span>
                 @*<a href="#" class="btn btn-sm btn-default">Изменить</a>*@
             </div>
         </td>
@@ -113,7 +115,7 @@
     <tr>
         <td style="white-space: nowrap">@DateTimeHelper.GetRussianDateTime(change.Date)</td>
         <td style="white-space: nowrap">@enumName.GetName(change.Status)</td>
-        <td style="white-space: nowrap">@change.User.Login</td>
+        <td style="white-space: nowrap">@change.UserLogin</td>
         <td style="width: 100%; white-space: pre">@change.Comment</td>
     </tr>
 }

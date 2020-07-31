@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Models.VirusTotal
@@ -33,19 +35,19 @@ namespace Zidium.UserAccount.Models.VirusTotal
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.Others.Id; }
+            get { return SystemComponentType.Others.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.VirusTotalTestType.Id; }
+            get { return SystemUnitTestType.VirusTotalTestType.Id; }
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
-            if (UnitTest != null)
+            if (id != null)
             {
-                var rule = UnitTest.VirusTotalRule;
+                var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(id.Value);
                 if (rule != null)
                 {
                     Url = rule.Url;
@@ -53,24 +55,36 @@ namespace Zidium.UserAccount.Models.VirusTotal
             }
 
             // общий ключ для всего аккаунта
-            ApiKey = AccountDbContext.GetAccountSettingService().VirusTotalApiKey;
+            var service = new AccountSettingService(storage);
+            ApiKey = service.VirusTotalApiKey;
         }
 
-        public void SaveRule()
+        public void SaveRule(IStorage storage)
         {
-            if (UnitTest.VirusTotalRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newRule = new UnitTestVirusTotalRule();
-                newRule.UnitTestId = UnitTest.Id;
-                newRule.UnitTest = UnitTest;
-                newRule.NextStep = VirusTotalStep.Scan;
-                UnitTest.VirusTotalRule = newRule;
+                var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(Id.Value);
+                if (rule == null)
+                {
+                    var ruleForAdd = new UnitTestVirusTotalRuleForAdd()
+                    {
+                        UnitTestId = Id.Value,
+                        NextStep = VirusTotalStep.Scan
+                    };
+                    storage.UnitTestVirusTotalRules.Add(ruleForAdd);
+                    rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(Id.Value);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Url.Set(Url);
+                storage.UnitTestVirusTotalRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            var rule = UnitTest.VirusTotalRule;
-            rule.Url = Url;
 
             // общий ключ для всего аккаунта
-            AccountDbContext.GetAccountSettingService().VirusTotalApiKey = ApiKey;
+            var service = new AccountSettingService(storage);
+            service.VirusTotalApiKey = ApiKey;
         }
 
         protected override void ValidateRule()
@@ -84,5 +98,8 @@ namespace Zidium.UserAccount.Models.VirusTotal
                 throw new UserFriendlyException("Заполните ApiKey");
             }
         }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs { get; set; }
+
     }
 }

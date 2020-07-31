@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using NLog;
 using Zidium.Api;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.TaskQueue;

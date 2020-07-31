@@ -1,6 +1,6 @@
 ﻿using System;
 using Zidium.Core.Caching;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common.Helpers
 {
@@ -16,7 +16,7 @@ namespace Zidium.Core.Common.Helpers
         /// <returns></returns>
         private static bool CanJoin(
             IEventCacheReadObject oldEvent,
-            Event newEvent,
+            EventForAdd newEvent,
             DateTime maxJoinDate)
         {
             // склеивать события разных версий нельзя
@@ -35,7 +35,7 @@ namespace Zidium.Core.Common.Helpers
                    && maxJoinDate >= newEvent.StartDate;
         }
 
-        public static bool CanJoinSimpleEvents(IEventCacheReadObject oldEvent, Event newEvent, TimeSpan joinInterval)
+        public static bool CanJoinSimpleEvents(IEventCacheReadObject oldEvent, EventForAdd newEvent, TimeSpan joinInterval)
         {
             if (oldEvent == null)
             {

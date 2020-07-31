@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -28,7 +28,7 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Предыдущая важность. Используется для событий статусов.
         /// </summary>
-        EventImportance PreviousImportance { get; set; }
+        EventImportance PreviousImportance { get; }
 
         /// <summary>
         /// Счетчик - сколько раз случалось событие

@@ -1,15 +1,17 @@
-﻿using Zidium.Core.AccountsDb;
+﻿using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Events
 {
     public class ShowEventModelReason
     {
-        public Event Event { get; set; }
+        public EventForRead Event { get; set; }
 
-        public Component Component { get; set; }
+        public EventTypeForRead EventType { get; set; }
 
-        public Metric Metric { get; set; }
+        public ComponentForRead Component { get; set; }
 
-        public UnitTest UnitTest { get; set; }
+        public MetricForRead Metric { get; set; }
+
+        public UnitTestForRead UnitTest { get; set; }
     }
 }

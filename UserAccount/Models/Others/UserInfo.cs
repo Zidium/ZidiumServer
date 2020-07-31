@@ -20,16 +20,16 @@ namespace Zidium.UserAccount
 
         public bool IsSwitched { get; set; }
 
-        private UserSettingsHelper _settings = null;
+        private UserSettingsHelper _settings;
+
         public UserSettingsHelper Settings
         {
             get
             {
                 if (_settings == null)
                 {
-                    var accountDbContext = FullRequestContext.Current.AccountDbContext;
-                    var repository = accountDbContext.GetUserSettingRepository();
-                    _settings = new UserSettingsHelper(AccountId, Id, repository);
+                    var storage = FullRequestContext.Current.Controller.GetStorage();
+                    _settings = new UserSettingsHelper(Id, storage);
                 }
                 return _settings;
             }

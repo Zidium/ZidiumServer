@@ -1,8 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Models.SqlChecksModels
@@ -11,7 +12,7 @@ namespace Zidium.UserAccount.Models.SqlChecksModels
     {
         [Required(ErrorMessage = "Пожалуйста, выберите провайдера")]
         [Display(Name = "Провайдер")]
-        public DatabaseProviderType Provider { get; set; }
+        public SqlRuleDatabaseProviderType Provider { get; set; }
 
         [Display(Name = "Строка соединения")]
         public string ConnectionString { get; set; }
@@ -42,22 +43,22 @@ namespace Zidium.UserAccount.Models.SqlChecksModels
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.DataBase.Id; }
+            get { return SystemComponentType.Database.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.SqlTestType.Id; }
+            get { return SystemUnitTestType.SqlTestType.Id; }
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
             OpenConnectionTimeoutMs = 3000;
             CommandTimeoutMs = 30000;
-            Provider = DatabaseProviderType.MsSql;
-            if (UnitTest != null)
+            Provider = SqlRuleDatabaseProviderType.MsSql;
+            if (id != null)
             {
-                var rule = UnitTest.SqlRule;
+                var rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(id.Value);
                 if (rule != null)
                 {
                     CommandTimeoutMs = rule.CommandTimeoutMs;
@@ -69,21 +70,34 @@ namespace Zidium.UserAccount.Models.SqlChecksModels
             }
         }
 
-        public void SaveRule()
+        public void SaveRule(IStorage storage)
         {
-            if (UnitTest.SqlRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newRule = new UnitTestSqlRule();
-                newRule.UnitTestId = UnitTest.Id;
-                newRule.UnitTest = UnitTest;
-                UnitTest.SqlRule = newRule;
+                var rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(Id.Value);
+                if (rule == null)
+                {
+                    var ruleForAdd = new UnitTestSqlRuleForAdd()
+                    {
+                        UnitTestId = Id.Value,
+                        Provider = SqlRuleDatabaseProviderType.MsSql,
+                        OpenConnectionTimeoutMs = 3000,
+                        CommandTimeoutMs = 30000
+                    };
+                    storage.UnitTestSqlRules.Add(ruleForAdd);
+                    rule = storage.UnitTestSqlRules.GetOneOrNullByUnitTestId(Id.Value);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.ConnectionString.Set(ConnectionString);
+                ruleForUpdate.Query.Set(Query);
+                ruleForUpdate.Provider.Set(Provider);
+                ruleForUpdate.CommandTimeoutMs.Set(CommandTimeoutMs);
+                ruleForUpdate.OpenConnectionTimeoutMs.Set(OpenConnectionTimeoutMs);
+                storage.UnitTestSqlRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            var rule = UnitTest.SqlRule;
-            rule.ConnectionString = ConnectionString;
-            rule.OpenConnectionTimeoutMs = OpenConnectionTimeoutMs;
-            rule.Provider = Provider;
-            rule.Query = Query;
-            rule.CommandTimeoutMs = CommandTimeoutMs;
         }
 
         protected override void ValidateRule()
@@ -105,5 +119,7 @@ namespace Zidium.UserAccount.Models.SqlChecksModels
                 throw new UserFriendlyException("Таймаут выполнения запроса должен быть >= 1000");
             }
         }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs;
     }
 }

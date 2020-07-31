@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.ExtentionProperties;
 
 namespace Zidium.UserAccount.Models.ComponentTreeDetails

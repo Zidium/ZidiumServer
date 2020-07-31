@@ -62,7 +62,7 @@ namespace Zidium.UserAccount.Models
             }
             if (AllowEmpty == false && (ComponentTypeId == null || ComponentTypeId==Guid.Empty))
             {
-                var others = items.FirstOrDefault(x => x.Value == SystemComponentTypes.Others.Id.ToString());
+                var others = items.FirstOrDefault(x => x.Value == SystemComponentType.Others.Id.ToString());
                 if (others != null)
                 {
                     others.Selected = true;

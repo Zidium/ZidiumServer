@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {
@@ -30,5 +31,6 @@ namespace Zidium.Core.Api
         public EventImportance? ImportanceForNew { get; set; }
 
         public bool UpdateActualEvents { get; set; }
+
     }
 }

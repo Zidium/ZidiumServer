@@ -3,10 +3,10 @@ using System.Net.NetworkInformation;
 using System.Threading;
 using NLog;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes.UnitTests.PingTests;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -63,12 +63,13 @@ namespace Zidium.Agent.AgentTasks
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.PingTestType.Id;
+            return SystemUnitTestType.PingTestType.Id;
         }
 
-        protected override UnitTestExecutionInfo GetResult(Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+        protected override UnitTestExecutionInfo GetResult(
+            Guid accountId,
+            IStorage storage,
+            UnitTestForRead unitTest,
             ILogger logger,
             string accountName,
             CancellationToken token)
@@ -78,7 +79,7 @@ namespace Zidium.Agent.AgentTasks
                 throw new ArgumentNullException("unitTest");
             }
 
-            var rule = unitTest.PingRule;
+            var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTest.Id);
             if (rule == null)
             {
                 return null; // Правило ещё не сохранено
@@ -97,7 +98,7 @@ namespace Zidium.Agent.AgentTasks
             {
                 exception.Data.Add("AccountId", accountId);
                 exception.Data.Add("UnitTestId", rule.UnitTestId);
-                exception.Data.Add("UnitTestName", rule.UnitTest.DisplayName);
+                exception.Data.Add("UnitTestName", unitTest.DisplayName);
                 exception.Data.Add("Address", rule.Host);
                 logger.Error(exception);
 
@@ -108,8 +109,12 @@ namespace Zidium.Agent.AgentTasks
             if (result == null)
                 return null;
 
+            var ruleForUpdate = rule.GetForUpdate();
             if (result.ErrorCode == PingErrorCode.Success)
             {
+                ruleForUpdate.LastRunErrorCode.Set(PingErrorCode.Success);
+                storage.UnitTestPingRules.Update(ruleForUpdate);
+
                 return new UnitTestExecutionInfo()
                 {
                     ResultRequest = new SendUnitTestResultRequestData()
@@ -119,6 +124,9 @@ namespace Zidium.Agent.AgentTasks
                     }
                 };
             }
+
+            ruleForUpdate.LastRunErrorCode.Set(result.ErrorCode);
+            storage.UnitTestPingRules.Update(ruleForUpdate);
 
             return new UnitTestExecutionInfo()
             {

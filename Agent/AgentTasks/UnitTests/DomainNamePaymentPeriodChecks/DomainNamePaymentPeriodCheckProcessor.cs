@@ -7,12 +7,13 @@ using System.Text;
 using System.Threading;
 using System.Web;
 using NLog;
-using Zidium.Api;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -100,7 +101,7 @@ namespace Zidium.Agent.AgentTasks
                 {
                     Code = DomainNamePaymentPeriodErrorCode.Unavailable,
                     Date = null,
-                    ErrorMessage = Tools.GetExceptionFullMessage(exception)
+                    ErrorMessage = Api.Tools.GetExceptionFullMessage(exception)
                 };
             }
 
@@ -243,12 +244,12 @@ namespace Zidium.Agent.AgentTasks
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.DomainNameTestType.Id;
+            return SystemUnitTestType.DomainNameTestType.Id;
         }
 
         protected override UnitTestExecutionInfo GetResult(Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+            IStorage storage,
+            UnitTestForRead unitTest,
             ILogger logger,
             string accountName,
             CancellationToken token)
@@ -257,7 +258,8 @@ namespace Zidium.Agent.AgentTasks
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var rule = unitTest.DomainNamePaymentPeriodRule;
+
+            var rule = storage.DomainNamePaymentPeriodRules.GetOneOrNullByUnitTestId(unitTest.Id);
             if (rule == null)
                 return null; // Правило ещё не создалось, выход
             
@@ -273,10 +275,10 @@ namespace Zidium.Agent.AgentTasks
             {
                 return new UnitTestExecutionInfo()
                 {
-                    ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                    ResultRequest = new SendUnitTestResultRequestData()
                     {
                         Message = resultInfo.ErrorMessage,
-                        Result = Core.Api.UnitTestResult.Unknown,
+                        Result = UnitTestResult.Unknown,
                     },
                     IsNetworkProblem = true
                 };
@@ -295,24 +297,29 @@ namespace Zidium.Agent.AgentTasks
                 DbProcessor.SetException(new UserFriendlyException(resultInfo.ErrorMessage));
             }
 
+            var ruleForUpdate = rule.GetForUpdate();
             if (resultInfo.Date == null)
             {
-                rule.LastRunErrorCode = resultInfo.Code;
+                ruleForUpdate.LastRunErrorCode.Set(resultInfo.Code);
+                storage.DomainNamePaymentPeriodRules.Update(ruleForUpdate);
+
                 return new UnitTestExecutionInfo()
                 {
-                    ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                    ResultRequest = new SendUnitTestResultRequestData()
                     {
-                        Result = Core.Api.UnitTestResult.Alarm,
+                        Result = UnitTestResult.Alarm,
                         Message = resultInfo.ErrorMessage
                     }
                 };
             }
 
             var days = (int)((resultInfo.Date.Value - DateTime.Now.Date).TotalDays);
-            rule.LastRunErrorCode = DomainNamePaymentPeriodErrorCode.Success;
+            ruleForUpdate.LastRunErrorCode.Set(DomainNamePaymentPeriodErrorCode.Success);
+            storage.DomainNamePaymentPeriodRules.Update(ruleForUpdate);
+
             var result = new UnitTestExecutionInfo()
             {
-                ResultRequest = new Core.Api.SendUnitTestResultRequestData()
+                ResultRequest = new SendUnitTestResultRequestData()
                 {
                     Message = string.Format(
                         "Осталось {0} дней до окончания срока оплаты. Домен оплачен до {1}",
@@ -322,15 +329,15 @@ namespace Zidium.Agent.AgentTasks
             };
             if (days <= rule.AlarmDaysCount)
             {
-                result.ResultRequest.Result = Core.Api.UnitTestResult.Alarm;
+                result.ResultRequest.Result = UnitTestResult.Alarm;
             }
             else if (days <= rule.WarningDaysCount)
             {
-                result.ResultRequest.Result = Core.Api.UnitTestResult.Warning;
+                result.ResultRequest.Result = UnitTestResult.Warning;
             }
             else
             {
-                result.ResultRequest.Result = Core.Api.UnitTestResult.Success;
+                result.ResultRequest.Result = UnitTestResult.Success;
             }
             return result;
         }
@@ -359,7 +366,7 @@ namespace Zidium.Agent.AgentTasks
                 {
                     Code = DomainNamePaymentPeriodErrorCode.Unavailable,
                     Date = null,
-                    ErrorMessage = Tools.GetExceptionFullMessage(exception)
+                    ErrorMessage = Api.Tools.GetExceptionFullMessage(exception)
                 };
             }
 

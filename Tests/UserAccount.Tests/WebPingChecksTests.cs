@@ -3,7 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Xunit;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models.PingChecksModels;
@@ -36,14 +36,13 @@ namespace Zidium.UserAccount.Tests
             }
 
             // Посмотрим, как создалась проверка и правило
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.QueryAll()
+                var unitTest = accountContext.UnitTests
                     .FirstOrDefault(t => t.PingRule != null && t.PingRule.Host == model.Host);
 
                 Assert.NotNull(unitTest);
-                Assert.Equal(SystemUnitTestTypes.PingTestType.Id, unitTest.TypeId);
+                Assert.Equal(SystemUnitTestType.PingTestType.Id, unitTest.TypeId);
                 Assert.Equal((int)TimeSpan.FromMinutes(10).TotalSeconds, unitTest.PeriodSeconds);
                 Assert.Equal(ObjectColor.Gray, unitTest.NoSignalColor);
                 Assert.True(unitTest.SimpleMode);
@@ -62,18 +61,17 @@ namespace Zidium.UserAccount.Tests
             model.Host = Guid.NewGuid().ToString();
             model.Period = TimeSpan.FromMinutes(20);
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 using (var controller = new PingChecksController(account.Id, user.Id))
                 {
                     controller.EditSimple(model);
 
                     // Посмотрим, как изменилась проверка и правило
-                    var unitTestRepository = accountContext.GetUnitTestRepository();
-                    var unitTest = unitTestRepository.GetByIdOrNull(unitTestId);
+                    var unitTest = accountContext.UnitTests.Find(unitTestId);
 
                     Assert.NotNull(unitTest);
-                    Assert.Equal(SystemUnitTestTypes.PingTestType.Id, unitTest.TypeId);
+                    Assert.Equal(SystemUnitTestType.PingTestType.Id, unitTest.TypeId);
                     Assert.Equal((int)TimeSpan.FromMinutes(20).TotalSeconds, unitTest.PeriodSeconds);
                     Assert.Equal(model.Host, unitTest.PingRule.Host);
 

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+﻿using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -12,9 +10,7 @@ namespace Zidium.UserAccount.Models
 
         public string Search { get; set; }
 
-        public bool ShowDeleted { get; set; }
-
-        public IQueryable<EventType> EventTypes { get; set; }
+        public EventTypeForRead[] EventTypes { get; set; }
 
         public static int MaxMessageLength = 150;
     }

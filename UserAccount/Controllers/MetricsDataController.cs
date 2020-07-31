@@ -2,66 +2,49 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.MetricData;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class MetricsDataController : ContextController
+    public class MetricsDataController : BaseController
     {
-
-        public ActionResult Index(Guid? componentId, Guid? counterId, DateTime? from, DateTime? to)
+        public ActionResult Index(Guid? componentId, Guid? metricTypeId, DateTime? from, DateTime? to)
         {
             var eDate = to ?? DateTime.Now;
             var sDate = from ?? eDate.AddDays(-1);
 
-            Component component = null;
-            if (componentId.HasValue)
-            {
-                var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-                component = componentRepository.GetById(componentId.Value);
-            }
-
-            var model = new CounterDataListModel()
+            var model = new MetricDataListModel()
             {
                 ComponentId = componentId,
                 From = sDate,
                 To = eDate
             };
 
-            if (component != null)
+            if (componentId != null)
             {
-                var counterRepository = CurrentAccountDbContext.GetMetricTypeRepository();
-
-                MetricType metricType;
-                if (counterId.HasValue)
+                MetricTypeForRead metricType;
+                if (metricTypeId.HasValue)
                 {
-                    metricType = counterRepository.GetById(counterId.Value);
-                    model.CounterId = metricType.Id;
-                    model.CounterName = metricType.SystemName;
+                    metricType = GetStorage().MetricTypes.GetOneById(metricTypeId.Value);
+                    model.MetricTypeId = metricType.Id;
+                    model.CounterName = metricType.DisplayName;
                 }
                 else
                 {
-                    var metricTypes = component.Metrics.Where(t => t.IsDeleted == false && t.MetricType.IsDeleted == false).Select(t => t.MetricType);
-                    metricType = metricTypes.OrderBy(t => t.SystemName).FirstOrDefault();
-                    model.CounterId = metricType != null ? metricType.Id : (Guid?)null;
-                    model.CounterName = metricType != null ? metricType.SystemName : null;
+                    var firstMetricTypeId = GetStorage().Metrics.GetByComponentId(componentId.Value).FirstOrDefault()?.MetricTypeId;
+                    metricType = firstMetricTypeId.HasValue ? GetStorage().MetricTypes.GetOneById(firstMetricTypeId.Value) : null;
+                    model.MetricTypeId = metricType?.Id;
+                    model.CounterName = metricType?.DisplayName;
                 }
 
-                if (model.CounterId.HasValue)
+                if (model.MetricTypeId.HasValue)
                 {
-                    var storageContext = CurrentAccountDbContext;
-                    var metricHistoryRepository = storageContext.GetMetricHistoryRepository();
+                    var rows = GetStorage().MetricHistory.GetByPeriod(componentId.Value, sDate, eDate, new[] { model.MetricTypeId.Value }, 1000);
 
-                    var rows = metricHistoryRepository
-                        .GetByPeriod(component.Id, sDate, eDate, new[] { model.CounterId.Value })
-                        .OrderByDescending(t => t.BeginDate)
-                        .ToArray();
-
-                    model.Data = rows.ToArray();
+                    model.Data = rows.Take(100).ToArray();
                     model.Graph = GetCounterGraphDataModel(metricType, rows.OrderBy(t => t.BeginDate).ToArray());
                 }
             }
@@ -74,21 +57,20 @@ namespace Zidium.UserAccount.Controllers
             var toDate = MvcApplication.GetServerDateTime();
             var fromDate = TimelineHelper.IntervalToStartDate(toDate, interval);
 
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = metricRepository.GetById(id);
+            var metric = GetStorage().Metrics.GetOneById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
 
-            var metricHistoryRepository = CurrentAccountDbContext.GetMetricHistoryRepository();
-            var rows = metricHistoryRepository
-                .GetByPeriod(metric.ComponentId, fromDate, toDate, new[] { metric.MetricTypeId })
+            var rows = GetStorage().MetricHistory
+                .GetByPeriod(metric.ComponentId, fromDate, toDate, new[] { metric.MetricTypeId }, 1000)
                 .OrderBy(t => t.BeginDate)
                 .ToArray();
 
-            var model = GetCounterGraphDataModel(metric.MetricType, rows);
+            var model = GetCounterGraphDataModel(metricType, rows);
 
             return PartialView("GraphPartial", model);
         }
 
-        private MetricGraphDataModel GetCounterGraphDataModel(MetricType metricType, MetricHistory[] rows)
+        private MetricGraphDataModel GetCounterGraphDataModel(MetricTypeForRead metricType, MetricHistoryForRead[] rows)
         {
             var model = new MetricGraphDataModel();
 
@@ -101,7 +83,7 @@ namespace Zidium.UserAccount.Controllers
             // График с большим количеством точек рисуется медленно
             if (rows.Length > 100)
             {
-                var newRows = new List<MetricHistory>();
+                var newRows = new List<MetricHistoryForRead>();
                 var step = rows.Length / 100.0d;
                 var index = 0.0d;
                 while (index < rows.Length)
@@ -110,7 +92,18 @@ namespace Zidium.UserAccount.Controllers
                     if (index > 0)
                     {
                         var prevItem = rows[(int)index - 1];
-                        newRows.Last().ActualDate = prevItem.ActualDate;
+                        var lastItem = newRows.Last();
+                        newRows[newRows.Count - 1] = new MetricHistoryForRead(
+                                lastItem.Id,
+                                lastItem.ComponentId,
+                                lastItem.MetricTypeId,
+                                lastItem.BeginDate,
+                                prevItem.ActualDate,
+                                lastItem.Value,
+                                lastItem.Color,
+                                lastItem.StatusEventId,
+                                lastItem.HasSignal
+                                );
                     }
 
                     var item = rows[(int)index];

@@ -1,0 +1,420 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F1ADEE86-7705-474A-9E1E-FD086391445D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Zidium.Storage.Ef</RootNamespace>
+    <AssemblyName>Zidium.Storage.Ef</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Context\AccountDbContext.cs" />
+    <Compile Include="Context\ContextWrapper.cs" />
+    <Compile Include="Context\DatabaseProviderType.cs" />
+    <Compile Include="Context\DataContextBase.cs" />
+    <Compile Include="Context\NonClusteredPrimaryKeyCSharpMigrationCodeGenerator.cs" />
+    <Compile Include="Context\Provider.cs" />
+    <Compile Include="Context\Transaction.cs" />
+    <Compile Include="Entities\DbAccountSetting.cs" />
+    <Compile Include="Entities\DbArchivedStatus.cs" />
+    <Compile Include="Entities\DbBulb.cs" />
+    <Compile Include="Entities\DbComponent.cs" />
+    <Compile Include="Entities\DbComponentProperty.cs" />
+    <Compile Include="Entities\DbComponentType.cs" />
+    <Compile Include="Entities\DbDefect.cs" />
+    <Compile Include="Entities\DbDefectChange.cs" />
+    <Compile Include="Entities\DbEvent.cs" />
+    <Compile Include="Entities\DbEventProperty.cs" />
+    <Compile Include="Entities\DbEventType.cs" />
+    <Compile Include="Entities\DbLastComponentNotification.cs" />
+    <Compile Include="Entities\DbLimitData.cs" />
+    <Compile Include="Entities\DbLimitDataForUnitTest.cs" />
+    <Compile Include="Entities\DbLog.cs" />
+    <Compile Include="Entities\DbLogConfig.cs" />
+    <Compile Include="Entities\DbLogProperty.cs" />
+    <Compile Include="Entities\DbMetric.cs" />
+    <Compile Include="Entities\DbMetricHistory.cs" />
+    <Compile Include="Entities\DbMetricType.cs" />
+    <Compile Include="Entities\DbNotification.cs" />
+    <Compile Include="Entities\DbNotificationHttp.cs" />
+    <Compile Include="Entities\DbRole.cs" />
+    <Compile Include="Entities\DbSendEmailCommand.cs" />
+    <Compile Include="Entities\DbSendMessageCommand.cs" />
+    <Compile Include="Entities\DbSendSmsCommand.cs" />
+    <Compile Include="Entities\DbSubscription.cs" />
+    <Compile Include="Entities\DbTariffLimit.cs" />
+    <Compile Include="Entities\DbTimeZone.cs" />
+    <Compile Include="Entities\DbToken.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestDomainNamePaymentPeriodRule.cs" />
+    <Compile Include="Entities\UnitTests\DbHttpRequestUnitTest.cs" />
+    <Compile Include="Entities\UnitTests\DbHttpRequestUnitTestRule.cs" />
+    <Compile Include="Entities\UnitTests\DbHttpRequestUnitTestRuleData.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestPingRule.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestSqlRule.cs" />
+    <Compile Include="Entities\UnitTests\SslCertificateExpirationDateRule.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestTcpPortRule.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTest.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestProperty.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestType.cs" />
+    <Compile Include="Entities\UnitTests\DbUnitTestVirusTotalRule.cs" />
+    <Compile Include="Entities\DbUser.cs" />
+    <Compile Include="Entities\DbUserContact.cs" />
+    <Compile Include="Entities\DbUserRole.cs" />
+    <Compile Include="Entities\DbUserSetting.cs" />
+    <Compile Include="Mapping\AccountSettingMapping.cs" />
+    <Compile Include="Mapping\ArchivedStatusMapping.cs" />
+    <Compile Include="Mapping\ComponentMapping.cs" />
+    <Compile Include="Mapping\ComponentPropertyMapping.cs" />
+    <Compile Include="Mapping\ComponentTypeMapping.cs" />
+    <Compile Include="Mapping\DefectChangeMapping.cs" />
+    <Compile Include="Mapping\DefectMapping.cs" />
+    <Compile Include="Mapping\EventMapping.cs" />
+    <Compile Include="Mapping\EventParameterMapping.cs" />
+    <Compile Include="Mapping\EventTypeMapping.cs" />
+    <Compile Include="Mapping\LastComponentNotificationMapping.cs" />
+    <Compile Include="Mapping\LimitDataForUnitTestMapping.cs" />
+    <Compile Include="Mapping\LimitDataMapping.cs" />
+    <Compile Include="Mapping\LogConfigMapping.cs" />
+    <Compile Include="Mapping\LogMapping.cs" />
+    <Compile Include="Mapping\LogParameterMapping.cs" />
+    <Compile Include="Mapping\MetricHistoryMapping.cs" />
+    <Compile Include="Mapping\MetricMapping.cs" />
+    <Compile Include="Mapping\MetricTypeMapping.cs" />
+    <Compile Include="Mapping\NotificationHttpMapping.cs" />
+    <Compile Include="Mapping\NotificationMapping.cs" />
+    <Compile Include="Mapping\RoleMapping.cs" />
+    <Compile Include="Mapping\SendEmailCommandMapping.cs" />
+    <Compile Include="Mapping\SendMessageCommandMapping.cs" />
+    <Compile Include="Mapping\SendSmsCommandMapping.cs" />
+    <Compile Include="Mapping\StatusDataMapping.cs" />
+    <Compile Include="Mapping\SubscriptionMapping.cs" />
+    <Compile Include="Mapping\TariffLimitMapping.cs" />
+    <Compile Include="Mapping\TimeZoneMapping.cs" />
+    <Compile Include="Mapping\TokenMapping.cs" />
+    <Compile Include="Mapping\UnitTests\HttpRequestUnitTestMapping.cs" />
+    <Compile Include="Mapping\UnitTests\HttpRequestUnitTestRuleDataMapping.cs" />
+    <Compile Include="Mapping\UnitTests\HttpRequestUnitTestRuleMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestDomainNamePaymentPeriodRuleMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestPingRuleMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestPropertyMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestSqlRuleMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestSslCertificateExpirationDateRuleMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestTcpPortRuleMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestTypeMapping.cs" />
+    <Compile Include="Mapping\UnitTests\UnitTestVirusTotalRuleMapping.cs" />
+    <Compile Include="Mapping\UserContactMapping.cs" />
+    <Compile Include="Mapping\UserMapping.cs" />
+    <Compile Include="Mapping\UserRoleMapping.cs" />
+    <Compile Include="Mapping\UserSettingMapping.cs" />
+    <Compile Include="MsSql\Migrations\201803232225266_Initial.cs" />
+    <Compile Include="MsSql\Migrations\201803232225266_Initial.Designer.cs">
+      <DependentUpon>201803232225266_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201805040752329_AddedAttempsToUnittest.cs" />
+    <Compile Include="MsSql\Migrations\201805040752329_AddedAttempsToUnittest.Designer.cs">
+      <DependentUpon>201805040752329_AddedAttempsToUnittest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.cs" />
+    <Compile Include="MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.Designer.cs">
+      <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs" />
+    <Compile Include="MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.Designer.cs">
+      <DependentUpon>201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201808041420268_DateIndexForLog.cs" />
+    <Compile Include="MsSql\Migrations\201808041420268_DateIndexForLog.Designer.cs">
+      <DependentUpon>201808041420268_DateIndexForLog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.cs" />
+    <Compile Include="MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.Designer.cs">
+      <DependentUpon>201810260859442_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201909201752164_AddTcpPortRules.cs" />
+    <Compile Include="MsSql\Migrations\201909201752164_AddTcpPortRules.Designer.cs">
+      <DependentUpon>201909201752164_AddTcpPortRules.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.cs" />
+    <Compile Include="MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.Designer.cs">
+      <DependentUpon>201909201814080_AddOpenedToTcpPortRules.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202001141705124_SendMessageCommandTable.cs" />
+    <Compile Include="MsSql\Migrations\202001141705124_SendMessageCommandTable.Designer.cs">
+      <DependentUpon>202001141705124_SendMessageCommandTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202001232048399_VirusTotal.cs" />
+    <Compile Include="MsSql\Migrations\202001232048399_VirusTotal.Designer.cs">
+      <DependentUpon>202001232048399_VirusTotal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202001261050288_NotificationsSendInterval.cs" />
+    <Compile Include="MsSql\Migrations\202001261050288_NotificationsSendInterval.Designer.cs">
+      <DependentUpon>202001261050288_NotificationsSendInterval.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202001270935574_AddedTimeZones.cs" />
+    <Compile Include="MsSql\Migrations\202001270935574_AddedTimeZones.Designer.cs">
+      <DependentUpon>202001270935574_AddedTimeZones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202002061507069_FixVirusTotal.cs" />
+    <Compile Include="MsSql\Migrations\202002061507069_FixVirusTotal.Designer.cs">
+      <DependentUpon>202002061507069_FixVirusTotal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202002251646397_FixedComponentProperty.cs" />
+    <Compile Include="MsSql\Migrations\202002251646397_FixedComponentProperty.Designer.cs">
+      <DependentUpon>202002251646397_FixedComponentProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\Migrations\202003310631113_RemovedAccountTariffsTable.cs" />
+    <Compile Include="MsSql\Migrations\202003310631113_RemovedAccountTariffsTable.Designer.cs">
+      <DependentUpon>202003310631113_RemovedAccountTariffsTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MsSql\MsSqlAccountDbContext.cs" />
+    <Compile Include="MsSql\MsSqlAccountDbMConfiguration.cs" />
+    <Compile Include="PostgreSql\Migrations\201805151013039_Initial.cs" />
+    <Compile Include="PostgreSql\Migrations\201805151013039_Initial.Designer.cs">
+      <DependentUpon>201805151013039_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs" />
+    <Compile Include="PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.Designer.cs">
+      <DependentUpon>201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\201808041508405_DateIndexForLogs.cs" />
+    <Compile Include="PostgreSql\Migrations\201808041508405_DateIndexForLogs.Designer.cs">
+      <DependentUpon>201808041508405_DateIndexForLogs.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.cs" />
+    <Compile Include="PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.Designer.cs">
+      <DependentUpon>201810260942307_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\201909241332031_AddedTcpPortRules.cs" />
+    <Compile Include="PostgreSql\Migrations\201909241332031_AddedTcpPortRules.Designer.cs">
+      <DependentUpon>201909241332031_AddedTcpPortRules.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202001141707161_SendMessageCommandTable.cs" />
+    <Compile Include="PostgreSql\Migrations\202001141707161_SendMessageCommandTable.Designer.cs">
+      <DependentUpon>202001141707161_SendMessageCommandTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202001261030480_VirusTotal.cs" />
+    <Compile Include="PostgreSql\Migrations\202001261030480_VirusTotal.Designer.cs">
+      <DependentUpon>202001261030480_VirusTotal.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202001261048024_NotificationsSendInterval.cs" />
+    <Compile Include="PostgreSql\Migrations\202001261048024_NotificationsSendInterval.Designer.cs">
+      <DependentUpon>202001261048024_NotificationsSendInterval.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202001270950025_AddedTimeZones.cs" />
+    <Compile Include="PostgreSql\Migrations\202001270950025_AddedTimeZones.Designer.cs">
+      <DependentUpon>202001270950025_AddedTimeZones.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202002070758096_VirusTotal1.cs" />
+    <Compile Include="PostgreSql\Migrations\202002070758096_VirusTotal1.Designer.cs">
+      <DependentUpon>202002070758096_VirusTotal1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202002251649305_FixedComponentProperty.cs" />
+    <Compile Include="PostgreSql\Migrations\202002251649305_FixedComponentProperty.Designer.cs">
+      <DependentUpon>202002251649305_FixedComponentProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\Migrations\202003310633015_RemovedAccountTariffsTable.cs" />
+    <Compile Include="PostgreSql\Migrations\202003310633015_RemovedAccountTariffsTable.Designer.cs">
+      <DependentUpon>202003310633015_RemovedAccountTariffsTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PostgreSql\PostgreSqlAccountDbContext.cs" />
+    <Compile Include="PostgreSql\PostgreSqlAccountDbMConfiguration.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\AccountSettingRepository.cs" />
+    <Compile Include="Repositories\ArchivedStatusRepository.cs" />
+    <Compile Include="Repositories\BulbRepository.cs" />
+    <Compile Include="Repositories\ComponentPropertyRepository.cs" />
+    <Compile Include="Repositories\ComponentRepository.cs" />
+    <Compile Include="Repositories\ComponentTypeRepository.cs" />
+    <Compile Include="Repositories\DefectChangeRepository.cs" />
+    <Compile Include="Repositories\DefectRepository.cs" />
+    <Compile Include="Repositories\EventPropertyRepository.cs" />
+    <Compile Include="Repositories\EventRepository.cs" />
+    <Compile Include="Repositories\EventTypeRepository.cs" />
+    <Compile Include="Repositories\GuiRepository.cs" />
+    <Compile Include="Repositories\HttpRequestUnitTestRepository.cs" />
+    <Compile Include="Repositories\HttpRequestUnitTestRuleDataRepository.cs" />
+    <Compile Include="Repositories\HttpRequestUnitTestRuleRepository.cs" />
+    <Compile Include="Repositories\LastComponentNotificationRepository.cs" />
+    <Compile Include="Repositories\LimitDataForUnitTestRepository.cs" />
+    <Compile Include="Repositories\LimitDataRepository.cs" />
+    <Compile Include="Repositories\LogConfigRepository.cs" />
+    <Compile Include="Repositories\LogPropertyRepository.cs" />
+    <Compile Include="Repositories\LogRepository.cs" />
+    <Compile Include="Repositories\MetricHistoryRepository.cs" />
+    <Compile Include="Repositories\MetricRepository.cs" />
+    <Compile Include="Repositories\MetricTypeRepository.cs" />
+    <Compile Include="Repositories\NotificationHttpRepository.cs" />
+    <Compile Include="Repositories\NotificationRepository.cs" />
+    <Compile Include="Repositories\RoleRepository.cs" />
+    <Compile Include="Repositories\SendEmailCommandRepository.cs" />
+    <Compile Include="Repositories\SendMessageCommandRepository.cs" />
+    <Compile Include="Repositories\SendSmsCommandRepository.cs" />
+    <Compile Include="Repositories\SubscriptionRepository.cs" />
+    <Compile Include="Repositories\TariffLimitRepository.cs" />
+    <Compile Include="Repositories\TimeZoneRepository.cs" />
+    <Compile Include="Repositories\TokenRepository.cs" />
+    <Compile Include="Repositories\UnitTestDomainNamePaymentPeriodRuleRepository.cs" />
+    <Compile Include="Repositories\UnitTestPingRuleRepository.cs" />
+    <Compile Include="Repositories\UnitTestRepository.cs" />
+    <Compile Include="Repositories\UnitTestSqlRuleRepository.cs" />
+    <Compile Include="Repositories\UnitTestSslCertificateExpirationDateRuleRepository.cs" />
+    <Compile Include="Repositories\UnitTestTcpPortRuleRepository.cs" />
+    <Compile Include="Repositories\UnitTestTypeRepository.cs" />
+    <Compile Include="Repositories\UnitTestVirusTotalRuleRepository.cs" />
+    <Compile Include="Repositories\UserContactRepository.cs" />
+    <Compile Include="Repositories\UserRepository.cs" />
+    <Compile Include="Repositories\UserRoleRepository.cs" />
+    <Compile Include="Repositories\UserSettingRepository.cs" />
+    <Compile Include="Storage.cs" />
+    <Compile Include="StorageFactory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="EntityFramework">
+      <Version>6.4.0</Version>
+    </PackageReference>
+    <PackageReference Include="EntityFramework6.Npgsql">
+      <Version>6.4.1</Version>
+    </PackageReference>
+    <PackageReference Include="Npgsql">
+      <Version>4.1.3.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj">
+      <Project>{77142E43-4B60-47BC-9C84-C6FE43247966}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Storage\Storage.csproj">
+      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Name>Storage</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Help.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MsSql\Migrations\201803232225266_Initial.resx">
+      <DependentUpon>201803232225266_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201805040752329_AddedAttempsToUnittest.resx">
+      <DependentUpon>201805040752329_AddedAttempsToUnittest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201805041424223_DeletedAttempsFromPingRule.resx">
+      <DependentUpon>201805041424223_DeletedAttempsFromPingRule.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.resx">
+      <DependentUpon>201806092010398_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201808041420268_DateIndexForLog.resx">
+      <DependentUpon>201808041420268_DateIndexForLog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201810260859442_AddedBodyToHttpUnittest.resx">
+      <DependentUpon>201810260859442_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201909201752164_AddTcpPortRules.resx">
+      <DependentUpon>201909201752164_AddTcpPortRules.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\201909201814080_AddOpenedToTcpPortRules.resx">
+      <DependentUpon>201909201814080_AddOpenedToTcpPortRules.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202001141705124_SendMessageCommandTable.resx">
+      <DependentUpon>202001141705124_SendMessageCommandTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202001232048399_VirusTotal.resx">
+      <DependentUpon>202001232048399_VirusTotal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202001261050288_NotificationsSendInterval.resx">
+      <DependentUpon>202001261050288_NotificationsSendInterval.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202001270935574_AddedTimeZones.resx">
+      <DependentUpon>202001270935574_AddedTimeZones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202002061507069_FixVirusTotal.resx">
+      <DependentUpon>202002061507069_FixVirusTotal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202002251646397_FixedComponentProperty.resx">
+      <DependentUpon>202002251646397_FixedComponentProperty.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MsSql\Migrations\202003310631113_RemovedAccountTariffsTable.resx">
+      <DependentUpon>202003310631113_RemovedAccountTariffsTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\201805151013039_Initial.resx">
+      <DependentUpon>201805151013039_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.resx">
+      <DependentUpon>201806092012515_ChangedMetricHistoryIndexForHistoryDeletion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\201808041508405_DateIndexForLogs.resx">
+      <DependentUpon>201808041508405_DateIndexForLogs.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\201810260942307_AddedBodyToHttpUnittest.resx">
+      <DependentUpon>201810260942307_AddedBodyToHttpUnittest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\201909241332031_AddedTcpPortRules.resx">
+      <DependentUpon>201909241332031_AddedTcpPortRules.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202001141707161_SendMessageCommandTable.resx">
+      <DependentUpon>202001141707161_SendMessageCommandTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202001261030480_VirusTotal.resx">
+      <DependentUpon>202001261030480_VirusTotal.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202001261048024_NotificationsSendInterval.resx">
+      <DependentUpon>202001261048024_NotificationsSendInterval.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202001270950025_AddedTimeZones.resx">
+      <DependentUpon>202001270950025_AddedTimeZones.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202002070758096_VirusTotal1.resx">
+      <DependentUpon>202002070758096_VirusTotal1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202002251649305_FixedComponentProperty.resx">
+      <DependentUpon>202002251649305_FixedComponentProperty.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PostgreSql\Migrations\202003310633015_RemovedAccountTariffsTable.resx">
+      <DependentUpon>202003310633015_RemovedAccountTariffsTable.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

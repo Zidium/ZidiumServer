@@ -1,4 +1,6 @@
-﻿namespace Zidium.Core.Common
+﻿using Zidium.Common;
+
+namespace Zidium.Core.Common
 {
     public class EmptyParameterException : UserFriendlyException
     {

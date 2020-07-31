@@ -5,6 +5,7 @@ using Xunit;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -22,10 +23,10 @@ namespace Zidium.UserAccount.Tests
             var phone = "+7 (926) 666-77-88";
 
             // Проверим, что у пользователя нет мобильного телефона с заданным номером
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                var dbUser = userRepository.GetById(user.Id);
+                var dbUser = context.Users.Find(user.Id);
+                Assert.NotNull(dbUser);
                 var hasMobilePhone = dbUser.UserContacts.Any(t => t.Type == UserContactType.MobilePhone && t.Value == phone);
                 Assert.False(hasMobilePhone);
             }
@@ -48,10 +49,10 @@ namespace Zidium.UserAccount.Tests
 
             // Проверим, что телефон появился у пользователя
 
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var userRepository = context.GetUserRepository();
-                var dbUser = userRepository.GetById(user.Id);
+                var dbUser = context.Users.Find(user.Id);
+                Assert.NotNull(dbUser);
                 var hasMobilePhone = dbUser.UserContacts.Any(t => t.Type == UserContactType.MobilePhone && t.Value == phone);
                 Assert.True(hasMobilePhone);
             }
@@ -75,22 +76,20 @@ namespace Zidium.UserAccount.Tests
         {
             var account = TestHelper.GetTestAccount();
             var user = TestHelper.CreateTestUser(account.Id);
+            var storage = TestHelper.GetStorage(account.Id);
 
             // Получим токен на смену пароля
             Guid tokenId;
-            using (var contexts = new DatabasesContext())
-            {
-                var service = new UserService(contexts);
 
-                tokenId = service.StartResetPassword(user.Id, false);
-            }
+            var service = new UserService(storage);
+            tokenId = service.StartResetPassword(user.Id, false);
 
             // Укажем новый пароль
             SetPasswordModel model;
             using (var controller = new HomeController(null, null))
             {
-                var result = (ViewResultBase) controller.SetPassword(tokenId, account.Id);
-                model = (SetPasswordModel) result.Model;
+                var result = (ViewResultBase)controller.SetPassword(tokenId, account.Id);
+                model = (SetPasswordModel)result.Model;
             }
 
             var newPassword = PasswordHelper.GetRandomPassword(20);
@@ -103,12 +102,8 @@ namespace Zidium.UserAccount.Tests
             }
 
             // Проверим, что можно зайти с новым паролем
-            using (var contexts = new DatabasesContext())
-            {
-                var service = new UserService(contexts);
-                var authInfo = service.Auth(user.Login, newPassword, null);
-                Assert.Equal(user.Id, authInfo.User.Id);
-            }
+            var authInfo = service.Auth(user.Login, newPassword, null);
+            Assert.Equal(user.Id, authInfo.User.Id);
         }
     }
 }

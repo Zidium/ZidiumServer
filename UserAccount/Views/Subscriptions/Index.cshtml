@@ -1,17 +1,14 @@
-﻿@using Zidium.Core.AccountsDb
+﻿@using System.Web.Mvc.Html
 @using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Subscriptions
+
 @model SubscriptionListModel
 
 @{
     ViewBag.Title = "Подписки";
     ViewBag.ActiveMenuItems = "Manage,Subscriptions";
-
-    // таблицы подписок
-    var defaultSubscriptions = Model.GetTable(SubscriptionObject.Default);
-    var componentTypeSubscriptions = Model.GetTable(SubscriptionObject.ComponentType);
-    var componentSubscriptions = Model.GetTable(SubscriptionObject.Component);
 }
 
 <style>
@@ -66,7 +63,7 @@
 @*<hr/>*@
 <div class="subscription-type-container">
     <p class="h4 table-name">Подписка по умолчанию</p>
-    @Html.Partial("SubscriptionsTable", defaultSubscriptions)
+    @Html.Partial("SubscriptionsTable", Model.DefaultSubscriptions)
     <br/>
 </div>
 
@@ -77,7 +74,7 @@
        data-title="@SubscriptionObjectHelper.GetAddTitle(SubscriptionObject.ComponentType)"
        class="btn btn-default add-btn _showDialogBtn">Добавить подписку</a>
     <br />
-    @Html.Partial("SubscriptionsTable", componentTypeSubscriptions)
+    @Html.Partial("SubscriptionsTable", Model.ComponentTypeSubscriptions)
     <br />
 </div>
     
@@ -89,7 +86,7 @@
        data-title="@SubscriptionObjectHelper.GetAddTitle(SubscriptionObject.Component)"
        class="btn btn-default add-btn _showDialogBtn">Добавить подписку</a>
     <br />
-    @Html.Partial("SubscriptionsTable", componentSubscriptions)
+    @Html.Partial("SubscriptionsTable", Model.ComponentSubscriptions)
 </div>
 
 

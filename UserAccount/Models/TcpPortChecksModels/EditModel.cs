@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Models.TcpPortChecksModels
@@ -39,19 +41,19 @@ namespace Zidium.UserAccount.Models.TcpPortChecksModels
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.Others.Id; }
+            get { return SystemComponentType.Others.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.TcpPortTestType.Id; }
+            get { return SystemUnitTestType.TcpPortTestType.Id; }
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
-            if (UnitTest != null)
+            if (id != null)
             {
-                var rule = UnitTest.TcpPortRule;
+                var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(id.Value);
                 if (rule != null)
                 {
                     Host = rule.Host;
@@ -61,19 +63,29 @@ namespace Zidium.UserAccount.Models.TcpPortChecksModels
             }
         }
 
-        public void SaveRule()
+        public void SaveRule(IStorage storage)
         {
-            if (UnitTest.TcpPortRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newRule = new UnitTestTcpPortRule();
-                newRule.UnitTestId = UnitTest.Id;
-                newRule.UnitTest = UnitTest;
-                UnitTest.TcpPortRule = newRule;
+                var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(Id.Value);
+                if (rule == null)
+                {
+                    var ruleForAdd = new UnitTestTcpPortRuleForAdd()
+                    {
+                        UnitTestId = Id.Value
+                    };
+                    storage.UnitTestTcpPortRules.Add(ruleForAdd);
+                    rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(Id.Value);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Host.Set(Host);
+                ruleForUpdate.Port.Set(Port.Value);
+                ruleForUpdate.Opened.Set(Opened);
+                storage.UnitTestTcpPortRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            var rule = UnitTest.TcpPortRule;
-            rule.Host = Host;
-            rule.Port = Port.Value;
-            rule.Opened = Opened;
         }
 
         protected override void ValidateRule()
@@ -82,7 +94,7 @@ namespace Zidium.UserAccount.Models.TcpPortChecksModels
             {
                 throw new UserFriendlyException("Заполните хост");
             }
-            if (Port==null)
+            if (Port == null)
             {
                 throw new UserFriendlyException("Заполните порт");
             }
@@ -91,5 +103,8 @@ namespace Zidium.UserAccount.Models.TcpPortChecksModels
                 throw new UserFriendlyException("Порт имеет значения от 0 до 65535");
             }
         }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs { get; set; }
+
     }
 }

@@ -9,7 +9,7 @@ namespace Zidium.Core.Common
         {
             if (language == Language.Russian)
             {
-                return new RussionEnumName();
+                return new RussianEnumName();
             }
             throw new Exception("Неизвестный язык " + language);
         }

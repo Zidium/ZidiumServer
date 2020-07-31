@@ -1,39 +1,32 @@
 ﻿using System;
-using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ComponentTypesController : ContextController
+    public class ComponentTypesController : BaseController
     {
         public ActionResult Index(string search = null)
         {
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-
-            var query = repository.QueryAll();
-
-            if (!string.IsNullOrEmpty(search))
-                query = query.Where(t => t.SystemName.Contains(search) || t.DisplayName.Contains(search) || t.Id.ToString().Equals(search));
+            var data = GetStorage().ComponentTypes.Filter(search, 100);
 
             var model = new ComponentTypesListModel
             {
-                Search = search, 
-                ComponentTypes = query.OrderBy(t => t.DisplayName)
+                Search = search,
+                ComponentTypes = data
             };
             return View(model);
         }
 
         public ActionResult Show(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-            var componentType = repository.GetById(id);
+            var componentType = GetStorage().ComponentTypes.GetOneById(id);
             var model = new ComponentTypeEditModel()
             {
                 Id = componentType.Id,
@@ -79,8 +72,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-            var componentType = repository.GetById(id);
+            var componentType = GetStorage().ComponentTypes.GetOneById(id);
             CheckEditingPermissions(componentType);
             var model = new ComponentTypeEditModel()
             {
@@ -100,25 +92,31 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-            var componentType = repository.GetById(model.Id);
+
+            var componentType = GetStorage().ComponentTypes.GetOneById(model.Id);
             CheckEditingPermissions(componentType);
-            repository.Update(componentType, model.DisplayName, model.SystemName);
+
+            GetDispatcherClient().UpdateComponentType(CurrentUser.AccountId, new UpdateComponentTypeRequestData()
+            {
+                Id = model.Id,
+                DisplayName = model.DisplayName,
+                SystemName = model.SystemName
+            }).Check();
+
             this.SetTempMessage(TempMessageType.Success, "Тип компонента сохранён");
             return RedirectToAction("Show", new { id = model.Id });
         }
 
-        protected void CheckEditingPermissions(ComponentType componentType)
+        protected void CheckEditingPermissions(ComponentTypeForRead componentType)
         {
             if (componentType.IsSystem)
-                throw new CantEditSystemObjectException(componentType.Id, Naming.ComponentType);
+                throw new UserFriendlyException($"Нельзя изменять системный тип компонента");
         }
 
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-            var componentType = repository.GetById(id);
+            var componentType = GetStorage().ComponentTypes.GetOneById(id);
             CheckDeletingPermissions(componentType);
             var model = new DeleteConfirmationModel()
             {
@@ -138,8 +136,8 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
                 return View("~/Views/Shared/Dialogs/DeleteConfirmation.cshtml", model);
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-            var componentType = repository.GetById(Guid.Parse(model.Id));
+
+            var componentType = GetStorage().ComponentTypes.GetOneById(Guid.Parse(model.Id));
             CheckDeletingPermissions(componentType);
 
             var client = GetDispatcherClient();
@@ -149,18 +147,17 @@ namespace Zidium.UserAccount.Controllers
             return Redirect(model.ReturnUrl);
         }
 
-        protected void CheckDeletingPermissions(ComponentType componentType)
+        protected void CheckDeletingPermissions(ComponentTypeForRead componentType)
         {
             if (componentType.IsSystem)
-                throw new CantDeleteSystemObjectException(componentType.Id, Naming.ComponentType);
+                throw new UserFriendlyException("Нельзя удалять системный тип компонента");
             if (componentType.IsDeleted)
-                throw new AlreadyDeletedException(componentType.Id, Naming.ComponentType);
+                throw new UserFriendlyException("Тип компонента уже удалён");
         }
 
         public JsonResult CheckSystemName(ComponentTypeEditModel model)
         {
-            var repository = CurrentAccountDbContext.GetComponentTypeRepository();
-            var componentType = repository.GetOneOrNullBySystemName(model.SystemName);
+            var componentType = GetStorage().ComponentTypes.GetOneOrNullBySystemName(model.SystemName);
             if (componentType != null && (model.Id == Guid.Empty || model.Id != componentType.Id))
                 return Json("Тип компонента с таким системным именем уже существует", JsonRequestBehavior.AllowGet);
             return Json(true, JsonRequestBehavior.AllowGet);
@@ -169,8 +166,6 @@ namespace Zidium.UserAccount.Controllers
         /// <summary>
         /// Для unit-тестов
         /// </summary>
-        /// <param name="accountId"></param>
-        /// <param name="userId"></param>
         public ComponentTypesController(Guid accountId, Guid userId) : base(accountId, userId) { }
 
         public ComponentTypesController() { }

@@ -1,7 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -20,14 +19,14 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Ссылка на аккаунт
         /// </summary>
-        public Guid AccountId { get; set; }
+        public Guid AccountId { get; private set; }
 
         /// <summary>
         /// Признак удалённого
         /// </summary>
         public bool IsDeleted { get; set; }
 
-        public DateTime? CreateDate { get; set; }
+        public DateTime? CreateDate { get; private set; }
 
         /// <summary>
         /// Текст правила для красного цвета
@@ -56,7 +55,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public ObjectColor? ElseColor { get; set; }
 
-        public static MetricTypeCacheWriteObject Create(MetricType metricType, Guid accountId)
+        public static MetricTypeCacheWriteObject Create(MetricTypeForRead metricType, Guid accountId)
         {
             if (metricType == null)
             {
@@ -85,22 +84,9 @@ namespace Zidium.Core.Caching
             return 200;
         }
 
-        public MetricType CreateEf()
+        internal MetricTypeForUpdate CreateEf()
         {
-            return new MetricType()
-            {
-                Id = Id,
-                IsDeleted = IsDeleted,
-                CreateDate = CreateDate,
-                SystemName = SystemName,
-                DisplayName = DisplayName,
-                ActualTimeSecs = TimeSpanHelper.GetSeconds(ActualTime),
-                NoSignalColor = NoSignalColor,
-                ConditionAlarm = ConditionRed,
-                ConditionWarning = ConditionYellow,
-                ConditionSuccess = ConditionGreen,
-                ConditionElseColor = ElseColor
-            };
+            return new MetricTypeForUpdate(Id);
         }
     }
 }

@@ -4,8 +4,9 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.Notifications;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -35,9 +36,9 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Создадим уведомление
             Guid notificationId;
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var notification = new Notification()
+                var notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -48,8 +49,7 @@ namespace Zidium.Core.Tests.AgentTests
                     CreationDate = DateTime.Now
                 };
 
-                var notificationRepository = context.GetNotificationRepository();
-                notificationRepository.Add(notification);
+                context.Notifications.Add(notification);
                 notificationId = notification.Id;
                 context.SaveChanges();
             }
@@ -58,18 +58,16 @@ namespace Zidium.Core.Tests.AgentTests
             var processor = new EmailNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
             processor.Process(account.Id, component.Id);
 
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
                 // Должно появиться письмо
-                var emailRepository = context.GetSendEmailCommandRepository();
-                var email = emailRepository.QueryAll().FirstOrDefault(t => t.ReferenceId == notificationId);
+                var email = context.SendEmailCommands.FirstOrDefault(t => t.ReferenceId == notificationId);
 
                 Assert.NotNull(email);
                 Assert.Equal(user.Login, email.To);
 
                 // У уведомления должна появиться ссылка на письмо
-                var notificationRepository = context.GetNotificationRepository();
-                var notification = notificationRepository.Find(notificationId);
+                var notification = context.Notifications.Find(notificationId);
 
                 Assert.Equal(email.Id, notification.SendEmailCommandId);
             }

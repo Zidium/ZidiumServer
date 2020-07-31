@@ -3,10 +3,11 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using NLog;
-using Zidium.Core;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -44,22 +45,25 @@ namespace Zidium.Agent.AgentTasks
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.SslTestType.Id;
+            return SystemUnitTestType.SslTestType.Id;
         }
 
         protected override UnitTestExecutionInfo GetResult(Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+            IStorage storage,
+            UnitTestForRead unitTest,
             ILogger logger,
             string accountName,
             CancellationToken token)
         {
-            var rule = unitTest.SslCertificateExpirationDateRule;
-            var uri = new Uri(unitTest.SslCertificateExpirationDateRule.Url);
+            var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            var uri = new Uri(rule.Url);
 
+            var ruleForUpdate = rule.GetForUpdate();
             if (uri.Scheme != "https")
             {
-                rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
+                ruleForUpdate.LastRunErrorCode.Set(SslCertificateExpirationDateErrorCode.UnknownError);
+                storage.UnitTestSslCertificateExpirationDateRules.Update(ruleForUpdate);
+
                 return new UnitTestExecutionInfo()
                 {
                     ResultRequest = new SendUnitTestResultRequestData()
@@ -77,7 +81,9 @@ namespace Zidium.Agent.AgentTasks
             }
             catch (WebException exception)
             {
-                rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
+                ruleForUpdate.LastRunErrorCode.Set(SslCertificateExpirationDateErrorCode.UnknownError);
+                storage.UnitTestSslCertificateExpirationDateRules.Update(ruleForUpdate);
+
                 return new UnitTestExecutionInfo()
                 {
                     ResultRequest = new SendUnitTestResultRequestData()
@@ -90,7 +96,9 @@ namespace Zidium.Agent.AgentTasks
             }
 
             var days = (date.Date - DateTime.Now.Date).TotalDays;
-            rule.LastRunErrorCode = SslCertificateExpirationDateErrorCode.Success;
+            ruleForUpdate.LastRunErrorCode.Set(SslCertificateExpirationDateErrorCode.Success);
+            storage.UnitTestSslCertificateExpirationDateRules.Update(ruleForUpdate);
+
             var result = new UnitTestExecutionInfo()
             {
                 ResultRequest = new SendUnitTestResultRequestData()

@@ -186,6 +186,14 @@ namespace Zidium.Core.Api.Dispatcher
             return dispatcher.GetOrCreateComponentType(request);
         }
 
+        public UpdateComponentTypeResponse UpdateComponentType(Guid accountId, UpdateComponentTypeRequestData data)
+        {
+            var request = GetRequest<UpdateComponentTypeRequest>(accountId);
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.UpdateComponentType(request);
+        }
+
         public DeleteComponentTypeResponse DeleteComponentType(Guid accountId, Guid componentTypeId)
         {
             var request = GetRequest<DeleteComponentTypeRequest>(accountId);

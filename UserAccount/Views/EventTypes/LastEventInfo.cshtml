@@ -1,4 +1,5 @@
 ﻿@using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.EventTypeLastEventModel
 
 <p>
@@ -14,14 +15,14 @@
 
 <p>
     <span class="simple-text-header">Компонент: </span>
-    <span class="simple-text-value">@Html.ComponentLink(Model.Component)</span>
+    <span class="simple-text-value">@Html.ComponentLink(Model.Component.Id, Model.Component.DisplayName)</span>
 </p>
 
 @if (Model.Unittest != null)
 {
     <p>
         <span class="simple-text-header">Проверка: </span>
-        <span class="simple-text-value">@Html.UnitTestLink(Model.Unittest)</span>
+        <span class="simple-text-value">@Html.UnitTestLink(Model.Unittest.Id, Model.Unittest.DisplayName)</span>
     </p>
 }
 
@@ -29,11 +30,11 @@
 {
     <p>
         <span class="simple-text-header">Метрика: </span>
-        <span class="simple-text-value">@Html.MetricLink(Model.Metric)</span>
+        <span class="simple-text-value">@Html.MetricLink(Model.Metric.Id, Model.MetricType.DisplayName)</span>
     </p>
 }
 
-@if (Model.Properties.Rows.Count > 0)
+@if (Model.Properties.Rows.Length > 0)
 {
     <p>
         <span class="simple-text-header">Дополнительные свойства:</span>

@@ -19,7 +19,7 @@ namespace Zidium.UserAccount.Models
 
         [Display(Name = "Тип данных")]
         [MyRequired]
-        public Core.Api.DataType DataType { get; set; }
+        public Storage.DataType DataType { get; set; }
 
         public bool ModalMode { get; set; }
 

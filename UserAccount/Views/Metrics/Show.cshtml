@@ -1,12 +1,13 @@
-﻿@using Zidium.Core.Api
-@using Zidium.Core.Common.Helpers
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Metrics
+
 @model ShowModel
 
 @{
-    ViewBag.Title = Model.Metric.MetricType.DisplayName + " - Метрика";
+    ViewBag.Title = Model.Metric.DisplayName + " - Метрика";
     ViewBag.ActiveMenuItems = "Metrics";
 }
 
@@ -50,7 +51,7 @@
 
 <p class="submenu-title">Страница метрики</p>
 <div class="zi-bread-crumbs">
-    @Html.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", Model.Metric)
+    @Html.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", Model.MetricBreadCrumbs)
 </div>
 <hr class="submenu" />    
 
@@ -59,12 +60,12 @@
         <span class="@GuiHelper.GetMonitoringStatusLabelCssClass(Model.Metric.Bulb.Status)" style="font-size: 28px; font-weight: normal;">@(Model.Metric.Value.HasValue ? Model.Metric.Value.ToString() : "null")</span>
     </span>
     <span class='@GuiHelper.GetComponentStatusTextCssClass(Model.Metric.Bulb.Status) big-font'>
-        @Model.Metric.MetricType.DisplayName
+        @Model.Metric.DisplayName
     </span>
 
     <p style="margin-top: 10px;">
         <span class="simple-text-header">Статус длится</span>
-        <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.Metric.Bulb.GetDuration(DateTime.Now))</span>,
+        <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.Metric.Bulb.Duration)</span>,
         <span class="simple-text-header">начался</span>
         <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Metric.Bulb.StartDate)</span>
     </p>
@@ -85,12 +86,12 @@
         <p>
             <span class="simple-text-header">Тип метрики: </span>
             <span class="simple-text-value">
-                @Html.ActionLink(Model.Metric.MetricType.SystemName, "Show", "MetricTypes", new { id = Model.Metric.MetricType.Id }, null)
+                @Html.ActionLink(Model.Metric.DisplayName, "Show", "MetricTypes", new { id = Model.Metric.MetricTypeId }, null)
             </span>
         </p>
         <p>
             <span class="simple-text-header">Компонент:</span>
-            @Html.ComponentLink(Model.Metric.Component)
+            @Html.ComponentLink(Model.Metric.Component.Id, Model.Metric.Component.FullName)
         </p>
         <p>
             <span class="simple-text-header">Дата начала статуса:</span>
@@ -102,7 +103,7 @@
         </p>
         <p>
             <span class="simple-text-header">Длительность:</span>
-            <span class="simple-text-value">@GuiHelper.TimeSpanAsString(Model.Metric.Bulb.GetDuration(DateTime.Now))</span>
+            <span class="simple-text-value">@GuiHelper.TimeSpanAsString(Model.Metric.Bulb.Duration)</span>
         </p>
         <p>
             <span class="simple-text-header">Количество обновлений:</span>
@@ -111,10 +112,6 @@
         <p>
             <span class="simple-text-header">Актуальна до:</span>
             <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Metric.Bulb.ActualDate)</span>
-        </p>
-        <p>
-            <span class="simple-text-header">Системное имя:</span>
-            <span class="simple-text-value">@Model.Metric.MetricType.SystemName</span>
         </p>
     </div>
 
@@ -189,7 +186,7 @@
 
 <span class="pageHeader1">Последние @ShowModel.LastValuesCountMax значений</span>
 
-<a style="margin-left: 50px;" class="btn btn-default" href='@Url.Action("Index", "MetricsData", new { componentId = Model.Metric.ComponentId, counterId = Model.Metric.MetricTypeId })'>
+<a style="margin-left: 50px;" class="btn btn-default" href='@Url.Action("Index", "MetricsData", new { componentId = Model.Metric.Component.Id, metricTypeId = Model.Metric.MetricTypeId })'>
     Все значения за 24 часа
 </a>
 
@@ -201,7 +198,7 @@
         </tr>
     </thead>
     <tbody>
-        @if (Model.Values.Count == 0)
+        @if (Model.Values.Length == 0)
         {
             <tr>
                 <td colspan="3">Нет результатов</td>

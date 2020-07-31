@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models.Controls

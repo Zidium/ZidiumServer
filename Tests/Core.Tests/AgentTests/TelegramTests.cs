@@ -3,8 +3,9 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.SendMessages;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -17,10 +18,10 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             Guid commandId;
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 // создадим сообщение
-                var command = new SendMessageCommand()
+                var command = new DbSendMessageCommand()
                 {
                     Channel = SubscriptionChannel.Telegram,
                     Body = "test body",
@@ -42,9 +43,9 @@ namespace Zidium.Core.Tests.AgentTests
             processor.Process(account.Id, commandId);
 
             // проверим, что сообщение отправлено
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var command = accountDbContext.GetSendMessageCommandRepository().GetById(commandId);
+                var command = accountDbContext.SendMessageCommands.Find(commandId);
                 Assert.Null(command.ErrorMessage);
                 Assert.Equal(MessageStatus.Sent, command.Status);
             }
@@ -73,10 +74,10 @@ namespace Zidium.Core.Tests.AgentTests
             Guid commandId;
             Guid notificationId;
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 // создадим уведомление
-                var notification = new Notification()
+                var notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -87,13 +88,12 @@ namespace Zidium.Core.Tests.AgentTests
                     CreationDate = DateTime.Now
                 };
 
-                var notificationRepository = accountDbContext.GetNotificationRepository();
-                notificationRepository.Add(notification);
+                accountDbContext.Notifications.Add(notification);
                 notificationId = notification.Id;
                 accountDbContext.SaveChanges();
 
                 // создадим сообщение
-                var command = new SendMessageCommand()
+                var command = new DbSendMessageCommand()
                 {
                     Channel = SubscriptionChannel.Telegram,
                     Body = "test body",
@@ -114,16 +114,15 @@ namespace Zidium.Core.Tests.AgentTests
             processor.FakeMode = true;
             processor.Process(account.Id, commandId);
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 // проверим, что сообщение отправлено
-                var command = accountDbContext.GetSendMessageCommandRepository().GetById(commandId);
+                var command = accountDbContext.SendMessageCommands.Find(commandId);
                 Assert.Null(command.ErrorMessage);
                 Assert.Equal(MessageStatus.Sent, command.Status);
 
                 // проверим, что статус уведомления поменялся
-                var notificationRepository = accountDbContext.GetNotificationRepository();
-                var notification = notificationRepository.Find(notificationId);
+                var notification = accountDbContext.Notifications.Find(notificationId);
                 Assert.Equal(NotificationStatus.Sent, notification.Status);
             }
         }

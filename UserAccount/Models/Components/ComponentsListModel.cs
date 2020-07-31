@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
-using Zidium.Core.Api;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.Controls;
 
@@ -19,13 +17,13 @@ namespace Zidium.UserAccount.Models
 
         public string Search { get; set; }
 
-        public IQueryable<Component> Components { get; set; }
+        public GetGuiComponentListInfo[] Components { get; set; }
 
         public static int MaxMessageLength = 255;
 
-        public string GetComponentStatusTextCssClass(Component component)
+        public string GetComponentStatusTextCssClass(GetGuiComponentListInfo component)
         {
-            var status = component.ExternalStatus.Status;
+            var status = component.ExternalStatus;
             var result = GuiHelper.GetComponentStatusTextCssClass(status);
             return result;
         }

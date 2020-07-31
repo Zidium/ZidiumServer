@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Api;
 using Zidium.Core.ConfigDb;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 
 namespace Zidium.Core.Common
@@ -18,7 +15,7 @@ namespace Zidium.Core.Common
         /// Количество потоков для обработки всех аккаунтов
         /// </summary>
         public int AccountThreads { get; set; }
-        
+
         /// <summary>
         /// Количество потоков для обработки БД 
         /// </summary>
@@ -59,74 +56,6 @@ namespace Zidium.Core.Common
             CancellationToken = cancellationToken;
         }
 
-        /// <summary>
-        /// Все базы данных, которые находятся в рабочем состоянии
-        /// </summary>
-        /// <returns></returns>
-        protected DatabaseInfo[] GetAllNotBroken()
-        {
-            var client = DispatcherHelper.GetDispatcherClient();
-            var databases = client.GetDatabases().Data;
-
-            Logger.Trace("Всего БД: " + databases.Length);
-
-            foreach (var database in databases)
-            {
-                CancellationToken.ThrowIfCancellationRequested();
-                if (database.IsBroken)
-                {
-                    Logger.Warn(
-                        "БД недоступна; ID:{0}; SystemName:{1}",
-                        database.Id,
-                        database.SystemName);
-                }
-                else if (IsDataBaseBroken(database))
-                {
-                    Logger.Warn(
-                        "БД сейчас недоступна; ID:{0}; SystemName:{1}",
-                        database.Id,
-                        database.SystemName);
-                }
-                else
-                {
-                    Logger.Trace(
-                       "БД доступна; ID:{0}; SystemName:{1}",
-                       database.Id,
-                       database.SystemName);
-                }
-            }
-
-            // вернем только рабочие бд
-            databases = databases.Where(x => x.IsBroken == false).ToArray();
-            return databases;
-        }
-
-        public static bool IsDataBaseBroken(DatabaseInfo database)
-        {
-            try
-            {
-                if (database.IsBroken)
-                {
-                    return true;
-                }
-                database.ValidateBroken();
-                return false;
-            }
-            catch (Exception)
-            {
-                var client = DispatcherHelper.GetDispatcherClient();
-                client.SetDatabaseIsBroken(new SetDatabaseIsBrokenRequestData()
-                {
-                    Id = database.Id,
-                    IsBroken = true
-                });
-
-                return true;
-            }
-        }
-
-        #region Циклы по аккаунтам
-
         public void ForAccount(Guid accountId, Action<ForEachAccountData> method)
         {
             ForEachAccount(x =>
@@ -146,12 +75,18 @@ namespace Zidium.Core.Common
         {
             try
             {
-                Logger.Trace("Начинаем обработку всех аккаунтов");
+                if (Logger.IsTraceEnabled)
+                    Logger.Trace("Начинаем обработку всех аккаунтов");
+
                 var client = DispatcherHelper.GetDispatcherClient();
                 var accounts = client.GetAccounts(new GetAccountsRequestData() { Status = AccountStatus.Active }).Data;
 
-                Logger.Trace("Найдено аккаунтов: " + accounts.Length);
+                if (Logger.IsTraceEnabled)
+                    Logger.Trace("Найдено аккаунтов: " + accounts.Length);
+
                 var tasks = new ThreadTaskQueue(AccountThreads);
+                tasks.UseSystemThreadPool = true;
+
                 tasks.ForEach(accounts, account =>
                 {
                     CancellationToken.ThrowIfCancellationRequested();
@@ -163,12 +98,13 @@ namespace Zidium.Core.Common
             catch (Exception exception)
             {
                 SetException(exception);
-                Tools.HandleOutOfMemoryException(exception);
+                Zidium.Api.Tools.HandleOutOfMemoryException(exception);
                 Logger.Error(exception);
             }
             finally
             {
-                Logger.Trace("Обработка всех аккаунтов завершена");
+                if (Logger.IsTraceEnabled)
+                    Logger.Trace("Обработка всех аккаунтов завершена");
             }
         }
 
@@ -177,18 +113,19 @@ namespace Zidium.Core.Common
             var accountLogger = LogManager.GetLogger(Logger.Name + "." + account.SystemName);
             try
             {
-                CancellationToken.ThrowIfCancellationRequested();
-                using (var data = new ForEachAccountData(accountLogger, CancellationToken, account))
-                {
+                var data = new ForEachAccountData(accountLogger, CancellationToken, account);
+
+                if (Logger.IsTraceEnabled)
                     data.Logger.Trace("Начинаем обработку аккаунта; ID:{0}; Name:{1}", account.Id, account.DisplayName);
-                    try
-                    {
-                        method(data);
-                    }
-                    finally
-                    {
+
+                try
+                {
+                    method(data);
+                }
+                finally
+                {
+                    if (Logger.IsTraceEnabled)
                         data.Logger.Trace("Обработка аккаунта завершена; ID:{0}; Name:{1}", account.Id, account.DisplayName);
-                    }
                 }
             }
             catch (ThreadAbortException) { }
@@ -196,120 +133,10 @@ namespace Zidium.Core.Common
             catch (Exception exception)
             {
                 SetException(exception);
-                Tools.HandleOutOfMemoryException(exception);
+                Zidium.Api.Tools.HandleOutOfMemoryException(exception);
                 accountLogger.Error(exception);
             }
         }
 
-        #endregion
-
-        #region Цикл по компонентам
-
-        protected void ForEachAccountComponentsWrapper(
-            AccountInfo account,
-            Component component,
-            Action<ForEachComponentData> method)
-        {
-            try
-            {
-                Logger.Trace(
-                "Начинаем обработку компонента; ID:{0} SystemName:{1}",
-                component.Id,
-                component.SystemName);
-
-                var logger = LogManager.GetLogger(Logger.Name + "." + account.SystemName + "." + component.SystemName);
-                using (var data = new ForEachComponentData(
-                    logger,
-                    CancellationToken,
-                    account,
-                    component))
-                {
-                    method(data);
-                }
-
-            }
-            catch (ThreadAbortException) { }
-            catch (OperationCanceledException) { }
-            catch (Exception exception)
-            {
-                SetException(exception);
-                Tools.HandleOutOfMemoryException(exception);
-                Logger.Error(exception);
-            }
-            finally
-            {
-                Logger.Trace("Обработка компонента завершена; ID:{0} SystemName:{1}",
-                    component.Id,
-                    component.SystemName);
-            }
-        }
-
-        public void ForEachAccountComponents(Guid accountId, Action<ForEachComponentData> method, bool withDeleted = false)
-        {
-            var client = DispatcherHelper.GetDispatcherClient();
-            var account = client.GetAccountById(new GetAccountByIdRequestData() { Id = accountId }).Data;
-            ForEachAccountComponents(account, method, withDeleted);
-        }
-
-        public void ForComponent(Guid accountId, Guid componentId, Action<ForEachComponentData> method)
-        {
-            ForEachAccount(x =>
-            {
-                if (x.Account.Id == accountId)
-                {
-                    ForEachAccountComponents(x.Account, y =>
-                    {
-                        if (y.Component.Id == componentId)
-                        {
-                            method(y);
-                        }
-                    });
-                }
-            });
-        }
-
-        public void ForEachAccountComponents(AccountInfo account, Action<ForEachComponentData> method, bool withDeleted = false)
-        {
-            try
-            {
-                Logger.Trace("Начинаем обработку компонентов аккаунта; accountId:{0} accountName:{1}", account.Id, account.DisplayName);
-                CancellationToken.ThrowIfCancellationRequested();
-                using (var accountDbContext = AccountDbContext.CreateFromDatabaseId(account.AccountDatabaseId))
-                {
-                    var componentRepository = accountDbContext.GetComponentRepository();
-                    var components = !withDeleted ?
-                        componentRepository.QueryAll().ToArray() :
-                        componentRepository.QueryAllWithDeleted().ToArray();
-                    Logger.Trace("Найдено компонентов: " + components.Length);
-                    var tasks = new ThreadTaskQueue(ComponentsThreads);
-                    tasks.ForEach(components, component =>
-                    {
-                        CancellationToken.ThrowIfCancellationRequested();
-                        ForEachAccountComponentsWrapper(account, component, method);
-                    });
-                }
-            }
-            catch (ThreadAbortException) { }
-            catch (OperationCanceledException) { }
-            catch (Exception exception)
-            {
-                SetException(exception);
-                Tools.HandleOutOfMemoryException(exception);
-                Logger.Error(exception);
-            }
-            finally
-            {
-                Logger.Trace("Обработка аккаунта завершена; accountId:{0} accountName:{1}", account.Id, account.DisplayName);
-            }
-        }
-
-        public void ForEachComponent(Action<ForEachComponentData> method, bool withDeleted = false)
-        {
-            Logger.Trace("Начинаем обработку всех компонентов во всех базах");
-            ForEachAccount(data => ForEachAccountComponents(data.Account, method, withDeleted));
-            Logger.Trace("Обработка всех компонентов во всех базах завершена");
-        }
-
-        #endregion
     }
 }

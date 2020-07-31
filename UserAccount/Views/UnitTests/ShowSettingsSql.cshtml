@@ -1,10 +1,12 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.UnitTests
+
 @model ShowSettingsSqlModel
+
 @{ 
-    string periodText = GuiHelper.TimeSpanAsString(Model.Period);
-    string commandTimeoutText = GuiHelper.TimeSpanAsString(Model.CommandTimeout);
-    string connectionTimeoutText = GuiHelper.TimeSpanAsString(Model.OpenConnectionTimeout);
+    var periodText = GuiHelper.TimeSpanAsString(Model.Period);
+    var commandTimeoutText = GuiHelper.TimeSpanAsString(Model.CommandTimeout);
+    var connectionTimeoutText = GuiHelper.TimeSpanAsString(Model.OpenConnectionTimeout);
 }
 
 <div class="col-md-8 tiles-column">

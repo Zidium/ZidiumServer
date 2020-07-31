@@ -1,13 +1,16 @@
 ﻿@using Zidium.Core.Common
 @using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.Events.WormyApplicationsModel
 
 @{
     ViewBag.Title = "Проблемные компоненты";
     ViewBag.ActiveMenuItems = "Components,Wormy";
 }
+
 <link href="/Css/Controls/SimpleBarChar.css" rel="stylesheet" />
 <link href="/Css/Controls/OneLineSausageChar.css" rel="stylesheet" />
+
 <style>
     .my-label {
         font-weight: bold;
@@ -73,7 +76,7 @@ else
                         <span class="badge alert-danger" style="font-size: 14px;">@application.Errors</span>
                     </a>
                 </td>
-                <td>@Html.PartialComponentBreadCrumbs(application.Component)</td>
+                <td>@Html.PartialComponentBreadCrumbs(application.Component.Id, Model.Storage)</td>
             </tr>
         }
     </table>

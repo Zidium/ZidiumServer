@@ -1,6 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -12,7 +11,7 @@ namespace Zidium.UserAccount.Models
 
         public string SystemName { get; set; }
 
-        public ComponentType ComponentType { get; set; }
+        public ComponentTypeForRead ComponentType { get; set; }
 
         public EventCategory Category { get; set; }
 

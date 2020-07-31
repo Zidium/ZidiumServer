@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
     public class ComponentAddModel
     {
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
         [Display(Name = "Id")]
         public Guid Id { get; set; }
@@ -39,7 +39,7 @@ namespace Zidium.UserAccount.Models
         [DataType("ComponentType")]
         public Guid ComponentTypeId { get; set; }
 
-        public ComponentType ComponentType { get; set; }
+        public ComponentTypeForRead ComponentType { get; set; }
 
         [Display(Name = "Версия")]
         [StringLength(255)]
@@ -47,6 +47,7 @@ namespace Zidium.UserAccount.Models
 
         public bool IsDeleted { get; set; }
 
-        public List<ComponentProperty> Properties { get; set; }
+        public ComponentPropertyForRead[] Properties { get; set; }
+
     }
 }

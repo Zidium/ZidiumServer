@@ -8,13 +8,13 @@ namespace ApiAdapter
 {
     public static class AdapterDataConverter
     {
-        public static List<Zidium.Core.Api.EventImportance> ConvertToCore(IEnumerable<EventImportance> importances)
+        public static Zidium.Storage.EventImportance[] ConvertToCore(IEnumerable<EventImportance> importances)
         {
             if (importances == null)
             {
                 return null;
             }
-            return importances.Select(x => ConvertToCore(x).GetValueOrDefault()).ToList();
+            return importances.Select(x => ConvertToCore(x).GetValueOrDefault()).ToArray();
         }
 
         public static Zidium.Core.Api.GetEventsRequestData ConvertToCore(GetEventsRequestDtoData filter)
@@ -93,85 +93,85 @@ namespace ApiAdapter
             return joinEventDatas.Select(ConvertToCore).ToList();
         }
 
-        public static Zidium.Core.Api.DataType ConvertToCore(DataType dataType)
+        public static Zidium.Storage.DataType ConvertToCore(DataType dataType)
         {
             if (dataType == DataType.Boolean)
             {
-                return Zidium.Core.Api.DataType.Boolean;
+                return Zidium.Storage.DataType.Boolean;
             }
             if (dataType == DataType.DateTime)
             {
-                return Zidium.Core.Api.DataType.DateTime;
+                return Zidium.Storage.DataType.DateTime;
             }
             if (dataType == DataType.Double)
             {
-                return Zidium.Core.Api.DataType.Double;
+                return Zidium.Storage.DataType.Double;
             }
             if (dataType == DataType.Int32)
             {
-                return Zidium.Core.Api.DataType.Int32;
+                return Zidium.Storage.DataType.Int32;
             }
             if (dataType == DataType.Int64)
             {
-                return Zidium.Core.Api.DataType.Int64;
+                return Zidium.Storage.DataType.Int64;
             }
             if (dataType == DataType.Binary)
             {
-                return Zidium.Core.Api.DataType.Binary;
+                return Zidium.Storage.DataType.Binary;
             }
             if (dataType == DataType.String)
             {
-                return Zidium.Core.Api.DataType.String;
+                return Zidium.Storage.DataType.String;
             }
             if (dataType == DataType.Guid)
             {
-                return Zidium.Core.Api.DataType.Guid;
+                return Zidium.Storage.DataType.Guid;
             }
             if (dataType == DataType.Unknown)
             {
-                return Zidium.Core.Api.DataType.Unknown;
+                return Zidium.Storage.DataType.Unknown;
             }
             throw new Exception("Неизвестное значение DataType: " + dataType);
         }
 
-        public static Zidium.Core.Api.DataType ParseCoreDataType(string type)
+        public static Zidium.Storage.DataType ParseCoreDataType(string type)
         {
             if (type == "Boolean")
             {
-                return Zidium.Core.Api.DataType.Boolean;
+                return Zidium.Storage.DataType.Boolean;
             }
             if (type == "DateTime")
             {
-                return Zidium.Core.Api.DataType.DateTime;
+                return Zidium.Storage.DataType.DateTime;
             }
             if (type == "Double")
             {
-                return Zidium.Core.Api.DataType.Double;
+                return Zidium.Storage.DataType.Double;
             }
             if (type == "Int32")
             {
-                return Zidium.Core.Api.DataType.Int32;
+                return Zidium.Storage.DataType.Int32;
             }
             if (type == "Int64")
             {
-                return Zidium.Core.Api.DataType.Int64;
+                return Zidium.Storage.DataType.Int64;
             }
             if (type == "Binary")
             {
-                return Zidium.Core.Api.DataType.Binary;
+                return Zidium.Storage.DataType.Binary;
             }
             if (type == "String")
             {
-                return Zidium.Core.Api.DataType.String;
+                return Zidium.Storage.DataType.String;
             }
             if (type == "Guid")
             {
-                return Zidium.Core.Api.DataType.Guid;
+                return Zidium.Storage.DataType.Guid;
             }
-            return Zidium.Core.Api.DataType.Unknown;
+            return Zidium.Storage.DataType.Unknown;
         }
 
-        public static Zidium.Core.Api.UnitTestResult? ConvertToCore(UnitTestResult? data)
+        public static Zidium.Storage.UnitTestResult? ConvertToCore(UnitTestResult? data)
         {
             if (data == null)
             {
@@ -179,19 +179,19 @@ namespace ApiAdapter
             }
             if (data == UnitTestResult.Unknown)
             {
-                return Zidium.Core.Api.UnitTestResult.Unknown;
+                return Zidium.Storage.UnitTestResult.Unknown;
             }
             if (data == UnitTestResult.Success)
             {
-                return Zidium.Core.Api.UnitTestResult.Success;
+                return Zidium.Storage.UnitTestResult.Success;
             }
             if (data == UnitTestResult.Warning)
             {
-                return Zidium.Core.Api.UnitTestResult.Warning;
+                return Zidium.Storage.UnitTestResult.Warning;
             }
             if (data == UnitTestResult.Alarm)
             {
-                return Zidium.Core.Api.UnitTestResult.Alarm;
+                return Zidium.Storage.UnitTestResult.Alarm;
             }
             throw new Exception("Неизвестное значени UnitTestResult: " + data);
         }
@@ -326,41 +326,41 @@ namespace ApiAdapter
             return result;
         }
 
-        public static DataType ConvertToApi(Zidium.Core.Api.DataType dataType)
+        public static DataType ConvertToApi(Zidium.Storage.DataType dataType)
         {
-            if (dataType == Zidium.Core.Api.DataType.Boolean)
+            if (dataType == Zidium.Storage.DataType.Boolean)
             {
                 return DataType.Boolean;
             }
-            if (dataType == Zidium.Core.Api.DataType.DateTime)
+            if (dataType == Zidium.Storage.DataType.DateTime)
             {
                 return DataType.DateTime;
             }
-            if (dataType == Zidium.Core.Api.DataType.Double)
+            if (dataType == Zidium.Storage.DataType.Double)
             {
                 return DataType.Double;
             }
-            if (dataType == Zidium.Core.Api.DataType.Int32)
+            if (dataType == Zidium.Storage.DataType.Int32)
             {
                 return DataType.Int32;
             }
-            if (dataType == Zidium.Core.Api.DataType.Int64)
+            if (dataType == Zidium.Storage.DataType.Int64)
             {
                 return DataType.Int64;
             }
-            if (dataType == Zidium.Core.Api.DataType.Binary)
+            if (dataType == Zidium.Storage.DataType.Binary)
             {
                 return DataType.Binary;
             }
-            if (dataType == Zidium.Core.Api.DataType.String)
+            if (dataType == Zidium.Storage.DataType.String)
             {
                 return DataType.String;
             }
-            if (dataType == Zidium.Core.Api.DataType.Guid)
+            if (dataType == Zidium.Storage.DataType.Guid)
             {
                 return DataType.Guid;
             }
-            if (dataType == Zidium.Core.Api.DataType.Unknown)
+            if (dataType == Zidium.Storage.DataType.Unknown)
             {
                 return DataType.Unknown;
             }
@@ -390,7 +390,7 @@ namespace ApiAdapter
             return properties.Select(ConvertToApi).ToList();
         }
 
-        public static List<EventDto> ConvertToApi(List<Zidium.Core.Api.EventInfo> eventInfos)
+        public static List<EventDto> ConvertToApi(Zidium.Core.Api.EventInfo[] eventInfos)
         {
             if (eventInfos == null)
             {
@@ -460,7 +460,7 @@ namespace ApiAdapter
             return result;
         }
 
-        public static List<ComponentDto> ConvertToApi(List<Zidium.Core.Api.ComponentInfo> infos)
+        public static List<ComponentDto> ConvertToApi(Zidium.Core.Api.ComponentInfo[] infos)
         {
             if (infos == null)
             {
@@ -562,78 +562,78 @@ namespace ApiAdapter
             };
         }
 
-        public static MonitoringStatus ConvertToApi(Zidium.Core.Api.MonitoringStatus status)
+        public static MonitoringStatus ConvertToApi(Zidium.Storage.MonitoringStatus status)
         {
-            if (status == Zidium.Core.Api.MonitoringStatus.Unknown)
+            if (status == Zidium.Storage.MonitoringStatus.Unknown)
             {
                 return MonitoringStatus.Unknown;
             }
-            if (status == Zidium.Core.Api.MonitoringStatus.Disabled)
+            if (status == Zidium.Storage.MonitoringStatus.Disabled)
             {
                 return MonitoringStatus.Disabled;
             }
-            if (status == Zidium.Core.Api.MonitoringStatus.Success)
+            if (status == Zidium.Storage.MonitoringStatus.Success)
             {
                 return MonitoringStatus.Success;
             }
-            if (status == Zidium.Core.Api.MonitoringStatus.Warning)
+            if (status == Zidium.Storage.MonitoringStatus.Warning)
             {
                 return MonitoringStatus.Warning;
             }
-            if (status == Zidium.Core.Api.MonitoringStatus.Alarm)
+            if (status == Zidium.Storage.MonitoringStatus.Alarm)
             {
                 return MonitoringStatus.Alarm;
             }
             throw new Exception("неизвестное значение ComponentStatus: " + status);
         }
 
-        public static EventCategory ConvertToApi(Zidium.Core.Api.EventCategory category)
+        public static EventCategory ConvertToApi(Zidium.Storage.EventCategory category)
         {
-            if (category == Zidium.Core.Api.EventCategory.ApplicationError)
+            if (category == Zidium.Storage.EventCategory.ApplicationError)
             {
                 return EventCategory.ApplicationError;
             }
-            if (category == Zidium.Core.Api.EventCategory.ComponentEvent)
+            if (category == Zidium.Storage.EventCategory.ComponentEvent)
             {
                 return EventCategory.ComponentEvent;
             }
-            if (category == Zidium.Core.Api.EventCategory.UnitTestStatus)
+            if (category == Zidium.Storage.EventCategory.UnitTestStatus)
             {
                 return EventCategory.UnitTestStatus;
             }
-            if (category == Zidium.Core.Api.EventCategory.UnitTestResult)
+            if (category == Zidium.Storage.EventCategory.UnitTestResult)
             {
                 return EventCategory.UnitTestResult;
             }
-            if (category == Zidium.Core.Api.EventCategory.MetricStatus)
+            if (category == Zidium.Storage.EventCategory.MetricStatus)
             {
                 return EventCategory.MetricStatus;
             }
-            //if (category == Zidium.Core.Api.EventCategory.MetricResult)
+            //if (category == Zidium.Storage.EventCategory.MetricResult)
             //{
             //    return EventCategory.MetricResult;
             //}
-            if (category == Zidium.Core.Api.EventCategory.ComponentEventsStatus)
+            if (category == Zidium.Storage.EventCategory.ComponentEventsStatus)
             {
                 return EventCategory.ComponentEventsStatus;
             }
-            if (category == Zidium.Core.Api.EventCategory.ComponentUnitTestsStatus)
+            if (category == Zidium.Storage.EventCategory.ComponentUnitTestsStatus)
             {
                 return EventCategory.ComponentUnitTestsStatus;
             }
-            if (category == Zidium.Core.Api.EventCategory.ComponentMetricsStatus)
+            if (category == Zidium.Storage.EventCategory.ComponentMetricsStatus)
             {
                 return EventCategory.ComponentMetricsStatus;
             }
-            if (category == Zidium.Core.Api.EventCategory.ComponentChildsStatus)
+            if (category == Zidium.Storage.EventCategory.ComponentChildsStatus)
             {
                 return EventCategory.ComponentChildsStatus;
             }
-            if (category == Zidium.Core.Api.EventCategory.ComponentInternalStatus)
+            if (category == Zidium.Storage.EventCategory.ComponentInternalStatus)
             {
                 return EventCategory.ComponentInternalStatus;
             }
-            if (category == Zidium.Core.Api.EventCategory.ComponentExternalStatus)
+            if (category == Zidium.Storage.EventCategory.ComponentExternalStatus)
             {
                 return EventCategory.ComponentExternalStatus;
             }
@@ -812,12 +812,8 @@ namespace ApiAdapter
             var result = new Zidium.Core.Api.GetChangedWebLogConfigsRequestData()
             {
                 LastUpdateDate = data.LastUpdateDate,
-                ComponentIds = new List<Guid>()
+                ComponentIds = data.ComponentIds?.ToArray()
             };
-            if (data.ComponentIds != null)
-            {
-                result.ComponentIds.AddRange(data.ComponentIds);
-            }
             return result;
         }
 
@@ -847,13 +843,13 @@ namespace ApiAdapter
             };
         }
 
-        public static Zidium.Core.Api.UpdateComponentTypeData ConvertToCore(UpdateComponentTypeRequestDtoData data)
+        public static Zidium.Core.Api.UpdateComponentTypeRequestData ConvertToCore(UpdateComponentTypeRequestDtoData data)
         {
             if (data == null)
             {
                 return null;
             }
-            return new Zidium.Core.Api.UpdateComponentTypeData()
+            return new Zidium.Core.Api.UpdateComponentTypeRequestData()
             {
                 DisplayName = data.DisplayName,
                 SystemName = data.SystemName,
@@ -903,6 +899,13 @@ namespace ApiAdapter
             };
         }
 
+        public static List<WebLogConfigDto> ConvertToApi(Zidium.Core.Api.WebLogConfig[] configs)
+        {
+            if (configs == null)
+                return null;
+            return configs.Select(ConvertToApi).ToList();
+        }
+
         public static WebLogConfigDto ConvertToApi(Zidium.Core.Api.WebLogConfig config)
         {
             if (config == null)
@@ -923,7 +926,7 @@ namespace ApiAdapter
             };
         }
 
-        public static List<LogDto> ConvertToApi(List<Zidium.Core.Api.LogRow> logRows)
+        public static List<LogDto> ConvertToApi(Zidium.Core.Api.LogRow[] logRows)
         {
             if (logRows == null)
             {
@@ -950,13 +953,13 @@ namespace ApiAdapter
             };
         }
 
-        public static List<Zidium.Core.Api.LogLevel> ConvertToCore(List<LogLevel> levels)
+        public static Zidium.Storage.LogLevel[] ConvertToCore(List<LogLevel> levels)
         {
             if (levels == null)
             {
                 return null;
             }
-            return levels.Select(x => ConvertToCore(x).GetValueOrDefault()).ToList();
+            return levels.Select(x => ConvertToCore(x).GetValueOrDefault()).ToArray();
         }
 
         public static Zidium.Core.Api.GetLogsRequestData ConvertToCore(GetLogsRequestDtoData filter)
@@ -1005,29 +1008,29 @@ namespace ApiAdapter
             return message;
         }
 
-        public static LogLevel ConvertToApi(Zidium.Core.Api.LogLevel level)
+        public static LogLevel ConvertToApi(Zidium.Storage.LogLevel level)
         {
-            if (level == Zidium.Core.Api.LogLevel.Debug)
+            if (level == Zidium.Storage.LogLevel.Debug)
             {
                 return LogLevel.Debug;
             }
-            if (level == Zidium.Core.Api.LogLevel.Trace)
+            if (level == Zidium.Storage.LogLevel.Trace)
             {
                 return LogLevel.Trace;
             }
-            if (level == Zidium.Core.Api.LogLevel.Info)
+            if (level == Zidium.Storage.LogLevel.Info)
             {
                 return LogLevel.Info;
             }
-            if (level == Zidium.Core.Api.LogLevel.Warning)
+            if (level == Zidium.Storage.LogLevel.Warning)
             {
                 return LogLevel.Warning;
             }
-            if (level == Zidium.Core.Api.LogLevel.Error)
+            if (level == Zidium.Storage.LogLevel.Error)
             {
                 return LogLevel.Error;
             }
-            if (level == Zidium.Core.Api.LogLevel.Fatal)
+            if (level == Zidium.Storage.LogLevel.Fatal)
             {
                 return LogLevel.Fatal;
             }
@@ -1035,7 +1038,7 @@ namespace ApiAdapter
         }
 
 
-        public static Zidium.Core.Api.LogLevel? ConvertToCore(LogLevel? level)
+        public static Zidium.Storage.LogLevel? ConvertToCore(LogLevel? level)
         {
             if (level == null)
             {
@@ -1043,32 +1046,32 @@ namespace ApiAdapter
             }
             if (level == LogLevel.Debug)
             {
-                return Zidium.Core.Api.LogLevel.Debug;
+                return Zidium.Storage.LogLevel.Debug;
             }
             if (level == LogLevel.Trace)
             {
-                return Zidium.Core.Api.LogLevel.Trace;
+                return Zidium.Storage.LogLevel.Trace;
             }
             if (level == LogLevel.Info)
             {
-                return Zidium.Core.Api.LogLevel.Info;
+                return Zidium.Storage.LogLevel.Info;
             }
             if (level == LogLevel.Warning)
             {
-                return Zidium.Core.Api.LogLevel.Warning;
+                return Zidium.Storage.LogLevel.Warning;
             }
             if (level == LogLevel.Error)
             {
-                return Zidium.Core.Api.LogLevel.Error;
+                return Zidium.Storage.LogLevel.Error;
             }
             if (level == LogLevel.Fatal)
             {
-                return Zidium.Core.Api.LogLevel.Fatal;
+                return Zidium.Storage.LogLevel.Fatal;
             }
             throw new Exception("Неизвестное значение level: " + level);
         }
 
-        public static Zidium.Core.Api.EventImportance? ConvertToCore(EventImportance? importance)
+        public static Zidium.Storage.EventImportance? ConvertToCore(EventImportance? importance)
         {
             if (importance == null)
             {
@@ -1076,45 +1079,45 @@ namespace ApiAdapter
             }
             if (importance.Value == EventImportance.Unknown)
             {
-                return Zidium.Core.Api.EventImportance.Unknown;
+                return Zidium.Storage.EventImportance.Unknown;
             }
             if (importance.Value == EventImportance.Success)
             {
-                return Zidium.Core.Api.EventImportance.Success;
+                return Zidium.Storage.EventImportance.Success;
             }
             if (importance.Value == EventImportance.Warning)
             {
-                return Zidium.Core.Api.EventImportance.Warning;
+                return Zidium.Storage.EventImportance.Warning;
             }
             if (importance.Value == EventImportance.Alarm)
             {
-                return Zidium.Core.Api.EventImportance.Alarm;
+                return Zidium.Storage.EventImportance.Alarm;
             }
             throw new Exception("Неизвестное значение EventImportance: " + importance);
         }
 
-        public static EventImportance ConvertToApi(Zidium.Core.Api.EventImportance importance)
+        public static EventImportance ConvertToApi(Zidium.Storage.EventImportance importance)
         {
-            if (importance == Zidium.Core.Api.EventImportance.Unknown)
+            if (importance == Zidium.Storage.EventImportance.Unknown)
             {
                 return EventImportance.Unknown;
             }
-            if (importance == Zidium.Core.Api.EventImportance.Success)
+            if (importance == Zidium.Storage.EventImportance.Success)
             {
                 return EventImportance.Success;
             }
-            if (importance == Zidium.Core.Api.EventImportance.Warning)
+            if (importance == Zidium.Storage.EventImportance.Warning)
             {
                 return EventImportance.Warning;
             }
-            if (importance == Zidium.Core.Api.EventImportance.Alarm)
+            if (importance == Zidium.Storage.EventImportance.Alarm)
             {
                 return EventImportance.Alarm;
             }
             throw new Exception("Неизвестное значение EventImportance: " + importance);
         }
 
-        public static Zidium.Core.Api.EventCategory? ConvertToCore(EventCategory? category)
+        public static Zidium.Storage.EventCategory? ConvertToCore(EventCategory? category)
         {
             if (category == null)
             {
@@ -1123,56 +1126,56 @@ namespace ApiAdapter
 
             if (category == EventCategory.ApplicationError)
             {
-                return Zidium.Core.Api.EventCategory.ApplicationError;
+                return Zidium.Storage.EventCategory.ApplicationError;
             }
             if (category == EventCategory.ComponentEvent)
             {
-                return Zidium.Core.Api.EventCategory.ComponentEvent;
+                return Zidium.Storage.EventCategory.ComponentEvent;
             }
             if (category == EventCategory.UnitTestStatus)
             {
-                return Zidium.Core.Api.EventCategory.UnitTestStatus;
+                return Zidium.Storage.EventCategory.UnitTestStatus;
             }
             if (category == EventCategory.UnitTestResult)
             {
-                return Zidium.Core.Api.EventCategory.UnitTestResult;
+                return Zidium.Storage.EventCategory.UnitTestResult;
             }
             if (category == EventCategory.MetricStatus)
             {
-                return Zidium.Core.Api.EventCategory.MetricStatus;
+                return Zidium.Storage.EventCategory.MetricStatus;
             }
             //if (category == EventCategory.MetricResult)
             //{
-            //    return Zidium.Core.Api.EventCategory.MetricResult;
+            //    return Zidium.Storage.EventCategory.MetricResult;
             //}
             if (category == EventCategory.ComponentEventsStatus)
             {
-                return Zidium.Core.Api.EventCategory.ComponentEventsStatus;
+                return Zidium.Storage.EventCategory.ComponentEventsStatus;
             }
             if (category == EventCategory.ComponentUnitTestsStatus)
             {
-                return Zidium.Core.Api.EventCategory.ComponentUnitTestsStatus;
+                return Zidium.Storage.EventCategory.ComponentUnitTestsStatus;
             }
             if (category == EventCategory.ComponentMetricsStatus)
             {
-                return Zidium.Core.Api.EventCategory.ComponentMetricsStatus;
+                return Zidium.Storage.EventCategory.ComponentMetricsStatus;
             }
             if (category == EventCategory.ComponentChildsStatus)
             {
-                return Zidium.Core.Api.EventCategory.ComponentChildsStatus;
+                return Zidium.Storage.EventCategory.ComponentChildsStatus;
             }
             if (category == EventCategory.ComponentInternalStatus)
             {
-                return Zidium.Core.Api.EventCategory.ComponentInternalStatus;
+                return Zidium.Storage.EventCategory.ComponentInternalStatus;
             }
             if (category == EventCategory.ComponentExternalStatus)
             {
-                return Zidium.Core.Api.EventCategory.ComponentExternalStatus;
+                return Zidium.Storage.EventCategory.ComponentExternalStatus;
             }
             throw new Exception("неизвестное значение EventCategory: " + category);
         }
 
-        public static Zidium.Core.Api.EventCategory? ConvertToCore(SendEventCategory? category)
+        public static Zidium.Storage.EventCategory? ConvertToCore(SendEventCategory? category)
         {
             if (category == null)
             {
@@ -1181,11 +1184,11 @@ namespace ApiAdapter
 
             if (category == SendEventCategory.ApplicationError)
             {
-                return Zidium.Core.Api.EventCategory.ApplicationError;
+                return Zidium.Storage.EventCategory.ApplicationError;
             }
             if (category == SendEventCategory.ComponentEvent)
             {
-                return Zidium.Core.Api.EventCategory.ComponentEvent;
+                return Zidium.Storage.EventCategory.ComponentEvent;
             }
             throw new Exception("неизвестное значение EventCategory: " + category);
         }
@@ -1250,29 +1253,29 @@ namespace ApiAdapter
             return result;
         }
 
-        public static List<MetricDto> ConvertToApi(List<Zidium.Core.Api.MetricInfo> counters)
+        public static List<MetricDto> ConvertToApi(Zidium.Core.Api.MetricInfo[] metrics)
         {
-            if (counters == null)
+            if (metrics == null)
             {
                 return null;
             }
-            return counters.Select(ConvertToApi).ToList();
+            return metrics.Select(ConvertToApi).ToList();
         }
 
-        public static MetricDto ConvertToApi(Zidium.Core.Api.MetricInfo counter)
+        public static MetricDto ConvertToApi(Zidium.Core.Api.MetricInfo metric)
         {
-            if (counter == null)
+            if (metric == null)
             {
                 return null;
             }
             return new MetricDto()
             {
-                ComponentId = counter.ComponentId,
-                Name = counter.SystemName,
-                Value = counter.Value,
-                BeginDate = counter.BeginDate,
-                ActualDate = counter.ActualDate,
-                Status = ConvertToApi(counter.Status)
+                ComponentId = metric.ComponentId,
+                Name = metric.SystemName,
+                Value = metric.Value,
+                BeginDate = metric.BeginDate,
+                ActualDate = metric.ActualDate,
+                Status = ConvertToApi(metric.Status)
             };
         }
     }

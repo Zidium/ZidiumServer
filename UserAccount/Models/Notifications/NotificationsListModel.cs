@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -23,7 +21,7 @@ namespace Zidium.UserAccount.Models
 
         public Guid? UserId { get; set; }
 
-        public List<NotificationsListItemModel> Notifications { get; set; }
+        public NotificationsListItemModel[] Notifications { get; set; }
 
         public const int MaxMessageLength = 100;
     }

@@ -4,10 +4,11 @@ using System.Web;
 using NLog;
 using Zidium.Api;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
 using Zidium.Core.Limits;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace Zidium.DispatcherHttpService
 {
@@ -24,9 +25,12 @@ namespace Zidium.DispatcherHttpService
         protected void Application_Start(object sender, EventArgs e)
         {
             // Приложение не должно накатывать миграции или создавать базы
-            AccountDbContext.DisableMigrations();
+            StorageFactory.DisableMigrations();
 
             Initialization.SetServices();
+            DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+            DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
+
             InitComponentControl();
 
             try
@@ -119,11 +123,11 @@ namespace Zidium.DispatcherHttpService
             {
                 if (AccountLimitsCheckerManager.LastSaveException == null)
                 {
-                    UnitTestControl.SendResult(UnitTestResult.Success, TimeSpan.FromMinutes(10), "Сохранено записей: " + count + " за " + duration);
+                    UnitTestControl.SendResult(Api.UnitTestResult.Success, TimeSpan.FromMinutes(10), "Сохранено записей: " + count + " за " + duration);
                 }
                 else
                 {
-                    UnitTestControl.SendResult(UnitTestResult.Alarm, TimeSpan.FromMinutes(10), AccountLimitsCheckerManager.LastSaveException.Message);
+                    UnitTestControl.SendResult(Api.UnitTestResult.Alarm, TimeSpan.FromMinutes(10), AccountLimitsCheckerManager.LastSaveException.Message);
                 }
             }
 

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
@@ -13,15 +12,11 @@ using Zidium.UserAccount.Models.Controls;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class UnitTestTypesController : ContextController
+    public class UnitTestTypesController : BaseController
     {
         public ActionResult Index(string search = null)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var items = repository
-                .QueryAllForGui(search)
-                .OrderBy(t => t.IsSystem)
-                .ThenBy(t => t.DisplayName);
+            var items = GetStorage().UnitTestTypes.Filter(search, 100);
 
             var model = new UnitTestTypeListModel()
             {
@@ -33,8 +28,7 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult Show(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetById(id);
+            var unitTestType = GetStorage().UnitTestTypes.GetOneById(id);
 
             var model = new UnitTestTypeShowModel()
             {
@@ -89,8 +83,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetById(id);
+            var unitTestType = GetStorage().UnitTestTypes.GetOneById(id);
             CheckEditingPermissions(unitTestType);
 
             var model = new UnitTestTypeEditModel()
@@ -118,8 +111,7 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetById(model.Id);
+            var unitTestType = GetStorage().UnitTestTypes.GetOneById(model.Id);
             CheckEditingPermissions(unitTestType);
 
             var client = GetDispatcherClient();
@@ -137,17 +129,16 @@ namespace Zidium.UserAccount.Controllers
             return RedirectToAction("Show", new { id = model.Id });
         }
 
-        protected void CheckEditingPermissions(UnitTestType unitTestType)
+        protected void CheckEditingPermissions(UnitTestTypeForRead unitTestType)
         {
             if (unitTestType.IsSystem)
-                throw new CantEditSystemObjectException(unitTestType.Id, Naming.UnitTestType);
+                throw new UserFriendlyException("Нельзя изменять системный тип проверки");
         }
 
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetById(id);
+            var unitTestType = GetStorage().UnitTestTypes.GetOneById(id);
             CheckDeletingPermissions(unitTestType);
             var model = new DeleteConfirmationModel()
             {
@@ -168,8 +159,7 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View("~/Views/Shared/Dialogs/DeleteConfirmation.cshtml", model);
 
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetById(Guid.Parse(model.Id));
+            var unitTestType = GetStorage().UnitTestTypes.GetOneById(Guid.Parse(model.Id));
             CheckDeletingPermissions(unitTestType);
 
             var client = GetDispatcherClient();
@@ -184,18 +174,17 @@ namespace Zidium.UserAccount.Controllers
             return RedirectToAction("Index");
         }
 
-        protected void CheckDeletingPermissions(UnitTestType unitTestType)
+        protected void CheckDeletingPermissions(UnitTestTypeForRead unitTestType)
         {
             if (unitTestType.IsSystem)
-                throw new CantDeleteSystemObjectException(unitTestType.Id, Naming.UnitTestType);
+                throw new UserFriendlyException("Незлья удалять системный тип проверки");
             if (unitTestType.IsDeleted)
-                throw new AlreadyDeletedException(unitTestType.Id, Naming.UnitTestType);
+                throw new UserFriendlyException("Тип проверки уже удалён");
         }
 
         public JsonResult CheckSystemName(UnitTestTypeEditModel model)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetOneOrNullBySystemName(model.SystemName);
+            var unitTestType = GetStorage().UnitTestTypes.GetOneOrNullBySystemName(model.SystemName);
             if (unitTestType != null && (model.Id == Guid.Empty || model.Id != unitTestType.Id))
                 return Json("Тип проверки с таким системным именем уже существует", JsonRequestBehavior.AllowGet);
             return Json(true, JsonRequestBehavior.AllowGet);

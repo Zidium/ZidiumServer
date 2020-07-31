@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Xunit;
 using Zidium.TestTools;
@@ -38,10 +37,9 @@ namespace Zidium.UserAccount.Tests
             }
 
             // Проверим данные созданной проверки
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = accountContext.GetUnitTestRepository();
-                var unitTest = repository.QueryAll().SingleOrDefault(t => t.DisplayName == model.DisplayName);
+                var unitTest = accountContext.UnitTests.SingleOrDefault(t => t.DisplayName == model.DisplayName);
                 Assert.NotNull(unitTest);
                 Assert.Equal(model.UnitTestTypeId, unitTest.TypeId);
                 Assert.Equal(model.ComponentId, unitTest.ComponentId);
@@ -77,9 +75,12 @@ namespace Zidium.UserAccount.Tests
             // Проверим, что проверка есть в списке
             using (var controller = new UnitTestsController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index();
+                var result = (ViewResultBase)controller.Index(componentId: component.Id);
                 var listModel = (UnitTestsListModel)result.Model;
-                Assert.True(listModel.UnitTestTypes.Any(t => t.UnitTests.Any(x => x.Id == unitTestId)));
+                var unitTestItems = listModel.UnitTestTypes.FirstOrDefault(t => t.UnitTestType.Id == unitTestType.Id);
+                Assert.NotNull(unitTestItems);
+                var unitTestItem = unitTestItems.UnitTests.FirstOrDefault(t => t.Id == unitTestId);
+                Assert.NotNull(unitTestItem);
             }
 
             // Удалим проверку
@@ -92,9 +93,10 @@ namespace Zidium.UserAccount.Tests
             // Проверим, что проверки нет в списке
             using (var controller = new UnitTestsController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Index();
+                var result = (ViewResultBase)controller.Index(componentId: component.Id);
                 var listModel = (UnitTestsListModel)result.Model;
-                Assert.False(listModel.UnitTestTypes.Any(t => t.UnitTests.Any(x => x.Id == unitTestId)));
+                var unitTestItems = listModel.UnitTestTypes.FirstOrDefault(t => t.UnitTestType.Id == unitTestType.Id);
+                Assert.Null(unitTestItems);
             }
         }
 

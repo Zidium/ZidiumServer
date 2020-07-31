@@ -1,12 +1,29 @@
-﻿using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes;
+﻿using System;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Defects
 {
     public class ShowDefectModel
     {
-        public EventType EventType { get; set; }
+        public EventTypeForRead EventType { get; set; }
 
-        public Defect Defect { get; set; }
+        public DefectForRead Defect { get; set; }
+
+        public DefectChangeInfo[] Changes { get; set; }
+
+        public string LastChangeUser { get; set; }
+
+        public string ResponsibleUser { get; set; }
+
+        public class DefectChangeInfo
+        {
+            public DateTime Date;
+
+            public DefectStatus Status;
+
+            public string Comment;
+
+            public string UserLogin;
+        }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb.Classes;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Defects
 {

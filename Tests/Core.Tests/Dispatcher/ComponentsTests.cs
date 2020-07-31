@@ -3,9 +3,8 @@ using System.Linq;
 using Xunit;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.TestTools;
-using EventImportance = Zidium.Api.EventImportance;
-using UnitTestResult = Zidium.Api.UnitTestResult;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -21,7 +20,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var systemName = "Component." + Guid.NewGuid();
             var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
             {
-                TypeId = SystemComponentTypes.WebSite.Id,
+                TypeId = SystemComponentType.WebSite.Id,
                 SystemName = systemName,
                 DisplayName = systemName,
                 ParentComponentId = account.RootId
@@ -34,7 +33,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Снова создадим с тем же системным именем
             getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
             {
-                TypeId = SystemComponentTypes.WebSite.Id,
+                TypeId = SystemComponentType.WebSite.Id,
                 SystemName = systemName,
                 DisplayName = systemName,
                 ParentComponentId = account.RootId
@@ -68,13 +67,13 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.Equal(Zidium.Api.MonitoringStatus.Success, componentState.Status);
 
             // сделаем юнит-тест желтым
-            unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromDays(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Warning, TimeSpan.FromDays(1)).Check();
             componentState = component.GetTotalState(false).Data;
             Assert.Equal(Zidium.Api.MonitoringStatus.Warning, componentState.Status);
 
             // сделаем ребенка зеленым
             child.CreateComponentEvent("event")
-               .SetImportance(EventImportance.Success)
+               .SetImportance(Zidium.Api.EventImportance.Success)
                .Send()
                .Check();
 
@@ -87,7 +86,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             // проверим, что в БД все выключено
             // статусы объектов через АПИ проверим позже, т.к. они могут на лету изменить данные в БД
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var unitTestDb = accountDbContext.UnitTests.Find(unitTest.Info.Id);
                 Assert.NotNull(unitTestDb);
@@ -125,7 +124,7 @@ namespace Zidium.Core.Tests.Dispatcher
             component.GetTotalState(true);
 
             // проверим, что в БД все включено
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var unitTestDb = accountDbContext.UnitTests.Find(unitTest.Info.Id);
                 Assert.NotNull(unitTestDb);
@@ -168,7 +167,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var systemName = "Component." + Guid.NewGuid();
             var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
             {
-                TypeId = SystemComponentTypes.WebSite.Id,
+                TypeId = SystemComponentType.WebSite.Id,
                 SystemName = systemName,
                 DisplayName = systemName,
                 ParentComponentId = account.RootId
@@ -179,7 +178,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var childSystemName = "Component." + Guid.NewGuid();
             var getOrCreateChildComponentResponse = dispatcher.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
             {
-                TypeId = SystemComponentTypes.WebSite.Id,
+                TypeId = SystemComponentType.WebSite.Id,
                 SystemName = childSystemName,
                 DisplayName = childSystemName,
                 ParentComponentId = component.Component.Id
@@ -190,14 +189,12 @@ namespace Zidium.Core.Tests.Dispatcher
             dispatcher.DeleteComponent(account.Id, component.Component.Id);
 
             // Проверим, что оба компонента удалены
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var componentRepository = context.GetComponentRepository();
-
-                var componentFromDb = componentRepository.GetById(component.Component.Id);
+                var componentFromDb = context.Components.Find(component.Component.Id);
                 Assert.True(componentFromDb.IsDeleted);
 
-                var childFromDb = componentRepository.GetById(child.Component.Id);
+                var childFromDb = context.Components.Find(child.Component.Id);
                 Assert.True(childFromDb.IsDeleted);
             }
         }
@@ -212,7 +209,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var systemName = "Component." + Guid.NewGuid();
             var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(account.Id, new GetOrCreateComponentRequestData()
             {
-                TypeId = SystemComponentTypes.WebSite.Id,
+                TypeId = SystemComponentType.WebSite.Id,
                 SystemName = systemName,
                 DisplayName = systemName,
                 ParentComponentId = account.RootId

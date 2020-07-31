@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.Api;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Components;
@@ -16,11 +17,11 @@ using Zidium.UserAccount.Models.Controls;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ComponentsController : ContextController
+    public class ComponentsController : BaseController
     {
         public ActionResult Index(ColorStatusSelectorValue color, Guid? componentTypeId = null, string search = null)
         {
-            var service = CurrentAccountDbContext.GetUserSettingService();
+            var service = new UserSettingService(GetStorage());
             var showAsList = service.ShowComponentsAsList(CurrentUser.Id);
             if (showAsList)
                 return RedirectToAction("List", new { color, componentTypeId, search });
@@ -36,9 +37,8 @@ namespace Zidium.UserAccount.Controllers
         {
             if (save == "1")
             {
-                var service = CurrentAccountDbContext.GetUserSettingService();
+                var service = new UserSettingService(GetStorage());
                 service.ShowComponentsAsList(CurrentUser.Id, true);
-                CurrentAccountDbContext.SaveChanges();
                 return RedirectToAction("List", new { color = color.HasValue ? color : null, componentTypeId, search });
             }
 
@@ -49,85 +49,63 @@ namespace Zidium.UserAccount.Controllers
                 Color = color,
                 ParentComponentId = parentComponentId
             };
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var query = repository.QueryAll().Include("ComponentType").Include("ExternalStatus");
-            if (componentTypeId == null && parentComponentId == null)
-            {
-                query = query.Where(t =>
-                    t.ComponentTypeId != SystemComponentTypes.Root.Id &&
-                    t.ComponentTypeId != SystemComponentTypes.Folder.Id);
-            }
 
-            if (parentComponentId.HasValue)
-            {
-                query = query.Where(x => x.ParentId == model.ParentComponentId);
-            }
+            var statuses = model.Color.Checked ? model.Color.GetSelectedMonitoringStatuses() : null;
 
-            if (model.ComponentTypeId.HasValue)
-                query = query.Where(t => t.ComponentTypeId == model.ComponentTypeId);
+            var list = GetStorage().Gui.GetComponentList(
+                componentTypeId, 
+                new [] { SystemComponentType.Root.Id, SystemComponentType.Folder.Id },
+                parentComponentId,
+                statuses,
+                search, 
+                100);
 
-            // фильтр по цвету
-            if (model.Color.Checked)
-            {
-                var statuses = model.Color.GetSelectedMonitoringStatuses();
-                query = query.Where(t => statuses.Contains(t.ExternalStatus.Status));
-            }
-
-            if (!string.IsNullOrEmpty(search))
-                query = query.Where(t => t.Id.ToString().Contains(search) || t.SystemName.Contains(search) || t.DisplayName.Contains(search));
-
-            model.Components = query.OrderBy(t => t.DisplayName);
+            model.Components = list;
             return View(model);
         }
 
 
         public ActionResult Show(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(id);
+            var storage = GetStorage();
+            var data = storage.Gui.GetComponentShow(id, MvcApplication.GetServerDateTime());
 
             // Блок с мини-статусами
 
-            var eventsMiniStatus = GetEventsMiniStatusModel(id, CurrentAccountDbContext);
-            var unittestsMiniStatus = GetUnittestsMiniStatusModel(CurrentUser.AccountId, id, CurrentAccountDbContext);
-            var metricsMiniStatus = GetMetricsMiniStatusModel(CurrentUser.AccountId, id, CurrentAccountDbContext);
-            var childsMiniStatus = GetChildsMiniStatusModel(CurrentUser.AccountId, id, CurrentAccountDbContext);
+            var eventsMiniStatus = GetEventsMiniStatusModel(id, data);
+            var unittestsMiniStatus = GetUnittestsMiniStatusModel(CurrentUser.AccountId, id, data);
+            var metricsMiniStatus = GetMetricsMiniStatusModel(CurrentUser.AccountId, id, data);
+            var childsMiniStatus = GetChildsMiniStatusModel(CurrentUser.AccountId, id, data);
 
             // Списки
 
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTests = unitTestRepository
-                .QueryAll()
-                .Where(t => t.ComponentId == id)
-                .Include("Bulb")
-                .Include("Type")
+            var unitTests = data.UnitTests
                 .OrderByDescending(x => x.Bulb.Status)
                 .ThenBy(x => x.DisplayName)
                 .ToArray();
 
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metrics = metricRepository
-                .QueryAll()
-                .Where(t => t.ComponentId == id)
-                .Include("Bulb")
-                .OrderBy(t => t.MetricType.DisplayName)
+            var metrics = data.Metrics
+                .OrderByDescending(x => x.Bulb.Status)
+                .ThenBy(t => t.DisplayName)
                 .ToArray();
 
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var childs = componentRepository
-                .QueryAll()
-                .Where(t => t.ParentId == component.Id)
-                .Include("ExternalStatus")
-                .Include("ComponentType")
+            var childs = data.Childs
                 .OrderByDescending(x => x.ExternalStatus.Status).ThenBy(x => x.DisplayName)
                 .ToArray();
 
+            var component = storage.Components.GetOneById(id);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+
             var model = new ComponentShowModel()
             {
+                Now = MvcApplication.GetServerDateTime(),
+                ComponentBreadCrumbs = ComponentBreadCrumbsModel.Create(id, GetStorage()),
                 Component = component,
-                LogConfig = component.LogConfig ?? new LogConfig(),
-                ExternalState = component.ExternalStatus,
-                InternalState = component.InternalStatus,
+                ComponentType = componentType,
+                Properties = properties,
+                LogConfig = storage.LogConfigs.GetOneByComponentId(id),
+                ExternalState = storage.Bulbs.GetOneById(component.ExternalStatusId),
                 EventsMiniStatus = eventsMiniStatus,
                 UnittestsMiniStatus = unittestsMiniStatus,
                 MetricsMiniStatus = metricsMiniStatus,
@@ -136,18 +114,14 @@ namespace Zidium.UserAccount.Controllers
                 Metrics = metrics,
                 Childs = childs
             };
+
             return View(model);
         }
 
-        public static ComponentMiniStatusModel GetEventsMiniStatusModel(Guid id, AccountDbContext accountDbContext)
+        public static ComponentMiniStatusModel GetEventsMiniStatusModel(Guid id, GetGuiComponentShowInfo component)
         {
             var now = MvcApplication.GetServerDateTime();
-            var eventRepository = accountDbContext.GetEventRepository();
-            var actualEvents = eventRepository.GetActualClientEvents(id, now).Select(t => new
-            {
-                Id = t.Id,
-                Importance = t.Importance
-            });
+            var actualEvents = component.ActualEventsMiniInfo;
 
             var alarmEvents = actualEvents.Where(t => t.Importance == EventImportance.Alarm).ToArray();
             var warningEvents = actualEvents.Where(t => t.Importance == EventImportance.Warning).ToArray();
@@ -170,19 +144,9 @@ namespace Zidium.UserAccount.Controllers
             return eventsMiniStatus;
         }
 
-        public static ComponentMiniStatusModel GetUnittestsMiniStatusModel(Guid accountId, Guid id, AccountDbContext accountDbContext)
+        public static ComponentMiniStatusModel GetUnittestsMiniStatusModel(Guid accountId, Guid id, GetGuiComponentShowInfo component)
         {
-            var unitTestRepository = accountDbContext.GetUnitTestRepository();
-            var unitTests = unitTestRepository
-                .QueryAll()
-                .Where(t => t.ComponentId == id)
-                .Include("Bulb")
-                .Select(t => new
-                {
-                    Id = t.Id,
-                    Status = t.Bulb.Status
-                })
-                .ToArray();
+            var unitTests = component.UnitTestsMiniInfo;
 
             var alarmUnitTests = unitTests.Where(t => t.Status == MonitoringStatus.Alarm).ToArray();
             var warningUnitTests = unitTests.Where(t => t.Status == MonitoringStatus.Warning).ToArray();
@@ -205,19 +169,9 @@ namespace Zidium.UserAccount.Controllers
             return checksMiniStatus;
         }
 
-        public static ComponentMiniStatusModel GetMetricsMiniStatusModel(Guid accountId, Guid id, AccountDbContext accountDbContext)
+        public static ComponentMiniStatusModel GetMetricsMiniStatusModel(Guid accountId, Guid id, GetGuiComponentShowInfo component)
         {
-            var metricRepository = accountDbContext.GetMetricRepository();
-            var metrics = metricRepository
-                .QueryAll()
-                .Where(t => t.ComponentId == id)
-                .Include("Bulb")
-                .Select(t => new
-                {
-                    Id = t.Id,
-                    Status = t.Bulb.Status
-                })
-                .ToArray();
+            var metrics = component.MetricsMiniInfo;
 
             var alarmMetrics = metrics.Where(t => t.Status == MonitoringStatus.Alarm).ToArray();
             var warningMetrics = metrics.Where(t => t.Status == MonitoringStatus.Warning).ToArray();
@@ -240,19 +194,9 @@ namespace Zidium.UserAccount.Controllers
             return metricsMiniStatus;
         }
 
-        public static ComponentMiniStatusModel GetChildsMiniStatusModel(Guid accountId, Guid id, AccountDbContext accountDbContext)
+        public static ComponentMiniStatusModel GetChildsMiniStatusModel(Guid accountId, Guid id, GetGuiComponentShowInfo component)
         {
-            var componentRepository = accountDbContext.GetComponentRepository();
-            var childs = componentRepository
-                .QueryAll()
-                .Where(t => t.ParentId == id && t.IsDeleted == false)
-                .Include("ExternalStatus")
-                .Select(t => new
-                {
-                    Id = t.Id,
-                    Status = t.ExternalStatus.Status
-                })
-                .ToArray();
+            var childs = component.ChildsMiniInfo;
 
             var alarmChilds = childs.Where(t => t.Status == MonitoringStatus.Alarm).ToArray();
             var warningChilds = childs.Where(t => t.Status == MonitoringStatus.Warning).ToArray();
@@ -278,33 +222,25 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult GetComponentErrorStatisticsHtml(Guid componentId)
         {
             var now = DateTime.Now;
-            var accountId = CurrentUser.AccountId;
-            var repository = CurrentAccountDbContext.GetEventRepository();
+            var repository = GetStorage().Events;
+
             var model = new ComponentErrorStatisticsModel();
 
             // month
             var period = ReportPeriodHelper.GetRange(ReportPeriod.Month, now);
-            model.ByMonth = repository
-                .GetErrorsByPeriod(period.From, period.To)
-                .Count(x => x.OwnerId == componentId);
+            model.ByMonth = repository.GetErrorsCountByPeriod(componentId, period.From, period.To);
 
             // week
             period = ReportPeriodHelper.GetRange(ReportPeriod.Week, now);
-            model.ByWeek = repository
-                .GetErrorsByPeriod(period.From, period.To)
-                .Count(x => x.OwnerId == componentId);
+            model.ByWeek = repository.GetErrorsCountByPeriod(componentId, period.From, period.To);
 
             // day
             period = ReportPeriodHelper.GetRange(ReportPeriod.Day, now);
-            model.ByDay = repository
-                .GetErrorsByPeriod(period.From, period.To)
-                .Count(x => x.OwnerId == componentId);
+            model.ByDay = repository.GetErrorsCountByPeriod(componentId, period.From, period.To);
 
             // hour
             period = ReportPeriodHelper.GetRange(ReportPeriod.Hour, now);
-            model.ByHour = repository
-                .GetErrorsByPeriod(period.From, period.To)
-                .Count(x => x.OwnerId == componentId);
+            model.ByHour = repository.GetErrorsCountByPeriod(componentId, period.From, period.To);
 
             return View("ComponentErrorStatistics", model);
         }
@@ -317,15 +253,14 @@ namespace Zidium.UserAccount.Controllers
                 parentId2 = parentId.Value;
             else
             {
-                var repository = CurrentAccountDbContext.GetComponentRepository();
-                var root = repository.GetRoot();
+                var root = GetStorage().Components.GetRoot();
                 parentId2 = root.Id;
             }
             var model = new ComponentAddModel()
             {
                 ParentId = parentId2,
-                ComponentTypeId = SystemComponentTypes.Others.Id,
-                CanEditParentId = parentId==null
+                ComponentTypeId = SystemComponentType.Others.Id,
+                CanEditParentId = parentId == null
             };
             return View(model);
         }
@@ -337,11 +272,11 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            componentRepository.GetById(model.ParentId);
+            var storage = GetStorage();
 
-            var componentTypeRepository = CurrentAccountDbContext.GetComponentTypeRepository();
-            componentTypeRepository.GetById(model.ComponentTypeId);
+            storage.Components.GetOneById(model.ParentId);
+
+            storage.ComponentTypes.GetOneById(model.ComponentTypeId);
 
             var client = GetDispatcherClient();
             var createData = new CreateComponentRequestData()
@@ -366,7 +301,7 @@ namespace Zidium.UserAccount.Controllers
             {
                 var message = string.Format("Добавлен компонент <a href='{1}' class='alert-link'>{0}</a>",
                     component.DisplayName,
-                    Url.Action("Show", new {id = component.Id}));
+                    Url.Action("Show", new { id = component.Id }));
 
                 this.SetTempMessage(TempMessageType.Success, message);
                 return RedirectToAction("Index");
@@ -378,19 +313,20 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(id);
+            var component = GetStorage().Components.GetOneById(id);
+            var properties = GetStorage().ComponentProperties.GetByComponentId(id);
+
             CheckEditingPermissions(component);
             var model = new ComponentEditModel()
             {
                 Id = component.Id,
                 DisplayName = component.DisplayName,
                 SystemName = component.SystemName,
-                ParentId = component.Parent.Id,
-                ComponentTypeId = component.ComponentType.Id,
+                ParentId = component.ParentId,
+                ComponentTypeId = component.ComponentTypeId,
                 Version = component.Version,
                 IsDeleted = component.IsDeleted,
-                Properties = component.Properties.OrderBy(t => t.Name).ToList()
+                Properties = properties.OrderBy(t => t.Name).ToArray()
             };
             return View(model);
         }
@@ -400,15 +336,16 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(ComponentEditModel model)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(model.Id);
+            var component = GetStorage().Components.GetOneById(model.Id);
             CheckEditingPermissions(component);
 
             if (!ModelState.IsValid)
             {
-                model.Properties = component.Properties.OrderBy(t => t.Name).ToList();
+                var properties = GetStorage().ComponentProperties.GetByComponentId(model.Id);
+                model.Properties = properties.OrderBy(t => t.Name).ToArray();
                 return View(model);
             }
+
             var dispatcher = GetDispatcherClient();
             var updateData = new UpdateComponentRequestData()
             {
@@ -424,16 +361,16 @@ namespace Zidium.UserAccount.Controllers
             if (!response.Success)
             {
                 ModelState.AddModelError(string.Empty, response.ErrorMessage);
-                model.Properties = component.Properties.OrderBy(t => t.Name).ToList();
+                var properties = GetStorage().ComponentProperties.GetByComponentId(model.Id);
+                model.Properties = properties.OrderBy(t => t.Name).ToArray();
                 return View(model);
             }
             return RedirectToAction("Index");
         }
 
-        protected void CheckEditingPermissions(Component component)
+        protected void CheckEditingPermissions(ComponentForRead component)
         {
-            if (component.IsRoot)
-                throw new CantEditSystemObjectException(component.Id, Naming.Component);
+            // Все компоненты можно менять
         }
 
         [CanEditAllData]
@@ -474,7 +411,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var component = GetComponentById(id);
+            var component = GetStorage().Components.GetOneById(id);
             var model = new DeleteConfirmationAjaxModel()
             {
                 Title = "Удаление компонента",
@@ -515,10 +452,9 @@ namespace Zidium.UserAccount.Controllers
 
         public JsonResult CheckSystemName(ComponentEditModel model)
         {
-            if (model.SystemName != null)
+            if (model.SystemName != null && model.ParentId != null)
             {
-                var repository = CurrentAccountDbContext.GetComponentRepository();
-                var component = repository.GetChild(model.ParentId, model.SystemName);
+                var component = GetStorage().Components.GetChild(model.ParentId.Value, model.SystemName);
                 if (component != null && (model.Id == Guid.Empty || model.Id != component.Id))
                     return Json("Компонент с таким системным именем уже существует", JsonRequestBehavior.AllowGet);
             }
@@ -527,24 +463,20 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult GetComponentsMiniList()
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var query = repository.QueryAll().Include("ExternalStatus");
+            var list = GetStorage().Gui.GetComponentMiniList()
+                .Where(t => t.ComponentTypeId != SystemComponentType.Root.Id &&
+                            t.ComponentTypeId != SystemComponentType.Folder.Id)
+                .OrderBy(t => t.DisplayName);
 
-            query = query.Where(t =>
-                t.IsDeleted == false
-                && t.ComponentTypeId != SystemComponentTypes.Root.Id
-                && t.ComponentTypeId != SystemComponentTypes.Folder.Id);
-
-            query = query.OrderBy(t => t.DisplayName);
             var model = new ComponentsMiniListModel()
             {
-                Components = query.Select(t => new ComponentsMiniListItemModel()
+                Components = list.Select(t => new ComponentsMiniListItemModel()
                 {
                     Id = t.Id,
                     ComponentTypeId = t.ComponentTypeId,
                     DisplayName = t.DisplayName,
                     SystemName = t.SystemName,
-                    Status = t.ExternalStatus.Status
+                    Status = t.Status
                 }).ToArray()
             };
             return PartialView("ComponentsMiniList", model);
@@ -553,8 +485,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult AddProperty(Guid componentId)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(componentId);
+            var component = GetStorage().Components.GetOneById(componentId);
             CheckEditingPermissions(component);
             var model = new ComponentPropertyEditModel()
             {
@@ -575,11 +506,19 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var component = componentRepository.GetById(model.ComponentId);
+            var component = GetStorage().Components.GetOneById(model.ComponentId);
             CheckEditingPermissions(component);
-            var propertyRepository = CurrentAccountDbContext.GetComponentPropertyRepository();
-            var property = propertyRepository.Add(component, model.Name, model.Value, model.DataType);
+
+            var id = Guid.NewGuid();
+            GetStorage().ComponentProperties.Add(new ComponentPropertyForAdd()
+            {
+                Id = id,
+                ComponentId = component.Id,
+                Name = model.Name,
+                Value = model.Value,
+                DataType = model.DataType
+            });
+            var property = GetStorage().ComponentProperties.GetOneById(id);
 
             if (model.ModalMode)
                 return PartialView("ComponentPropertyRow", property);
@@ -590,8 +529,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditProperty(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentPropertyRepository();
-            var property = repository.GetById(id);
+            var property = GetStorage().ComponentProperties.GetOneById(id);
             var model = new ComponentPropertyEditModel()
             {
                 ModalMode = Request.IsAjaxRequest(),
@@ -612,19 +550,25 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            var repository = CurrentAccountDbContext.GetComponentPropertyRepository();
-            var property = repository.GetById(model.Id);
-            repository.Update(property, model.Name, model.Value, model.DataType);
+
+            var propertyForUpdate = new ComponentPropertyForUpdate(model.Id);
+            propertyForUpdate.Name.Set(model.Name);
+            propertyForUpdate.Value.Set(model.Value);
+            propertyForUpdate.DataType.Set(model.DataType);
+            GetStorage().ComponentProperties.Update(propertyForUpdate);
+
             if (model.ModalMode)
+            {
+                var property = GetStorage().ComponentProperties.GetOneById(model.Id);
                 return PartialView("ComponentPropertyData", property);
+            }
             return Redirect(model.ReturnUrl);
         }
 
         [CanEditAllData]
         public ActionResult DeleteProperty(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentPropertyRepository();
-            var property = repository.GetById(id);
+            var property = GetStorage().ComponentProperties.GetOneById(id);
             var model = new DeleteConfirmationModel()
             {
                 Id = id.ToString(),
@@ -643,9 +587,8 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteProperty(DeleteConfirmationModel model)
         {
-            var repository = CurrentAccountDbContext.GetComponentPropertyRepository();
-            var property = repository.GetById(Guid.Parse(model.Id));
-            repository.Remove(property);
+            GetStorage().ComponentProperties.Delete(Guid.Parse(model.Id));
+
             if (model.ModalMode)
                 return new EmptyResult();
             return Redirect(model.ReturnUrl);
@@ -685,7 +628,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     var dispatcher = GetDispatcherClient();
 
-                    var rootId = CurrentAccountDbContext.GetComponentRepository().GetRoot().Id;
+                    var rootId = GetStorage().Components.GetRoot().Id;
 
                     // создаем папку
                     Guid folderId;
@@ -695,7 +638,7 @@ namespace Zidium.UserAccount.Controllers
                         {
                             SystemName = model.FolderSystemName,
                             DisplayName = model.FolderDisplayName,
-                            TypeId = SystemComponentTypes.Folder.Id,
+                            TypeId = SystemComponentType.Folder.Id,
                             ParentComponentId = rootId
                         };
                         var folderResponse = dispatcher.GetOrCreateComponent(CurrentUser.AccountId, getFolderData);
@@ -737,11 +680,11 @@ namespace Zidium.UserAccount.Controllers
             return View(model);
         }
 
-        protected ColorCountGroupItem CreateUnitTestColorItem(Guid componentId, List<UnitTest> unitTests, ImportanceColor color)
+        protected ColorCountGroupItem CreateUnitTestColorItem(Guid componentId, GetGuiComponentStatesInfo.UnitTestInfo[] unitTests, ImportanceColor color)
         {
             var item = new ColorCountGroupItem()
             {
-                Count = unitTests.Count
+                Count = unitTests.Length
             };
             if (item.Count == 1)
             {
@@ -754,11 +697,11 @@ namespace Zidium.UserAccount.Controllers
             return item;
         }
 
-        protected ColorCountGroupItem CreateChildComponentColorItem(Guid componentId, List<Component> childs, ImportanceColor color)
+        protected ColorCountGroupItem CreateChildComponentColorItem(Guid componentId, GetGuiComponentStatesInfo.ChildInfo[] childs, ImportanceColor color)
         {
             var item = new ColorCountGroupItem()
             {
-                Count = childs.Count
+                Count = childs.Length
             };
             if (item.Count == 1)
             {
@@ -771,11 +714,11 @@ namespace Zidium.UserAccount.Controllers
             return item;
         }
 
-        protected ColorCountGroupItem CreateMetricsColorItem(Guid componentId, List<Metric> metrics, ImportanceColor color)
+        protected ColorCountGroupItem CreateMetricsColorItem(Guid componentId, GetGuiComponentStatesInfo.MetricInfo[] metrics, ImportanceColor color)
         {
             var item = new ColorCountGroupItem()
             {
-                Count = metrics.Count
+                Count = metrics.Length
             };
             if (item.Count == 1)
             {
@@ -788,11 +731,11 @@ namespace Zidium.UserAccount.Controllers
             return item;
         }
 
-        protected ColorCountGroupItem CreateEventsColorItem(Guid componentId, List<Event> events, ImportanceColor color, DateTime now)
+        protected ColorCountGroupItem CreateEventsColorItem(Guid componentId, GetGuiComponentStatesInfo.EventInfo[] events, ImportanceColor color, DateTime now)
         {
             var item = new ColorCountGroupItem()
             {
-                Count = events.Count()
+                Count = events.Length
             };
             if (item.Count == 1)
             {
@@ -810,57 +753,22 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult States(StatesModel model)
         {
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            int componentsCount = componentRepository.QueryAll().Count();
+            int componentsCount = GetStorage().Components.GetCount();
+
             if (model.IsFilterEmpty() == false || componentsCount < 20)
             {
-                var query = componentRepository
-                    .QueryAll()
-                    .Include("ComponentType")
-                    .Include("ExternalStatus");
-
-                // фильтр по типу компонента
-                if (model.ComponentTypeId.HasValue)
-                {
-                    query = query.Where(t => t.ComponentTypeId == model.ComponentTypeId);
-                }
-
-                // фильтр по компоненту
-                if (model.ComponentId.HasValue)
-                {
-                    query = query.Where(t => t.Id == model.ComponentId);
-                }
-                else if (model.ParentComponentId.HasValue)
-                {
-                    query = query.Where(t => t.ParentId == model.ParentComponentId);
-                }
-                else
-                {
-                    var types = new[]
+                var query = GetStorage().Gui.GetComponentStates(
+                    model.ComponentTypeId,
+                    model.ComponentId,
+                    model.ParentComponentId,
+                    new[]
                     {
-                        SystemComponentTypes.Folder.Id,
-                        SystemComponentTypes.Root.Id
-                    };
-                    query = query.Where(x => types.Contains(x.ComponentTypeId) == false);
-                }
-
-                // фильтр по цвету
-                if (model.Color.Checked)
-                {
-                    var statuses = model.Color.GetSelectedMonitoringStatuses();
-                    query = query.Where(t => statuses.Contains(t.ExternalStatus.Status));
-                }
-
-                // фильтр по строке
-                if (string.IsNullOrEmpty(model.SearchString) == false)
-                {
-                    string searchString = model.SearchString;
-                    query = query.Where(t =>
-                        t.SystemName.Contains(searchString)
-                        || t.DisplayName.Contains(searchString)
-                        || t.ComponentType.SystemName.Contains(searchString)
-                        || t.ComponentType.DisplayName.Contains(searchString));
-                }
+                        SystemComponentType.Folder.Id,
+                        SystemComponentType.Root.Id
+                    },
+                    model.Color.Checked ? model.Color.GetSelectedMonitoringStatuses() : null,
+                    model.SearchString, 
+                    MvcApplication.GetServerDateTime());
 
                 var components = query
                     .OrderBy(x => x.ComponentType.DisplayName)
@@ -873,76 +781,73 @@ namespace Zidium.UserAccount.Controllers
                 {
                     var row = new StatesModelRow
                     {
-                        ComponentTypeId = component.ComponentTypeId,
+                        ComponentTypeId = component.ComponentType.Id,
                         ComponentTypeName = component.ComponentType.DisplayName,
                         ComponentId = component.Id,
                         ComponentName = component.DisplayName
                     };
 
                     // события
-                    var accountDbContext = CurrentAccountDbContext;
-                    var events = accountDbContext.GetEventRepository().GetActualClientEvents(component.Id, now).ToList();
+                    var events = component.Events;
 
-                    var colorEvents = events.Where(x => x.Importance == EventImportance.Alarm).ToList();
+                    var colorEvents = events.Where(x => x.Importance == EventImportance.Alarm).ToArray();
                     row.Events.RedItem = CreateEventsColorItem(component.Id, colorEvents, ImportanceColor.Red, now);
 
-                    colorEvents = events.Where(x => x.Importance == EventImportance.Warning).ToList();
+                    colorEvents = events.Where(x => x.Importance == EventImportance.Warning).ToArray();
                     row.Events.YellowItem = CreateEventsColorItem(component.Id, colorEvents, ImportanceColor.Yellow, now);
 
-                    colorEvents = events.Where(x => x.Importance == EventImportance.Success).ToList();
+                    colorEvents = events.Where(x => x.Importance == EventImportance.Success).ToArray();
                     row.Events.GreenItem = CreateEventsColorItem(component.Id, colorEvents, ImportanceColor.Green, now);
 
-                    colorEvents = events.Where(x => x.Importance == EventImportance.Unknown).ToList();
+                    colorEvents = events.Where(x => x.Importance == EventImportance.Unknown).ToArray();
                     row.Events.GrayItem = CreateEventsColorItem(component.Id, colorEvents, ImportanceColor.Gray, now);
 
 
                     // проверки
-                    var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-                    var unitTests = unitTestRepository.QueryAll().Where(t => t.ComponentId == row.ComponentId).Include("Bulb").ToList();
+                    var unitTests = component.UnitTests;
 
-                    var colorTests = unitTests.Where(x => x.Bulb.Status == MonitoringStatus.Alarm).ToList();
+                    var colorTests = unitTests.Where(x => x.Status == MonitoringStatus.Alarm).ToArray();
                     row.Checks.RedItem = CreateUnitTestColorItem(component.Id, colorTests, ImportanceColor.Red);
 
-                    colorTests = unitTests.Where(x => x.Bulb.Status == MonitoringStatus.Warning).ToList();
+                    colorTests = unitTests.Where(x => x.Status == MonitoringStatus.Warning).ToArray();
                     row.Checks.YellowItem = CreateUnitTestColorItem(component.Id, colorTests, ImportanceColor.Yellow);
 
-                    colorTests = unitTests.Where(x => x.Bulb.Status == MonitoringStatus.Success).ToList();
+                    colorTests = unitTests.Where(x => x.Status == MonitoringStatus.Success).ToArray();
                     row.Checks.GreenItem = CreateUnitTestColorItem(component.Id, colorTests, ImportanceColor.Green);
 
-                    colorTests = unitTests.Where(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled).ToList();
+                    colorTests = unitTests.Where(x => x.Status == MonitoringStatus.Unknown || x.Status == MonitoringStatus.Disabled).ToArray();
                     row.Checks.GrayItem = CreateUnitTestColorItem(component.Id, colorTests, ImportanceColor.Gray);
 
 
                     // дети
-                    var childs = componentRepository.QueryAll().Where(t => t.ParentId == row.ComponentId).Include("ExternalStatus").ToList();
+                    var childs = component.Childs;
 
-                    var colorChilds = childs.Where(x => x.ExternalStatus.Status == MonitoringStatus.Alarm).ToList();
+                    var colorChilds = childs.Where(x => x.Status == MonitoringStatus.Alarm).ToArray();
                     row.Childs.RedItem = CreateChildComponentColorItem(component.Id, colorChilds, ImportanceColor.Red);
 
-                    colorChilds = childs.Where(x => x.ExternalStatus.Status == MonitoringStatus.Warning).ToList();
+                    colorChilds = childs.Where(x => x.Status == MonitoringStatus.Warning).ToArray();
                     row.Childs.YellowItem = CreateChildComponentColorItem(component.Id, colorChilds, ImportanceColor.Yellow);
 
-                    colorChilds = childs.Where(x => x.ExternalStatus.Status == MonitoringStatus.Success).ToList();
+                    colorChilds = childs.Where(x => x.Status == MonitoringStatus.Success).ToArray();
                     row.Childs.GreenItem = CreateChildComponentColorItem(component.Id, colorChilds, ImportanceColor.Green);
 
-                    colorChilds = childs.Where(x => x.ExternalStatus.Status == MonitoringStatus.Unknown || x.ExternalStatus.Status == MonitoringStatus.Disabled).ToList();
+                    colorChilds = childs.Where(x => x.Status == MonitoringStatus.Unknown || x.Status == MonitoringStatus.Disabled).ToArray();
                     row.Childs.GrayItem = CreateChildComponentColorItem(component.Id, colorChilds, ImportanceColor.Gray);
 
 
                     // метрики
-                    var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-                    var metrics = metricRepository.QueryAll().Where(t => t.ComponentId == row.ComponentId).Include("Bulb").ToList();
+                    var metrics = component.Metrics;
 
-                    var colorMetrics = metrics.Where(t => t.Bulb.Status == MonitoringStatus.Alarm).ToList();
+                    var colorMetrics = metrics.Where(t => t.Status == MonitoringStatus.Alarm).ToArray();
                     row.Counters.RedItem = CreateMetricsColorItem(component.Id, colorMetrics, ImportanceColor.Red);
 
-                    colorMetrics = metrics.Where(t => t.Bulb.Status == MonitoringStatus.Warning).ToList();
+                    colorMetrics = metrics.Where(t => t.Status == MonitoringStatus.Warning).ToArray();
                     row.Counters.YellowItem = CreateMetricsColorItem(component.Id, colorMetrics, ImportanceColor.Yellow);
 
-                    colorMetrics = metrics.Where(t => t.Bulb.Status == MonitoringStatus.Success).ToList();
+                    colorMetrics = metrics.Where(t => t.Status == MonitoringStatus.Success).ToArray();
                     row.Counters.GreenItem = CreateMetricsColorItem(component.Id, colorMetrics, ImportanceColor.Green);
 
-                    colorMetrics = metrics.Where(t => t.Bulb.Status == MonitoringStatus.Unknown || t.Bulb.Status == MonitoringStatus.Disabled).ToList();
+                    colorMetrics = metrics.Where(t => t.Status == MonitoringStatus.Unknown || t.Status == MonitoringStatus.Disabled).ToArray();
                     row.Counters.GrayItem = CreateMetricsColorItem(component.Id, colorMetrics, ImportanceColor.Gray);
 
                     model.Rows.Add(row);
@@ -967,26 +872,21 @@ namespace Zidium.UserAccount.Controllers
         public PartialViewResult ShowTimelinesUnitTestsPartial(Guid id, DateTime fromDate, DateTime toDate, string importance)
         {
             var importances = EnumHelper.StringToEnumArray<EventImportance>(importance);
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTests = unitTestRepository.QueryAll().Where(t => t.ComponentId == id).Select(t => new { t.Id, t.DisplayName }).ToDictionary(t => t.Id, t => t);
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var events = eventRepository.QueryAllByAccount()
-                .Where(t => unitTests.Keys.Contains(t.OwnerId) && t.Category == EventCategory.UnitTestStatus && importances.Contains(t.Importance) && t.StartDate <= toDate && t.ActualDate >= fromDate)
-                .GroupBy(t => t.OwnerId)
-                .Select(t => t.Key)
-                .ToList();
+
+            var items = GetStorage().Gui.GetTimelinesUnitTests(id, importances, fromDate, toDate);
+
             var model = new ComponentShowTimelinesGroupModel()
             {
                 FromDate = fromDate,
                 ToDate = toDate,
                 Items = importances.Length > 0 ?
-                    events.Select(t => new ComponentShowTimelinesGroupItemModel()
-                    {
+                    items.Select(t => new ComponentShowTimelinesGroupItemModel()
+                    {   
                         Action = "ForUnitTest",
                         Category = EventCategory.UnitTestStatus,
-                        OwnerId = t,
-                        Name = unitTests[t].DisplayName,
-                        Url = Url.Action("ResultDetails", "Unittests", new { id = t })
+                        OwnerId = t.UnitTestId,
+                        Name = t.DisplayName,
+                        Url = Url.Action("ResultDetails", "Unittests", new { id = t.UnitTestId })
                     })
                     .OrderBy(t => t.Name)
                     .ToArray()
@@ -998,26 +898,21 @@ namespace Zidium.UserAccount.Controllers
         public PartialViewResult ShowTimelinesMetricsPartial(Guid id, DateTime fromDate, DateTime toDate, string importance)
         {
             var importances = EnumHelper.StringToEnumArray<EventImportance>(importance);
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metrics = metricRepository.QueryAll().Where(t => t.ComponentId == id).Include("MetricType").Select(t => new { t.Id, Name = t.MetricType.SystemName }).ToDictionary(t => t.Id, t => t);
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var events = eventRepository.QueryAllByAccount()
-                .Where(t => metrics.Keys.Contains(t.OwnerId) && t.Category == EventCategory.MetricStatus && importances.Contains(t.Importance) && t.StartDate <= toDate && t.ActualDate >= fromDate)
-                .GroupBy(t => t.OwnerId)
-                .Select(t => t.Key)
-                .ToList();
+
+            var items = GetStorage().Gui.GetTimelinesMetrics(id, importances, fromDate, toDate);
+
             var model = new ComponentShowTimelinesGroupModel()
             {
                 FromDate = fromDate,
                 ToDate = toDate,
                 Items = importances.Length > 0 ?
-                    events.Select(t => new ComponentShowTimelinesGroupItemModel()
+                    items.Select(t => new ComponentShowTimelinesGroupItemModel()
                     {
                         Action = "ForMetric",
                         Category = EventCategory.MetricStatus,
-                        OwnerId = t,
-                        Name = metrics[t].Name,
-                        Url = Url.Action("Show", "Metrics", new { id = t })
+                        OwnerId = t.MetricId,
+                        Name = t.DisplayName,
+                        Url = Url.Action("Show", "Metrics", new { id = t.MetricId })
                     })
                     .OrderBy(t => t.Name)
                     .ToArray()
@@ -1029,26 +924,21 @@ namespace Zidium.UserAccount.Controllers
         public PartialViewResult ShowTimelinesChildsPartial(Guid id, DateTime fromDate, DateTime toDate, string importance)
         {
             var importances = EnumHelper.StringToEnumArray<EventImportance>(importance);
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var childs = componentRepository.GetChildComponents(id).Select(t => new { t.Id, t.DisplayName }).ToDictionary(t => t.Id, t => t);
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var events = eventRepository.QueryAllByAccount()
-                .Where(t => childs.Keys.Contains(t.OwnerId) && t.Category == EventCategory.ComponentExternalStatus && importances.Contains(t.Importance) && t.StartDate <= toDate && t.ActualDate >= fromDate)
-                .GroupBy(t => t.OwnerId)
-                .Select(t => t.Key)
-                .ToList();
+
+            var items = GetStorage().Gui.GetTimelinesChilds(id, importances, fromDate, toDate);
+
             var model = new ComponentShowTimelinesGroupModel()
             {
                 FromDate = fromDate,
                 ToDate = toDate,
                 Items = importances.Length > 0 ?
-                    events.Select(t => new ComponentShowTimelinesGroupItemModel()
+                    items.Select(t => new ComponentShowTimelinesGroupItemModel()
                     {
                         Action = "ForComponent",
                         Category = EventCategory.ComponentExternalStatus,
-                        OwnerId = t,
-                        Name = childs[t].DisplayName,
-                        Url = Url.Action("Show", "Components", new { id = t })
+                        OwnerId = t.ComponentId,
+                        Name = t.DisplayName,
+                        Url = Url.Action("Show", "Components", new { id = t.ComponentId })
                     })
                     .OrderBy(t => t.Name)
                     .ToArray()
@@ -1060,37 +950,23 @@ namespace Zidium.UserAccount.Controllers
         public PartialViewResult ShowTimelinesEventsPartial(Guid id, DateTime fromDate, DateTime toDate, string importance)
         {
             var importances = EnumHelper.StringToEnumArray<EventImportance>(importance);
-            var eventTypeRepository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventTypes = eventTypeRepository.QueryAll().Select(t => new { t.Id, t.DisplayName }).ToDictionary(t => t.Id, t => t);
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var categories = new[]
-            {
-                EventCategory.ApplicationError,
-                EventCategory.ComponentEvent
-            };
-            var events = eventRepository.QueryAllByAccount()
-                .Where(t => t.OwnerId == id && categories.Contains(t.Category) && importances.Contains(t.Importance) && t.StartDate <= toDate && t.ActualDate >= fromDate)
-                .GroupBy(t => t.EventTypeId)
-                .Select(t => new
-                {
-                    Id = t.Key,
-                    LastMessage = t.OrderByDescending(z => z.StartDate).FirstOrDefault().Message
-                })
-                .ToList();
+
+            var items = GetStorage().Gui.GetTimelinesEvents(id, importances, fromDate, toDate);
+
             var model = new ComponentShowTimelinesGroupModel()
             {
                 FromDate = fromDate,
                 ToDate = toDate,
                 Items = importances.Length > 0 ?
-                    events.Select(t => new ComponentShowTimelinesGroupItemModel()
+                    items.Select(t => new ComponentShowTimelinesGroupItemModel()
                     {
                         Action = "ForEventType",
                         Category = null,
                         OwnerId = id,
-                        EventTypeId = t.Id,
-                        Name = eventTypes[t.Id].DisplayName,
+                        EventTypeId = t.EventTypeId,
+                        Name = t.DisplayName,
                         Comment = t.LastMessage,
-                        Url = Url.Action("Show", "EventTypes", new { Id = t.Id })
+                        Url = Url.Action("Show", "EventTypes", new { Id = t.EventTypeId })
                     })
                     .OrderBy(t => t.Name)
                     .ToArray()
@@ -1103,22 +979,18 @@ namespace Zidium.UserAccount.Controllers
         [HttpPost]
         public ActionResult RecalcStatus(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(id);
             var dispatcher = GetDispatcherClient();
-            var response = dispatcher.GetComponentTotalState(CurrentUser.AccountId, component.Id, true);
+            var response = dispatcher.GetComponentTotalState(CurrentUser.AccountId, id, true);
             response.Check();
-            return RedirectToAction("Show", new { id = component.Id });
+            return RedirectToAction("Show", new { id = id });
         }
 
         [CanEditAllData]
         public ActionResult DisableAjax(Guid id)
         {
-            var component = GetComponentById(id);
-
             var model = new DisableDialogAjaxModel()
             {
-                Id = component.Id,
+                Id = id,
                 Message = "На какое время выключить компонент?",
                 Interval = DisableDialogAjaxModel.DisableInterval.Forever
             };
@@ -1170,7 +1042,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult DeleteAjax(Guid id)
         {
-            var component = GetComponentById(id);
+            var component = GetStorage().Components.GetOneById(id);
 
             var model = new DeleteDialogAjaxModel()
             {

@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.Events;
 
@@ -12,9 +11,11 @@ namespace Zidium.UserAccount.Models
 {
     public class ShowEventModel
     {
-        protected AccountDbContext AccountDbContext { get; set; }
+        public IStorage Storage { get; set; }
 
-        public Event Event { get; set; }
+        public EventForRead Event { get; set; }
+
+        public EventPropertyForRead[] Properties { get; set; }
 
         public List<ShowEventModelReason> ErrorReasons { get; set; }
 
@@ -44,24 +45,26 @@ namespace Zidium.UserAccount.Models
 
         public string PageTitle { get; protected set; }
 
-        public string GetEventMessageText(Event eventObj)
+        public string GetEventMessageText(EventForRead eventObj, EventTypeForRead eventType)
         {
             if (string.IsNullOrEmpty(eventObj.Message))
             {
-                return eventObj.EventType.DisplayName;
+                return eventType.DisplayName;
             }
             return eventObj.Message;
         }
 
-        public EventType EventType { get; set; }
+        public EventTypeForRead EventType { get; set; }
 
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
-        public Metric Metric { get; set; }
+        public MetricForRead Metric { get; set; }
 
-        public UnitTest UnitTest { get; set; }
+        public MetricTypeForRead MetricType { get; set; }
 
-        protected string GetPageTitle(EventCategory category, EventType eventType)
+        public UnitTestForRead UnitTest { get; set; }
+
+        protected string GetPageTitle(EventCategory category, EventTypeForRead eventType)
         {
             switch (category)
             {
@@ -101,42 +104,40 @@ namespace Zidium.UserAccount.Models
             }
         }
 
-        public void Init(Guid eventId, UserInfo currentUser, AccountDbContext accountDbContext)
+        public void Init(Guid eventId, UserInfo currentUser, IStorage storage)
         {
-            AccountDbContext = accountDbContext;
+            Storage = storage;
 
             ErrorReasons = new List<ShowEventModelReason>();
             UnitTestsReasons = new List<ShowEventModelReason>();
             MetricsReasons = new List<ShowEventModelReason>();
             ChildsReasons = new List<ShowEventModelReason>();
 
-            var eventRepository = accountDbContext.GetEventRepository();
-            Event = eventRepository.GetById(eventId);
+            Event = storage.Events.GetOneById(eventId);
+            Properties = storage.EventProperties.GetByEventId(eventId);
 
             // тип события
-            EventType = Event.EventType;
+            EventType = storage.EventTypes.GetOneById(Event.EventTypeId);
 
             // событие метрики
             if (Event.Category == EventCategory.MetricStatus)
             {
-                var metricRepository = accountDbContext.GetMetricRepository();
-                var metric = metricRepository.GetById(Event.OwnerId);
+                var metric = storage.Metrics.GetOneById(Event.OwnerId);
                 Metric = metric;
-                Component = metric.Component;
+                MetricType = storage.MetricTypes.GetOneById(metric.MetricTypeId);
+                Component = storage.Components.GetOneById(metric.ComponentId);
             }
             // событие юнит-теста
             else if (Event.Category == EventCategory.UnitTestStatus ||
                      Event.Category == EventCategory.UnitTestResult)
             {
-                var unitTestRepository = accountDbContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.GetById(Event.OwnerId);
+                var unitTest = storage.UnitTests.GetOneById(Event.OwnerId);
                 UnitTest = unitTest;
-                Component = unitTest.Component;
+                Component = storage.Components.GetOneById(unitTest.ComponentId);
             }
             else // событие компонента
             {
-                var componentRepository = accountDbContext.GetComponentRepository();
-                Component = componentRepository.GetById(Event.OwnerId);
+                Component = storage.Components.GetOneById(Event.OwnerId);
             }
 
             // название страницы
@@ -145,7 +146,7 @@ namespace Zidium.UserAccount.Models
             // причины статусов
             if (Event.Category.IsStatus())
             {
-                LoadReasons(Event, accountDbContext);
+                LoadReasons(Event, storage);
             }
 
             CanChangeImportance = !EventType.IsSystem;
@@ -158,15 +159,16 @@ namespace Zidium.UserAccount.Models
             ErrorReasons = ErrorReasons.OrderByDescending(t => t.Event.StartDate).Take(100).ToList();
         }
 
-        protected void ProcessReason(Event eventObj, AccountDbContext accountDbContext)
+        protected void ProcessReason(EventForRead eventObj, IStorage storage)
         {
             // пользовательские события (ошибки)
             if (eventObj.Category == EventCategory.ApplicationError || eventObj.Category == EventCategory.ComponentEvent)
             {
-                var component = accountDbContext.Components.First(x => x.Id == eventObj.OwnerId);
+                var component = storage.Components.GetOneById(eventObj.OwnerId);
                 var reason = new ShowEventModelReason()
                 {
                     Event = eventObj,
+                    EventType = storage.EventTypes.GetOneById(eventObj.EventTypeId),
                     Component = component
                 };
                 ErrorReasons.Add(reason);
@@ -176,12 +178,13 @@ namespace Zidium.UserAccount.Models
             // статус метрики
             if (eventObj.Category == EventCategory.MetricStatus)
             {
-                var metric = accountDbContext.Metrics.First(x => x.Id == eventObj.OwnerId);
+                var metric = storage.Metrics.GetOneById(eventObj.OwnerId);
                 var reason = new ShowEventModelReason()
                 {
                     Event = eventObj,
+                    EventType = storage.EventTypes.GetOneById(eventObj.EventTypeId),
                     Metric = metric,
-                    Component = metric.Component
+                    Component = storage.Components.GetOneById(metric.ComponentId)
                 };
                 MetricsReasons.Add(reason);
                 return;
@@ -190,12 +193,13 @@ namespace Zidium.UserAccount.Models
             // статус юнит-теста
             if (eventObj.Category == EventCategory.UnitTestStatus)
             {
-                var unitTest = accountDbContext.UnitTests.First(x => x.Id == eventObj.OwnerId);
+                var unitTest = storage.UnitTests.GetOneById(eventObj.OwnerId);
                 var reason = new ShowEventModelReason()
                 {
                     Event = eventObj,
+                    EventType = storage.EventTypes.GetOneById(eventObj.EventTypeId),
                     UnitTest = unitTest,
-                    Component = unitTest.Component
+                    Component = storage.Components.GetOneById(unitTest.ComponentId)
                 };
                 UnitTestsReasons.Add(reason);
                 return;
@@ -204,24 +208,26 @@ namespace Zidium.UserAccount.Models
             // результат юнит-теста
             if (eventObj.Category == EventCategory.UnitTestResult)
             {
-                var unitTest = accountDbContext.UnitTests.First(x => x.Id == eventObj.OwnerId);
+                var unitTest = storage.UnitTests.GetOneById(eventObj.OwnerId);
                 var reason = new ShowEventModelReason()
                 {
                     Event = eventObj,
+                    EventType = storage.EventTypes.GetOneById(eventObj.EventTypeId),
                     UnitTest = unitTest,
-                    Component = unitTest.Component
+                    Component = storage.Components.GetOneById(unitTest.ComponentId)
                 };
                 UnitTestsReasons.Add(reason);
                 return;
             }
 
-            // внешняя колбаса
+            // итоговый статус
             if (eventObj.Category == EventCategory.ComponentExternalStatus)
             {
-                var component = accountDbContext.Components.First(x => x.Id == eventObj.OwnerId);
+                var component = storage.Components.GetOneById(eventObj.OwnerId);
                 var reason = new ShowEventModelReason()
                 {
                     Event = eventObj,
+                    EventType = storage.EventTypes.GetOneById(eventObj.EventTypeId),
                     Component = component
                 };
                 ChildsReasons.Add(reason);
@@ -229,17 +235,16 @@ namespace Zidium.UserAccount.Models
             }
 
             // для статусов загрузим причины еще раз
-            LoadReasons(eventObj, accountDbContext);
+            LoadReasons(eventObj, storage);
         }
 
-        protected void LoadReasons(Event eventObj, AccountDbContext accountDbContext)
+        protected void LoadReasons(EventForRead eventObj, IStorage storage)
         {
-            var eventRepository = accountDbContext.GetEventRepository();
-            var reasons = eventRepository.GetEventReasons(eventObj.Id).OrderByDescending(t => t.StartDate).Take(MaxEventsReasonCount).ToArray();
+            var reasons = storage.Events.GetEventReasons(eventObj.Id).OrderByDescending(t => t.StartDate).Take(MaxEventsReasonCount).ToArray();
 
             foreach (var reasonsEvent in reasons)
             {
-                ProcessReason(reasonsEvent, accountDbContext);
+                ProcessReason(reasonsEvent, storage);
             }
         }
 
@@ -247,7 +252,7 @@ namespace Zidium.UserAccount.Models
 
         public bool CanChangeActuality { get; set; }
 
-        public string GetRealEndDateString(Event eventObj)
+        public string GetRealEndDateString(EventForRead eventObj)
         {
             var realEndDate = eventObj.StartDate + EventHelper.GetDuration(eventObj.StartDate, eventObj.ActualDate, DateTime.Now);
             return eventObj.ActualDate == DateTimeHelper.InfiniteActualDate

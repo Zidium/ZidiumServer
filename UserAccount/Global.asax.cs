@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Entity;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -10,10 +9,13 @@ using System.Web.Optimization;
 using System.Web.Routing;
 using NLog;
 using Zidium.Api;
+using Zidium.Common;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
+using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.UserAccount.Binders;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Helpers;
@@ -27,9 +29,16 @@ namespace Zidium.UserAccount
         protected void Application_Start()
         {
             // Приложение не должно накатывать миграции или создавать базы
-            AccountDbContext.DisableMigrations();
+            StorageFactory.DisableMigrations();
 
             Initialization.SetServices();
+            DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+
+            if (DispatcherHelper.UseLocalDispatcher())
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
+            else
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new RemoteAccountStorageFactory());
+
             InitMonitoring();
 
             try
@@ -80,7 +89,7 @@ namespace Zidium.UserAccount
             // Создадим компонент
             // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
             var folder = !DebugHelper.IsDebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
-            var componentType = client.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? SystemComponentTypes.WebSite.SystemName : DebugHelper.DebugComponentType);
+            var componentType = client.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? SystemComponentType.WebSite.SystemName : DebugHelper.DebugComponentType);
             ComponentControl = folder
                 .GetOrCreateChildComponentControl(new GetOrCreateComponentData("UserAccountWebSite", componentType)
                 {

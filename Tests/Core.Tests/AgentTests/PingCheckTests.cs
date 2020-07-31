@@ -1,7 +1,7 @@
 ﻿using System;
 using Xunit;
 using Zidium.Agent.AgentTasks;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Tests.AgentTests
 {

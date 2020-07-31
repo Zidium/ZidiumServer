@@ -1,6 +1,6 @@
-﻿@using Zidium.Core.AccountsDb
-@using Zidium.Core.Api
+﻿@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
+
 @model object
 
 @{
@@ -38,33 +38,33 @@ else
         {
             @Html.Raw(GuiHelper.TimeSpanAsString((TimeSpan)Model))
         }
-        else if (Model is Component)
+        else if (Model is ComponentForRead)
         {
-            @Html.ActionLink((Model as Component).DisplayName, "Show", "Components", new { id = (Model as Component).Id }, null)
+            @Html.ActionLink((Model as ComponentForRead).DisplayName, "Show", "Components", new { id = (Model as ComponentForRead).Id }, null)
         }
-        else if (Model is ComponentType)
+        else if (Model is ComponentTypeForRead)
         {
-            @Html.ActionLink((Model as ComponentType).DisplayName, "Show", "ComponentTypes", new { id = (Model as ComponentType).Id }, null)
+            @Html.ActionLink((Model as ComponentTypeForRead).DisplayName, "Show", "ComponentTypes", new { id = (Model as ComponentTypeForRead).Id }, null)
         }
-        else if (Model is EventType)
+        else if (Model is EventTypeForRead)
         {
-            @Html.ActionLink((Model as EventType).DisplayName, "Show", "EventTypes", new { id = (Model as EventType).Id }, null)
+            @Html.ActionLink((Model as EventTypeForRead).DisplayName, "Show", "EventTypes", new { id = (Model as EventTypeForRead).Id }, null)
         }
-        else if (Model is Event)
+        else if (Model is EventForRead)
         {
-            @Html.ActionLink(!string.IsNullOrEmpty((Model as Event).Message) ? (Model as Event).Message : (Model as Event).EventType.DisplayName, "Show", "Events", new { id = (Model as Event).Id }, null)
+            @Html.ActionLink(!string.IsNullOrEmpty((Model as EventForRead).Message) ? (Model as EventForRead).Message : (Model as EventForRead).Id.ToString(), "Show", "Events", new { id = (Model as EventForRead).Id }, null)
         }
-        else if (Model is User)
+        else if (Model is UserForRead)
         {
-            @Html.ActionLink((Model as User).Login, "Show", "Users", new { id = (Model as User).Id.ToString() }, null)
+            @Html.ActionLink((Model as UserForRead).Login, "Show", "Users", new { id = (Model as UserForRead).Id.ToString() }, null)
         }
-        else if (Model is Subscription)
+        else if (Model is SubscriptionForRead)
         {
-            @Html.ActionLink((Model as Subscription).Id.ToString(), "Edit", "Subscriptions", new { id = (Model as Subscription).Id }, null)
+            @Html.ActionLink((Model as SubscriptionForRead).Id.ToString(), "Edit", "Subscriptions", new { id = (Model as SubscriptionForRead).Id }, null)
         }
-        else if (Model is UnitTestType)
+        else if (Model is UnitTestTypeForRead)
         {
-            @Html.ActionLink((Model as UnitTestType).DisplayName, "Show", "UnitTestTypes", new { id = (Model as UnitTestType).Id }, null)
+            @Html.ActionLink((Model as UnitTestTypeForRead).DisplayName, "Show", "UnitTestTypes", new { id = (Model as UnitTestTypeForRead).Id }, null)
         }
         else if (Model is EventImportance)
         {

@@ -3,7 +3,7 @@ using System.Threading;
 using Xunit;
 using Zidium.Api;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
@@ -26,7 +26,7 @@ namespace Zidium.Core.Tests.Dispatcher
                     Value = 1000,
                     ActualInterval = TimeSpan.FromSeconds(1)
                 });
-            Assert.True(responseSend.Success);
+            responseSend.Check();
 
             // Подождём 2 секунды
             Thread.Sleep(2 * 1000);

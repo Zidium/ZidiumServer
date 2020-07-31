@@ -3,10 +3,12 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Threading;
 using NLog;
-using Zidium.Core;
+using Zidium.Common;
 using Zidium.Core.Api;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
+using Zidium.Storage;
+using Npgsql;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -19,76 +21,43 @@ namespace Zidium.Agent.AgentTasks
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.SqlTestType.Id;
+            return SystemUnitTestType.SqlTestType.Id;
         }
 
         protected override UnitTestExecutionInfo GetResult(Guid accountId,
-            AccountDbContext accountDbContext,
-            UnitTest unitTest,
+            IStorage storage,
+            UnitTestForRead unitTest,
             ILogger logger,
             string accountName,
             CancellationToken token)
         {
-            return CheckSql(unitTest.SqlRule);
+            var rule = storage.UnitTestSqlRules.GetOneByUnitTestId(unitTest.Id);
+            return CheckSql(rule);
         }
 
-        public static string GetConnectionStringWithTimeout(UnitTestSqlRule rule)
-        {
-            var builder = new SqlConnectionStringBuilder(rule.ConnectionString);
-            builder.ConnectTimeout = rule.OpenConnectionTimeoutMs/1000;
-            return builder.ConnectionString;
-        }
-
-        protected static UnitTestResult GetStatus(string text)
-        {
-            if (string.Equals("unknown", text, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return UnitTestResult.Unknown;
-            }
-            if (string.Equals("success", text, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return UnitTestResult.Success;
-            }
-            if (string.Equals("warning", text, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return UnitTestResult.Warning;
-            }
-            if (string.Equals("alarm", text, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return UnitTestResult.Alarm;
-            }
-            throw new UserFriendlyException("Неизвестное значение статуса: " + text);
-        }
-
-        public static UnitTestExecutionInfo CheckSql(UnitTestSqlRule rule)
+        public UnitTestExecutionInfo CheckSql(UnitTestSqlRuleForRead rule)
         {
             if (rule == null)
             {
                 throw new ArgumentNullException("rule");
             }
-            SqlConnection connection = null;
-            string error = "Неизвестная ошибка";
             try
             {
-                if (rule.Provider != DatabaseProviderType.MsSql)
+                var dataSet = new DataSet();
+
+                if (rule.Provider == SqlRuleDatabaseProviderType.MsSql)
+                {
+                    FillMsSqlDataSet(rule, dataSet);
+                }
+                else if (rule.Provider == SqlRuleDatabaseProviderType.PostgreSql)
+                {
+                    FillPostrgesqlDataSet(rule, dataSet);
+                }
+                else
                 {
                     throw new UserFriendlyException("Не поддерживается провайдер " + rule.Provider);
                 }
-                error = "Неверный формат строки соединения";
-                var connString = GetConnectionStringWithTimeout(rule);
-                connection = new SqlConnection(connString);
 
-                error = "Не удалось открыть соединение";
-                connection.Open();
-
-                error = "Не удалось выполнить запрос";
-                var command = new SqlCommand(rule.Query, connection);
-                command.CommandTimeout = rule.CommandTimeoutMs/1000;
-                var adapter = new SqlDataAdapter(command);
-                var dataSet = new DataSet();
-                adapter.Fill(dataSet);
-
-                error = "Неверный формат ответа";
                 if (dataSet.Tables.Count == 0)
                 {
                     throw new UserFriendlyException("Запрос не вернул ни одной таблицы");
@@ -111,8 +80,8 @@ namespace Zidium.Agent.AgentTasks
                 {
                     throw new UserFriendlyException("Таблица должна содержать 2 столбца");
                 }
-                string statusText = row[0].ToString();
-                string message = row[1].ToString();
+                var statusText = row[0].ToString();
+                var message = row[1].ToString();
                 var status = GetStatus(statusText);
                 return new UnitTestExecutionInfo()
                 {
@@ -131,7 +100,7 @@ namespace Zidium.Agent.AgentTasks
                 {
                     ResultRequest = new SendUnitTestResultRequestData()
                     {
-                        Message = error + ": " + exception.Message,
+                        Message = exception.Message,
                         Result = UnitTestResult.Alarm,
                     },
                     IsNetworkProblem = sqlException?.Number == -2 || sqlException?.Number == 11 // TIMEOUT_EXPIRED = -2, GENERAL_NETWORK_ERROR = 11
@@ -139,6 +108,120 @@ namespace Zidium.Agent.AgentTasks
             }
         }
 
-        
+        private void FillMsSqlDataSet(UnitTestSqlRuleForRead rule, DataSet dataSet)
+        {
+            string connString;
+            try
+            {
+                connString = GetMsSqlConnectionStringWithTimeout(rule);
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(exception.Message);
+            }
+
+            using (var connection = new SqlConnection(connString))
+            {
+                try
+                {
+                    connection.Open();
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(exception.Message);
+                }
+
+                using (var command = new SqlCommand(rule.Query, connection))
+                {
+                    command.CommandTimeout = rule.CommandTimeoutMs / 1000;
+                    var adapter = new SqlDataAdapter(command);
+
+                    try
+                    {
+                        adapter.Fill(dataSet);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new UserFriendlyException(exception.Message);
+                    }
+                }
+            }
+        }
+
+        private void FillPostrgesqlDataSet(UnitTestSqlRuleForRead rule, DataSet dataSet)
+        {
+            string connString;
+            try
+            {
+                connString = GetPostgreSqlConnectionStringWithTimeout(rule);
+            }
+            catch (Exception exception)
+            {
+                throw new UserFriendlyException(exception.Message);
+            }
+
+            using (var connection = new NpgsqlConnection(connString))
+            {
+                try
+                {
+                    connection.Open();
+                }
+                catch (Exception exception)
+                {
+                    throw new UserFriendlyException(exception.Message);
+                }
+
+                using (var command = new NpgsqlCommand(rule.Query, connection))
+                {
+                    command.CommandTimeout = rule.CommandTimeoutMs / 1000;
+                    var adapter = new NpgsqlDataAdapter(command);
+
+                    try
+                    {
+                        adapter.Fill(dataSet);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new UserFriendlyException(exception.Message);
+                    }
+                }
+            }
+        }
+
+        private string GetMsSqlConnectionStringWithTimeout(UnitTestSqlRuleForRead rule)
+        {
+            var builder = new SqlConnectionStringBuilder(rule.ConnectionString);
+            builder.ConnectTimeout = rule.OpenConnectionTimeoutMs / 1000;
+            return builder.ConnectionString;
+        }
+
+        private string GetPostgreSqlConnectionStringWithTimeout(UnitTestSqlRuleForRead rule)
+        {
+            var builder = new NpgsqlConnectionStringBuilder(rule.ConnectionString);
+            builder.Timeout = rule.OpenConnectionTimeoutMs / 1000;
+            return builder.ConnectionString;
+        }
+
+        private UnitTestResult GetStatus(string text)
+        {
+            if (string.Equals("unknown", text, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return UnitTestResult.Unknown;
+            }
+            if (string.Equals("success", text, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return UnitTestResult.Success;
+            }
+            if (string.Equals("warning", text, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return UnitTestResult.Warning;
+            }
+            if (string.Equals("alarm", text, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return UnitTestResult.Alarm;
+            }
+            throw new UserFriendlyException("Неизвестное значение статуса: " + text);
+        }
+
     }
 }

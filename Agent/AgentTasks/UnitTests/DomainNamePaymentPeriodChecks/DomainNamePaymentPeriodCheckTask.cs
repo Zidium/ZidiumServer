@@ -6,7 +6,7 @@ namespace Zidium.Agent.AgentTasks
     {
         public DomainNamePaymentPeriodCheckTask()
         {
-            ExecutionPeriod = TimeSpan.FromSeconds(5);
+            ExecutionPeriod = TimeSpan.FromMinutes(1);
             WaitOnErrorTime = TimeSpan.FromMinutes(10); // чтобы не было большого количества запросов из-за ошибок
         }
 

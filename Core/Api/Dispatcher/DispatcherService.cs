@@ -8,8 +8,8 @@ using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
-using Zidium.Core.DispatcherLayer;
 using Zidium.Core.Limits;
+using Zidium.Storage;
 
 namespace Zidium.Core
 {
@@ -26,10 +26,16 @@ namespace Zidium.Core
 
         private DispatcherService(Zidium.Api.IComponentControl control)
         {
+            _accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            _configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
             Control = control;
             StaticControl = control;
-            AllCaches.Init();
+            //AllCaches.Init();
         }
+
+        private readonly IAccountStorageFactory _accountStorageFactory;
+
+        private readonly IConfigDbServicesFactory _configDbServicesFactory;
 
         public static Zidium.Api.IComponentControl StaticControl = new Zidium.Api.FakeComponentControl();
 
@@ -97,7 +103,7 @@ namespace Zidium.Core
             return new Zidium.Api.FakeComponentControl("FakeDispatcher");
         }
 
-        protected delegate T ExecuteMethodDelegate<T>(DispatcherContext dispatcherContext);
+        protected delegate T ExecuteMethodDelegate<T>();
 
         protected void CheckRequest(Request request)
         {
@@ -123,25 +129,63 @@ namespace Zidium.Core
 
         }
 
-        protected void CheckComponentId(Guid? componentId, string fieldName)
+        protected IStorage GetStorage(Guid accountId)
         {
-            if (componentId == null)
-            {
-                throw new ParameterRequiredException("Request." + fieldName);
-            }
+            return _accountStorageFactory.GetStorageByAccountId(accountId);
         }
 
-        protected DispatcherContext GetDispatcherContext(Request request)
+        protected void AuthRequest(Request request)
         {
-            var result = DispatcherContext.Create();
-            try
+            // Если запрос локальный и аккаунт не указан, то это системный аккаунт
+            if (request.Token.IsLocalRequest && request.Token.AccountId == null)
             {
-                // Если запрос локальный и аккаунт не указан, то это системный аккаунт
-                if (request.Token.IsLocalRequest && request.Token.AccountId == null)
-                {
-                    request.Token.AccountId = SystemAccountHelper.GetSystemAccountId();
+                request.Token.AccountId = SystemAccountHelper.GetSystemAccountId();
 
-                    // Здесь проверяем только секретный ключ
+                // Здесь проверяем только секретный ключ
+                if (request.Token.SecretKey != SystemAccountHelper.GetSystemToken().SecretKey)
+                {
+                    throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidSecretKey, "Неверный SecretKey");
+                }
+            }
+            else
+            {
+                // Для всех остальных запросов проверим указанный аккаунт
+
+                // Проверим, что указан аккаунт
+                if (request.Token.AccountId == null && string.IsNullOrEmpty(request.Token.AccountName))
+                {
+                    throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidAccountName, "Не указан AccountName");
+                }
+
+                AccountInfo account;
+                string searchKey;
+
+                // Найдём аккаунт по Id или по названию
+                var accountService = _configDbServicesFactory.GetAccountService();
+                if (request.Token.AccountId.HasValue)
+                {
+                    searchKey = request.Token.AccountId.Value.ToString();
+                    account = accountService.GetOneOrNullById(request.Token.AccountId.Value);
+                }
+                else
+                {
+                    searchKey = request.Token.AccountName;
+                    account = accountService.GetOneOrNullBySystemName(request.Token.AccountName);
+                }
+
+                if (account == null)
+                {
+                    throw new Zidium.Api.Dto.ResponseCodeException(
+                        Zidium.Api.ResponseCode.InvalidAccountName,
+                        "Неизвестный Account: " + searchKey);
+                }
+
+                request.Token.AccountId = account.Id;
+
+                // Проверим секретный ключ
+                // Для локального запроса ключ должен быть от системного аккаунта
+                if (request.Token.IsLocalRequest)
+                {
                     if (request.Token.SecretKey != SystemAccountHelper.GetSystemToken().SecretKey)
                     {
                         throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidSecretKey, "Неверный SecretKey");
@@ -149,68 +193,17 @@ namespace Zidium.Core
                 }
                 else
                 {
-                    // Для всех остальных запросов проверим указанный аккаунт
-
-                    // Проверим, что указан аккаунт
-                    if (request.Token.AccountId == null && string.IsNullOrEmpty(request.Token.AccountName))
+                    // Для обычного запроса ключ должен совпадать с ключом аккаунта
+                    if (request.Token.SecretKey != account.SecretKey)
                     {
-                        throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidAccountName, "Не указан AccountName");
+                        throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidSecretKey, "Неверный SecretKey");
                     }
 
-                    AccountInfo account;
-                    string searchKey;
-
-                    // Найдём аккаунт по Id или по названию
-                    if (request.Token.AccountId.HasValue)
+                    if (account.Status == AccountStatus.Blocked)
                     {
-                        searchKey = request.Token.AccountId.Value.ToString();
-                        account = result.AccountService.GetOneOrNullById(request.Token.AccountId.Value);
-                    }
-                    else
-                    {
-                        searchKey = request.Token.AccountName;
-                        account = result.AccountService.GetOneOrNullBySystemName(request.Token.AccountName);
-                    }
-
-                    if (account == null)
-                    {
-                        throw new Zidium.Api.Dto.ResponseCodeException(
-                            Zidium.Api.ResponseCode.InvalidAccountName,
-                            "Неизвестный Account: " + searchKey);
-                    }
-
-                    request.Token.AccountId = account.Id;
-
-                    // Проверим секретный ключ
-                    // Для локального запроса ключ должен быть от системного аккаунта
-                    if (request.Token.IsLocalRequest)
-                    {
-                        if (request.Token.SecretKey != SystemAccountHelper.GetSystemToken().SecretKey)
-                        {
-                            throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidSecretKey, "Неверный SecretKey");
-                        }
-                    }
-                    else
-                    {
-                        // Для обычного запроса ключ должен совпадать с ключом аккаунта
-                        if (request.Token.SecretKey != account.SecretKey)
-                        {
-                            throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.InvalidSecretKey, "Неверный SecretKey");
-                        }
-
-                        if (account.Status == AccountStatus.Blocked)
-                        {
-                            throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.AccountBlocked, "Аккаунт заблокирован");
-                        }
+                        throw new Zidium.Api.Dto.ResponseCodeException(Zidium.Api.ResponseCode.AccountBlocked, "Аккаунт заблокирован");
                     }
                 }
-
-                return result;
-            }
-            catch
-            {
-                result.Dispose();
-                throw;
             }
         }
 
@@ -231,14 +224,14 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request)) // чтобы убедиться, что AccountId и SecretKey верные
+
+            AuthRequest(request); // чтобы убедиться, что AccountId и SecretKey верные
+
+            return new GetEchoResponse()
             {
-                return new GetEchoResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = request.Data.Message
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = request.Data.Message
+            };
         }
 
         public GetServerTimeResponse GetServerTime()
@@ -272,24 +265,27 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var root = context.GetRoot(accountId);
-                var logService = context.LogService;
-                var logConfig = logService.GetLogConfig(accountId, root.Id);
-                var logConfigDto = ApiConverter.GetLogConfig(logConfig);
+            AuthRequest(request);
 
-                return new GetRootControlDataResponse()
+            var accountId = request.Token.AccountId.Value;
+            var storage = GetStorage(accountId);
+
+            var root = storage.Components.GetRoot();
+            var componentType = storage.ComponentTypes.GetOneById(root.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(root.Id);
+
+            var logService = new LogService(storage);
+            var logConfig = logService.GetLogConfig(root.Id);
+
+            return new GetRootControlDataResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new ComponentControlData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new ComponentControlData()
-                    {
-                        Component = ApiConverter.GetComponentInfo(root),
-                        WebLogConfig = logConfigDto
-                    }
-                };
-            }
+                    Component = ApiConverter.GetComponentInfo(root, properties, componentType),
+                    WebLogConfig = ApiConverter.GetLogConfig(logConfig)
+                }
+            };
         }
 
         public CreateComponentResponse CreateComponent(CreateComponentRequest request)
@@ -299,29 +295,34 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            // создаём компонент
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var component = componentService.CreateComponent(accountId, request.Data);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            // получаем конфиг веб-лога
+            var logService = new LogService(storage);
+            var logConfig = logService.GetLogConfig(component.Id);
+            var logConfigDto = ApiConverter.GetLogConfig(logConfig);
+
+            return new CreateComponentResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-
-                // создаём компонент
-                var service = context.ComponentService;
-                var component = service.CreateComponent(accountId, request.Data);
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-
-                // получаем конфиг веб-лога
-                var logConfig = service.GetLogConfig(accountId, component.Id);
-                var logConfigDto = ApiConverter.GetLogConfig(logConfig);
-
-                return new CreateComponentResponse()
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new ComponentControlData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new ComponentControlData()
-                    {
-                        Component = componentInfo,
-                        WebLogConfig = logConfigDto
-                    }
-                };
-            }
+                    Component = componentInfo,
+                    WebLogConfig = logConfigDto
+                }
+            };
+
         }
 
         public GetOrCreateComponentResponse GetOrCreateComponent(GetOrCreateComponentRequest request)
@@ -331,33 +332,33 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            // получаем или создаём компонент
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var component = componentService.GetOrCreateComponent(accountId, request.Data);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            // получаем конфиг веб-лога
+            var logService = new LogService(storage);
+            var logConfig = logService.GetLogConfig(component.Id);
+            var logConfigDto = ApiConverter.GetLogConfig(logConfig);
+
+            return new GetOrCreateComponentResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-
-                // получаем или создаём компонент
-                var service = context.ComponentService;
-
-                var component = service.GetOrCreateComponent(
-                    accountId,
-                    request.Data);
-
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-
-                // получаем конфиг веб-лога
-                var logConfig = service.GetLogConfig(accountId, component.Id);
-                var logConfigDto = ApiConverter.GetLogConfig(logConfig);
-
-                return new GetOrCreateComponentResponse()
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new ComponentControlData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new ComponentControlData()
-                    {
-                        Component = componentInfo,
-                        WebLogConfig = logConfigDto
-                    }
-                };
-            }
+                    Component = componentInfo,
+                    WebLogConfig = logConfigDto
+                }
+            };
         }
 
         public GetComponentControlByIdResponse GetComponentControlById(GetComponentControlByIdRequest request)
@@ -371,36 +372,40 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            // получаем или создаём компонент
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+
+            var component = componentService.GetComponentByIdNoCache(accountId, componentId);
+            if (component.IsDeleted)
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-
-                // получаем или создаём компонент
-                var service = context.ComponentService;
-
-                var component = service.GetComponentByIdNoCache(accountId, componentId);
-                if (component.IsDeleted)
-                {
-                    throw new UnknownComponentIdException(componentId, accountId);
-                }
-
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-
-                // получаем конфиг веб-лога
-                var logConfig = service.GetLogConfig(accountId, component.Id);
-                var logConfigDto = ApiConverter.GetLogConfig(logConfig);
-
-                return new GetComponentControlByIdResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new ComponentControlData()
-                    {
-                        Component = componentInfo,
-                        WebLogConfig = logConfigDto
-                    }
-                };
+                throw new UnknownComponentIdException(componentId, accountId);
             }
+
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            // получаем конфиг веб-лога
+            var logService = new LogService(storage);
+            var logConfig = logService.GetLogConfig(component.Id);
+            var logConfigDto = ApiConverter.GetLogConfig(logConfig);
+
+            return new GetComponentControlByIdResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new ComponentControlData()
+                {
+                    Component = componentInfo,
+                    WebLogConfig = logConfigDto
+                }
+            };
         }
 
         public GetOrAddComponentResponse GetOrAddComponent(GetOrAddComponentRequest request)
@@ -410,40 +415,47 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            // получаем или создаём компонент
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var component = componentService.GetOrCreateComponent(accountId, request.Data);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            return new GetOrAddComponentResponse()
             {
-                var accountId = request.Token.AccountId.Value;
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = componentInfo
+            };
 
-                // получаем или создаём компонент
-                var service = context.ComponentService;
-
-                var component = service.GetOrCreateComponent(accountId, request.Data);
-
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-
-                return new GetOrAddComponentResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = componentInfo
-                };
-            }
         }
 
         public GetRootComponentResponse GetRootComponent(GetRootComponentRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var root = storage.Components.GetRoot();
+            var componentType = storage.ComponentTypes.GetOneById(root.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(root.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(root, properties, componentType);
+
+            return new GetRootComponentResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentService;
-                var root = service.GetRootComponent(accountId);
-                var componentInfo = ApiConverter.GetComponentInfo(root);
-                return new GetRootComponentResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = componentInfo
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = componentInfo
+            };
+
         }
 
         public GetComponentByIdResponse GetComponentById(GetComponentByIdRequest request)
@@ -457,18 +469,25 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var component = componentService.GetComponentByIdNoCache(accountId, componentId);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            return new GetComponentByIdResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var component = context.ComponentService.GetComponentByIdNoCache(accountId, componentId);
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-                return new GetComponentByIdResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = componentInfo
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = componentInfo
+            };
+
         }
 
         public GetComponentBySystemNameResponse GetComponentBySystemName(GetComponentBySystemNameRequest request)
@@ -486,23 +505,23 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.SystemName");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var component = componentService.GetComponentBySystemName(accountId, request.Data.ParentId.Value, request.Data.SystemName);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            return new GetComponentBySystemNameResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentService;
-
-                var component = service.GetComponentBySystemName(
-                    accountId,
-                    request.Data.ParentId.Value,
-                    request.Data.SystemName);
-
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-                return new GetComponentBySystemNameResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = componentInfo
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = componentInfo
+            };
         }
 
         public UpdateComponentResponse UpdateComponent(UpdateComponentRequest request)
@@ -516,18 +535,24 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.Id");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            componentService.UpdateComponent(accountId, request.Data);
+            var component = storage.Components.GetOneById(request.Data.Id.Value);
+            var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+            var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
+
+            return new UpdateComponentResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentService;
-                var component = service.UpdateComponent(accountId, request.Data);
-                var componentInfo = ApiConverter.GetComponentInfo(component);
-                return new UpdateComponentResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = componentInfo
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = componentInfo
+            };
         }
 
         public GetChildComponentsResponse GetChildComponents(GetChildComponentsRequest request)
@@ -541,19 +566,27 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var components = componentService.GetChildComponents(componentId);
+            var componentInfos = components.Select(component =>
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.ComponentService;
-                var components = service.GetChildComponents(accountId, componentId);
-                var componentInfos = ApiConverter.GetComponentInfoList(components);
-                return new GetChildComponentsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = componentInfos
-                };
-            }
+                var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+                var properties = storage.ComponentProperties.GetByComponentId(component.Id);
+                return ApiConverter.GetComponentInfo(component, properties, componentType);
+            }).ToArray();
+
+            return new GetChildComponentsResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = componentInfos
+            };
         }
 
         public SetComponentEnableResponse SetComponentEnable(SetComponentEnableRequest request)
@@ -567,16 +600,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            componentService.EnableComponent(accountId, request.Data.ComponentId.Value);
+
+            return new SetComponentEnableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentService;
-                service.EnableComponent(accountId, request.Data.ComponentId.Value);
-                return new SetComponentEnableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SetComponentDisableResponse SetComponentDisable(SetComponentDisableRequest request)
@@ -590,22 +626,23 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentService;
 
-                service.DisableComponent(
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            componentService.DisableComponent(
                     accountId,
                     request.Data.ComponentId.Value,
                     request.Data.ToDate,
                     request.Data.Comment);
 
-                return new SetComponentDisableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+            return new SetComponentDisableResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public DeleteComponentResponse DeleteComponent(DeleteComponentRequest request)
@@ -620,17 +657,19 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            componentService.DeleteComponent(accountId, componentId);
+
+            return new DeleteComponentResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.ComponentService;
-                service.DeleteComponent(accountId, componentId);
-                return new DeleteComponentResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public GetComponentAndChildIdsResponse GetComponentAndChildIds(GetComponentAndChildIdsRequest request)
@@ -647,37 +686,42 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var result = componentService.GetComponentAndChildIds(accountId, componentId);
+
+            return new GetComponentAndChildIdsResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.ComponentService;
-                var result = service.GetComponentAndChildIds(accountId, componentId);
-                return new GetComponentAndChildIdsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = result
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = result
+            };
         }
 
         public UpdateEventsStatusesResponse UpdateEventsStatuses(UpdateEventsStatusesRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var componentService = new ComponentService(storage);
+            var updated = componentService.UpdateEventsStatuses(accountId, request.Data.MaxCount);
+
+            return new UpdateEventsStatusesResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentService;
-                var updated = service.UpdateEventsStatuses(accountId, request.Data.MaxCount);
-                return new UpdateEventsStatusesResponse()
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new UpdateEventsStatusesResponseData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new UpdateEventsStatusesResponseData()
-                    {
-                        UpdateCount = updated
-                    }
-                };
-            }
+                    UpdateCount = updated
+                }
+            };
         }
 
         #endregion
@@ -692,37 +736,38 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            try
             {
-                try
-                {
-                    var accountId = request.Token.AccountId.Value;
-                    var componentId = request.Data.ComponentId.Value;
-                    var service = context.EventService;
+                var accountId = request.Token.AccountId.Value;
+                var componentId = request.Data.ComponentId.Value;
 
-                    var eventData = service.SendEvent(
-                        accountId,
-                        componentId,
-                        request.Data);
+                var storage = GetStorage(accountId);
+                var service = new EventService(storage);
 
-                    return new SendEventResponse()
-                    {
-                        Code = Zidium.Api.ResponseCode.Success,
-                        InternalData = new SendEventResponseData()
-                        {
-                            EventId = eventData.Id,
-                            EventTypeId = eventData.EventTypeId
-                        }
-                    };
-                }
-                catch (Zidium.Api.Dto.ResponseCodeException responseException)
+                var eventData = service.SendEvent(
+                    accountId,
+                    componentId,
+                    request.Data);
+
+                return new SendEventResponse()
                 {
-                    return new SendEventResponse()
+                    Code = Zidium.Api.ResponseCode.Success,
+                    InternalData = new SendEventResponseData()
                     {
-                        Code = responseException.Code,
-                        ErrorMessage = responseException.Message
-                    };
-                }
+                        EventId = eventData.Id,
+                        EventTypeId = eventData.EventTypeId
+                    }
+                };
+            }
+            catch (Zidium.Api.Dto.ResponseCodeException responseException)
+            {
+                return new SendEventResponse()
+                {
+                    Code = responseException.Code,
+                    ErrorMessage = responseException.Message
+                };
             }
         }
 
@@ -733,36 +778,29 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
-            {
-                try
-                {
-                    var accountId = request.Token.AccountId.Value;
-                    var service = context.EventService;
-                    var componentGroups = request.Data.GroupBy(x => x.ComponentId);
-                    foreach (var componentGroup in componentGroups)
-                    {
-                        var componentId = componentGroup.Key;
-                        if (componentId == null)
-                        {
-                            continue;
-                        }
-                        var joinDatas = componentGroup.ToList();
-                        foreach (var joinData in joinDatas)
-                        {
-                            service.JoinEvent(accountId, componentId.Value, joinData);
-                        }
-                    }
-                }
-                catch (Exception)
-                {
 
-                }
-                return new JoinEventsResponse()
+            AuthRequest(request);
+
+            try
+            {
+                var accountId = request.Token.AccountId.Value;
+
+                var storage = GetStorage(accountId);
+                var service = new EventService(storage);
+
+                foreach (var joinData in request.Data)
                 {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
+                    service.JoinEvent(accountId, joinData.ComponentId.Value, joinData);
+                }
             }
+            catch (Exception)
+            {
+
+            }
+            return new JoinEventsResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public UpdateEventTypeResponse UpdateEventType(UpdateEventTypeRequest request)
@@ -772,41 +810,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.EventTypeService;
-                service.Update(accountId, request.Data);
-                return new UpdateEventTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                };
-            }
-        }
 
-        public CreateMetricResponse CreateMetric(CreateMetricRequest request)
-        {
-            CheckRequest(request);
-            if (request.Data == null)
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new EventTypeService(storage);
+            service.Update(accountId, request.Data);
+
+            return new UpdateEventTypeResponse()
             {
-                throw new ParameterRequiredException("Request.Data");
-            }
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                var metric = service.CreateMetric(accountId, request.Data);
-                var responseData = new CreateMetricResponseData()
-                {
-                    MetricId = metric.Id,
-                    MetricTypeId = metric.MetricTypeId
-                };
-                return new CreateMetricResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = responseData
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+            };
         }
 
         public GetEventByIdResponse GetEventById(GetEventByIdRequest request)
@@ -821,21 +837,21 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.EventId");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.EventService;
-                var eventData = service.GetEventById(accountId, request.Data.EventId.Value);
-                var eventTypeService = context.EventTypeService;
-                var type = eventTypeService.GetOneById(eventData.EventTypeId, accountId);
-                var eventInfo = ApiConverter.GetEventInfo(eventData, type);
+            AuthRequest(request);
 
-                return new GetEventByIdResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = eventInfo
-                };
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var eventData = storage.Events.GetOneById(request.Data.EventId.Value);
+            var type = storage.EventTypes.GetOneById(eventData.EventTypeId);
+            var properties = storage.EventProperties.GetByEventId(eventData.Id);
+            var eventInfo = ApiConverter.GetEventInfo(eventData, type, properties);
+
+            return new GetEventByIdResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = eventInfo
+            };
         }
 
         public GetEventsResponse GetEvents(GetEventsRequest request)
@@ -850,34 +866,60 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.OwnerId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new EventService(storage);
+            var events = service.GetEvents(accountId, request.Data);
+
+            var eventInfos = events.Select(eventObj =>
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.EventService;
+                var eventType = storage.EventTypes.GetOneById(eventObj.EventTypeId);
+                var properties = storage.EventProperties.GetByEventId(eventObj.Id);
+                var eventInfo = ApiConverter.GetEventInfo(eventObj, eventType, properties);
+                return eventInfo;
+            }).ToArray();
 
-                var events = service.GetEvents(accountId, request.Data);
-
-                var eventInfos = new List<EventInfo>();
-                var eventTypeService = context.EventTypeService;
-
-                foreach (var eventObj in events)
-                {
-                    var eventType = eventTypeService.GetOneById(eventObj.EventTypeId, accountId);
-                    var eventInfo = ApiConverter.GetEventInfo(eventObj, eventType);
-                    eventInfos.Add(eventInfo);
-                }
-
-                return new GetEventsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = eventInfos
-                };
-            }
+            return new GetEventsResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = eventInfos
+            };
         }
 
         #endregion
 
         #region Метрики
+
+        public CreateMetricResponse CreateMetric(CreateMetricRequest request)
+        {
+            CheckRequest(request);
+            if (request.Data == null)
+            {
+                throw new ParameterRequiredException("Request.Data");
+            }
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var metric = service.CreateMetric(accountId, request.Data);
+            var responseData = new CreateMetricResponseData()
+            {
+                MetricId = metric.Id,
+                MetricTypeId = metric.MetricTypeId
+            };
+
+            return new CreateMetricResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = responseData
+            };
+        }
 
         public GetMetricsResponse GetMetrics(GetMetricsRequest request)
         {
@@ -891,43 +933,45 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var metrics = service.GetMetrics(accountId, componentId);
+            var metricInfos = new List<MetricInfo>(metrics.Count);
+            foreach (var metric in metrics)
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.MetricService;
-                var metrics = service.GetMetrics(accountId, componentId);
-                var metricInfos = new List<MetricInfo>(metrics.Count);
-                foreach (var metric in metrics)
+                var metricType = AllCaches.MetricTypes.Find(new AccountCacheRequest()
                 {
-                    var metricType = AllCaches.MetricTypes.Find(new AccountCacheRequest()
-                    {
-                        AccountId = accountId,
-                        ObjectId = metric.MetricTypeId
-                    });
-                    if (metricType == null)
-                    {
-                        throw new Exception("metricType == null");
-                    }
-                    var statusData = AllCaches.StatusDatas.Find(new AccountCacheRequest()
-                    {
-                        AccountId = accountId,
-                        ObjectId = metric.StatusDataId
-                    });
-                    if (statusData == null)
-                    {
-                        throw new Exception("statusData == null");
-                    }
-                    var metricInfo = ApiConverter.GetMetricInfo(metric, metricType, statusData);
-                    metricInfos.Add(metricInfo);
+                    AccountId = accountId,
+                    ObjectId = metric.MetricTypeId
+                });
+                if (metricType == null)
+                {
+                    throw new Exception("metricType == null");
                 }
-                var response = new GetMetricsResponse
+                var statusData = AllCaches.StatusDatas.Find(new AccountCacheRequest()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = metricInfos
-                };
-                return response;
+                    AccountId = accountId,
+                    ObjectId = metric.StatusDataId
+                });
+                if (statusData == null)
+                {
+                    throw new Exception("statusData == null");
+                }
+                var metricInfo = ApiConverter.GetMetricInfo(metric, metricType, statusData);
+                metricInfos.Add(metricInfo);
             }
+
+            var response = new GetMetricsResponse
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = metricInfos.ToArray()
+            };
+            return response;
         }
 
         public GetMetricsHistoryResponse GetMetricsHistory(GetMetricsHistoryRequest request)
@@ -942,41 +986,35 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var rows = service.GetMetricsHistory(accountId, request.Data);
+
+            // конвертируем историю в MetricInfo
+            var metricInfos = rows.Select(row =>
             {
-                var accountId = request.Token.AccountId.Value;
-                var accountDbContext = context.GetAccountDbContext(accountId);
-                var metricTypeRepository = accountDbContext.GetMetricTypeRepository();
-                var service = context.MetricService;
-                var rows = service.GetMetricsHistory(accountId, request.Data);
-
-                // конвертируем историю в MetricInfo
-                var metricInfos = new List<MetricInfo>();
-                foreach (var row in rows)
+                var type = storage.MetricTypes.GetOneById(row.MetricTypeId);
+                var info = new MetricInfo()
                 {
-                    var type = metricTypeRepository.GetByIdOrNull(row.MetricTypeId);
-                    if (type == null || type.IsDeleted)
-                    {
-                        continue;
-                    }
-                    var info = new MetricInfo()
-                    {
-                        ActualDate = row.ActualDate,
-                        BeginDate = row.BeginDate,
-                        ComponentId = row.ComponentId,
-                        SystemName = type.SystemName,
-                        Status = MonitoringStatusHelper.Get(row.Color),
-                        Value = row.Value
-                    };
-                    metricInfos.Add(info);
-                }
-
-                return new GetMetricsHistoryResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = metricInfos
+                    ActualDate = row.ActualDate,
+                    BeginDate = row.BeginDate,
+                    ComponentId = row.ComponentId,
+                    SystemName = type.SystemName,
+                    Status = MonitoringStatusHelper.Get(row.Color),
+                    Value = row.Value
                 };
-            }
+                return info;
+            }).ToArray();
+
+            return new GetMetricsHistoryResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = metricInfos
+            };
         }
 
         public DeleteMetricTypeResponse DeleteMetricType(DeleteMetricTypeRequest typeRequest)
@@ -990,12 +1028,15 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.MetricTypeId");
             }
-            using (var context = GetDispatcherContext(typeRequest))
-            {
-                var accountId = typeRequest.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.DeleteMetricType(accountId, typeRequest.Data.MetricTypeId);
-            }
+
+            AuthRequest(typeRequest);
+
+            var accountId = typeRequest.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.DeleteMetricType(accountId, typeRequest.Data.MetricTypeId);
+
             return new DeleteMetricTypeResponse()
             {
                 Code = Zidium.Api.ResponseCode.Success
@@ -1010,35 +1051,39 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.SaveMetrics(accountId, request.Data);
+            return new SendMetricsResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.SaveMetrics(accountId, request.Data);
-                return new SendMetricsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public UpdateMetricsResponse UpdateMetrics(UpdateMetricsRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var updated = service.UpdateMetrics(accountId, request.Data.MaxCount);
+
+            return new UpdateMetricsResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                var updated = service.UpdateMetrics(accountId, request.Data.MaxCount);
-                return new UpdateMetricsResponse()
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new UpdateMetricsResponseData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new UpdateMetricsResponseData()
-                    {
-                        UpdateCount = updated
-                    }
-                };
-            }
+                    UpdateCount = updated
+                }
+            };
         }
 
         public SetMetricEnableResponse SetMetricEnable(SetMetricEnableRequest request)
@@ -1048,16 +1093,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.EnableMetric(accountId, request.Data.MetricId);
+
+            return new SetMetricEnableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.EnableMetric(accountId, request.Data.MetricId);
-                return new SetMetricEnableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SetMetricDisableResponse SetMetricDisable(SetMetricDisableRequest request)
@@ -1067,16 +1115,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.DisableMetric(accountId, request.Data);
+
+            return new SetMetricDisableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.DisableMetric(accountId, request.Data);
-                return new SetMetricDisableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public UpdateMetricResponse UpdateMetric(UpdateMetricRequest request)
@@ -1086,16 +1137,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.UpdateMetric(accountId, request.Data);
+
+            return new UpdateMetricResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.UpdateMetric(accountId, request.Data);
-                return new UpdateMetricResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public UpdateMetricTypeResponse UpdateMetricType(UpdateMetricTypeRequest request)
@@ -1105,16 +1159,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.UpdateMetricType(accountId, request.Data);
+
+            return new UpdateMetricTypeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.UpdateMetricType(accountId, request.Data);
-                return new UpdateMetricTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public CreateMetricTypeResponse CreateMetricType(CreateMetricTypeRequest request)
@@ -1124,21 +1181,24 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var metricType = service.CreateMetricType(accountId, request.Data);
+            var responseData = new CreateMetricTypeResponseData()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                var metricType = service.CreateMetricType(accountId, request.Data);
-                var responseData = new CreateMetricTypeResponseData()
-                {
-                    MetricTypeId = metricType.Id
-                };
-                return new CreateMetricTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = responseData
-                };
-            }
+                MetricTypeId = metricType.Id
+            };
+
+            return new CreateMetricTypeResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = responseData
+            };
         }
 
         public SendMetricResponse SendMetric(SendMetricRequest request)
@@ -1153,32 +1213,33 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                var metric = service.SaveMetric(accountId, request.Data);
+            AuthRequest(request);
 
-                var metricType = AllCaches.MetricTypes.Find(
-                    new AccountCacheRequest()
-                    {
-                        AccountId = metric.AccountId,
-                        ObjectId = metric.MetricTypeId
-                    });
+            var accountId = request.Token.AccountId.Value;
 
-                var status = AllCaches.StatusDatas.Find(
-                    new AccountCacheRequest()
-                    {
-                        AccountId = accountId,
-                        ObjectId = metric.StatusDataId
-                    });
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var metric = service.SaveMetric(accountId, request.Data);
 
-                return new SendMetricResponse()
+            var metricType = AllCaches.MetricTypes.Find(
+                new AccountCacheRequest()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = ApiConverter.GetMetricInfo(metric, metricType, status)
-                };
-            }
+                    AccountId = metric.AccountId,
+                    ObjectId = metric.MetricTypeId
+                });
+
+            var status = AllCaches.StatusDatas.Find(
+                new AccountCacheRequest()
+                {
+                    AccountId = accountId,
+                    ObjectId = metric.StatusDataId
+                });
+
+            return new SendMetricResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = ApiConverter.GetMetricInfo(metric, metricType, status)
+            };
         }
 
         public GetMetricResponse GetMetric(GetMetricRequest request)
@@ -1197,42 +1258,46 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.Name");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            var metric = service.GetActualMetric(accountId, request.Data.ComponentId.Value, request.Data.Name);
+            var statusData = AllCaches.StatusDatas.Find(new AccountCacheRequest()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                var metric = service.GetActualMetric(accountId, request.Data.ComponentId.Value, request.Data.Name);
-                var statusData = AllCaches.StatusDatas.Find(new AccountCacheRequest()
-                {
-                    AccountId = accountId,
-                    ObjectId = metric.StatusDataId
-                });
-                var metricType = AllCaches.MetricTypes.Find(new AccountCacheRequest()
-                {
-                    AccountId = accountId,
-                    ObjectId = metric.MetricTypeId
-                });
-                return new GetMetricResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = ApiConverter.GetMetricInfo(metric, metricType, statusData)
-                };
-            }
+                AccountId = accountId,
+                ObjectId = metric.StatusDataId
+            });
+            var metricType = AllCaches.MetricTypes.Find(new AccountCacheRequest()
+            {
+                AccountId = accountId,
+                ObjectId = metric.MetricTypeId
+            });
+
+            return new GetMetricResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = ApiConverter.GetMetricInfo(metric, metricType, statusData)
+            };
         }
 
         public DeleteMetricResponse DeleteMetric(DeleteMetricRequest request)
         {
             CheckRequest(request);
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.MetricService;
-                service.DeleteMetric(accountId, request.Data);
+            AuthRequest(request);
 
-                var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-                checker.RefreshMetricsCount();
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new MetricService(storage);
+            service.DeleteMetric(accountId, request.Data);
+
+            var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+            checker.RefreshMetricsCount();
+
             return new DeleteMetricResponse()
             {
                 Code = Zidium.Api.ResponseCode.Success
@@ -1259,17 +1324,19 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new LogService(storage);
+            service.SaveLogMessage(accountId, componentId, request.Data);
+
+            return new SendLogResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.LogService;
-                service.SaveLogMessage(accountId, componentId, request.Data);
-                return new SendLogResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public GetLogsResponse GetLogs(GetLogsRequest request)
@@ -1284,19 +1351,25 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new LogService(storage);
+            var rows = service.GetLogs(accountId, componentId, request.Data);
+            var rowsDto = rows.Select(log =>
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.LogService;
-                var rows = service.GetLogs(accountId, componentId, request.Data);
-                var rowsDto = rows.Select(ApiConverter.GetLogRow).ToList();
-                return new GetLogsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = rowsDto
-                };
-            }
+                var properties = storage.LogProperties.GetByLogId(log.Id);
+                return ApiConverter.GetLogRow(log, properties);
+            }).ToArray();
+
+            return new GetLogsResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = rowsDto
+            };
         }
 
         public GetLogConfigResponse GetLogConfig(GetLogConfigRequest request)
@@ -1311,19 +1384,21 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new LogService(storage);
+            var logConfig = service.GetLogConfig(componentId);
+            var logConfigDto = ApiConverter.GetLogConfig(logConfig);
+
+            return new GetLogConfigResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.LogService;
-                var logConfig = service.GetLogConfig(accountId, componentId);
-                var logConfigDto = ApiConverter.GetLogConfig(logConfig);
-                return new GetLogConfigResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = logConfigDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = logConfigDto
+            };
         }
 
         public SendLogsResponse SendLogs(SendLogsRequest request)
@@ -1333,18 +1408,20 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new LogService(storage);
+
+            service.SaveLogMessages(accountId, request.Data);
+
+            return new SendLogsResponse()
             {
-                var service = context.LogService;
-                var accountId = request.Token.AccountId.Value;
-
-                service.SaveLogMessages(accountId, request.Data);
-
-                return new SendLogsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public GetChangedWebLogConfigsResponse GetChangedWebLogConfigs(GetChangedWebLogConfigsRequest request)
@@ -1359,24 +1436,25 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.LastUpdateDate");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new LogService(storage);
+
+            var configs = service.GetChangedConfigs(
+                accountId,
+                request.Data.LastUpdateDate.Value,
+                request.Data.ComponentIds);
+
+            var response = new GetChangedWebLogConfigsResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.LogService;
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = configs.Select(ApiConverter.GetLogConfig).ToArray()
+            };
 
-                var configs = service.GetChangedConfigs(
-                    accountId,
-                    request.Data.LastUpdateDate.Value,
-                    request.Data.ComponentIds);
-
-                var response = new GetChangedWebLogConfigsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = configs.Select(ApiConverter.GetLogConfig).ToList()
-                };
-
-                return response;
-            }
+            return response;
         }
 
         #endregion
@@ -1393,22 +1471,21 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var data = request.Data;
+            var service = _configDbServicesFactory.GetAccountManagementService();
+
+            var reginfoId = service.RegistrationStep1(
+                data.AccountName,
+                data.EMail,
+                data.UserAgentTag);
+
+            return new AccountRegistrationResponse()
             {
-                var data = request.Data;
-                var service = context.AccountManagementService;
-
-                var reginfoId = service.RegistrationStep1(
-                    data.AccountName,
-                    data.EMail,
-                    data.UserAgentTag);
-
-                return new AccountRegistrationResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = reginfoId
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = reginfoId
+            };
         }
 
         public AccountRegistrationResponse AccountRegistrationStep2(AccountRegistrationStep2Request request)
@@ -1421,23 +1498,22 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var data = request.Data;
+            var service = _configDbServicesFactory.GetAccountManagementService();
+
+            var reginfoId = service.RegistrationStep2(
+                data.RegId,
+                data.CompanyName,
+                data.Site,
+                data.CompanyPost);
+
+            return new AccountRegistrationResponse()
             {
-                var data = request.Data;
-                var service = context.AccountManagementService;
-
-                var reginfoId = service.RegistrationStep2(
-                    data.RegId,
-                    data.CompanyName,
-                    data.Site,
-                    data.CompanyPost);
-
-                return new AccountRegistrationResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = reginfoId
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = reginfoId
+            };
         }
 
         public AccountRegistrationResponse AccountRegistrationStep3(AccountRegistrationStep3Request request)
@@ -1450,24 +1526,23 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var data = request.Data;
+            var service = _configDbServicesFactory.GetAccountManagementService();
+
+            var reginfoId = service.RegistrationStep3(
+                data.RegId,
+                data.FirstName,
+                data.LastName,
+                data.FatherName,
+                data.Phone);
+
+            return new AccountRegistrationResponse()
             {
-                var data = request.Data;
-                var service = context.AccountManagementService;
-
-                var reginfoId = service.RegistrationStep3(
-                    data.RegId,
-                    data.FirstName,
-                    data.LastName,
-                    data.FatherName,
-                    data.Phone);
-
-                return new AccountRegistrationResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = reginfoId
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = reginfoId
+            };
         }
 
         public EndAccountRegistrationResponse EndAccountRegistration(EndAccountRegistrationRequest request)
@@ -1480,17 +1555,16 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.SecretKey");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var service = context.AccountManagementService;
-                var accountId = service.EndRegistration(request.Data.SecretKey);
+            AuthRequest(request);
 
-                return new EndAccountRegistrationResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = accountId
-                };
-            }
+            var service = _configDbServicesFactory.GetAccountManagementService();
+            var accountId = service.EndRegistration(request.Data.SecretKey);
+
+            return new EndAccountRegistrationResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = accountId
+            };
         }
 
         #endregion
@@ -1508,27 +1582,29 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.SystemName or Request.Data.Id");
             }
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentTypeService;
 
-                ComponentType type;
-                if (request.Data.SystemName != null)
-                {
-                    type = service.GetBySystemName(accountId, request.Data.SystemName);
-                }
-                else
-                {
-                    type = service.GetById(accountId, request.Data.Id.Value);
-                }
-                var typeDto = ApiConverter.GetComponentTypeInfo(type);
-                return new GetComponentTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = typeDto
-                };
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+
+            ComponentTypeForRead type;
+            if (request.Data.SystemName != null)
+            {
+                type = storage.ComponentTypes.GetOneOrNullBySystemName(request.Data.SystemName);
             }
+            else
+            {
+                type = storage.ComponentTypes.GetOneById(request.Data.Id.Value);
+            }
+            var typeDto = ApiConverter.GetComponentTypeInfo(type);
+
+            return new GetComponentTypeResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = typeDto
+            };
         }
 
         public GetOrCreateComponentTypeResponse GetOrCreateComponentType(GetOrCreateComponentTypeRequest request)
@@ -1539,20 +1615,21 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new ComponentTypeService(storage);
+
+            var type = service.GetOrCreateComponentType(accountId, request.Data);
+            var typeDto = ApiConverter.GetComponentTypeInfo(type);
+
+            return new GetOrCreateComponentTypeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentTypeService;
-
-                var type = service.GetOrCreateComponentType(accountId, request.Data);
-
-                var typeDto = ApiConverter.GetComponentTypeInfo(type);
-                return new GetOrCreateComponentTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = typeDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = typeDto
+            };
         }
 
         public UpdateComponentTypeResponse UpdateComponentType(UpdateComponentTypeRequest request)
@@ -1567,20 +1644,22 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentTypeId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new ComponentTypeService(storage);
+
+            service.UpdateComponentType(accountId, request.Data);
+            var type = storage.ComponentTypes.GetOneById(request.Data.Id.Value);
+
+            var typeDto = ApiConverter.GetComponentTypeInfo(type);
+            return new UpdateComponentTypeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentTypeService;
-
-                var type = service.UpdateComponentType(accountId, request.Data);
-
-                var typeDto = ApiConverter.GetComponentTypeInfo(type);
-                return new UpdateComponentTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = typeDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = typeDto
+            };
         }
 
         public DeleteComponentTypeResponse DeleteComponentType(DeleteComponentTypeRequest request)
@@ -1595,22 +1674,23 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentTypeId");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.ComponentTypeService;
-                service.Delete(accountId, request.Data.ComponentTypeId.Value);
+            AuthRequest(request);
 
-                return new DeleteComponentTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new ComponentTypeService(storage);
+            service.Delete(accountId, request.Data.ComponentTypeId.Value);
+
+            return new DeleteComponentTypeResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         #endregion
 
-        #region Юнит-тесты
+        #region Проверки
 
         public SetUnitTestNextTimeResponse SetUnitTestNextTime(SetUnitTestNextTimeRequest request)
         {
@@ -1624,16 +1704,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.SetUnitTestNextTime(accountId, request.Data);
+
+            return new SetUnitTestNextTimeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                service.SetUnitTestNextTime(accountId, request.Data);
-                return new SetUnitTestNextTimeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SetUnitTestNextStepProcessTimeResponse SetUnitTestNextStepProcessTime(SetUnitTestNextStepProcessTimeRequest request)
@@ -1652,16 +1735,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.NextStepProcessTime");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.SetUnitTestNextStepProcessTime(accountId, request.Data);
+
+            return new SetUnitTestNextStepProcessTimeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                service.SetUnitTestNextStepProcessTime(accountId, request.Data);
-                return new SetUnitTestNextStepProcessTimeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public GetOrCreateUnitTestTypeResponse GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequest request)
@@ -1676,19 +1762,21 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.SystemName");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestTypeService;
+            AuthRequest(request);
 
-                var unitTestType = service.GetOrCreateUnitTestType(accountId, request.Data);
-                var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
-                return new GetOrCreateUnitTestTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = typeDto
-                };
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestTypeService(storage);
+
+            var unitTestType = service.GetOrCreateUnitTestType(accountId, request.Data);
+            var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
+
+            return new GetOrCreateUnitTestTypeResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = typeDto
+            };
         }
 
         public GetUnitTestTypeByIdResponse GetUnitTestTypeById(GetUnitTestTypeByIdRequest request)
@@ -1703,19 +1791,20 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.Id");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestTypeService;
+            AuthRequest(request);
 
-                var unitTestType = service.GetUnitTestTypeById(accountId, request.Data.Id.Value);
-                var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
-                return new GetUnitTestTypeByIdResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = typeDto
-                };
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestTypeService(storage);
+            var unitTestType = service.GetUnitTestTypeById(accountId, request.Data.Id.Value);
+            var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
+
+            return new GetUnitTestTypeByIdResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = typeDto
+            };
         }
 
         public UpdateUnitTestTypeResponse UpdateUnitTestType(UpdateUnitTestTypeRequest request)
@@ -1729,18 +1818,22 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestTypeId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestTypeService(storage);
+            service.UpdateUnitTestType(accountId, request.Data);
+            var unitTestType = service.GetUnitTestTypeById(accountId, request.Data.UnitTestTypeId.Value);
+            var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
+
+            return new UpdateUnitTestTypeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestTypeService;
-                var unitTestType = service.UpdateUnitTestType(accountId, request.Data);
-                var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
-                return new UpdateUnitTestTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = typeDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = typeDto
+            };
         }
 
         public DeleteUnitTestTypeResponse DeleteUnitTestType(DeleteUnitTestTypeRequest request)
@@ -1755,18 +1848,18 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.UnitTestTypeId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestTypeService(storage);
+            service.DeleteUnitTestType(accountId, request.Data.UnitTestTypeId.Value);
+
+            return new DeleteUnitTestTypeResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-
-                var service = context.UnitTestTypeService;
-                service.DeleteUnitTestType(accountId, request.Data.UnitTestTypeId.Value);
-
-                return new DeleteUnitTestTypeResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public GetOrCreateUnitTestResponse GetOrCreateUnitTest(GetOrCreateUnitTestRequest request)
@@ -1780,17 +1873,20 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            var result = service.GetOrCreateUnitTest(accountId, request.Data);
+
+            return new GetOrCreateUnitTestResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                var result = service.GetOrCreateUnitTest(accountId, request.Data);
-                return new GetOrCreateUnitTestResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = ApiConverter.GetOrCreateUnitTestResponseData(result)
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = ApiConverter.GetOrCreateUnitTestResponseData(result)
+            };
         }
 
         public UpdateUnitTestResponse UpdateUnitTest(UpdateUnitTestRequest request)
@@ -1804,16 +1900,19 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.UpdateUnitTest(accountId, request.Data);
+
+            return new UpdateUnitTestResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                service.UpdateUnitTest(accountId, request.Data);
-                return new UpdateUnitTestResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public DeleteUnitTestResponse DeleteUnitTest(DeleteUnitTestRequest request)
@@ -1828,16 +1927,19 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var unitTestId = request.Data.UnitTestId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.Delete(accountId, unitTestId);
+
+            return new DeleteUnitTestResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var unitTestId = request.Data.UnitTestId.Value;
-                context.UnitTestService.Delete(accountId, unitTestId);
-                return new DeleteUnitTestResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SendUnitTestResultResponse SendUnitTestResult(SendUnitTestResultRequest request)
@@ -1852,17 +1954,19 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.SendUnitTestResult(accountId, request.Data);
+
+            return new SendUnitTestResultResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                service.SendUnitTestResult(accountId, request.Data);
-                return new SendUnitTestResultResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = null
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = null
+            };
         }
 
         public SendUnitTestResultsResponse SendUnitTestResults(SendUnitTestResultsRequest request)
@@ -1873,17 +1977,19 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.SendUnitTestResults(accountId, request.Data);
+
+            return new SendUnitTestResultsResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                service.SendUnitTestResults(accountId, request.Data);
-                return new SendUnitTestResultsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = null
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = null
+            };
         }
 
         public GetUnitTestStateResponse GetUnitTestState(GetUnitTestStateRequest request)
@@ -1897,18 +2003,21 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            var result = service.GetUnitTestResult(accountId, request.Data.UnitTestId.Value);
+            var resultDto = ApiConverter.GetStatusDataInfo(result);
+
+            return new GetUnitTestStateResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                var result = service.GetUnitTestResult(accountId, request.Data.UnitTestId.Value);
-                var resultDto = ApiConverter.GetStatusDataInfo(result);
-                return new GetUnitTestStateResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = resultDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = resultDto
+            };
         }
 
         public SendHttpUnitTestBannerResponse SendHttpUnitTestBanner(SendHttpUnitTestBannerRequest request)
@@ -1927,20 +2036,22 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.HasBanner");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            var result = service.SendHttpUnitTestBanner(accountId, request.Data.UnitTestId.Value, request.Data.HasBanner.Value);
+
+            return new SendHttpUnitTestBannerResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                var result = service.SendHttpUnitTestBanner(accountId, request.Data.UnitTestId.Value, request.Data.HasBanner.Value);
-                return new SendHttpUnitTestBannerResponse()
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new SendHttpUnitTestBannerResponseData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new SendHttpUnitTestBannerResponseData()
-                    {
-                        CanProcessUnitTest = result
-                    }
-                };
-            }
+                    CanProcessUnitTest = result
+                }
+            };
         }
 
         public AddPingUnitTestResponse AddPingUnitTest(AddPingUnitTestRequest request)
@@ -1958,17 +2069,21 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            var result = service.AddPingUnitTest(accountId, request.Data);
+            var unittest = storage.UnitTests.GetOneById(result);
+            var rule = storage.UnitTestPingRules.GetOneByUnitTestId(result);
+
+            return new AddPingUnitTestResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                var result = service.AddPingUnitTest(accountId, request.Data);
-                return new AddPingUnitTestResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = ApiConverter.AddPingUnitTestResponseData(result)
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = ApiConverter.AddPingUnitTestResponseData(unittest, rule)
+            };
         }
 
         public AddHttpUnitTestResponse AddHttpUnitTest(AddHttpUnitTestRequest request)
@@ -1986,36 +2101,44 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            var id = service.AddHttpUnitTest(accountId, request.Data);
+            var unittest = storage.UnitTests.GetOneById(id);
+            var rules = storage.HttpRequestUnitTestRules.GetByUnitTestId(id);
+
+            return new AddHttpUnitTestResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                var result = service.AddHttpUnitTest(accountId, request.Data);
-                return new AddHttpUnitTestResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = ApiConverter.AddHttpUnitTestResponseData(result)
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = ApiConverter.AddHttpUnitTestResponseData(unittest, rules)
+            };
         }
 
         public RecalcUnitTestsResultsResponse RecalcUnitTestsResults(RecalcUnitTestsResultsRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            var updated = service.RecalcUnitTestsResults(accountId, request.Data.MaxCount);
+
+            return new RecalcUnitTestsResultsResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                var updated = service.RecalcUnitTestsResults(accountId, request.Data.MaxCount);
-                return new RecalcUnitTestsResultsResponse()
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = new RecalcUnitTestsResultsResponseData()
                 {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = new RecalcUnitTestsResultsResponseData()
-                    {
-                        UpdateCount = updated
-                    }
-                };
-            }
+                    UpdateCount = updated
+                }
+            };
         }
 
         public SetUnitTestEnableResponse SetUnitTestEnable(SetUnitTestEnableRequest request)
@@ -2026,17 +2149,19 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var unitTestId = request.Data.UnitTestId;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.Enable(accountId, unitTestId.Value);
+
+            return new SetUnitTestEnableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var unitTestId = request.Data.UnitTestId;
-                var service = context.UnitTestService;
-                service.Enable(accountId, unitTestId.Value);
-                return new SetUnitTestEnableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SetUnitTestDisableResponse SetUnitTestDisable(SetUnitTestDisableRequest request)
@@ -2047,16 +2172,18 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new UnitTestService(storage);
+            service.Disable(accountId, request.Data);
+
+            return new SetUnitTestDisableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.UnitTestService;
-                service.Disable(accountId, request.Data);
-                return new SetUnitTestDisableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         #endregion
@@ -2066,100 +2193,116 @@ namespace Zidium.Core
         public CreateSubscriptionResponse CreateSubscription(CreateSubscriptionRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new SubscriptionService(storage);
+            var subscription = service.CreateSubscription(accountId, request.Data);
+            var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
+
+            return new CreateSubscriptionResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.SubscriptionService;
-                var subscription = service.CreateSubscription(accountId, request.Data);
-                var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
-                return new CreateSubscriptionResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = subscriptionDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = subscriptionDto
+            };
         }
 
         public CreateUserDefaultSubscriptionResponse CreateUserDefaultSubscription(CreateUserDefaultSubscriptionRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new SubscriptionService(storage);
+            var subscription = service.CreateDefaultForUser(accountId, request.Data.UserId);
+            var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
+
+            return new CreateUserDefaultSubscriptionResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.SubscriptionService;
-                var subscription = service.CreateDefaultForUser(accountId, request.Data.UserId);
-                context.SaveChanges();
-                var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
-                return new CreateUserDefaultSubscriptionResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = subscriptionDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = subscriptionDto
+            };
         }
 
         public UpdateSubscriptionResponse UpdateSubscription(UpdateSubscriptionRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new SubscriptionService(storage);
+            service.UpdateSubscription(accountId, request.Data);
+            var subscription = storage.Subscriptions.GetOneById(request.Data.Id);
+            var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
+
+            return new UpdateSubscriptionResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.SubscriptionService;
-                var subscription = service.UpdateSubscription(accountId, request.Data);
-                var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
-                return new UpdateSubscriptionResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = subscriptionDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = subscriptionDto
+            };
         }
 
         public SetSubscriptionDisableResponse SetSubscriptionDisable(SetSubscriptionDisableRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new SubscriptionService(storage);
+            service.SetSubscriptionDisable(accountId, request.Data);
+
+            return new SetSubscriptionDisableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.SubscriptionService;
-                var subscription = service.SetSubscriptionDisable(accountId, request.Data);
-                return new SetSubscriptionDisableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SetSubscriptionEnableResponse SetSubscriptionEnable(SetSubscriptionEnableRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new SubscriptionService(storage);
+            service.SetSubscriptionEnable(accountId, request.Data);
+
+            return new SetSubscriptionEnableResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.SubscriptionService;
-                var subscription = service.SetSubscriptionEnable(accountId, request.Data);
-                return new SetSubscriptionEnableResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public DeleteSubscriptionResponse DeleteSubscription(DeleteSubscriptionRequest request)
         {
             CheckRequest(request);
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.SubscriptionService;
-                service.DeleteSubscription(accountId, request.Data);
-                context.SaveChanges();
 
-                return new DeleteSubscriptionResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new SubscriptionService(storage);
+            service.DeleteSubscription(accountId, request.Data);
+
+            return new DeleteSubscriptionResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         public SendSmsResponse SendSms(SendSmsRequest request)
@@ -2167,21 +2310,27 @@ namespace Zidium.Core
             CheckRequest(request);
             CheckForLocalRequest(request);
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+
+            // Проверим лимиты
+            var storage = GetStorage(accountId);
+            var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+            checker.CheckSmsPerDay(storage);
+
+            var entity = new SendSmsCommandForAdd()
             {
-                var accountId = request.Token.AccountId.Value;
+                Id = Guid.NewGuid(),
+                CreateDate = DateTime.Now,
+                Status = SmsStatus.InQueue,
+                ReferenceId = request.Data.ReferenceId,
+                Body = request.Data.Body,
+                Phone = request.Data.Phone
+            };
+            storage.SendSmsCommands.Add(entity);
 
-                // Проверим лимиты
-                var accountDbContext = context.GetAccountDbContext(accountId);
-                var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-                checker.CheckSmsPerDay(accountDbContext);
-
-                var sendSmsCommandRepository = accountDbContext.GetSendSmsCommandRepository();
-                sendSmsCommandRepository.Add(request.Data.Phone, request.Data.Body, request.Data.ReferenceId);
-                context.SaveChanges();
-
-                checker.AddSmsPerDay(accountDbContext);
-            }
+            checker.AddSmsPerDay(storage);
 
             return new SendSmsResponse()
             {
@@ -2204,25 +2353,27 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var recalc = request.Data.Recalc;
+            var componentService = new ComponentService(storage);
+            var state = componentService.GetComponentExternalState(accountId, componentId, recalc);
+            var stateDto = ApiConverter.GetStatusDataInfo(state);
+
+            var component = componentService.GetComponentById(accountId, componentId);
+            stateDto.DisableComment = component.DisableComment;
+            stateDto.DisableToDate = component.DisableToDate;
+
+            return new GetComponentTotalStateResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var recalc = request.Data.Recalc;
-                var componentService = context.ComponentService;
-                var state = componentService.GetComponentExternalState(accountId, componentId, recalc);
-                var stateDto = ApiConverter.GetStatusDataInfo(state);
-
-                var component = componentService.GetComponentById(accountId, componentId);
-                stateDto.DisableComment = component.DisableComment;
-                stateDto.DisableToDate = component.DisableToDate;
-
-                return new GetComponentTotalStateResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = stateDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = stateDto
+            };
         }
 
         public GetComponentInternalStateResponse GetComponentInternalState(GetComponentInternalStateRequest request)
@@ -2236,20 +2387,23 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var recalc = request.Data.Recalc;
+            var service = new ComponentService(storage);
+            var state = service.GetComponentInternalState(accountId, componentId, recalc);
+            var stateDto = ApiConverter.GetStatusDataInfo(state);
+
+            return new GetComponentInternalStateResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var recalc = request.Data.Recalc;
-                var service = context.ComponentService;
-                var state = service.GetComponentInternalState(accountId, componentId, recalc);
-                var stateDto = ApiConverter.GetStatusDataInfo(state);
-                return new GetComponentInternalStateResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = stateDto
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = stateDto
+            };
         }
 
         public UpdateComponentStateResponse UpdateComponentState(UpdateComponentStateRequest request)
@@ -2263,17 +2417,20 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var accountId = request.Token.AccountId.Value;
+            var componentId = request.Data.ComponentId.Value;
+
+            var storage = GetStorage(accountId);
+            var service = new ComponentService(storage);
+            var component = service.CalculateAllStatuses(accountId, componentId);
+
+            return new UpdateComponentStateResponse()
             {
-                var accountId = request.Token.AccountId.Value;
-                var componentId = request.Data.ComponentId.Value;
-                var service = context.ComponentService;
-                var component = service.CalculateAllStatuses(accountId, componentId);
-                return new UpdateComponentStateResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success
+            };
         }
 
         #endregion
@@ -2290,13 +2447,12 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.PaymentService;
+            AuthRequest(request);
 
-                service.AddYandexKassaRefillPayment(accountId, request.Data);
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var service = _configDbServicesFactory.GetPaymentService();
+            service.AddYandexKassaRefillPayment(accountId, request.Data);
 
             return new AddYandexKassaPaymentResponse()
             {
@@ -2314,11 +2470,12 @@ namespace Zidium.Core
             {
                 throw new ParameterRequiredException("Request.Data");
             }
-            using (var context = GetDispatcherContext(request))
-            {
-                var service = context.PaymentService;
-                service.ProcessPartnerPayments(request.Data.FromDate);
-            }
+
+            AuthRequest(request);
+
+            var service = _configDbServicesFactory.GetPaymentService();
+            service.ProcessPartnerPayments(request.Data.FromDate);
+
             return new ProcessPartnerPaymentsResponse()
             {
                 Code = Zidium.Api.ResponseCode.Success
@@ -2338,16 +2495,17 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var limits = GetAccountLimitsResponseData(request.Token.AccountId.Value, context, request.Data.ArchiveDays);
+            AuthRequest(request);
 
-                return new GetAccountLimitsResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = limits
-                };
-            }
+            var accountId = request.Token.AccountId.Value;
+            var storage = GetStorage(accountId);
+            var limits = GetAccountLimitsResponseData(accountId, storage, request.Data.ArchiveDays);
+
+            return new GetAccountLimitsResponse()
+            {
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = limits
+            };
         }
 
         public GetAllAccountsLimitsResponse GetAllAccountsLimits(GetAllAccountsLimitsRequest request)
@@ -2361,22 +2519,24 @@ namespace Zidium.Core
             }
 
             var limitsList = new List<GetAllAccountsLimitsResponseData>();
-            using (var context = GetDispatcherContext(request))
+
+            AuthRequest(request);
+
+            var service = _configDbServicesFactory.GetAccountService();
+            var accountsIds = service.GetAccounts(new GetAccountsRequestData()).Select(t => t.Id);
+            foreach (var accountId in accountsIds)
             {
-                var accountsIds = context.AccountService.GetAccounts(new GetAccountsRequestData()).Select(t => t.Id);
-                foreach (var accountId in accountsIds)
+                try
                 {
-                    try
+                    var storage = GetStorage(accountId);
+                    var limits = GetAccountLimitsResponseData(accountId, storage, request.Data.ArchiveDays);
+                    limitsList.Add(new GetAllAccountsLimitsResponseData()
                     {
-                        var limits = GetAccountLimitsResponseData(accountId, context, request.Data.ArchiveDays);
-                        limitsList.Add(new GetAllAccountsLimitsResponseData()
-                        {
-                            AccountId = accountId,
-                            Limits = limits
-                        });
-                    }
-                    catch { }
+                        AccountId = accountId,
+                        Limits = limits
+                    });
                 }
+                catch { }
             }
 
             return new GetAllAccountsLimitsResponse()
@@ -2386,22 +2546,22 @@ namespace Zidium.Core
             };
         }
 
-        protected GetAccountLimitsResponseData GetAccountLimitsResponseData(Guid accountId, DispatcherContext context, int archiveDays)
+        // TODO Move to service
+        protected GetAccountLimitsResponseData GetAccountLimitsResponseData(Guid accountId, IStorage storage, int archiveDays)
         {
             // Получим проверяльщик лимитов
             var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-            var accountDbContext = context.GetAccountDbContext(accountId);
 
             // Получим максимальные лимиты
-            var hardLimit = checker.GetHardTariffLimit(accountDbContext);
+            var hardLimit = checker.GetHardTariffLimit(storage);
             var hardLimitInfo = GetTariffLimitInfo(hardLimit);
-            var softLimit = checker.GetSoftTariffLimit(accountDbContext);
+            var softLimit = checker.GetSoftTariffLimit(storage);
             var softLimitInfo = GetTariffLimitInfo(softLimit);
 
             // Получим использованные лимиты
-            var usedToday = checker.GetUsedTodayTariffLimit(accountDbContext);
-            var usedInstant = checker.GetUsedInstantTariffLimit(accountDbContext);
-            var usedOverall = checker.GetUsedOverallTariffLimit(accountDbContext, archiveDays);
+            var usedToday = checker.GetUsedTodayTariffLimit(storage);
+            var usedInstant = checker.GetUsedInstantTariffLimit(storage);
+            var usedOverall = checker.GetUsedOverallTariffLimit(storage, archiveDays);
 
             // Сформируем результат
             return new GetAccountLimitsResponseData()
@@ -2419,16 +2579,16 @@ namespace Zidium.Core
             CheckForLocalRequest(request);
             CheckRequest(request);
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.AccountManagementService;
-                service.MakeAccountFree(accountId);
-                context.SaveChanges();
+            AuthRequest(request);
 
-                var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-                checker.RefreshTariffLimit();
-            }
+            var accountId = request.Token.AccountId.Value;
+
+            var service = _configDbServicesFactory.GetAccountManagementService();
+            service.MakeAccountFree(accountId);
+
+            var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+            checker.RefreshTariffLimit();
+
             return new MakeAccountFreeResponse()
             {
                 Code = Zidium.Api.ResponseCode.Success
@@ -2445,16 +2605,15 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.AccountManagementService;
-                service.MakeAccountPaidAndSetLimits(accountId, request.Data);
-                context.SaveChanges();
+            AuthRequest(request);
 
-                var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-                checker.RefreshTariffLimit();
-            }
+            var accountId = request.Token.AccountId.Value;
+            var service = _configDbServicesFactory.GetAccountManagementService();
+            service.MakeAccountPaidAndSetLimits(accountId, request.Data);
+
+            var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+            checker.RefreshTariffLimit();
+
             return new MakeAccountPaidResponse()
             {
                 Code = Zidium.Api.ResponseCode.Success
@@ -2471,16 +2630,14 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var accountId = request.Token.AccountId.Value;
-                var service = context.AccountManagementService;
-                service.SetAccountLimits(accountId, request.Data.Limits, request.Data.Type);
-                context.SaveChanges();
+            AuthRequest(request);
 
-                var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-                checker.RefreshTariffLimit();
-            }
+            var accountId = request.Token.AccountId.Value;
+            var service = _configDbServicesFactory.GetAccountManagementService();
+            service.SetAccountLimits(accountId, request.Data.Limits, request.Data.Type);
+
+            var checker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+            checker.RefreshTariffLimit();
 
             return new SetAccountLimitsResponse()
             {
@@ -2488,7 +2645,8 @@ namespace Zidium.Core
             };
         }
 
-        protected AccountTotalLimitsDataInfo GetTariffLimitInfo(TariffLimit tariffLimit)
+        // TODO Move to service
+        protected AccountTotalLimitsDataInfo GetTariffLimitInfo(TariffLimitForRead tariffLimit)
         {
             var result = new AccountTotalLimitsDataInfo()
             {
@@ -2531,11 +2689,9 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.Id");
             }
 
-            AccountInfo accountInfo;
-            using (var context = GetDispatcherContext(request))
-            {
-                accountInfo = context.AccountService.GetOneById(request.Data.Id.Value);
-            }
+            AuthRequest(request);
+
+            var accountInfo = _configDbServicesFactory.GetAccountService().GetOneById(request.Data.Id.Value);
 
             return new GetAccountByIdResponse()
             {
@@ -2549,11 +2705,9 @@ namespace Zidium.Core
             CheckForLocalRequest(request);
             CheckRequest(request);
 
-            AccountInfo[] accountInfos;
-            using (var context = GetDispatcherContext(request))
-            {
-                accountInfos = context.AccountService.GetAccounts(request.Data);
-            }
+            AuthRequest(request);
+
+            var accountInfos = _configDbServicesFactory.GetAccountService().GetAccounts(request.Data);
 
             return new GetAccountsResponse()
             {
@@ -2567,11 +2721,11 @@ namespace Zidium.Core
             CheckForLocalRequest(request);
             CheckRequest(request);
 
-            AccountInfo accountInfo;
-            using (var context = GetDispatcherContext(request))
-            {
-                accountInfo = context.AccountService.Update(request.Data);
-            }
+            AuthRequest(request);
+
+            var service = _configDbServicesFactory.GetAccountService();
+            service.Update(request.Data);
+            var accountInfo = service.GetOneById(request.Data.Id);
 
             return new UpdateAccountResponse()
             {
@@ -2585,15 +2739,15 @@ namespace Zidium.Core
             CheckForLocalRequest(request);
             CheckRequest(request);
 
-            using (var context = GetDispatcherContext(request))
+            AuthRequest(request);
+
+            var newKey = _configDbServicesFactory.GetAccountService().ChangeApiKey(request.Data);
+
+            return new ChangeApiKeyResponse()
             {
-                var newKey = context.AccountService.ChangeApiKey(request.Data);
-                return new ChangeApiKeyResponse()
-                {
-                    Code = Zidium.Api.ResponseCode.Success,
-                    InternalData = newKey
-                };
-            }
+                Code = Zidium.Api.ResponseCode.Success,
+                InternalData = newKey
+            };
         }
 
         #endregion
@@ -2615,11 +2769,9 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.Id");
             }
 
-            DatabaseInfo databaseInfo;
-            using (var context = GetDispatcherContext(request))
-            {
-                databaseInfo = context.DatabaseService.GetOneById(request.Data.Id.Value);
-            }
+            AuthRequest(request);
+
+            var databaseInfo = _configDbServicesFactory.GetDatabaseService().GetOneById(request.Data.Id.Value);
 
             return new GetDatabaseByIdResponse()
             {
@@ -2633,11 +2785,9 @@ namespace Zidium.Core
             CheckForLocalRequest(request);
             CheckRequest(request);
 
-            DatabaseInfo[] databaseInfos;
-            using (var context = GetDispatcherContext(request))
-            {
-                databaseInfos = context.DatabaseService.GetDatabases();
-            }
+            AuthRequest(request);
+
+            var databaseInfos = _configDbServicesFactory.GetDatabaseService().GetDatabases();
 
             return new GetDatabasesResponse()
             {
@@ -2666,11 +2816,10 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.IsBroken");
             }
 
-            using (var context = GetDispatcherContext(request))
-            {
-                var service = context.DatabaseService;
-                service.SetIsBroken(request.Data.Id.Value, request.Data.IsBroken.Value);
-            }
+            AuthRequest(request);
+
+            var service = _configDbServicesFactory.GetDatabaseService();
+            service.SetIsBroken(request.Data.Id.Value, request.Data.IsBroken.Value);
 
             return new SetDatabaseIsBrokenResponse()
             {

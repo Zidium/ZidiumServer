@@ -3,29 +3,17 @@ using System.Linq;
 using System.Threading;
 using NLog;
 using Zidium.Agent.AgentTasks.Notifications;
-using Zidium.Api;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Xunit;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
-using EventImportance = Zidium.Core.Api.EventImportance;
-using UnitTestResult = Zidium.Api.UnitTestResult;
 
 namespace Zidium.Core.Tests.AgentTests
 {
     public class CreateNotificationTests
     {
-        private void SetUserLastName(TestAccountInfo account, User user, string lastName)
-        {
-            using (var accountDbContext = account.CreateAccountDbContext())
-            {
-                var fromDb = accountDbContext.Users.Find(user.Id);
-                fromDb.LastName = lastName;
-                user.LastName = lastName;
-                accountDbContext.SaveChanges();
-            }
-        }
-
         /// <summary>
         /// Проверим влияние объекта подписки
         /// </summary>
@@ -44,15 +32,10 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.False(unitTest.IsFake());
 
             // создадим 3-х пользователей
-            var user1 = TestHelper.CreateTestUser(account.Id);
-            var user2 = TestHelper.CreateTestUser(account.Id);
-            var user3 = TestHelper.CreateTestUser(account.Id);
+            var user1 = TestHelper.CreateTestUser(account.Id, displayName: "user1");
+            var user2 = TestHelper.CreateTestUser(account.Id, displayName: "user2");
+            var user3 = TestHelper.CreateTestUser(account.Id, displayName: "user3");
             var users = new[] { user1, user2, user3 };
-
-            // чтобы проще отлаживать дадим читабельные фамилии
-            SetUserLastName(account, user1, "user1");
-            SetUserLastName(account, user2, "user2");
-            SetUserLastName(account, user3, "user3");
 
             // настроим подписки:
             // все 3 пользователя имеют подписку по умолчанию (зеленый цвет)
@@ -119,7 +102,7 @@ namespace Zidium.Core.Tests.AgentTests
             }).Data.Id;
 
             // установим компоненту зеленый цвет
-            unitTest.SendResult(UnitTestResult.Success, TimeSpan.FromDays(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Success, TimeSpan.FromDays(1)).Check();
             account.SaveAllCaches();
 
             // Запустим обработку
@@ -138,7 +121,7 @@ namespace Zidium.Core.Tests.AgentTests
             var notify1 = notifications.Single(x => x.UserId == user1.Id && x.SubscriptionId == subscription1Id);
 
             // установим компоненту желтый цвет
-            unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromDays(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Warning, TimeSpan.FromDays(1)).Check();
             account.SaveAllCaches();
 
             // Запустим обработку
@@ -162,7 +145,7 @@ namespace Zidium.Core.Tests.AgentTests
 
 
             // установим компоненту красный цвет
-            unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromDays(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Alarm, TimeSpan.FromDays(1)).Check();
             account.SaveAllCaches();
 
             // Запустим обработку
@@ -212,11 +195,11 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красное событие
             var eventType = TestHelper.GetTestEventType(account.Id);
-            var eventResponse = dispatcher.SendEvent(account.Id, new Api.SendEventData()
+            var eventResponse = dispatcher.SendEvent(account.Id, new SendEventData()
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
@@ -227,7 +210,7 @@ namespace Zidium.Core.Tests.AgentTests
             processor.ProcessAccount(account.Id, component.Id, user.Id);
 
             // Проверим, что появилось уведомление с правильными параметрами
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
                 // Должно быть одно уведомление
                 var notifications = TestHelper.SendSubscriptionNotifications(account.Id, EventImportance.Alarm, component.Id, channel);
@@ -240,11 +223,10 @@ namespace Zidium.Core.Tests.AgentTests
                 Assert.Equal(channel, notification.Type);
 
                 // Проверим, что уведомление создано по событию красного статуса
-                var eventRepository = context.GetEventRepository();
-                var eventObj = eventRepository.GetByIdOrNull(notification.EventId);
+                var eventObj = context.Events.Find(notification.EventId);
 
                 Assert.NotNull(eventObj);
-                Assert.Equal(Api.EventCategory.ComponentExternalStatus, eventObj.Category);
+                Assert.Equal(EventCategory.ComponentExternalStatus, eventObj.Category);
                 Assert.Equal(EventImportance.Alarm, eventObj.Importance);
                 Assert.Equal(component.Id, eventObj.OwnerId);
             }
@@ -296,10 +278,10 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
-            Assert.Equal(ResponseCode.ObjectDisabled, eventResponse.Code);
+            Assert.Equal(Zidium.Api.ResponseCode.ObjectDisabled, eventResponse.Code);
             account.SaveAllCaches();
 
             // Запустим обработку
@@ -356,7 +338,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             eventResponse.Check();
@@ -419,11 +401,13 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
             account.SaveAllCaches();
+
+            now = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку через 9 секунд
             processor.SetNow(now.AddSeconds(9));
@@ -481,7 +465,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
@@ -561,9 +545,9 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим жёлтую проверку
             var unitTest = component.GetOrCreateUnitTestControl("test");
-            unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromHours(1)).Check();
-            var sendTime = dispatcher.GetServerTime().Data.Date;
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Warning, TimeSpan.FromHours(1)).Check();
             account.SaveAllCaches();
+            var sendTime = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку
             var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
@@ -584,12 +568,12 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(1, notifications.Count);
 
             // изменим статус на красный
-            unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromHours(1));
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Alarm, TimeSpan.FromHours(1));
 
             // и сразу опять изменим на желтый
-            unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromHours(1));
-            sendTime = dispatcher.GetServerTime().Data.Date;
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Warning, TimeSpan.FromHours(1));
             account.SaveAllCaches();
+            sendTime = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку ещё раз
             processor.SetNow(sendTime.AddSeconds(10));
@@ -609,7 +593,7 @@ namespace Zidium.Core.Tests.AgentTests
             ////////////////////////////////
 
             // Отправим красную проверку
-            unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromHours(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Alarm, TimeSpan.FromHours(1)).Check();
             account.SaveAllCaches();
             sendTime = dispatcher.GetServerTime().Data.Date;
 
@@ -629,12 +613,12 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, notifications.Count);
 
             // изменим статус на зеленый
-            unitTest.SendResult(UnitTestResult.Success, TimeSpan.FromHours(1));
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Success, TimeSpan.FromHours(1));
 
             // и сразу опять изменим на красный
-            unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromHours(1));
-            sendTime = dispatcher.GetServerTime().Data.Date;
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Alarm, TimeSpan.FromHours(1));
             account.SaveAllCaches();
+            sendTime = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку ещё раз
             processor.SetNow(sendTime.AddSeconds(10));
@@ -661,10 +645,18 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Добавим пользователю http-контакт
             var url = @"http://localhost/url";
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = account.GetAccountDbContext())
             {
-                var repository = context.GetUserRepository();
-                repository.AddContactToUser(user.Id, UserContactType.Http, url, componentControl.Client.ToServerTime(DateTime.Now));
+                var contact = new DbUserContact()
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Type = UserContactType.Http,
+                    CreateDate = componentControl.Client.ToServerTime(DateTime.Now),
+                    Value = url
+                };
+                context.UserContacts.Add(contact);
+                context.SaveChanges();
             }
 
             // Подпишемся на красное событие
@@ -686,7 +678,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm
             });
             Assert.True(eventResponse.Success);
@@ -732,7 +724,7 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Отправим красную проверку
             var unitTest = component.GetOrCreateUnitTestControl("test");
-            unitTest.SendResult(UnitTestResult.Alarm, TimeSpan.FromMinutes(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Alarm, TimeSpan.FromMinutes(1)).Check();
             account.SaveAllCaches();
 
             // Запустим обработку
@@ -746,7 +738,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
 
             // Отправим зелёную проверку
-            unitTest.SendResult(UnitTestResult.Success, TimeSpan.FromMinutes(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Success, TimeSpan.FromMinutes(1)).Check();
             account.SaveAllCaches();
 
             // Проверим, что снова получили уведомление (о том, что стало лучше)
@@ -757,7 +749,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(NotificationReason.BetterStatus, notification.Reason);
 
             // Отправим жёлтую проверку
-            unitTest.SendResult(UnitTestResult.Warning, TimeSpan.FromMinutes(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Warning, TimeSpan.FromMinutes(1)).Check();
             account.SaveAllCaches();
 
             // Проверим, что создалось уведомление
@@ -768,7 +760,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(NotificationReason.NewImportanceStatus, notification.Reason);
 
             // Отправим зелёную проверку
-            unitTest.SendResult(UnitTestResult.Success, TimeSpan.FromMinutes(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Success, TimeSpan.FromMinutes(1)).Check();
             account.SaveAllCaches();
 
             // Проверим, что снова получили уведомление (потому что перешли ИЗ жёлтого статуса)
@@ -779,7 +771,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(NotificationReason.BetterStatus, notification.Reason);
 
             // Отправим серую проверку
-            unitTest.SendResult(UnitTestResult.Unknown, TimeSpan.FromMinutes(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Unknown, TimeSpan.FromMinutes(1)).Check();
             account.SaveAllCaches();
 
             // Проверим, что уведомления нет
@@ -788,7 +780,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, notifications.Count);
 
             // Отправим зелёную проверку
-            unitTest.SendResult(UnitTestResult.Success, TimeSpan.FromMinutes(1)).Check();
+            unitTest.SendResult(Zidium.Api.UnitTestResult.Success, TimeSpan.FromMinutes(1)).Check();
             account.SaveAllCaches();
 
             // Проверим, что уведомления нет
@@ -828,7 +820,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
             Assert.True(eventResponse.Success);
@@ -844,10 +836,18 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Добавим пользователю новый контакт
             var newEmail = Guid.NewGuid() + "@test.com";
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = account.GetAccountDbContext())
             {
-                var userRepository = context.GetUserRepository();
-                userRepository.AddContactToUser(user.Id, UserContactType.Email, newEmail, componentControl.Client.ToServerTime(DateTime.Now));
+                var contact = new DbUserContact()
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    Type = UserContactType.Email,
+                    CreateDate = componentControl.Client.ToServerTime(DateTime.Now),
+                    Value = newEmail
+                };
+                context.UserContacts.Add(contact);
+                context.SaveChanges();
             }
             account.SaveAllCaches();
 
@@ -892,7 +892,7 @@ namespace Zidium.Core.Tests.AgentTests
             var sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,
-                Result = Core.Api.UnitTestResult.Alarm,
+                Result = UnitTestResult.Alarm,
                 ActualIntervalSeconds = TimeSpan.FromHours(1).TotalSeconds
             });
             Assert.True(sendUnitTestResult.Success);
@@ -912,7 +912,7 @@ namespace Zidium.Core.Tests.AgentTests
             sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,
-                Result = Core.Api.UnitTestResult.Success,
+                Result = UnitTestResult.Success,
                 ActualIntervalSeconds = TimeSpan.FromHours(1).TotalSeconds
             });
             Assert.True(sendUnitTestResult.Success);
@@ -930,7 +930,7 @@ namespace Zidium.Core.Tests.AgentTests
             sendUnitTestResult = dispatcher.SendUnitTestResult(account.Id, new Api.SendUnitTestResultRequestData()
             {
                 UnitTestId = unittest.Id,
-                Result = Core.Api.UnitTestResult.Alarm,
+                Result = UnitTestResult.Alarm,
                 ActualIntervalSeconds = TimeSpan.FromHours(1).TotalSeconds
             });
             Assert.True(sendUnitTestResult.Success);
@@ -959,12 +959,8 @@ namespace Zidium.Core.Tests.AgentTests
             var component = account.CreateTestApplicationComponent();
 
             // Установим часовой пояс клиента UTC +04:00
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var userSettingService = accountDbContext.GetUserSettingService();
-                userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
-                accountDbContext.SaveChanges();
-            }
+            var userSettingService = new UserSettingService(TestHelper.GetStorage(account.Id));
+            userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
 
             // Подпишемся на красное событие
             var dispatcher = TestHelper.GetDispatcherClient();
@@ -991,7 +987,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm
             });
             Assert.True(eventResponse.Success);
@@ -1025,12 +1021,8 @@ namespace Zidium.Core.Tests.AgentTests
             var component = account.CreateTestApplicationComponent();
 
             // Установим часовой пояс клиента UTC +04:00
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var userSettingService = accountDbContext.GetUserSettingService();
-                userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
-                accountDbContext.SaveChanges();
-            }
+            var userSettingService = new UserSettingService(TestHelper.GetStorage(account.Id));
+            userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
 
             // Подпишемся на красное событие
             var dispatcher = TestHelper.GetDispatcherClient();
@@ -1057,7 +1049,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm
             });
             Assert.True(eventResponse.Success);
@@ -1089,12 +1081,8 @@ namespace Zidium.Core.Tests.AgentTests
             var component = account.CreateTestApplicationComponent();
 
             // Установим часовой пояс клиента UTC +04:00
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var userSettingService = accountDbContext.GetUserSettingService();
-                userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
-                accountDbContext.SaveChanges();
-            }
+            var userSettingService = new UserSettingService(TestHelper.GetStorage(account.Id));
+            userSettingService.TimeZoneOffsetMinutes(user.Id, 4 * 60);
 
             // Подпишемся на красное событие
             var dispatcher = TestHelper.GetDispatcherClient();
@@ -1121,7 +1109,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 TypeSystemName = eventType.SystemName,
                 ComponentId = component.Id,
-                Category = Api.EventCategory.ApplicationError,
+                Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm
             });
             Assert.True(eventResponse.Success);

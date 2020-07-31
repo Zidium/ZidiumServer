@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -14,8 +17,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -23,8 +27,8 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
             return View(model);
         }
 
@@ -47,8 +51,7 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
         }
@@ -56,7 +59,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
             return View(model);
         }
 
@@ -88,40 +91,44 @@ namespace Zidium.UserAccount.Controllers
             model.Url = uri.OriginalString;
             model.Period = TimeSpan.FromDays(1);
 
-            var unitTest = SaveSimpleCheck(model);
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
+            return GetSuccessJsonResponse(unitTestId);
         }
-
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
-        {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            return unitTestRepository.QueryAll()
-                .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.SslTestType.Id && t.SslCertificateExpirationDateRule != null && t.SslCertificateExpirationDateRule.Url == model.Url && t.IsDeleted == false);
-        }
-
 
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Срок годности SSL-сертификата сайта " + model.Url;
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.SslCertificateExpirationDateRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                unitTest.SslCertificateExpirationDateRule = new UnitTestSslCertificateExpirationDateRule()
+                var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
                 {
-                    WarningDaysCount = 30,
-                    AlarmDaysCount = 14
-                };
+                    var ruleForAdd = new UnitTestSslCertificateExpirationDateRuleForAdd()
+                    {
+                        UnitTestId = unitTestId,
+                        WarningDaysCount = 30,
+                        AlarmDaysCount = 14
+                    };
+                    storage.UnitTestSslCertificateExpirationDateRules.Add(ruleForAdd);
+                    rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(unitTestId);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Url.Set(model.Url);
+                storage.UnitTestSslCertificateExpirationDateRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            unitTest.SslCertificateExpirationDateRule.Url = model.Url;
         }
 
         protected string GetHostFromUrl(string url)
@@ -142,14 +149,15 @@ namespace Zidium.UserAccount.Controllers
             return ComponentHelper.GetSystemNameByHost(host);
         }
 
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            model.Url = unitTest.SslCertificateExpirationDateRule.Url;
+            var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            model.Url = rule.Url;
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.SslTestType.Id;
+            return SystemUnitTestType.SslTestType.Id;
         }
 
         /// <summary>

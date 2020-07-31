@@ -3,32 +3,33 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.ExtentionProperties;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ExtentionPropertiesController : ContextController
+    public class ExtentionPropertiesController : BaseController
     {
         public ActionResult ShowTable(Guid? logId, Guid? eventId, Guid? componentId)
         {
+            var storage = GetStorage();
             ExtentionPropertiesModel model = null;
             if (logId.HasValue)
             {
-                var log = CurrentAccountDbContext.Logs.Find(logId);
-                model = ExtentionPropertiesModel.Create(log);
+                var properties = storage.LogProperties.GetByLogId(logId.Value);
+                model = ExtentionPropertiesModel.Create(properties);
             }
             else if (eventId.HasValue)
             {
-                var eventObj = CurrentAccountDbContext.Events.Find(eventId);
-                model = ExtentionPropertiesModel.Create(eventObj);
+                var properties = storage.EventProperties.GetByEventId(eventId.Value);
+                model = ExtentionPropertiesModel.Create(properties);
             }
             else if (componentId.HasValue)
             {
-                var component = CurrentAccountDbContext.Components.Find(componentId);
-                model = ExtentionPropertiesModel.Create(component);
+                var properties = storage.ComponentProperties.GetByComponentId(componentId.Value);
+                model = ExtentionPropertiesModel.Create(properties);
             }
             else
             {
@@ -41,7 +42,7 @@ namespace Zidium.UserAccount.Controllers
         {
             if (owner == ExtentionPropertyOwner.Log)
             {
-                var property = CurrentAccountDbContext.LogProperties.Find(id);
+                var property = GetStorage().LogProperties.GetOneById(id);
                 if (property == null)
                 {
                     return null;
@@ -56,7 +57,7 @@ namespace Zidium.UserAccount.Controllers
             }
             if (owner == ExtentionPropertyOwner.Event)
             {
-                var property = CurrentAccountDbContext.EventProperties.Find(id);
+                var property = GetStorage().EventProperties.GetOneById(id);
                 if (property == null)
                 {
                     return null;
@@ -71,7 +72,7 @@ namespace Zidium.UserAccount.Controllers
             }
             if (owner == ExtentionPropertyOwner.Component)
             {
-                var property = CurrentAccountDbContext.ComponentProperties.Find(id);
+                var property = GetStorage().ComponentProperties.GetOneById(id);
                 if (property == null)
                 {
                     return null;
@@ -95,7 +96,7 @@ namespace Zidium.UserAccount.Controllers
                 throw new HttpException(404, "Файл не найден");
             }
 
-            // банарный файл
+            // бинарный файл
             if (row.DataType == DataType.Binary)
             {
                 var contentType = GuiHelper.GetContentType(row.Name);

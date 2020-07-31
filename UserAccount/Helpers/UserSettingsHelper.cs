@@ -1,35 +1,34 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Helpers
 {
     public class UserSettingsHelper
     {
-        private Guid _accountId;
-        private Guid _userId;
-        private IUserSettingRepository _repository;
-
-        public UserSettingsHelper(Guid accauntId, Guid userId, IUserSettingRepository repository)
+        public UserSettingsHelper(Guid userId, IStorage storage)
         {
-            _accountId = accauntId;
             _userId = userId;
-            _repository = repository;
+            _storage = storage;
         }
+
+        private readonly Guid _userId;
+
+        private readonly IStorage _storage;
 
         private string GetStringOrNull(string key)
         {
-            return _repository.GetValue(_userId, key);
+            return _storage.UserSettings.GetValue(_userId, key);
         }
 
         private void SetValue(string key, string value)
         {
-            _repository.SetValue(_userId, key, value);
+            _storage.UserSettings.SetValue(_userId, key, value);
         }
 
         public void SetBool(string key, bool value)
         {
             var valueToString = value ? "true" : "false";
-            _repository.SetValue(_userId, key, valueToString);  
+            _storage.UserSettings.SetValue(_userId, key, valueToString);  
         }
 
         public bool GetBool(string key, bool defaultValue = false)

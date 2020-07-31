@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
@@ -17,7 +17,7 @@ namespace Zidium.UserAccount.Models.Subscriptions
 
         public Guid ComponentId { get; set; }
 
-        public Subscription[] Subscriptions { get; set; }
+        public SubscriptionInfo[] Subscriptions { get; set; }
 
         public Guid? UserId { get; set; }
 
@@ -27,41 +27,36 @@ namespace Zidium.UserAccount.Models.Subscriptions
 
         public ViewModeCode ViewMode { get; set; }
 
-        public Subscription GetSubscription(Guid userId, SubscriptionChannel channel)
+        public SubscriptionInfo GetSubscription(Guid userId, SubscriptionChannel channel)
         {
-            return Subscriptions.FirstOrDefault(x => x.UserId == userId && x.Channel == channel);
+            return Subscriptions.FirstOrDefault(x => x.Info.UserId == userId && x.Info.Channel == channel);
         }
 
-        public void Init()
+        public SubscriptionChannel[] Channels { get; set; }
+
+        // TODO Move to controller
+        public void Init(IStorage storage)
         {
             Channels = SubscriptionHelper.AvailableSubscriptionChannels;
 
-            var accountDbContext = FullRequestContext.Current.AccountDbContext;
             CurrentUserId = FullRequestContext.Current.CurrentUser.Id;
 
-            var subscriptionsQuery = accountDbContext
-                .GetSubscriptionRepository()
-                .QueryAll()
-                .Where(x => x.User.InArchive == false);
+            var channelsForFilter = Channel.HasValue ? new[] {Channel.Value} : null;
+            var subscriptions = storage.Subscriptions.Filter(UserId, channelsForFilter);
 
-            if (Channel.HasValue)
-            {
-                subscriptionsQuery = subscriptionsQuery.Where(x => x.Channel == Channel);
-            }
-            if (UserId.HasValue)
-            {
-                subscriptionsQuery = subscriptionsQuery.Where(x => x.UserId == UserId);
-            }
-
-            var component = accountDbContext.GetComponentRepository().GetById(ComponentId);
-            var subscriptions = subscriptionsQuery.ToArray();
-            var filtered = new List<Subscription>();
+            var component = storage.Components.GetOneById(ComponentId);
+            var filtered = new List<SubscriptionInfo>();
             var userGroups = subscriptions.GroupBy(x => x.UserId);
 
             var channels = SubscriptionHelper.AvailableSubscriptionChannels;
 
             foreach (var userGroup in userGroups)
             {
+                var user = storage.Users.GetOneById(userGroup.Key);
+
+                if (user.InArchive)
+                    continue;
+
                 foreach (var channel in channels)
                 {
                     // подписка на компонент
@@ -73,7 +68,11 @@ namespace Zidium.UserAccount.Models.Subscriptions
 
                     if (onComponent != null)
                     {
-                        filtered.Add(onComponent);
+                        filtered.Add(new SubscriptionInfo()
+                        {
+                            Info = onComponent,
+                            UserName = user.FioOrLogin()
+                        });
                         continue;
                     }
 
@@ -84,7 +83,11 @@ namespace Zidium.UserAccount.Models.Subscriptions
 
                     if (onComponentType != null)
                     {
-                        filtered.Add(onComponentType);
+                        filtered.Add(new SubscriptionInfo()
+                        {
+                            Info = onComponentType,
+                            UserName = user.FioOrLogin()
+                        });
                         continue;
                     }
 
@@ -92,18 +95,27 @@ namespace Zidium.UserAccount.Models.Subscriptions
                     var defaultSubscription = userSubscriptions.SingleOrDefault(x => x.Object == SubscriptionObject.Default);
                     if (defaultSubscription != null)
                     {
-                        filtered.Add(defaultSubscription);
+                        filtered.Add(new SubscriptionInfo()
+                        {
+                            Info = defaultSubscription,
+                            UserName = user.FioOrLogin()
+                        });
                     }
                 }
             }
 
             Subscriptions = filtered
-                .OrderBy(x => x.UserId)
-                .ThenBy(x => x.User.LastName)
-                .ThenBy(x => x.Channel)
+                .OrderBy(x => x.UserName)
+                .ThenBy(x => x.Info.Channel)
                 .ToArray();
         }
 
-        public SubscriptionChannel[] Channels { get; set; }
+        public class SubscriptionInfo
+        {
+            public SubscriptionForRead Info;
+
+            public string UserName;
+        }
+
     }
 }

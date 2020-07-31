@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Web.Mvc;
 using System.Web.Security;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Controllers
 {
-    public class AccountController : ContextController
+    public class AccountController : BaseController
     {
         public ActionResult Logon(string returnUrl)
         {
@@ -30,16 +31,17 @@ namespace Zidium.UserAccount.Controllers
 
             var accountName = GetAccountName();
 
-            var userService = new UserService(DbContext);
+            var userService = new UserService(null);
 
             try
             {
                 var authInfo = userService.Auth(model.UserName, model.Password, accountName);
 
-                var tokenService = new TokenService(DbContext);
+                var storage = GetStorage(authInfo.AccountId);
+                var tokenService = new TokenService(storage);
                 var token = tokenService.GenerateToken(authInfo.AccountId, authInfo.User.Id, TokenPurpose.Logon, TimeSpan.FromMinutes(1));
 
-                var account = ConfigDbServicesHelper.GetAccountService().GetOneById(authInfo.AccountId);
+                var account = GetConfigDbServicesFactory().GetAccountService().GetOneById(authInfo.AccountId);
 
                 var currentUrl = Url.ToAbsolute(Url.Current().ToString());
                 var logonUrl = Url.Action("LogonByToken", new { id = token.Id, accountId = account.Id, rememberMe = model.RememberMe, returnUrl = model.ReturnUrl });
@@ -69,7 +71,8 @@ namespace Zidium.UserAccount.Controllers
         [AllowAnonymous]
         public ActionResult LogonByToken(Guid id, Guid accountId, string returnUrl = null, bool rememberMe = false, bool isSwitched = false)
         {
-            var tokenService = new TokenService(DbContext);
+            var storage = GetStorage(accountId);
+            var tokenService = new TokenService(storage);
             try
             {
                 var token = tokenService.UseToken(accountId, id, TokenPurpose.Logon);
@@ -90,7 +93,7 @@ namespace Zidium.UserAccount.Controllers
         private string GetAccountName()
         {
             var requestUrl = Url.ToAbsolute(Url.Current().ToString());
-            var accountName = ConfigDbServicesHelper.GetUrlService().GetAccountNameFromUrl(requestUrl);
+            var accountName = GetConfigDbServicesFactory().GetUrlService().GetAccountNameFromUrl(requestUrl);
             return accountName;
         }
 

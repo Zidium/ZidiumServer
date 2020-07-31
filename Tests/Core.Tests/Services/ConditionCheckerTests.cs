@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Xunit;
-using Zidium.Core;
 
 namespace Zidium.Core.Tests.Services
 {

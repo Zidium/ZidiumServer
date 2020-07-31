@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zidium.Core.AccountsDb;
+using Zidium.Core.AccountDb;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
 
@@ -9,7 +9,7 @@ namespace Zidium.UserAccount
 {
     public static class TimelineHelper
     {
-        public static List<TimelineItemModel> GetTimelineItemsByStates(this ContextController controller, TimelineState[] states, DateTime from, DateTime to)
+        public static List<TimelineItemModel> GetTimelineItemsByStates(this BaseController controller, TimelineState[] states, DateTime from, DateTime to)
         {
             var totalDuration = to - from;
             TimeSpan step;

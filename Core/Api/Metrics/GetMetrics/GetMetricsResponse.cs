@@ -2,7 +2,7 @@
 
 namespace Zidium.Core.Api
 {
-    public class GetMetricsResponse : ResponseT<List<MetricInfo>>
+    public class GetMetricsResponse : ResponseT<MetricInfo[]>
     {
     }
 }

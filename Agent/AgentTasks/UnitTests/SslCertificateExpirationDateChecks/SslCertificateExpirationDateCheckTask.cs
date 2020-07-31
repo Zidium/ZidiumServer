@@ -6,7 +6,7 @@ namespace Zidium.Agent.AgentTasks
     {
         public SslCertificateExpirationDateCheckTask()
         {
-            ExecutionPeriod = TimeSpan.FromSeconds(5);
+            ExecutionPeriod = TimeSpan.FromMinutes(1);
         }
 
         protected override AgentTaskResult Do()

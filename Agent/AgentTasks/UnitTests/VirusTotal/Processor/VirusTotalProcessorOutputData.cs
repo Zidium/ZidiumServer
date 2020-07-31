@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 {

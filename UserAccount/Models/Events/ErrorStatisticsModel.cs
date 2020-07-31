@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Events
 {
@@ -12,11 +11,13 @@ namespace Zidium.UserAccount.Models.Events
     {
         public class EventTypeData
         {
-            public EventType EventType { get; set; }
+            public EventTypeForRead EventType { get; set; }
 
             public int Count { get; set; }
 
             public string Message { get; set; }
+
+            public Models.Defects.DefectControlModel DefectControl { get; set; }
         }
 
         public enum ShowMode
@@ -35,17 +36,18 @@ namespace Zidium.UserAccount.Models.Events
 
         public Guid? ComponentId { get; set; }
 
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
         public List<EventTypeData> EventTypeDatas { get; set; }
 
         public ShowMode Mode { get; set; }
 
-        public void LoadData(Guid accountId, AccountDbContext accountDbContext)
+        // TODO Move to controller
+        public void LoadData(Guid accountId, IStorage storage)
         {
             if (ComponentId.HasValue)
             {
-                Component = accountDbContext.GetComponentRepository().GetById(ComponentId.Value);
+                Component = storage.Components.GetOneById(ComponentId.Value);
             }
 
             var periodRange = ReportPeriodHelper.GetRange(Period);
@@ -75,19 +77,21 @@ namespace Zidium.UserAccount.Models.Events
             }
 
             // загружаем события
-            var events = accountDbContext.GetEventRepository().GetErrorsByPeriod(FromTime, ToTime).Include(t => t.EventType);
+            var events = storage.Events.GetErrorsByPeriod(ComponentId, FromTime, ToTime);
+            var eventTypes = storage.EventTypes.GetMany(events.Select(t => t.EventTypeId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
 
-            if (ComponentId.HasValue)
+            var data = events.Select(t => new
             {
-                events = events.Where(x => x.OwnerId == ComponentId);
-            }
+                Event = t,
+                EventType = eventTypes[t.EventTypeId]
+            });
 
             if (Mode == ShowMode.NotProcessed)
             {
-                events = events.Where(t => t.EventType.DefectId == null);
+                data = data.Where(t => t.EventType.DefectId == null);
             }
 
-            var eventsArray = events.OrderBy(x => x.StartDate).ToArray();
+            var eventsArray = data.OrderBy(x => x.Event.StartDate).ToArray();
 
             // EventTypeDatas
             EventTypeDatas = new List<EventTypeData>();
@@ -97,9 +101,21 @@ namespace Zidium.UserAccount.Models.Events
                 var eventTypeData = new EventTypeData
                 {
                     EventType = eventTypeGroup.Key,
-                    Count = eventTypeGroup.Sum(t => t.Count),
-                    Message = eventTypeGroup.First().Message
+                    Count = eventTypeGroup.Sum(t => t.Event.Count),
+                    Message = eventTypeGroup.First().Event.Message
                 };
+
+                var eventType = storage.EventTypes.GetOneById(eventTypeData.EventType.Id);
+                var defect = eventType.DefectId != null ? storage.Defects.GetOneById(eventType.DefectId.Value) : null;
+                var lastChange = defect != null ? storage.DefectChanges.GetLastByDefectId(defect.Id) : null;
+
+                eventTypeData.DefectControl = new Defects.DefectControlModel()
+                {
+                    EventType = eventType,
+                    Defect = defect,
+                    LastChange = lastChange
+                };
+
                 EventTypeDatas.Add(eventTypeData);
             }
 

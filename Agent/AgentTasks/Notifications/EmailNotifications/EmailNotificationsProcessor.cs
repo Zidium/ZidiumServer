@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using NLog;
 using Zidium.Core.Common;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -19,53 +18,60 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected override SubscriptionChannel[] Channels { get; } = new[] { SubscriptionChannel.Email };
 
-        protected override void Send(
-            ILogger logger,
-            Notification notification,
-            AccountDbContext accountDbContext,
-            string accountName, 
-            Guid accountId)
+        protected override void Send(ILogger logger,
+            NotificationForRead notification,
+            IStorage storage,
+            string accountName,
+            Guid accountId, 
+            NotificationForUpdate notificationForUpdate)
         {
-            var componentRepository = accountDbContext.GetComponentRepository();
-            var component = componentRepository.GetById(notification.Event.OwnerId);
-            var path = ComponentHelper.GetComponentPathText(component);
+            var eventObj = storage.Events.GetOneById(notification.EventId);
+            var component = storage.Components.GetOneById(eventObj.OwnerId);
+            var path = ComponentHelper.GetComponentPathText(component, storage);
 
-            var subject = string.Format("{0} - {1}", path, GetEventImportanceText(notification.Event.Importance));
+            var subject = string.Format("{0} - {1}", path, GetEventImportanceText(eventObj.Importance));
             if (notification.Reason == NotificationReason.Reminder)
             {
                 subject += " (напоминание)";
             }
 
             // составляем тело письма
-            var user = accountDbContext.GetUserRepository().GetById(notification.UserId);
-            var htmlBody = GetStatusEventHtml(user, logger, notification, component, accountDbContext, accountName);
+            var user = storage.Users.GetOneById(notification.UserId);
+            var htmlBody = GetStatusEventHtml(user, logger, notification, component, storage, accountName, eventObj);
 
             // сохраняем письмо в очередь
-            var emailRepository = accountDbContext.GetSendEmailCommandRepository();
-            var command = new SendEmailCommand()
+            var command = new SendEmailCommandForAdd()
             {
                 Id = Guid.NewGuid(),
+                Status = EmailStatus.InQueue,
+                CreateDate = DateTime.Now,
                 Body = htmlBody,
                 IsHtml = true,
                 Subject = subject,
                 To = notification.Address,
                 ReferenceId = notification.Id
             };
-            emailRepository.Add(command);
+            storage.SendEmailCommands.Add(command);
 
             // заполним ссылку на письмо в уведомлении
-            notification.SendEmailCommand = command;
+            notificationForUpdate.SendEmailCommandId.Set(command.Id);
         }
 
-        protected Event GetRecentReasonEvent(Event statusEvent, AccountDbContext accountDbContext)
+        protected EventForRead GetRecentReasonEvent(EventForRead statusEvent, IStorage storage)
         {
-            var repository = accountDbContext.GetEventRepository();
-            return repository.GetRecentReasonEvent(statusEvent);
+            var service = new EventService(storage);
+            return service.GetRecentReasonEvent(statusEvent);
         }
 
-        protected string GetStatusEventHtml(User user, ILogger logger, Notification notification, Component component, AccountDbContext accountDbContext, string accountName)
+        protected string GetStatusEventHtml(
+            UserForRead user, 
+            ILogger logger, 
+            NotificationForRead notification, 
+            ComponentForRead component, 
+            IStorage storage, 
+            string accountName,
+            EventForRead statusEvent)
         {
-            var statusEvent = notification.Event;
             var html = new HtmlRender();
 
             if (notification.Reason == NotificationReason.Reminder)
@@ -84,10 +90,10 @@ namespace Zidium.Agent.AgentTasks.Notifications
             html.Write(statusTimeText);
             html.Write(" компонент ");
 
-            var componentPathText = ComponentHelper.GetComponentPathText(component);
+            var componentPathText = ComponentHelper.GetComponentPathText(component, storage);
             html.Write(componentPathText);
 
-            if (statusEvent.ImportanceHasGrown)
+            if (statusEvent.ImportanceHasGrown())
                 html.Write(" перешёл в статус ");
             else
                 html.Write(" вернулся в статус ");
@@ -100,9 +106,9 @@ namespace Zidium.Agent.AgentTasks.Notifications
             html.Write(".");
 
             // Причину показываем, только если статус стал опаснее
-            if (statusEvent.ImportanceHasGrown)
+            if (statusEvent.ImportanceHasGrown())
             {
-                var reasonEvent = GetRecentReasonEvent(statusEvent, accountDbContext);
+                var reasonEvent = GetRecentReasonEvent(statusEvent, storage);
 
                 if (reasonEvent != null)
                 {
@@ -116,8 +122,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Причиной стала ошибка 5412584 - Данный ключ отсутствует в словаре
                         html.Write("Причиной стала ");
 
-                        var eventTypeRepository = accountDbContext.GetEventTypeRepository();
-                        var errorType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+                        var errorType = storage.EventTypes.GetOneById(reasonEvent.EventTypeId);
                         var errorTitle = "ошибка";
 
                         if (errorType.Code != null)
@@ -135,11 +140,12 @@ namespace Zidium.Agent.AgentTasks.Notifications
                             html.Write(": " + reasonEvent.Message);
                         }
 
-                        if (reasonEvent.Properties.Count > 0)
+                        var reasonEventProperties = storage.EventProperties.GetByEventId(reasonEvent.Id);
+                        if (reasonEventProperties.Length > 0)
                         {
                             html.NewLine();
                             html.NewLine();
-                            WriteEventPropertiesTable(html, reasonEvent, "Дополнительные свойства ошибки:");
+                            WriteEventPropertiesTable(html, reasonEventProperties, "Дополнительные свойства ошибки:");
                         }
                     }
 
@@ -150,8 +156,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Причиной стало событие компонента Запуск компонента: Данный ключ отсутствует в словаре
                         html.Write("Причиной стало ");
 
-                        var eventTypeRepository = accountDbContext.GetEventTypeRepository();
-                        var componentEventType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+                        var componentEventType = storage.EventTypes.GetOneById(reasonEvent.EventTypeId);
 
                         var reasonEventUrl = UrlHelper.GetEventUrl(reasonEvent.Id, accountName);
                         html.WriteLink(reasonEventUrl, " событие " + componentEventType.DisplayName);
@@ -160,19 +165,20 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         {
                             html.Write(": " + reasonEvent.Message);
                         }
-                        if (reasonEvent.Properties.Count > 0)
+
+                        var reasonEventProperties = storage.EventProperties.GetByEventId(reasonEvent.Id);
+                        if (reasonEventProperties.Length > 0)
                         {
                             html.NewLine();
                             html.NewLine();
-                            WriteEventPropertiesTable(html, reasonEvent, "Дополнительные свойства события компонента:");
+                            WriteEventPropertiesTable(html, reasonEventProperties, "Дополнительные свойства события компонента:");
                         }
                     }
 
                     // причина - статус дочернего компонента
                     if (reasonEvent.Category == EventCategory.ComponentExternalStatus)
                     {
-                        var componentRepository = accountDbContext.GetComponentRepository();
-                        var childComponent = componentRepository.GetById(reasonEvent.OwnerId);
+                        var childComponent = storage.Components.GetOneById(reasonEvent.OwnerId);
 
                         // Делаем строку:
                         // Причиной стал статус ОШИБКА дочернего компонента ВИДЕОКАМЕРА
@@ -187,8 +193,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     // причина - результат проверки
                     if (reasonEvent.Category == EventCategory.UnitTestResult)
                     {
-                        var unitTestRepository = accountDbContext.GetUnitTestRepository();
-                        var unitTest = unitTestRepository.GetById(reasonEvent.OwnerId);
+                        var unitTest = storage.UnitTests.GetOneById(reasonEvent.OwnerId);
 
                         // Делаем строку:
                         // Причиной стал РЕЗУЛЬТАТ проверки МОЯ ПРОВЕРКА: Превышен таймаут выполнения запроса
@@ -203,24 +208,23 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         {
                             html.Write(": " + reasonEvent.Message);
                         }
-                        if (reasonEvent.Properties.Count > 0)
+
+                        var reasonEventProperties = storage.EventProperties.GetByEventId(reasonEvent.Id);
+                        if (reasonEventProperties.Length > 0)
                         {
                             html.NewLine();
                             html.NewLine();
-                            WriteEventPropertiesTable(html, reasonEvent, "Дополнительные свойства результата проверки:");
+                            WriteEventPropertiesTable(html, reasonEventProperties, "Дополнительные свойства результата проверки:");
                         }
                     }
 
                     // причина - значение метрики
                     if (reasonEvent.Category == EventCategory.MetricStatus)
                     {
-                        var metricRepository = accountDbContext.GetMetricRepository();
-                        var metric = metricRepository.GetById(reasonEvent.OwnerId);
-                        var metricHistoryRepository = accountDbContext.GetMetricHistoryRepository();
+                        var metric = storage.Metrics.GetOneById(reasonEvent.OwnerId);
+                        var metricType = storage.MetricTypes.GetOneById(metric.MetricTypeId);
 
-                        var firstValue = metricHistoryRepository.GetAllByStatus(reasonEvent.Id)
-                                .OrderBy(x => x.BeginDate)
-                                .FirstOrDefault();
+                        var firstValue = storage.MetricHistory.GetFirstByStatusEventId(reasonEvent.Id);
 
                         var firstValueText = firstValue != null ? firstValue.Value.ToString() : "null";
 
@@ -228,7 +232,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         // Причиной стало значение метрики CPU, % = 200
 
                         html.Write("Причиной стало ");
-                        var title = "значение метрики " + metric.MetricType.DisplayName;
+                        var title = "значение метрики " + metricType.DisplayName;
 
                         var reasonEventUrl = UrlHelper.GetMetricUrl(metric.Id, accountName);
                         html.WriteLink(reasonEventUrl, title);
@@ -250,7 +254,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 html.NewLine();
                 html.NewLine();
 
-                var changeSettingsUrl = UrlHelper.GetSubscriptionEditUrl(component, user, accountName);
+                var changeSettingsUrl = UrlHelper.GetSubscriptionEditUrl(component.Id, user.Id, accountName);
                 html.WriteLink(changeSettingsUrl, "Изменить настройки уведомлений");
                 html.NewLine();
                 html.Span("ID уведомления: " + notification.Id, "color: gray");
@@ -274,15 +278,15 @@ namespace Zidium.Agent.AgentTasks.Notifications
             return "gray";
         }
 
-        protected void WriteEventPropertiesTable(HtmlRender html, Event eventObj, string header)
+        protected void WriteEventPropertiesTable(HtmlRender html, EventPropertyForRead[] properties, string header)
         {
-            if (eventObj.Properties.Count > 0)
+            if (properties.Length > 0)
             {
                 html.Write(header);
                 html.NewLine();
 
                 html.BeginTable();
-                foreach (var param in eventObj.Properties)
+                foreach (var param in properties)
                 {
                     html.WriteExtentionPropertyRow(param.Name, param.Value, param.DataType, true);
                 }

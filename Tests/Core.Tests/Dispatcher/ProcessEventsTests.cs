@@ -1,9 +1,8 @@
 ﻿using System;
 using Xunit;
 using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.TestTools;
-using EventImportance = Zidium.Api.EventImportance;
-using MonitoringStatus = Zidium.Api.MonitoringStatus;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -22,7 +21,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Отправляем ошибку
             var error = TestHelper.CreateRandomApplicationError(component);
             error.JoinInterval = TimeSpan.Zero;
-            error.Importance = EventImportance.Alarm;
+            error.Importance = Zidium.Api.EventImportance.Alarm;
             error.StartDate = DateTime.Now;
             error.Version = "2.5.0.0";
             var eventResponse = error.Send();
@@ -42,7 +41,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 EventTypeId = eventResponse.Data.EventTypeId,
                 DisplayName = null,
                 OldVersion = error.Version,
-                ImportanceForOld = Zidium.Core.Api.EventImportance.Warning,
+                ImportanceForOld = EventImportance.Warning,
                 ImportanceForNew = null,
                 UpdateActualEvents = true
             }).Check();
@@ -50,7 +49,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Проверим, что старое событие поменялось
             account.SaveAllCaches();
             eventInfo = component.Client.ApiService.GetEventById(eventId);
-            Assert.Equal(EventImportance.Warning, eventInfo.Data.Importance);
+            Assert.Equal(Zidium.Api.EventImportance.Warning, eventInfo.Data.Importance);
             //Assert.Equal(true, eventInfo.Data.IsUserHandled);
 
             // Отправим ещё старое событие
@@ -61,7 +60,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             // Проверим, что его параметры сразу поменялись
             eventInfo = client.ApiService.GetEventById(eventId);
-            Assert.Equal(EventImportance.Warning, eventInfo.Data.Importance);
+            Assert.Equal(Zidium.Api.EventImportance.Warning, eventInfo.Data.Importance);
             //Assert.Equal(true, eventInfo.Data.IsUserHandled);
 
             // Отправим новое событие
@@ -83,8 +82,8 @@ namespace Zidium.Core.Tests.Dispatcher
                 EventTypeId = eventResponse.Data.EventTypeId,
                 DisplayName = null,
                 OldVersion = error.Version,
-                ImportanceForOld = Zidium.Core.Api.EventImportance.Warning,
-                ImportanceForNew = Zidium.Core.Api.EventImportance.Success,
+                ImportanceForOld = EventImportance.Warning,
+                ImportanceForNew = EventImportance.Success,
                 UpdateActualEvents = true
             }).Check();
 
@@ -97,7 +96,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             // Проверим, что его параметры сразу поменялись
             eventInfo = client.ApiService.GetEventById(eventId);
-            Assert.Equal(EventImportance.Success, eventInfo.Data.Importance);
+            Assert.Equal(Zidium.Api.EventImportance.Success, eventInfo.Data.Importance);
             //Assert.Equal(true, eventInfo.Data.IsUserHandled);
         }
 
@@ -114,7 +113,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Отправляем ошибку
             var error = TestHelper.CreateRandomApplicationError(component);
             error.JoinInterval = TimeSpan.Zero;
-            error.Importance = EventImportance.Alarm;
+            error.Importance = Zidium.Api.EventImportance.Alarm;
             error.StartDate = DateTime.Now;
             error.Version = "2.0.0.0";
             var eventResponse = error.Send();
@@ -122,7 +121,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             // Проверим, что статус компонента - Alarm
             var state = client.ApiService.GetComponentInternalState(component.Info.Id, false);
-            Assert.Equal(MonitoringStatus.Alarm, state.Data.Status);
+            Assert.Equal(Zidium.Api.MonitoringStatus.Alarm, state.Data.Status);
 
             // Отметим в типе события, что для данной версии нужно снижать важность и считать их обработанными
             var dispatcher = account.GetDispatcherClient();
@@ -131,7 +130,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 EventTypeId = eventResponse.Data.EventTypeId,
                 DisplayName = null,
                 OldVersion = error.Version,
-                ImportanceForOld = Zidium.Core.Api.EventImportance.Warning,
+                ImportanceForOld = EventImportance.Warning,
                 ImportanceForNew = null,
                 UpdateActualEvents = true
             };
@@ -140,7 +139,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Проверим, что статус компонента - Warning
             account.SaveAllCaches();
             state = client.ApiService.GetComponentInternalState(component.Info.Id, false);
-            Assert.Equal(MonitoringStatus.Warning, state.Data.Status);
+            Assert.Equal(Zidium.Api.MonitoringStatus.Warning, state.Data.Status);
         }
 
         [Fact]
@@ -153,7 +152,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Отправляем ошибку
             var error = TestHelper.CreateRandomApplicationError(component);
             error.JoinInterval = TimeSpan.Zero;
-            error.Importance = EventImportance.Alarm;
+            error.Importance = Zidium.Api.EventImportance.Alarm;
             error.StartDate = DateTime.Now;
             error.Version = "2.0.0.0";
             var eventResponse = error.Send();
@@ -161,7 +160,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             // Проверим, что статус компонента Alarm
             var state = component.GetTotalState(false);
-            Assert.Equal(MonitoringStatus.Alarm, state.Data.Status);
+            Assert.Equal(Zidium.Api.MonitoringStatus.Alarm, state.Data.Status);
             
             // Отметим в типе события, что для данной версии нужно снижать важность и считать их обработанными
             var dispatcher = account.GetDispatcherClient();
@@ -170,7 +169,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 EventTypeId = eventResponse.Data.EventTypeId,
                 DisplayName = null,
                 OldVersion = error.Version,
-                ImportanceForOld = Zidium.Core.Api.EventImportance.Warning,
+                ImportanceForOld = EventImportance.Warning,
                 ImportanceForNew = null,
                 UpdateActualEvents = true
             };
@@ -183,7 +182,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Проверим, что статус компонента Alarm
             account.SaveAllCaches();
             state = client.ApiService.GetComponentTotalState(component.Info.Id, false);
-            Assert.Equal(MonitoringStatus.Warning, state.Data.Status);
+            Assert.Equal(Zidium.Api.MonitoringStatus.Warning, state.Data.Status);
         }
     }
 }

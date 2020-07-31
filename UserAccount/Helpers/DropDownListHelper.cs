@@ -3,19 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Helpers
 {
     public static class DropDownListHelper
     {
-
-        private static AccountDbContext GetAccountDbContext()
+        private static IStorage GetStorage()
         {
-            return FullRequestContext.Current.AccountDbContext;
+            return FullRequestContext.Current.Controller.GetStorage();
         }
 
         private static Guid GetAccountId()
@@ -47,10 +44,8 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetMetricTypes(Guid? selected, bool allowEmpty)
         {
-            var repository = FullRequestContext.Current.AccountDbContext.GetMetricTypeRepository();
-            var metricTypes = repository.QueryAll();
+            var metricTypes = GetStorage().MetricTypes.Filter(null, 100);
             var items = metricTypes
-                .OrderBy(t => t.DisplayName)
                 .Select(x => new SelectListItem()
                 {
                     Text = x.DisplayName,
@@ -66,7 +61,7 @@ namespace Zidium.UserAccount.Helpers
             var all = new[]
             {
                 DefectStatus.Open,
-                DefectStatus.ReOpen,
+                DefectStatus.Reopened,
                 DefectStatus.InProgress,
                 DefectStatus.Testing,
                 DefectStatus.Closed
@@ -113,8 +108,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetUsers(Guid? selected, bool allowEmpty)
         {
-            var repository = GetAccountDbContext().GetUserRepository();
-            var users = repository.QueryAll().ToArray();
+            var users = GetStorage().Users.GetAll();
 
             var items = users.Select(x => new SelectListItem()
             {
@@ -128,9 +122,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetComponentTypes(Guid? selected, bool allowEmpty)
         {
-            var repository = GetAccountDbContext().GetComponentTypeRepository();
-            var accountId = GetAccountId();
-            var types = repository.QueryAll().OrderBy(x=>x.DisplayName).ToArray();
+            var types = GetStorage().ComponentTypes.Filter(null, 100);
 
             var items = types.Select(x => new SelectListItem()
             {

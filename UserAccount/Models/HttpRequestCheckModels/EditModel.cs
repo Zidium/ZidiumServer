@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 using Zidium.UserAccount.Models.Controls;
 
@@ -30,12 +31,12 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.WebSite.Id; }
+            get { return SystemComponentType.WebSite.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.HttpUnitTestType.Id; }
+            get { return SystemUnitTestType.HttpUnitTestType.Id; }
         }
 
         [Display(Name = "Url запроса")]
@@ -106,7 +107,7 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
                 throw new UserFriendlyException("Таймаут выполнения должен быть больше нуля");
             }
 
-            Uri uri = null;
+            Uri uri;
             try
             {
                 uri = new Uri(Url);
@@ -121,12 +122,12 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
                 throw new UserFriendlyException("Неверный формат домена");
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
-            HttpRequestUnitTestRule rule = null;
-            if (UnitTest != null)
+            HttpRequestUnitTestRuleForRead rule = null;
+            if (id != null)
             {
-                rule = UnitTest.HttpRequestUnitTest.Rules.FirstOrDefault();
+                rule = storage.HttpRequestUnitTestRules.GetByUnitTestId(id.Value).FirstOrDefault();
             }
             else
             {
@@ -142,9 +143,9 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
                 SuccessHtml = rule.SuccessHtml;
                 ErrorHtml = rule.ErrorHtml;
                 ResponseCode = rule.ResponseCode ?? 200;
-                RequestHeaders = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestHeader);
-                WebFormDatas = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.WebFormData);
-                RequestCookies = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestCookie);
+                RequestHeaders = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestHeader, storage);
+                WebFormDatas = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.WebFormData, storage);
+                RequestCookies = GetRuleDatas(rule, HttpRequestUnitTestRuleDataType.RequestCookie, storage);
             }
             else
             {
@@ -154,58 +155,72 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
             }
         }
 
-        public void SaveRule()
+        public void SaveRule(Guid id, IStorage storage)
         {
-            if (UnitTest.HttpRequestUnitTest == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newHttpRequestUnitTest = new HttpRequestUnitTest
+                var httpRequestUnitTest = storage.HttpRequestUnitTests.GetOneOrNullByUnitTestId(id);
+                if (httpRequestUnitTest == null)
                 {
-                    UnitTestId = UnitTest.Id,
-                    UnitTest = UnitTest
-                };
-                UnitTest.HttpRequestUnitTest = newHttpRequestUnitTest;
-            }
+                    var httpRequestUnitTestForAdd = new HttpRequestUnitTestForAdd()
+                    {
+                        UnitTestId = id
+                    };
+                    storage.HttpRequestUnitTests.Add(httpRequestUnitTestForAdd);
+                }
 
-            var rule = UnitTest.HttpRequestUnitTest.Rules.FirstOrDefault();
-            if (rule == null)
-            {
-                rule = new HttpRequestUnitTestRule()
+                var rule = storage.HttpRequestUnitTestRules.GetByUnitTestId(id).FirstOrDefault();
+                if (rule == null)
                 {
-                    Id = Guid.NewGuid(),
-                    HttpRequestUnitTest = UnitTest.HttpRequestUnitTest
-                };
-                UnitTest.HttpRequestUnitTest.Rules.Add(rule);
+                    var ruleForAdd = new HttpRequestUnitTestRuleForAdd()
+                    {
+                        Id = Guid.NewGuid(),
+                        HttpRequestUnitTestId = id,
+                        DisplayName = CheckName,
+                        Url = new Uri(Url).AbsoluteUri
+                    };
+                    storage.HttpRequestUnitTestRules.Add(ruleForAdd);
+                    rule = storage.HttpRequestUnitTestRules.GetOneById(ruleForAdd.Id);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.DisplayName.Set(CheckName);
+                ruleForUpdate.SortNumber.Set(0);
+                ruleForUpdate.TimeoutSeconds.Set(TimeOutSeconds);
+                ruleForUpdate.Method.Set(Method);
+                ruleForUpdate.Body.Set(Body);
+                ruleForUpdate.Url.Set(new Uri(Url).AbsoluteUri);
+                ruleForUpdate.ResponseCode.Set(ResponseCode);
+                ruleForUpdate.SuccessHtml.Set(SuccessHtml);
+                ruleForUpdate.ErrorHtml.Set(ErrorHtml);
+                storage.HttpRequestUnitTestRules.Update(ruleForUpdate);
+
+                var ruleDatas = storage.HttpRequestUnitTestRuleDatas.GetByRuleId(rule.Id);
+                foreach (var data in ruleDatas)
+                {
+                    storage.HttpRequestUnitTestRuleDatas.Delete(data.Id);
+                }
+
+                if (RequestHeaders != null)
+                    RequestHeaders.ForEach(x =>
+                        AddRuleData(rule, x, HttpRequestUnitTestRuleDataType.RequestHeader, storage));
+
+                if (RequestCookies != null)
+                    RequestCookies.ForEach(x =>
+                        AddRuleData(rule, x, HttpRequestUnitTestRuleDataType.RequestCookie, storage));
+
+                if (WebFormDatas != null)
+                    WebFormDatas.ForEach(
+                        x => AddRuleData(rule, x, HttpRequestUnitTestRuleDataType.WebFormData, storage));
+
+                transaction.Commit();
             }
-
-            rule.DisplayName = UnitTest.DisplayName;
-            rule.SortNumber = 0;
-            rule.TimeoutSeconds = TimeOutSeconds;
-            rule.Method = Method;
-            rule.Body = Body;
-            rule.Url = new Uri(Url).AbsoluteUri;
-            rule.ResponseCode = ResponseCode;
-            rule.SuccessHtml = SuccessHtml;
-            rule.ErrorHtml = ErrorHtml;
-
-            foreach (var data in rule.Datas.ToArray())
-            {
-                rule.Datas.Remove(data);
-                AccountDbContext.Entry(data).State = System.Data.Entity.EntityState.Deleted;
-            }
-
-            if (RequestHeaders != null)
-                RequestHeaders.ForEach(x => AddRuleData(rule, x, HttpRequestUnitTestRuleDataType.RequestHeader));
-
-            if (RequestCookies != null)
-                RequestCookies.ForEach(x => AddRuleData(rule, x, HttpRequestUnitTestRuleDataType.RequestCookie));
-
-            if (WebFormDatas != null)
-                WebFormDatas.ForEach(x => AddRuleData(rule, x, HttpRequestUnitTestRuleDataType.WebFormData));
         }
 
-        protected List<KeyValueRowModel> GetRuleDatas(HttpRequestUnitTestRule rule, HttpRequestUnitTestRuleDataType type)
+        protected List<KeyValueRowModel> GetRuleDatas(HttpRequestUnitTestRuleForRead rule, HttpRequestUnitTestRuleDataType type, IStorage storage)
         {
-            var datas = rule.Datas.Where(x => x.Type == type).ToList();
+            var ruleDatas = storage.HttpRequestUnitTestRuleDatas.GetByRuleId(rule.Id);
+            var datas = ruleDatas.Where(x => x.Type == type).ToList();
             var rows = new List<KeyValueRowModel>();
             foreach (var data in datas)
             {
@@ -215,7 +230,7 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
             return rows;
         }
 
-        protected KeyValueRowModel ConvertToKeyValueRow(HttpRequestUnitTestRuleData data)
+        protected KeyValueRowModel ConvertToKeyValueRow(HttpRequestUnitTestRuleDataForRead data)
         {
             return new KeyValueRowModel()
             {
@@ -225,18 +240,20 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
             };
         }
 
-        protected void AddRuleData(HttpRequestUnitTestRule rule, KeyValueRowModel row, HttpRequestUnitTestRuleDataType type)
+        protected void AddRuleData(HttpRequestUnitTestRuleForRead rule, KeyValueRowModel row, HttpRequestUnitTestRuleDataType type, IStorage storage)
         {
-            var data = new HttpRequestUnitTestRuleData
+            var data = new HttpRequestUnitTestRuleDataForAdd()
             {
                 Id = Guid.NewGuid(),
                 Key = row.Key,
                 Value = row.Value,
                 Type = type,
-                Rule = rule,
                 RuleId = rule.Id
             };
-            rule.Datas.Add(data);
+            storage.HttpRequestUnitTestRuleDatas.Add(data);
         }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs { get; set; }
+
     }
 }

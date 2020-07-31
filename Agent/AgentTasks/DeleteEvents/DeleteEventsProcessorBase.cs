@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.DeleteEvents
 {
@@ -15,7 +15,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
     {
         protected ILogger Logger;
 
-        public const int MaxDeleteCount = 1000;
+        public int MaxDeleteCount = 10000;
 
         public int DeletedEventsCount;
 
@@ -25,7 +25,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         protected object ReportLockObject = new object();
 
-        protected StringBuilder Report = new StringBuilder();
+        protected List<string> Report = new List<string>();
 
         protected DeleteEventsProcessorBase(ILogger logger, CancellationToken cancellationToken)
         {
@@ -59,7 +59,21 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
                 Logger.Info("Удалено событий, всего: " + DeletedEventsCount);
                 lock (ReportLockObject)
                 {
-                    Logger.Info(Report.ToString());
+                    var reportChunks = Report
+                        .Select((t, i) =>
+                            new
+                            {
+                                Value = t,
+                                Index = i
+                            })
+                        .GroupBy(t => t.Index / 20)
+                        .Select(grp => grp.Select(x => x.Value).ToArray())
+                        .ToArray();
+
+                    foreach (var chunk in reportChunks)
+                    {
+                        Logger.Info(string.Join(Environment.NewLine, chunk));
+                    }
                 }
             }
         }
@@ -126,21 +140,19 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             return count;
         }
 
-        public abstract int GetMaxDaysFromTariffLimit(TariffLimit tariffLimit);
+        public abstract int GetMaxDaysFromTariffLimit(TariffLimitForRead tariffLimit);
 
         public abstract EventCategory[] GetCategories();
 
         public void ProcessAccount(ForEachAccountData data)
         {
-            data.AccountDbContext.Database.CommandTimeout = 0;
             var categories = GetCategories();
 
-            var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
-            var tariffLimit = accountTariffRepository.GetHardTariffLimit();
+            var tariffLimit = data.Storage.TariffLimits.GetHardTariffLimit();
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-GetMaxDaysFromTariffLimit(tariffLimit)));
             data.Logger.Trace("Аккаунт: {0}, Максимальная дата актуальности: {1}", data.Account.SystemName, date);
 
-            var eventRepository = data.AccountDbContext.GetEventRepository();
+            var eventRepository = data.Storage.Events;
             var remaining = eventRepository.GetEventsCountForDeletion(categories, date);
 
             Int64 count = 0;
@@ -215,7 +227,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
                     break;
 
                 // чтобы не сильно нагружать SQL
-                Thread.Sleep(1000);
+                // Thread.Sleep(1000);
             }
 
             stopwatch.Stop();
@@ -232,7 +244,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
         {
             lock (ReportLockObject)
             {
-                Report.AppendLine(s);
+                Report.Add(s);
             }
         }
     }

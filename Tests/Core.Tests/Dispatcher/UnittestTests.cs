@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using Xunit;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher

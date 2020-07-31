@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Web.Mvc;
-using Zidium.Core.ConfigDb;
 
 namespace Zidium.UserAccount.Controllers
 {
-    public class SelfTestController : Controller
+    public class SelfTestController : BaseController
     {
         private void ConfigDbContextTest()
         {
-            ConfigDbServicesHelper.GetAccountService().GetSystemAccount();
+            GetConfigDbServicesFactory().GetAccountService().GetSystemAccount();
         }
 
         private void ComponentFakeTest()

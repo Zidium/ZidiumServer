@@ -1,29 +1,32 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models
 {
     public class ComponentShowModel
     {
-        public ComponentShowModel()
-        {
-            LogConfig = new LogConfig();
-        }
+        public DateTime Now;
 
-        public Component Component { get; set; }
+        public ComponentBreadCrumbsModel ComponentBreadCrumbs { get; set; }
 
-        public LogConfig LogConfig { get; set; }
+        public ComponentForRead Component { get; set; }
 
-        public Bulb ExternalState { get; set; }
+        public ComponentForRead Parent { get; set; }
 
-        public Bulb InternalState { get; set; }
+        public ComponentTypeForRead ComponentType { get; set; }
 
-        public Metric[] Metrics { get; set; }
+        public ComponentPropertyForRead[] Properties;
 
-        public UnitTest[] UnitTests { get; set; }
+        public LogConfigForRead LogConfig { get; set; }
 
-        public Component[] Childs { get; set; }
+        public BulbForRead ExternalState { get; set; }
+
+        public GetGuiComponentShowInfo.MetricInfo[] Metrics { get; set; }
+
+        public GetGuiComponentShowInfo.UnitTestInfo[] UnitTests { get; set; }
+
+        public GetGuiComponentShowInfo.ChildInfo[] Childs { get; set; }
 
         public ComponentMiniStatusModel EventsMiniStatus { get; set; }
 

@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace Zidium.Core.Api
+﻿namespace Zidium.Core.Api
 {
-    public class GetMetricsHistoryResponse : ResponseT<List<MetricInfo>>
+    public class GetMetricsHistoryResponse : ResponseT<MetricInfo[]>
     {
     }
 }

@@ -1,8 +1,9 @@
-﻿@using Zidium.Core.Api
-@using Zidium.UserAccount.Helpers
+﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using GridMvc.Html
 @using GridMvc.Sorting
+@using Zidium.Storage
+
 @model EventTypesListModel
 
 @{
@@ -81,7 +82,7 @@
                 }
              </text>).Encoded(false).Sanitized(false).Css("text-center").SetWidth(30);
     }
-}).Sortable().Selectable(false).WithPaging(50)
+}).Selectable(false)
 
 <script>
 

@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -11,17 +11,15 @@ namespace Zidium.UserAccount.Models.UnitTests
         public string Sql { get; set; }
         public TimeSpan Timeout { get; set; }
 
-        public static OverviewSettingsSqlModel Create(UnitTest unitTest)
+        public static OverviewSettingsSqlModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var rule = unitTest.SqlRule;
-            if (rule == null)
-            {
-                throw new Exception("unittest sql rule is null");
-            }
+
+            var rule = storage.UnitTestSqlRules.GetOneByUnitTestId(unitTest.Id);
+            
             return new OverviewSettingsSqlModel()
             {
                 UnitTestId = unitTest.Id,

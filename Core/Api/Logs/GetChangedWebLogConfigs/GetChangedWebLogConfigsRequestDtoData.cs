@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Zidium.Core.Api
 {
@@ -7,6 +6,6 @@ namespace Zidium.Core.Api
     {
         public DateTime? LastUpdateDate { get; set; }
 
-        public List<Guid> ComponentIds { get; set; }
+        public Guid[] ComponentIds { get; set; }
     }
 }

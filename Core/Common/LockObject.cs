@@ -1,5 +1,4 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 
 namespace Zidium.Core.Common
 {
@@ -34,6 +33,7 @@ namespace Zidium.Core.Common
         private static readonly LockObject _joinEventLocks = new LockObject(_locksCount);
         private static readonly LockObject _unitTestTypesLocks = new LockObject(_locksCount);
         private static readonly LockObject _subscriptionLocks = new LockObject(_locksCount);
+        private static readonly LockObject _unitTestLimitDataLocks = new LockObject(_locksCount);
 
         public static object ForComponent(string systemName)
         {
@@ -98,14 +98,19 @@ namespace Zidium.Core.Common
             return _unitTestLocks.Get(componentId + systemName);
         }
 
-        public static object ForJoinEvent(Event eventObj)
+        public static object ForJoinEvent(Guid ownerId)
         {
-            return _joinEventLocks.Get(eventObj.OwnerId);
+            return _joinEventLocks.Get(ownerId);
         }
 
         public static object ForSubscription(Guid subscriptionId)
         {
             return _subscriptionLocks.Get(subscriptionId);
+        }
+
+        public static object ForUnitTestLimitData(Guid limitDataId, Guid unitTestId)
+        {
+            return _unitTestLimitDataLocks.Get(unitTestId.ToString() + unitTestId.ToString());
         }
 
         /// <summary>

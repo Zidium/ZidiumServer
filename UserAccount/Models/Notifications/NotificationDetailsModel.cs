@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -14,10 +13,10 @@ namespace Zidium.UserAccount.Models
         public string Address { get; set; }
 
         [Display(Name = "Событие")]
-        public Event Event { get; set; }
+        public EventForRead Event { get; set; }
 
         [Display(Name = "Получатель")]
-        public User User { get; set; }
+        public UserForRead User { get; set; }
 
         [Display(Name = "Канал")]
         public SubscriptionChannel Channel { get; set; }
@@ -35,7 +34,7 @@ namespace Zidium.UserAccount.Models
         public DateTime? SendDate { get; set; }
 
         [Display(Name = "Подписка")]
-        public Subscription Subscription { get; set; }
+        public SubscriptionForRead Subscription { get; set; }
 
         [Display(Name = "Сообщение")]
         public string Text { get; set; }

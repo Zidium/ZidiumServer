@@ -1,5 +1,6 @@
-﻿@model Zidium.Core.AccountsDb.ComponentProperty
-<td>@Html.ActionLink(Model.Name, "EditProperty", "Components", new { id = @Model.Id }, new { onclick = "ModalBtnClick(this, event);" })</td>
+﻿@model Zidium.Storage.ComponentPropertyForRead
+
+<td>@Html.ActionLink(Model.Name, "EditProperty", "Components", new { id = Model.Id }, new { onclick = "ModalBtnClick(this, event);" })</td>
 <td><span class="text-prewrap">@Model.Value</span></td>
 <td>@Model.DataType</td>
 <td class="text-center">

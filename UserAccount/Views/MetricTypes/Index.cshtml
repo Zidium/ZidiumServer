@@ -1,6 +1,7 @@
 ﻿@using GridMvc.Html
 @using GridMvc.Sorting
 @using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.MetricTypes.ListModel
 
 @{
@@ -43,7 +44,7 @@
         .Titled(string.Empty)
         .RenderValueAs(m =>
              @<text>
-            <a href='@Url.Action("values", "metrics", new{metricTypeId = m.Id})' title="Текущие значения">
+            <a href='@Url.Action("Values", "Metrics", new{metricTypeId = m.Id})' title="Текущие значения">
                 <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
             </a>
               </text>)

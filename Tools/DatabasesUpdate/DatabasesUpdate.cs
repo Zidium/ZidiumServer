@@ -2,9 +2,11 @@
 using System.Configuration;
 using System.Linq;
 using NLog;
+using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.ConfigDb;
-using Zidium.Core.DispatcherLayer;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace DatabasesUpdate
 {
@@ -20,24 +22,27 @@ namespace DatabasesUpdate
             try
             {
                 Initialization.SetServices();
-                Provider.SetSectionName(sectionName);
+                StorageFactory.DisableMigrations();
+
+                DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+                DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
+
+                var accountDbStorageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
+                accountDbStorageFactory.OverrideSectionName(sectionName);
+
                 var connectionString = ConfigurationManager.ConnectionStrings[sectionName].ConnectionString;
                 DatabaseService.SetConnectionString(connectionString);
-                var provider = Provider.Current();
-                provider.Configuration();
 
-                var count = provider.InitializeDb(connectionString);
+                var accountDbStorage = accountDbStorageFactory.GetStorage(connectionString);
+                var count = accountDbStorage.Migrate();
 
-                bool adminCreated;
-                using (var accountDbContext = AccountDbContext.CreateFromConnectionString(connectionString))
-                {
-                    // обновляем справочники
-                    var registrator = new AccountDbDataRegistator(accountDbContext);
-                    registrator.RegisterAll();
+                // обновляем справочники
+                var registrator = new AccountDbDataRegistator(accountDbStorage);
+                registrator.RegisterAll();
 
-                    // Проверим, создан ли админ
-                    adminCreated = accountDbContext.GetUserRepository().QueryAll().FirstOrDefault(x => x.Roles.Any(y => y.RoleId == RoleId.AccountAdministrators)) != null;
-                }
+                // Проверим, создан ли админ
+                var userService = new UserService(accountDbStorage);
+                var adminCreated = userService.GetAccountAdmins().Any();
 
                 if (count == 0)
                     _logger.Info("База не изменилась");
@@ -48,110 +53,85 @@ namespace DatabasesUpdate
                     _logger.Info("Администратор аккаунта уже создан");
                 else
                 {
-                    var accountInfo = ConfigDbServicesHelper.GetAccountService().GetSystemAccount();
+                    var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+                    var accountInfo = configDbServicesFactory.GetAccountService().GetSystemAccount();
 
-                    using (var context = DispatcherContext.Create())
-                    {
-                        // создаем root компонент
-                        var componentService = context.ComponentService;
-                        componentService.CreateRoot(accountInfo.Id, accountInfo.RootId);
+                    // создаем root компонент
+                    var componentService = new ComponentService(accountDbStorage);
+                    componentService.CreateRoot(accountInfo.Id, accountInfo.RootId);
 
-                        // создаем админа
-                        Console.Write("Укажите EMail администратора: ");
-                        var adminEMail = Console.ReadLine();
+                    // создаем админа
+                    Console.Write("Укажите EMail администратора: ");
+                    var adminEMail = Console.ReadLine();
 
-                        Console.Write("Укажите пароль администратора: ");
-                        var adminPassword = Console.ReadLine();
+                    Console.Write("Укажите пароль администратора: ");
+                    var adminPassword = Console.ReadLine();
 
-                        var userService = context.UserService;
+                    var adminUserId = userService.CreateAccountAdmin(
+                        accountInfo.Id,
+                        adminEMail,
+                        null, null, null, null, null);
 
-                        var adminUser = userService.CreateAccountAdmin(
-                            accountInfo.Id,
-                            adminEMail,
-                            null, null, null, null, null);
+                    // Установим пароль админа
+                    var passwordToken = userService.StartResetPassword(adminUserId, false);
+                    userService.EndResetPassword(accountInfo.Id, passwordToken, adminPassword);
 
-                        // Установим пароль админа
-                        var passwordToken = userService.StartResetPassword(adminUser.Id, false);
-                        userService.EndResetPassword(accountInfo.Id, passwordToken, adminPassword);
-                        context.SaveChanges();
-
-                        _logger.Info($"Создан пользователь {adminEMail} с паролем {adminPassword}");
-                    }
+                    _logger.Info($"Создан пользователь {adminEMail} с паролем {adminPassword}");
 
                     // Установим бесконечные лимиты аккаунта
-                    var limits = SystemTariffLimits.BaseUnlimited;
+                    var limits = SystemTariffLimit.BaseUnlimited;
 
-                    using (var accountDbContext = AccountDbContext.CreateFromConnectionString(connectionString))
+                    var tariff = new TariffLimitForAdd()
                     {
-                        var accountTariffRepository = accountDbContext.GetAccountTariffRepository();
-                        var tariffLimitRepository = accountDbContext.GetTariffLimitRepository();
+                        Id = Guid.NewGuid(),
+                        Type = TariffLimitType.Soft,
+                        Source = TariffLimitSource.Base,
+                        Name = "Soft",
+                        EventsRequestsPerDay = limits.EventRequestsPerDay,
+                        EventsMaxDays = limits.EventsMaxDays,
+                        LogMaxDays = limits.LogMaxDays,
+                        LogSizePerDay = limits.LogSizePerDay,
+                        ComponentsMax = limits.ComponentsMax,
+                        ComponentTypesMax = limits.ComponentTypesMax,
+                        UnitTestTypesMax = limits.UnitTestTypesMax,
+                        HttpUnitTestsMaxNoBanner = limits.HttpChecksMaxNoBanner,
+                        UnitTestsMax = limits.UnitTestsMax,
+                        UnitTestsRequestsPerDay = limits.UnitTestsRequestsPerDay,
+                        UnitTestsMaxDays = limits.UnitTestsMaxDays,
+                        MetricsMax = limits.MetricsMax,
+                        MetricsRequestsPerDay = limits.MetricRequestsPerDay,
+                        MetricsMaxDays = limits.MetricsMaxDays,
+                        StorageSizeMax = limits.StorageSizeMax,
+                        SmsPerDay = limits.SmsPerDay
+                    };
 
-                        var tariff = new TariffLimit()
-                        {
-                            Type = TariffLimitType.Soft,
-                            Source = TariffLimitSource.Base,
-                            Name = "Soft",
-                            EventsRequestsPerDay = limits.EventRequestsPerDay,
-                            EventsMaxDays = limits.EventsMaxDays,
-                            LogMaxDays = limits.LogMaxDays,
-                            LogSizePerDay = limits.LogSizePerDay,
-                            ComponentsMax = limits.ComponentsMax,
-                            ComponentTypesMax = limits.ComponentTypesMax,
-                            UnitTestTypesMax = limits.UnitTestTypesMax,
-                            HttpUnitTestsMaxNoBanner = limits.HttpChecksMaxNoBanner,
-                            UnitTestsMax = limits.UnitTestsMax,
-                            UnitTestsRequestsPerDay = limits.UnitTestsRequestsPerDay,
-                            UnitTestsMaxDays = limits.UnitTestsMaxDays,
-                            MetricsMax = limits.MetricsMax,
-                            MetricsRequestsPerDay = limits.MetricRequestsPerDay,
-                            MetricsMaxDays = limits.MetricsMaxDays,
-                            StorageSizeMax = limits.StorageSizeMax,
-                            SmsPerDay = limits.SmsPerDay,
+                    accountDbStorage.TariffLimits.Add(tariff);
 
-                        };
+                    tariff = new TariffLimitForAdd()
+                    {
+                        Id = Guid.NewGuid(),
+                        Type = TariffLimitType.Hard,
+                        Source = TariffLimitSource.Base,
+                        Name = "Hard",
+                        EventsRequestsPerDay = limits.EventRequestsPerDay,
+                        EventsMaxDays = limits.EventsMaxDays,
+                        LogMaxDays = limits.LogMaxDays,
+                        LogSizePerDay = limits.LogSizePerDay,
+                        ComponentsMax = limits.ComponentsMax,
+                        ComponentTypesMax = limits.ComponentTypesMax,
+                        UnitTestTypesMax = limits.UnitTestTypesMax,
+                        HttpUnitTestsMaxNoBanner = limits.HttpChecksMaxNoBanner,
+                        UnitTestsMax = limits.UnitTestsMax,
+                        UnitTestsRequestsPerDay = limits.UnitTestsRequestsPerDay,
+                        UnitTestsMaxDays = limits.UnitTestsMaxDays,
+                        MetricsMax = limits.MetricsMax,
+                        MetricsRequestsPerDay = limits.MetricRequestsPerDay,
+                        MetricsMaxDays = limits.MetricsMaxDays,
+                        StorageSizeMax = limits.StorageSizeMax,
+                        SmsPerDay = limits.SmsPerDay
+                    };
 
-                        tariffLimitRepository.Add(tariff);
-
-                        var accountTariff = new AccountTariff()
-                        {
-                            TariffLimit = tariff
-                        };
-                        accountTariffRepository.Add(accountTariff);
-
-                        tariff = new TariffLimit()
-                        {
-                            Type = TariffLimitType.Hard,
-                            Source = TariffLimitSource.Base,
-                            Name = "Hard",
-                            EventsRequestsPerDay = limits.EventRequestsPerDay,
-                            EventsMaxDays = limits.EventsMaxDays,
-                            LogMaxDays = limits.LogMaxDays,
-                            LogSizePerDay = limits.LogSizePerDay,
-                            ComponentsMax = limits.ComponentsMax,
-                            ComponentTypesMax = limits.ComponentTypesMax,
-                            UnitTestTypesMax = limits.UnitTestTypesMax,
-                            HttpUnitTestsMaxNoBanner = limits.HttpChecksMaxNoBanner,
-                            UnitTestsMax = limits.UnitTestsMax,
-                            UnitTestsRequestsPerDay = limits.UnitTestsRequestsPerDay,
-                            UnitTestsMaxDays = limits.UnitTestsMaxDays,
-                            MetricsMax = limits.MetricsMax,
-                            MetricsRequestsPerDay = limits.MetricRequestsPerDay,
-                            MetricsMaxDays = limits.MetricsMaxDays,
-                            StorageSizeMax = limits.StorageSizeMax,
-                            SmsPerDay = limits.SmsPerDay,
-
-                        };
-
-                        tariffLimitRepository.Add(tariff);
-
-                        accountTariff = new AccountTariff()
-                        {
-                            TariffLimit = tariff
-                        };
-                        accountTariffRepository.Add(accountTariff);
-
-                        accountDbContext.SaveChanges();
-                    }
+                    accountDbStorage.TariffLimits.Add(tariff);
 
                 }
 

@@ -10,27 +10,15 @@ using Zidium.UserAccount.Models.MetricTypes;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class MetricTypesController : ContextController
+    public class MetricTypesController : BaseController
     {
         public ActionResult Index(string search)
         {
-            var countersRepository = CurrentAccountDbContext.GetMetricTypeRepository();
-
-            var query = countersRepository
-                .QueryAll()
-                .Where(t => t.IsDeleted == false);
-
-            if (!string.IsNullOrEmpty(search))
-            {
-                var searchLowerCase = search.ToLower();
-                query = query.Where(t => t.Id.ToString().ToLower() == searchLowerCase || t.SystemName.ToLower().Contains(searchLowerCase));
-            }
-
-            var counters = query.OrderBy(t => t.SystemName);
+            var metricTypes = GetStorage().MetricTypes.Filter(search, 100);
 
             var model = new ListModel()
             {
-                Items = counters,
+                Items = metricTypes,
                 Search = search
             };
 
@@ -39,7 +27,7 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult Show(Guid id)
         {
-            var metricType = GetMetricTypeById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(id);
             var model = new ShowModel()
             {
                 Id = metricType.Id,
@@ -65,7 +53,7 @@ namespace Zidium.UserAccount.Controllers
             };
             if (id.HasValue)
             {
-                var metricType = GetMetricTypeById(id.Value);
+                var metricType = GetStorage().MetricTypes.GetOneById(id.Value);
                 model.Id = metricType.Id;
                 model.SystemName = metricType.SystemName;
                 model.DisplayName = metricType.DisplayName;
@@ -148,21 +136,20 @@ namespace Zidium.UserAccount.Controllers
 
         public JsonResult CheckName(EditModel model)
         {
-            var repository = CurrentAccountDbContext.GetMetricTypeRepository();
-            var counter = repository.GetOneOrNullByName(model.SystemName);
-            if (counter != null && (!model.Id.HasValue || model.Id != counter.Id))
-                return Json("Метрика с таким именем уже существует", JsonRequestBehavior.AllowGet);
+            var metricType = GetStorage().MetricTypes.GetOneOrNullBySystemName(model.SystemName);
+            if (metricType != null && (!model.Id.HasValue || model.Id != metricType.Id))
+                return Json("Тип метрики с таким именем уже существует", JsonRequestBehavior.AllowGet);
             return Json(true, JsonRequestBehavior.AllowGet);
         }
 
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var metricType = GetMetricTypeById(id);
+            var metricType = GetStorage().MetricTypes.GetOneById(id);
             var model = new DeleteConfirmationAjaxModel()
             {
                 Title = "Удаление типа метрики",
-                Message = "Вы действительно хотите удалить тип метрики " + metricType.SystemName + "?",
+                Message = "Вы действительно хотите удалить тип метрики " + metricType.DisplayName + "?",
             };
             return View("Dialogs/DeleteConfirmationAjax", model);
         }

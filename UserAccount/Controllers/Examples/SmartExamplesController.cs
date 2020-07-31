@@ -6,7 +6,7 @@ using Zidium.UserAccount.Models.Examples.Smart;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class SmartExamplesController : ContextController
+    public class SmartExamplesController : BaseController
     {
         public ActionResult Example1()
         {

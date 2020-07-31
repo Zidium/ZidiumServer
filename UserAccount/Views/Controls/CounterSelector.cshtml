@@ -4,11 +4,11 @@
 
 @if (Model.Expression == null)
 {
-    @Html.DropDownList(@Model.Name, GuiHelper.GetAccountCounters(Model.CounterId, Model.ComponentId, Model.AllowEmpty), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false" })
+    @Html.DropDownList(@Model.Name, GuiHelper.GetAccountMetricTypes(Model.CounterId, Model.ComponentId, Model.AllowEmpty), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false" })
 }
 else
 {
-    @Model.HtmlHelper.DropDownListFor(Model.Expression, GuiHelper.GetAccountCounters(Model.CounterId, Model.ComponentId, Model.AllowEmpty), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false" })
+    @Model.HtmlHelper.DropDownListFor(Model.Expression, GuiHelper.GetAccountMetricTypes(Model.CounterId, Model.ComponentId, Model.AllowEmpty), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false" })
 }
 
 <script>

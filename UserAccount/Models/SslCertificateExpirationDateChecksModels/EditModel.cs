@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels
@@ -34,22 +36,22 @@ namespace Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.WebSite.Id; }
+            get { return SystemComponentType.WebSite.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.SslTestType.Id; }
+            get { return SystemUnitTestType.SslTestType.Id; }
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
             AlarmDaysCount = 14;
             WarningDaysCount = 30;
 
-            if (UnitTest != null)
+            if (id != null)
             {
-                var rule = UnitTest.SslCertificateExpirationDateRule;
+                var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(id.Value);
                 if (rule != null)
                 {
                     Url = rule.Url;
@@ -64,19 +66,29 @@ namespace Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels
             }
         }
 
-        public void SaveRule()
+        public void SaveRule(IStorage storage)
         {
-            if (UnitTest.SslCertificateExpirationDateRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newRule = new UnitTestSslCertificateExpirationDateRule();
-                newRule.UnitTestId = UnitTest.Id;
-                newRule.UnitTest = UnitTest;
-                UnitTest.SslCertificateExpirationDateRule = newRule;
+                var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(Id.Value);
+                if (rule == null)
+                {
+                    var ruleForAdd = new UnitTestSslCertificateExpirationDateRuleForAdd()
+                    {
+                        UnitTestId = Id.Value
+                    };
+                    storage.UnitTestSslCertificateExpirationDateRules.Add(ruleForAdd);
+                    rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneOrNullByUnitTestId(Id.Value);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Url.Set(Url);
+                ruleForUpdate.WarningDaysCount.Set(WarningDaysCount);
+                ruleForUpdate.AlarmDaysCount.Set(AlarmDaysCount);
+                storage.UnitTestSslCertificateExpirationDateRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            var rule = UnitTest.SslCertificateExpirationDateRule;
-            rule.Url = Url;
-            rule.AlarmDaysCount = AlarmDaysCount;
-            rule.WarningDaysCount = WarningDaysCount;
         }
 
         protected override void ValidateRule()
@@ -110,5 +122,8 @@ namespace Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels
                 throw new UserFriendlyException("Количество дней для красной проверки не может быть больше количества дней жёлтой проверки");
             }
         }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs { get; set; }
+
     }
 }

@@ -6,6 +6,11 @@ namespace Zidium.Core.ConfigDb
     public interface IDatabaseService
     {
         /// <summary>
+        /// Создание новой базы
+        /// </summary>
+        Guid CreateDatabase(string databaseName);
+
+        /// <summary>
         /// Получение списка всех баз
         /// </summary>
         DatabaseInfo[] GetDatabases();

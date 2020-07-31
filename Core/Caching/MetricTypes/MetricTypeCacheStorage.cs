@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Zidium.Core.AccountsDb;
+using System.Linq;
+using Zidium.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.Limits;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -20,7 +22,7 @@ namespace Zidium.Core.Caching
             return accountId + "#" + name.ToLowerInvariant();
         }
 
-        public Guid CreateMetricType(Guid accountId, string name)
+        public Guid CreateMetricType(Guid accountId, string name, IStorage storage)
         {
             if (name == null)
             {
@@ -35,11 +37,11 @@ namespace Zidium.Core.Caching
                 {
                     throw new UserFriendlyException("Тип метрики с именем " + name + " уже есть");
                 }
-                return GetOrCreateTypeId(accountId, name);
+                return GetOrCreateTypeId(accountId, name, storage);
             }
         }
 
-        public Guid GetOrCreateTypeId(Guid accountId, string name)
+        public Guid GetOrCreateTypeId(Guid accountId, string name, IStorage storage)
         {
             if (name == null)
             {
@@ -57,38 +59,41 @@ namespace Zidium.Core.Caching
                 {
                     return id;
                 }
-                using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
+
+                Guid metricTypeId;
+                var metricType = storage.MetricTypes.GetOneOrNullBySystemName(name);
+                if (metricType == null)
                 {
-                    var repository = accountDbContext.GetMetricTypeRepository();
-                    var metricType = repository.GetOneOrNullByName(name);
-                    if (metricType == null/* || metricType.IsDeleted*/) // репозиторий не возвращает удалённые
-                    {
-                        // Проверим лимиты
-                        var limitChecker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
-                        var checkResult = limitChecker.CheckMaxMetrics(accountDbContext);
-                        if (!checkResult.Success)
-                            throw new OverLimitException(checkResult.Message);
+                    // Проверим лимиты
+                    var limitChecker = AccountLimitsCheckerManager.GetCheckerForAccount(accountId);
+                    var checkResult = limitChecker.CheckMaxMetrics(storage);
+                    if (!checkResult.Success)
+                        throw new OverLimitException(checkResult.Message);
 
-                        metricType = new MetricType()
-                        {
-                            Id = Guid.NewGuid(),
-                            IsDeleted = false,
-                            CreateDate = DateTime.Now,
-                            SystemName = name,
-                            DisplayName = name
-                        };
-                        repository.Add(metricType);
-                        accountDbContext.SaveChanges();
-
-                        limitChecker.RefreshMetricsCount();
-                    }
-                    bool success = NameToIdMap.TryAdd(key, metricType.Id);
-                    if (success)
+                    var metricTypeForAdd = new MetricTypeForAdd()
                     {
-                        return metricType.Id;
-                    }
-                    throw new Exception("Не удалось добавить тип метрики в карту");
+                        Id = Guid.NewGuid(),
+                        IsDeleted = false,
+                        CreateDate = DateTime.Now,
+                        SystemName = name,
+                        DisplayName = name
+                    };
+                    storage.MetricTypes.Add(metricTypeForAdd);
+                    metricTypeId = metricTypeForAdd.Id;
+
+                    limitChecker.RefreshMetricsCount();
                 }
+                else
+                {
+                    metricTypeId = metricType.Id;
+                }
+
+                var success = NameToIdMap.TryAdd(key, metricTypeId);
+                if (success)
+                {
+                    return metricTypeId;
+                }
+                throw new Exception("Не удалось добавить тип метрики в карту");
             }
         }
 
@@ -188,33 +193,54 @@ namespace Zidium.Core.Caching
             return ObjectChangesHelper.HasChanges(oldObj, newObj);
         }
 
-        protected override void AddBatchObject(AccountDbContext accountDbContext, MetricTypeCacheWriteObject writeObject)
+        protected override void AddBatchObjects(IStorage storage, MetricTypeCacheWriteObject[] writeObjects)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        protected override void UpdateBatchObject(AccountDbContext accountDbContext, MetricTypeCacheWriteObject metricType, bool useCheck)
+        protected override void UpdateBatchObjects(IStorage storage, MetricTypeCacheWriteObject[] metricTypes, bool useCheck)
         {
-            var oldMetricType = metricType.Response.LastSavedData;
-            if (oldMetricType == null)
+            var entities = metricTypes.Select(metricType =>
             {
-                throw new Exception("oldMetricType == null");
-            }
+                var lastData = metricType.Response.LastSavedData;
+                if (lastData == null)
+                {
+                    throw new Exception("oldMetricType == null");
+                }
 
-            var dbEntity = oldMetricType.CreateEf();
-            accountDbContext.MetricTypes.Attach(dbEntity);
+                var entity = lastData.CreateEf();
 
-            dbEntity.CreateDate = metricType.CreateDate;
-            dbEntity.IsDeleted = metricType.IsDeleted;
-            dbEntity.CreateDate = metricType.CreateDate;
-            dbEntity.SystemName = metricType.SystemName;
-            dbEntity.DisplayName = metricType.DisplayName;
-            dbEntity.ActualTimeSecs = TimeSpanHelper.GetSeconds(metricType.ActualTime);
-            dbEntity.NoSignalColor = metricType.NoSignalColor;
-            dbEntity.ConditionAlarm = metricType.ConditionRed;
-            dbEntity.ConditionWarning = metricType.ConditionYellow;
-            dbEntity.ConditionSuccess = metricType.ConditionGreen;
-            dbEntity.ConditionElseColor = metricType.ElseColor;
+                if (lastData.IsDeleted != metricType.IsDeleted)
+                    entity.IsDeleted.Set(metricType.IsDeleted);
+
+                if (lastData.SystemName != metricType.SystemName)
+                    entity.SystemName.Set(metricType.SystemName);
+
+                if (lastData.DisplayName != metricType.DisplayName)
+                    entity.DisplayName.Set(metricType.DisplayName);
+
+                if (lastData.ActualTime != metricType.ActualTime)
+                    entity.ActualTimeSecs.Set(TimeSpanHelper.GetSeconds(metricType.ActualTime));
+
+                if (lastData.NoSignalColor != metricType.NoSignalColor)
+                    entity.NoSignalColor.Set(metricType.NoSignalColor);
+
+                if (lastData.ConditionRed != metricType.ConditionRed)
+                    entity.ConditionAlarm.Set(metricType.ConditionRed);
+
+                if (lastData.ConditionYellow != metricType.ConditionYellow)
+                    entity.ConditionWarning.Set(metricType.ConditionYellow);
+
+                if (lastData.ConditionGreen != metricType.ConditionGreen)
+                    entity.ConditionSuccess.Set(metricType.ConditionGreen);
+
+                if (lastData.ElseColor != metricType.ElseColor)
+                    entity.ConditionElseColor.Set(metricType.ElseColor);
+
+                return entity;
+            }).ToArray();
+
+            storage.MetricTypes.Update(entities);
         }
 
         public override int BatchCount
@@ -222,10 +248,9 @@ namespace Zidium.Core.Caching
             get { return 100; }
         }
 
-        protected override MetricTypeCacheWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext)
+        protected override MetricTypeCacheWriteObject LoadObject(AccountCacheRequest request, IStorage storage)
         {
-            var repository = accountDbContext.GetMetricTypeRepository();
-            var metricType = repository.GetByIdOrNull(request.ObjectId);
+            var metricType = storage.MetricTypes.GetOneOrNullById(request.ObjectId);
             return MetricTypeCacheWriteObject.Create(metricType, request.AccountId);
         }
     }

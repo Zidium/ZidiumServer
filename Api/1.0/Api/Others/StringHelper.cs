@@ -43,6 +43,7 @@ namespace Zidium.Api.Others
             return text;
         }
 
+        // TODO Change to normal result
         public static void SetMaxLength(ref string text, int maxLength)
         {
             if (text != null && text.Length > maxLength)

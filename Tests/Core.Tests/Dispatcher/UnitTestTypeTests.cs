@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Threading;
 using Xunit;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
@@ -26,14 +25,12 @@ namespace Zidium.Core.Tests.Dispatcher
 
             var unitTestTypeId = response.Data.Id;
 
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestTypeRepository = context.GetUnitTestTypeRepository();
-                var unitTestType = unitTestTypeRepository.GetByIdOrNull(unitTestTypeId);
+                var unitTestType = context.UnitTestTypes.Find(unitTestTypeId);
                 Assert.NotNull(unitTestType);
                 Assert.Equal(data.SystemName, unitTestType.SystemName);
             }
-
         }
 
         [Fact]

@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Common;
 using Zidium.Core.Common;
 
 namespace Zidium.Core

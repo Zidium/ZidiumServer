@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
 {
@@ -10,7 +10,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
 
         public DateTime EndDate { get; set; }
 
-        public HttpRequestUnitTestRule Rule { get; set; }
+        public HttpRequestUnitTestRuleForRead Rule { get; set; }
 
         public HttpRequestErrorCode ErrorCode { get; set; }
 

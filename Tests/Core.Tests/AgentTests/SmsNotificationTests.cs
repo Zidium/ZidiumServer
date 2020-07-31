@@ -4,8 +4,9 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.Notifications;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -36,9 +37,9 @@ namespace Zidium.Core.Tests.AgentTests
             // Создадим уведомление
             var phone = "+7 916 111-22-33";
             Guid notificationId;
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var notification = new Notification()
+                var notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -49,8 +50,7 @@ namespace Zidium.Core.Tests.AgentTests
                     CreationDate = DateTime.Now
                 };
 
-                var notificationRepository = context.GetNotificationRepository();
-                notificationRepository.Add(notification);
+                context.Notifications.Add(notification);
                 notificationId = notification.Id;
                 context.SaveChanges();
             }
@@ -61,10 +61,9 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Должно появиться sms
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var smsCommandRepository = context.GetSendSmsCommandRepository();
-                var smsCommand = smsCommandRepository.QueryAll().FirstOrDefault(t => t.ReferenceId == notificationId);
+                var smsCommand = context.SendSmsCommands.FirstOrDefault(t => t.ReferenceId == notificationId);
 
                 Assert.NotNull(smsCommand);
                 Assert.Equal(phone, smsCommand.Phone);

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -92,6 +92,14 @@
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Storage\Storage.Ef\Storage.Ef.csproj">
+      <Project>{f1adee86-7705-474a-9e1e-fd086391445d}</Project>
+      <Name>Storage.Ef</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Storage\Storage\Storage.csproj">
+      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Name>Storage</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Api\Api.1.0.csproj">
       <Project>{1e7f3895-5bce-4df5-aa33-3e4e8843e0eb}</Project>
       <Name>Api.1.0</Name>
@@ -165,12 +173,4 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

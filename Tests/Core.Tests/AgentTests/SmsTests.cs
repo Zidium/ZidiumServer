@@ -3,7 +3,8 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.SendSms;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -16,10 +17,17 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             Guid smsId;
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var sendSmsCommandRepository = accountDbContext.GetSendSmsCommandRepository();
-                var sms = sendSmsCommandRepository.Add("+7 916 123-45-67", "TEST SMS " + Guid.NewGuid());
+                var sms = accountDbContext.SendSmsCommands.Add(new DbSendSmsCommand()
+                {
+                    Id = Guid.NewGuid(),
+                    CreateDate = DateTime.Now,
+                    Status = SmsStatus.InQueue,
+                    Body = "TEST SMS " + Guid.NewGuid(),
+                    Phone = "+7 916 123-45-67"
+                });
+                accountDbContext.SaveChanges();
                 smsId = sms.Id;
             }
 
@@ -31,9 +39,9 @@ namespace Zidium.Core.Tests.AgentTests
             processor.Process(account.Id, smsId);
 
             // проверим, что sms отправлено
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var sms = accountDbContext.GetSendSmsCommandRepository().GetById(smsId);
+                var sms = accountDbContext.SendSmsCommands.Find(smsId);
                 Assert.Null(sms.ErrorMessage);
                 Assert.Equal(SmsStatus.Sent, sms.Status);
             }

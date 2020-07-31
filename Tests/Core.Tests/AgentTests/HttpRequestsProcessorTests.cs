@@ -5,10 +5,11 @@ using NLog;
 using Zidium.Agent.AgentTasks.HttpRequests;
 using Zidium.Core.AccountsDb;
 using Xunit;
-using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.Common.TimeService;
 using Zidium.Core.Tests.Services;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -37,7 +38,6 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.True(NetworkHelper.IsDomainHasIp("google.ru"));
             Assert.True(NetworkHelper.IsDomainHasIp("recursion.ru"));
             Assert.False(NetworkHelper.IsDomainHasIp("fakesite22222.zidium.net"));
-            Assert.True(NetworkHelper.IsDomainHasIp("asmo-m2.recursion.ru"));
             Assert.False(NetworkHelper.IsDomainHasIp("sdsdsds.recursion.ru"));
             Assert.False(NetworkHelper.IsDomainHasIp("jhgjhgfjfeefef.ru"));
         }
@@ -48,18 +48,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -78,7 +78,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть зелёной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Success, unitTestObj.Bulb.Status);
@@ -91,18 +91,19 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            Assert.False(unitTest.IsFake());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -121,7 +122,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -136,18 +137,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -165,7 +166,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -180,18 +181,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -210,7 +211,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -225,18 +226,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -254,7 +255,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -269,18 +270,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -298,7 +299,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -313,18 +314,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -343,7 +344,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -358,18 +359,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -387,7 +388,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -402,18 +403,18 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.ErrorColor = UnitTestResult.Alarm;
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     HttpRequestUnitTest = httpUnitTest,
@@ -431,7 +432,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(MonitoringStatus.Alarm, unitTestObj.Bulb.Status);
@@ -448,11 +449,11 @@ namespace Zidium.Core.Tests.AgentTests
             var component = account.CreateRandomComponentControl();
 
             // Создадим проверку, которая должна провалиться только после второй попытки
-            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestTypes.HttpUnitTestType.SystemName);
+            var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
             var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
             var unitTestId = unitTest.Info.Id;
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 unitTestObj.PeriodSeconds = (int)TimeSpan.FromMinutes(1).TotalSeconds;
@@ -461,7 +462,7 @@ namespace Zidium.Core.Tests.AgentTests
 
                 var httpUnitTest = unitTestObj.HttpRequestUnitTest;
 
-                httpUnitTest.Rules.Add(new HttpRequestUnitTestRule()
+                httpUnitTest.Rules.Add(new DbHttpRequestUnitTestRule()
                 {
                     Id = Guid.NewGuid(),
                     DisplayName = Guid.NewGuid().ToString(),
@@ -482,7 +483,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Проверка не должна стать красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(1, unitTestObj.AttempCount);
@@ -498,7 +499,7 @@ namespace Zidium.Core.Tests.AgentTests
             Assert.Equal(0, processor.ErrorCount);
 
             // Теперь проверка должна быть красной
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var unitTestObj = accountDbContext.UnitTests.Single(x => x.Id == unitTestId);
                 Assert.Equal(2, unitTestObj.AttempCount);

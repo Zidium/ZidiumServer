@@ -1,15 +1,14 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using NLog;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common
 {
     /// <summary>
     /// Данные для цикла по аккаунтам
     /// </summary>
-    public class ForEachAccountData : IDisposable
+    public class ForEachAccountData
     {
         public ILogger Logger { get; protected set; }
 
@@ -17,7 +16,7 @@ namespace Zidium.Core.Common
 
         public AccountInfo Account { get; protected set; }
 
-        public AccountDbContext AccountDbContext { get; protected set; }
+        public IStorage Storage { get; protected set; }
 
         public ForEachAccountData(
             ILogger logger,
@@ -26,13 +25,11 @@ namespace Zidium.Core.Common
         {
             Logger = logger;
             CancellationToken = cancellationToken;
-            AccountDbContext = AccountDbContext.CreateFromDatabaseId(account.AccountDatabaseId);
             Account = account;
+
+            var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
+            Storage = storageFactory.GetStorage(account.DatabaseConnectionString);
         }
 
-        public void Dispose()
-        {
-            AccountDbContext.Dispose();
-        }
     }
 }

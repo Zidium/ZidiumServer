@@ -1,6 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -10,7 +9,7 @@ namespace Zidium.UserAccount.Models
 
         public DateTime? Date { get; set; }
 
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
         public string DisplayName { get; set; }
 

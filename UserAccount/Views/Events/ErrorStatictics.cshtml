@@ -2,6 +2,7 @@
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
 @using Zidium.UserAccount.Models.Events
+
 @model ErrorStatisticsModel
 
 @{
@@ -161,7 +162,7 @@
                     }
                 </td>
                 <td class="event-type-table-defect-column">
-                    @Html.Partial("~/Views/Defects/DefectControl.cshtml", eventTypeData.EventType)
+                    @Html.Partial("~/Views/Defects/DefectControl.cshtml", eventTypeData.DefectControl)
                 </td>
             </tr>
         </table>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
-using Zidium.Core.Common;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models.MetricTypes

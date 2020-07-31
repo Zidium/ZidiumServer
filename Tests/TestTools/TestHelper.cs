@@ -10,14 +10,15 @@ using Zidium.Api.Dto;
 using Zidium.Api.Others;
 using Zidium.Api.XmlConfig;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Caching;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
 using Xunit;
-using Zidium.Core.DispatcherLayer;
+using Zidium.Core.AccountsDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace Zidium.TestTools
 {
@@ -51,7 +52,8 @@ namespace Zidium.TestTools
 
         public static TestAccountInfo GetTestAccount()
         {
-            var account = ConfigDbServicesHelper.GetAccountService().GetOneOrNullBySystemName("TEST");
+            var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+            var account = configDbServicesFactory.GetAccountService().GetOneOrNullBySystemName("TEST");
             if (account == null)
                 throw new Exception("Тестовый аккаунт не существует");
             return TestAccountInfo.Create(account);
@@ -506,49 +508,44 @@ namespace Zidium.TestTools
 
         public static void CheckFolderType(Api.ComponentTypeInfo componentTypeInfo)
         {
-            Assert.Equal(componentTypeInfo.Id, SystemComponentTypes.Folder.Id);
-            Assert.Equal(componentTypeInfo.SystemName, SystemComponentTypes.Folder.SystemName);
+            Assert.Equal(componentTypeInfo.Id, Core.AccountsDb.SystemComponentType.Folder.Id);
+            Assert.Equal(componentTypeInfo.SystemName, Core.AccountsDb.SystemComponentType.Folder.SystemName);
         }
 
         public static IMetricTypeCacheReadObject CreateTestMetricType(Guid accountId)
         {
-            var name = "Counter." + Guid.NewGuid();
-            using (var dispatcherContext = DispatcherContext.Create())
-            {
-                var service = dispatcherContext.MetricService;
-                var type = service.GetOrCreateType(accountId, name);
-                return type;
-            }
+            var name = "MetricType." + Guid.NewGuid();
+
+            var service = new MetricService(GetStorage(accountId));
+            var type = service.GetOrCreateType(accountId, name);
+            return type;
         }
 
         public static IMetricCacheReadObject CreateTestMetric(Guid accountId, Guid componentId)
         {
             var type = CreateTestMetricType(accountId);
-            using (var dispatcherContext = DispatcherContext.Create())
+
+            var service = new MetricService(GetStorage(accountId));
+            var metricId = service.CreateMetric(accountId, componentId, type.Id);
+            return AllCaches.Metrics.Find(new AccountCacheRequest()
             {
-                var service = dispatcherContext.MetricService;
-                var metricId = service.CreateMetric(accountId, componentId, type.Id);
-                return AllCaches.Metrics.Find(new AccountCacheRequest()
-                {
-                    AccountId = accountId,
-                    ObjectId = metricId
-                });
-            }
+                AccountId = accountId,
+                ObjectId = metricId
+            });
         }
 
-        public static ComponentType CreateRandomComponentType(Guid accountId)
+        public static ComponentTypeForRead CreateRandomComponentType(Guid accountId)
         {
             var guid = Guid.NewGuid().ToString();
-            using (var dispatcherContext = DispatcherContext.Create())
+
+            var data = new GetOrCreateComponentTypeRequestData()
             {
-                var data = new GetOrCreateComponentTypeRequestData()
-                {
-                    DisplayName = "display name " + guid,
-                    SystemName = "sysName " + guid
-                };
-                var type = dispatcherContext.ComponentTypeService.GetOrCreateComponentType(accountId, data);
-                return type;
-            }
+                DisplayName = "display name " + guid,
+                SystemName = "sysName " + guid
+            };
+            var service = new ComponentTypeService(GetStorage(accountId));
+            var type = service.GetOrCreateComponentType(accountId, data);
+            return type;
         }
 
         public static Core.Api.ComponentInfo GetTestApplicationComponent(TestAccountInfo accountInfo)
@@ -600,73 +597,79 @@ namespace Zidium.TestTools
             return database;
         }
 
-        public static EventType GetOrCreateEventType(
+        public static EventTypeForRead GetOrCreateEventType(
             Guid accountId,
-            Core.Api.EventCategory category,
+            Storage.EventCategory category,
             string systemName)
         {
-            using (var accountDb = AccountDbContext.CreateFromAccountId(accountId))
+            var eventType = new EventTypeForAdd()
             {
-                var eventType = new EventType()
-                {
-                    SystemName = systemName,
-                    DisplayName = "display name for " + systemName,
-                    Category = category
-                };
-                var type = accountDb.GetEventTypeRepository().GetOrCreate(eventType);
-                return type;
-            }
+                SystemName = systemName,
+                DisplayName = "display name for " + systemName,
+                Category = category
+            };
+            var type = new EventTypeService(GetStorage(accountId)).GetOrCreate(eventType, accountId);
+            return type;
         }
 
-        public static User GetAccountAdminUser(Guid accountId)
+        public static UserForRead GetAccountAdminUser(Guid accountId)
         {
-            using (var accountContext = AccountDbContext.CreateFromAccountId(accountId))
-            {
-                var repository = accountContext.GetUserRepository();
-                return repository.GetAccountAdmin();
-            }
+            var service = new UserService(GetStorage(accountId));
+            return service.GetAccountAdmin();
         }
 
-        public static User CreateTestUser(Guid accountId, string password = null)
+        public static UserForRead CreateTestUser(Guid accountId, string password = null, string displayName = null)
         {
-            using (var dispatcherContext = DispatcherContext.Create())
+            var storage = GetStorage(accountId);
+            var userService = new UserService(storage);
+            var login = "Test.User." + Guid.NewGuid();
+            var user = new UserForAdd()
             {
-                var userService = dispatcherContext.UserService;
-                var login = "Test.User." + Guid.NewGuid();
-                var user = new User()
-                {
-                    Login = login,
-                    LastName = login,
-                    FirstName = login,
-                    MiddleName = login,
-                    Post = "Post"
-                };
+                Id = Guid.NewGuid(),
+                CreateDate = GetNow(),
+                Login = login,
+                DisplayName = displayName,
+                LastName = login,
+                FirstName = login,
+                MiddleName = login,
+                Post = "Post"
+            };
 
-                if (!string.IsNullOrEmpty(password))
-                    user.PasswordHash = PasswordHelper.GetPasswordHashString(password);
+            if (!string.IsNullOrEmpty(password))
+                user.PasswordHash = PasswordHelper.GetPasswordHashString(password);
 
-                // Создадим по одному контакту каждого типа
-                user.UserContacts.Add(new UserContact()
-                {
-                    Type = UserContactType.MobilePhone,
-                    Value = Guid.NewGuid().ToString()
-                });
+            // Создадим по одному контакту каждого типа
+            var contacts = new List<UserContactForAdd>();
+            contacts.Add(new UserContactForAdd()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Type = UserContactType.MobilePhone,
+                Value = Guid.NewGuid().ToString(),
+                CreateDate = GetNow()
+            });
 
-                user.UserContacts.Add(new UserContact()
-                {
-                    Type = UserContactType.Telegram,
-                    Value = Guid.NewGuid().ToString()
-                });
+            contacts.Add(new UserContactForAdd()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Type = UserContactType.Telegram,
+                Value = Guid.NewGuid().ToString(),
+                CreateDate = GetNow()
+            });
 
-                user.UserContacts.Add(new UserContact()
-                {
-                    Type = UserContactType.VKontakte,
-                    Value = Guid.NewGuid().ToString()
-                });
+            contacts.Add(new UserContactForAdd()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Type = UserContactType.VKontakte,
+                Value = Guid.NewGuid().ToString(),
+                CreateDate = GetNow()
+            });
 
-                user = userService.CreateUser(user, accountId, false);
-                return user;
-            }
+            var userId = userService.CreateUser(user, contacts, new List<UserRoleForAdd>(), accountId, false);
+
+            return storage.Users.GetOneById(userId);
         }
 
         public static Guid CreateRandomComponentTypeId(Guid accountId)
@@ -674,36 +677,28 @@ namespace Zidium.TestTools
             return CreateRandomComponentType(accountId).Id;
         }
 
-        public static EventType GetTestEventType(Guid accountId)
+        public static EventTypeForRead GetTestEventType(Guid accountId)
         {
-            using (var accountContext = AccountDbContext.CreateFromAccountId(accountId))
+            var eventType = new EventTypeForAdd()
             {
-                IEventTypeRepository eventTypeRepository = new EventTypeRepository(accountContext);
-                var eventType = new EventType()
-                {
-                    Category = Core.Api.EventCategory.ComponentEvent,
-                    DisplayName = "Тестовый тип события " + Guid.NewGuid(),
-                    ImportanceForNew = Core.Api.EventImportance.Success,
-                    JoinIntervalSeconds = 5,
-                    SystemName = "EventType.Test " + Guid.NewGuid()
-                };
-                eventType = eventTypeRepository.GetOrCreate(eventType);
-                return eventType;
-            }
+                Category = Storage.EventCategory.ComponentEvent,
+                DisplayName = "Тестовый тип события " + Guid.NewGuid(),
+                ImportanceForNew = Storage.EventImportance.Success,
+                JoinIntervalSeconds = 5,
+                SystemName = "EventType.Test " + Guid.NewGuid()
+            };
+            return new EventTypeService(GetStorage(accountId)).GetOrCreate(eventType, accountId);
         }
 
         public static IUnitTestTypeCacheReadObject CreateTestUnitTestType(Guid accountId)
         {
-            using (var dispatcherContext = DispatcherContext.Create())
+            var service = new UnitTestTypeService(GetStorage(accountId));
+            var unitTestType = service.GetOrCreateUnitTestType(accountId, new GetOrCreateUnitTestTypeRequestData()
             {
-                var service = dispatcherContext.UnitTestTypeService;
-                var unitTestType = service.GetOrCreateUnitTestType(accountId, new GetOrCreateUnitTestTypeRequestData()
-                {
-                    DisplayName = "Тестовый тип проверки " + Guid.NewGuid(),
-                    SystemName = "UnitTestType.Test " + Guid.NewGuid()
-                });
-                return unitTestType;
-            }
+                DisplayName = "Тестовый тип проверки " + Guid.NewGuid(),
+                SystemName = "UnitTestType.Test " + Guid.NewGuid()
+            });
+            return unitTestType;
         }
 
         public static GetOrCreateUnitTestResponseData CreateTestUnitTest(Guid accountId, Guid componentId)
@@ -725,7 +720,7 @@ namespace Zidium.TestTools
             account.SaveAllCaches();
 
             var now = GetDispatcherClient().GetServerTime().Data.Date.AddSeconds(1);
-            using (var storageDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var storageDbContext = GetAccountDbContext(account.Id))
             {
                 var events = storageDbContext.Events
                     .Where(x => x.OwnerId == ownerId && x.ActualDate > now)
@@ -740,11 +735,11 @@ namespace Zidium.TestTools
             }
         }
 
-        public static MetricType CreateCpuMetricType(Guid accountId)
+        public static DbMetricType CreateCpuMetricType(Guid accountId)
         {
-            using (var accountContext = AccountDbContext.CreateFromAccountId(accountId))
+            using (var accountContext = GetAccountDbContext(accountId))
             {
-                var metricType = new MetricType()
+                var metricType = new DbMetricType()
                 {
                     Id = Guid.NewGuid(),
                     IsDeleted = false,
@@ -760,11 +755,11 @@ namespace Zidium.TestTools
             }
         }
 
-        public static MetricType CreateHddMetricType(Guid accountId)
+        public static DbMetricType CreateHddMetricType(Guid accountId)
         {
-            using (var accountContext = AccountDbContext.CreateFromAccountId(accountId))
+            using (var accountContext = GetAccountDbContext(accountId))
             {
-                var metricType = new MetricType()
+                var metricType = new DbMetricType()
                 {
                     Id = Guid.NewGuid(),
                     IsDeleted = false,
@@ -780,18 +775,18 @@ namespace Zidium.TestTools
             }
         }
 
-        public static void CheckExternalStatus(Guid accountId, IComponentControl componentControl, Core.Api.MonitoringStatus status)
+        public static void CheckExternalStatus(Guid accountId, IComponentControl componentControl, Storage.MonitoringStatus status)
         {
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(accountId))
+            using (var accountDbContext = GetAccountDbContext(accountId))
             {
                 var component = accountDbContext.Components.First(x => x.Id == componentControl.Info.Id);
                 Assert.Equal(component.ExternalStatus.Status, status);
             }
         }
 
-        public static void CheckMetricaStatus(Guid accountId, IComponentControl componentControl, string metricName, Core.Api.MonitoringStatus status)
+        public static void CheckMetricaStatus(Guid accountId, IComponentControl componentControl, string metricName, Storage.MonitoringStatus status)
         {
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(accountId))
+            using (var accountDbContext = GetAccountDbContext(accountId))
             {
                 var component = accountDbContext.Components.First(x => x.Id == componentControl.Info.Id);
                 var metric = component.Metrics.Single(x => x.MetricType.SystemName == metricName && x.IsDeleted == false);
@@ -799,15 +794,13 @@ namespace Zidium.TestTools
             }
         }
 
-        //public static List<Notification> _Last;
-
-        public static List<Notification> SendSubscriptionNotifications(
+        public static List<DbNotification> SendSubscriptionNotifications(
             Guid accountId,
-            Core.Api.EventImportance importance,
+            Storage.EventImportance importance,
             Guid componentId,
             SubscriptionChannel notificationType)
         {
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(accountId))
+            using (var accountDbContext = GetAccountDbContext(accountId))
             {
                 // получим новые, неотправленные уведомления
                 var notifications = accountDbContext.Notifications
@@ -825,7 +818,7 @@ namespace Zidium.TestTools
                 }
 
                 accountDbContext.SaveChanges();
-                //_Last = notifications;
+
                 return notifications;
             }
         }
@@ -839,5 +832,21 @@ namespace Zidium.TestTools
             };
             return data;
         }
+
+        public static IStorage GetStorage(Guid accountId)
+        {
+            return AccountStorageFactory.GetStorageByAccountId(accountId);
+        }
+
+        private static readonly IAccountStorageFactory AccountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+
+        internal static AccountDbContext GetAccountDbContext(Guid accountId)
+        {
+            var dispatcherClient = DispatcherHelper.GetDispatcherClient();
+            var accountInfo = dispatcherClient.GetAccountById(new GetAccountByIdRequestData() { Id = accountId }).Data;
+            var databaseInfo = dispatcherClient.GetDatabaseById(new GetDatabaseByIdRequestData() { Id = accountInfo.AccountDatabaseId }).Data;
+            return AccountDbContext.CreateFromConnectionString(null, databaseInfo.ConnectionString);
+        }
+
     }
 }

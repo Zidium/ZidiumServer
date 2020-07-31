@@ -1,6 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Defects
 {
@@ -16,7 +15,7 @@ namespace Zidium.UserAccount.Models.Defects
 
         public Guid? ResponsibleUserId { get; set; }
 
-        public User ResponsibleUser { get; set; }
+        public GetGuiDefectsInfo.ResponsibleUserInfo ResponsibleUser { get; set; }
 
         public string Code { get; set; }
 

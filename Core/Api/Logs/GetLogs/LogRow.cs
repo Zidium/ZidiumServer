@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {

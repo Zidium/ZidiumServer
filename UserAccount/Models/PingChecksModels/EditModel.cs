@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Models.PingChecksModels
@@ -31,21 +33,21 @@ namespace Zidium.UserAccount.Models.PingChecksModels
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.Others.Id; }
+            get { return SystemComponentType.Others.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.PingTestType.Id; }
+            get { return SystemUnitTestType.PingTestType.Id; }
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
             TimeoutMs = 1000;
 
-            if (UnitTest != null)
+            if (id != null)
             {
-                var rule = UnitTest.PingRule;
+                var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(id.Value);
                 if (rule != null)
                 {
                     Host = rule.Host;
@@ -54,18 +56,29 @@ namespace Zidium.UserAccount.Models.PingChecksModels
             }
         }
 
-        public void SaveRule()
+        public void SaveRule(IStorage storage)
         {
-            if (UnitTest.PingRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newRule = new UnitTestPingRule();
-                newRule.UnitTestId = UnitTest.Id;
-                newRule.UnitTest = UnitTest;
-                UnitTest.PingRule = newRule;
+                var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(Id.Value);
+                if (rule == null)
+                {
+                    var ruleForAdd = new UnitTestPingRuleForAdd()
+                    {
+                        UnitTestId = Id.Value,
+                        TimeoutMs = 5000
+                    };
+                    storage.UnitTestPingRules.Add(ruleForAdd);
+                    rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(Id.Value);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Host.Set(Host);
+                ruleForUpdate.TimeoutMs.Set(TimeoutMs);
+                storage.UnitTestPingRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            var rule = UnitTest.PingRule;
-            rule.Host = Host;
-            rule.TimeoutMs = TimeoutMs;
         }
 
         protected override void ValidateRule()
@@ -79,5 +92,8 @@ namespace Zidium.UserAccount.Models.PingChecksModels
                 throw new UserFriendlyException("Таймаут должен быть больше нуля");
             }
         }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs;
+
     }
 }

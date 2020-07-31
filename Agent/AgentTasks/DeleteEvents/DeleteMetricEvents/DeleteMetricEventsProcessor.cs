@@ -1,7 +1,6 @@
 ﻿using System.Threading;
 using NLog;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.DeleteEvents
 {
@@ -19,7 +18,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         protected EventCategory[] Categories;
 
-        public override int GetMaxDaysFromTariffLimit(TariffLimit tariffLimit)
+        public override int GetMaxDaysFromTariffLimit(TariffLimitForRead tariffLimit)
         {
             return tariffLimit.MetricsMaxDays;
         }

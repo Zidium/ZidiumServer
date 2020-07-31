@@ -1,4 +1,8 @@
-﻿@model Zidium.Core.AccountsDb.Metric
-@Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.Component)
+﻿@using System.Web.Mvc.Html
+
+@model Zidium.UserAccount.Models.MetricBreadCrumbsModel
+
+@Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.ComponentBreadCrumbs)
+
 <span style="margin-left: 2px; margin-right: 2px">/</span>
-@Html.ActionLink(Model.MetricType.DisplayName, "Show", "Metrics", new { id = Model.Id }, null)
+@Html.ActionLink(Model.DisplayName, "Show", "Metrics", new { id = Model.Id }, null)

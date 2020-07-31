@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
-using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
 using Zidium.UserAccount.Models.Others;
@@ -15,7 +16,7 @@ using Zidium.UserAccount.Models.Subscriptions;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class SubscriptionsController : ContextController
+    public class SubscriptionsController : BaseController
     {
         public ActionResult Index(Guid? userId = null)
         {
@@ -28,20 +29,143 @@ namespace Zidium.UserAccount.Controllers
             var channels = SubscriptionHelper.AvailableSubscriptionChannels;
 
             // получаем подписки
-            var subscriptions = CurrentAccountDbContext.GetSubscriptionRepository()
-                .QueryAll()
-                .Where(x => x.UserId == userId.Value)
-                .Where(x => channels.Contains(x.Channel))
-                .ToArray();
+            var subscriptions = GetStorage().Subscriptions.Filter(userId.Value, channels);
 
             var model = new SubscriptionListModel()
             {
                 UserId = userId.Value,
                 Subscriptions = subscriptions,
-                Channels = channels
+                Channels = channels,
+                DefaultSubscriptions = GetTable(SubscriptionObject.Default, userId.Value, channels, subscriptions),
+                ComponentTypeSubscriptions = GetTable(SubscriptionObject.ComponentType, userId.Value, channels, subscriptions),
+                ComponentSubscriptions = GetTable(SubscriptionObject.Component, userId.Value, channels, subscriptions)
             };
 
             return View(model);
+        }
+
+        private SubscriptionsTableModel GetTable(SubscriptionObject obj, Guid userId, SubscriptionChannel[] channels, SubscriptionForRead[] allSubscriptions)
+        {
+            var model = new SubscriptionsTableModel()
+            {
+                Object = obj,
+                UserId = userId,
+                Channels = channels
+            };
+            var subscriptions = allSubscriptions.Where(x => x.Object == obj).ToArray();
+
+            // подписки по умолчанию
+            if (obj == SubscriptionObject.Default)
+            {
+                var row = new SubscriptionsTableRowModel()
+                {
+                    Cells = new List<ShowSubscriptionCellModel>(),
+                    Table = model,
+                    SubscriptionObject = SubscriptionObject.Default
+                };
+
+                foreach (var channel in channels)
+                {
+                    row.Cells.Add(new ShowSubscriptionCellModel()
+                    {
+                        Channel = channel,
+                        Object = SubscriptionObject.Default,
+                        Subscription = subscriptions.SingleOrDefault(x => x.Channel == channel && x.Object == SubscriptionObject.Default),
+                        Row = row
+                    });
+                }
+
+                model.Rows = new[] { row };
+            }
+
+            // подписки на тип компонента
+            if (obj == SubscriptionObject.ComponentType)
+            {
+                var componentTypeGroups = subscriptions.GroupBy(x => x.ComponentTypeId).Select(x => new
+                {
+                    ComponentTypeId = x.Key,
+                    Subscriptions = x.ToArray()
+                }).ToArray();
+
+                var componentTypes = GetStorage().ComponentTypes.GetMany(componentTypeGroups.Select(t => t.ComponentTypeId.GetValueOrDefault()).ToArray()).ToDictionary(a => a.Id, b => b);
+
+                var componentTypeGroupsWithTypes = componentTypeGroups.Select(t => new
+                {
+                    ComponentTypeId = t.ComponentTypeId,
+                    ComponentType = componentTypes[t.ComponentTypeId.GetValueOrDefault()],
+                    Subscriptions = t.Subscriptions
+                }).OrderBy(t => t.ComponentType.DisplayName);
+
+                var rows = new List<SubscriptionsTableRowModel>();
+                foreach (var componentTypeGroup in componentTypeGroupsWithTypes)
+                {
+                    var row = new SubscriptionsTableRowModel()
+                    {
+                        Cells = new List<ShowSubscriptionCellModel>(),
+                        Table = model,
+                        SubscriptionObject = SubscriptionObject.ComponentType,
+                        Text = componentTypeGroup.ComponentType.DisplayName
+                    };
+
+                    foreach (var channel in channels)
+                    {
+                        row.Cells.Add(new ShowSubscriptionCellModel()
+                        {
+                            Channel = channel,
+                            Object = SubscriptionObject.ComponentType,
+                            ObjectId = componentTypeGroup.ComponentType.Id,
+                            Subscription = componentTypeGroup.Subscriptions.SingleOrDefault(x => x.Channel == channel),
+                            Row = row
+                        });
+                    }
+
+                    rows.Add(row);
+                }
+                model.Rows = rows.ToArray();
+            }
+
+            // подписки на компонент
+            if (obj == SubscriptionObject.Component)
+            {
+                var componentGroups = subscriptions.GroupBy(x => x.ComponentId).Select(x => new
+                {
+                    ComponentId = x.Key,
+                    FullName = ComponentHelper.GetComponentPathText(GetStorage().Components.GetOneById(x.Key.GetValueOrDefault()), GetStorage()),
+                    Subscriptions = x.ToArray()
+                })
+                    .OrderBy(x => x.FullName)
+                    .ToArray();
+
+                var rows = new List<SubscriptionsTableRowModel>();
+                foreach (var componentGroup in componentGroups)
+                {
+                    var row = new SubscriptionsTableRowModel()
+                    {
+                        Cells = new List<ShowSubscriptionCellModel>(),
+                        Table = model,
+                        SubscriptionObject = SubscriptionObject.Component,
+                        Text = componentGroup.FullName,
+                        ComponentId = componentGroup.ComponentId
+                    };
+
+                    foreach (var channel in channels)
+                    {
+                        row.Cells.Add(new ShowSubscriptionCellModel()
+                        {
+                            Channel = channel,
+                            Object = SubscriptionObject.Component,
+                            ObjectId = componentGroup.ComponentId,
+                            Subscription = componentGroup.Subscriptions.SingleOrDefault(x => x.Channel == channel),
+                            Row = row
+                        });
+                    }
+
+                    rows.Add(row);
+                }
+                model.Rows = rows.ToArray();
+            }
+
+            return model;
         }
 
         /// <summary>
@@ -77,8 +201,9 @@ namespace Zidium.UserAccount.Controllers
                 ResendTime = null,
                 ComponentTypeId = componentTypeId,
                 ComponentId = componentId,
-                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
+                CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl()
             };
+            RestoreEditModel(model);
             return View("Edit", model);
         }
 
@@ -89,8 +214,7 @@ namespace Zidium.UserAccount.Controllers
         /// <returns></returns>
         public ActionResult Edit(Guid id)
         {
-            var subscriptionRepository = CurrentAccountDbContext.GetSubscriptionRepository();
-            var subscription = subscriptionRepository.GetById(id);
+            var subscription = GetStorage().Subscriptions.GetOneById(id);
             var model = new SubscriptionEditModel()
             {
                 ModalMode = Request.IsAjaxRequest(),
@@ -116,8 +240,9 @@ namespace Zidium.UserAccount.Controllers
                 SendIntervalTo = subscription.SendIntervalToHour.HasValue && subscription.SendIntervalToMinute.HasValue
                     ? new Time() { Hour = subscription.SendIntervalToHour.Value, Minute = subscription.SendIntervalToMinute.Value }
                     : (Time?)null,
-                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
+                CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl()
             };
+            RestoreEditModel(model);
             return View(model);
         }
 
@@ -125,6 +250,8 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult Edit(SubscriptionEditModel model)
         {
+            RestoreEditModel(model);
+
             var modelState = new ModelStateHelper<SubscriptionEditModel>(ModelState);
 
             // Проверка ComponentTypeId
@@ -252,7 +379,22 @@ namespace Zidium.UserAccount.Controllers
             return View(model);
         }
 
-        protected void CheckEditingPermissions(Subscription subscription)
+        private void RestoreEditModel(SubscriptionEditModel model)
+        {
+            if (model.ComponentTypeId.HasValue)
+            {
+                model.ComponentTypeDisplayName = GetStorage().ComponentTypes.GetOneById(model.ComponentTypeId.Value).DisplayName;
+            }
+
+            if (model.ComponentId.HasValue)
+            {
+                var service = new ComponentService(GetStorage());
+                var component = GetStorage().Components.GetOneById(model.ComponentId.Value);
+                model.ComponentDisplayName = service.GetFullDisplayName(component);
+            }
+        }
+
+        protected void CheckEditingPermissions(SubscriptionForRead subscription)
         {
             if (!CurrentUser.CanManageAccount() && CurrentUser.Id != subscription.UserId)
                 throw new NoAccessToPageException();
@@ -262,14 +404,12 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult Enable(string ids, bool isEnable, Guid userId, SubscriptionChannel channel)
         {
-            var subscriptionRepository = CurrentAccountDbContext.GetSubscriptionRepository();
-
             var list = ids.Split(',');
             foreach (var item in list)
             {
                 var id = new Guid(item);
 
-                var subscription = subscriptionRepository.GetById(id);
+                var subscription = GetStorage().Subscriptions.GetOneById(id);
                 CheckEditingPermissions(subscription);
 
                 var client = GetDispatcherClient();
@@ -307,14 +447,12 @@ namespace Zidium.UserAccount.Controllers
             var colorValue = ColorStatusSelectorValue.FromString(color);
             var colors = colorValue.GetSelectedEventImportances();
 
-            var subscriptionRepository = CurrentAccountDbContext.GetSubscriptionRepository();
-
             var list = ids.Split(',');
             foreach (var item in list)
             {
                 var id = new Guid(item);
 
-                var subscription = subscriptionRepository.GetById(id);
+                var subscription = GetStorage().Subscriptions.GetOneById(id);
                 CheckEditingPermissions(subscription);
 
                 var client = GetDispatcherClient();
@@ -331,7 +469,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     Id = data.Id,
                     IsEnabled = data.IsEnabled,
-                    Importance = colors.Count > 0 ? colors[0] : data.Importance,
+                    Importance = colors.Length > 0 ? colors[0] : data.Importance,
                     DurationMinimumInSeconds = data.DurationMinimumInSeconds,
                     ResendTimeInSeconds = data.ResendTimeInSeconds
                 });
@@ -360,8 +498,7 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                var repository = CurrentAccountDbContext.GetSubscriptionRepository();
-                var subscription = repository.GetById(model.Id);
+                var subscription = GetStorage().Subscriptions.GetOneById(model.Id);
                 CheckEditingPermissions(subscription);
 
                 var client = GetDispatcherClient();
@@ -399,7 +536,8 @@ namespace Zidium.UserAccount.Controllers
                 Channel = channel,
                 ViewMode = viewMode.Value
             };
-            model.Init();
+            model.Init(GetStorage());
+
             return PartialView(model);
         }
 
@@ -407,26 +545,28 @@ namespace Zidium.UserAccount.Controllers
             Guid componentId,
             Guid? userId)
         {
-            var component = GetComponentById(componentId);
+            var component = GetStorage().Components.GetOneById(componentId);
             userId = userId ?? CurrentUser.Id;
-            var user = GetUserById(userId.Value);
+            var user = GetStorage().Users.GetOneById(userId.Value);
+            var componentType = GetStorage().ComponentTypes.GetOneById(component.ComponentTypeId);
+            var userContacts = GetStorage().UserContacts.GetByUserId(user.Id);
 
-            var subscriptions = CurrentAccountDbContext
-                .GetSubscriptionRepository()
-                .QueryAll()
-                .Where(x => x.UserId == userId
-                    && (x.Object == SubscriptionObject.Default
+            var subscriptions = GetStorage().Subscriptions.GetByUserId(userId.Value)
+                .Where(x =>
+                    (x.Object == SubscriptionObject.Default
                     || (x.Object == SubscriptionObject.ComponentType && x.ComponentTypeId == component.ComponentTypeId)
                     || (x.Object == SubscriptionObject.Component && x.ComponentId == componentId)))
                 .ToArray();
 
-
             var model = new EditComponentSubscriptionsModel()
             {
                 Component = component,
+                ComponentFullName = new ComponentService(GetStorage()).GetFullDisplayName(component),
+                ComponentType = componentType,
                 User = user,
+                UserContacts = userContacts,
                 AllSubscriptions = subscriptions,
-                CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl()
+                CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl()
             };
 
             return View(model);

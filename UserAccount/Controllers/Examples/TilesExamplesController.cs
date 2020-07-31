@@ -5,7 +5,7 @@ using Zidium.UserAccount.Models.Examples.Tiles;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class TilesExamplesController : ContextController
+    public class TilesExamplesController : BaseController
     {
         private static Random _random = new Random();
 

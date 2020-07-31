@@ -7,7 +7,7 @@ using Zidium.UserAccount.Models.ReloadedTileModels;
 
 namespace Zidium.UserAccount.Controllers
 {
-    public class ReloadedTilesController : ContextController
+    public class ReloadedTilesController : BaseController
     {
         public ActionResult Render(string url)
         {

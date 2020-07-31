@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models

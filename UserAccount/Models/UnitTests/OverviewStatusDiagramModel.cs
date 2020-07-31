@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -7,7 +7,7 @@ namespace Zidium.UserAccount.Models.UnitTests
     {
         public Guid UnitTestId { get; set; }
 
-        public static OverviewStatusDiagramModel Create(UnitTest unitTest)
+        public static OverviewStatusDiagramModel Create(UnitTestForRead unitTest)
         {
             if (unitTest == null)
             {

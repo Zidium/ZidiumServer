@@ -9,7 +9,6 @@ using System.Web;
 using NLog;
 using Zidium.Api;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
 using Zidium.Core.Common;
@@ -56,7 +55,8 @@ namespace Zidium.DispatcherHttpService
 
         private static void CheckConfigDbContext()
         {
-            ConfigDbServicesHelper.GetAccountService().GetSystemAccount();
+            var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+            configDbServicesFactory.GetAccountService().GetSystemAccount();
         }
 
         private static IComponentControl _actionStatsFolder;
@@ -100,8 +100,8 @@ namespace Zidium.DispatcherHttpService
                 output.AppendLine("Api.WebLogManager.GetQueueSize(): " + DataSizeHelper.GetSizeText(ComponentControl.Client.WebLogManager.GetQueueSize()));
             }
             output.AppendLine("------------");
-
             output.AppendLine("");
+
             foreach (var cache in AllCaches.All)
             {
                 output.AppendLine("--- " + cache.GetType() + " ---");
@@ -309,8 +309,9 @@ namespace Zidium.DispatcherHttpService
                     stat.Component.SendMetric("Запросов в минуту", stat.Count, actualInterval);
                 }
 
-                ComponentControl.SendMetric("Contexts.Account.Active", AccountDbContext.ActiveCount, actualInterval);
-                ComponentControl.SendMetric("Contexts.Account.Max", AccountDbContext.MaxActiveCount, actualInterval);
+                // TODO Collect storage stats
+                // ComponentControl.SendMetric("Contexts.Account.Active", AccountDbContext.ActiveCount, actualInterval);
+                // ComponentControl.SendMetric("Contexts.Account.Max", AccountDbContext.MaxActiveCount, actualInterval);
 
                 lock (CounterLockObject)
                 {

@@ -1,17 +1,11 @@
 ﻿@using Zidium.Core.AccountsDb
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Controls
+
 @model Zidium.UserAccount.Models.CheckModels.UnitTestCommonSettingsModel
-@{
-    // код ниже нужен, чтобы загрузить проверку в случае,
-    // когда при сохранении модель имеет ошибку и контроллер возвращает вьюшку,
-    // а вьюшке нужен заполненный Model.UnitTest
-    if (Model.Id.HasValue && Model.UnitTest == null)
-    {
-        Model.GetUnitTest(Model.Id.Value);
-    }
-}
+
 @Html.AntiForgeryToken()
+
 <input type="hidden" name="Id" id="Id" value="@Model.Id" />
 
 @Html.MyValidationSummaryVertical()
@@ -26,7 +20,7 @@
 
         @if (Model.Id.HasValue)
         {
-            if (Model.UnitTest.Enable)
+            if (Model.Enable)
             {
                 @Html.ActionLink("Выключить", "Disable", "UnitTests", new { id = Model.Id }, new { @class = "btn btn-default bottom10px", id = "disabeUnitTestBtn" })
             }
@@ -70,7 +64,7 @@
     </div>
 </div>
 
-@if (SystemUnitTestTypes.CanEditPeriod(Model.UnitTestTypeId))
+@if (SystemUnitTestType.CanEditPeriod(Model.UnitTestTypeId))
 {
     // для проверки домена период НЕ показываем, всегда проверяем 1 раз в день
     <div class="form-group">
@@ -90,7 +84,7 @@
     </div>
 }
 
-@if (!SystemUnitTestTypes.IsSystem(Model.UnitTestTypeId))
+@if (!SystemUnitTestType.IsSystem(Model.UnitTestTypeId))
 {
     // Интервал актуальности настраивается только для пользовательских проверок
     <div class="form-group">
@@ -133,7 +127,7 @@
     </div>
 </div>
 
-@if (!SystemUnitTestTypes.IsSystem(Model.UnitTestTypeId))
+@if (!SystemUnitTestType.IsSystem(Model.UnitTestTypeId))
 {
     // Цвет без сигнала настраивается только для пользовательских проверок
 

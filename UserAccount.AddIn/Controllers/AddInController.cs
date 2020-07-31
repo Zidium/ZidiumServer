@@ -2,7 +2,7 @@
 
 namespace Zidium.UserAccount.Controllers
 {
-    public class AddInController : ContextController
+    public class AddInController : BaseController
     {
         public PartialViewResult SystemMenuPartial()
         {

@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.ExtentionProperties;
 
 namespace Zidium.UserAccount.Models
@@ -10,11 +10,13 @@ namespace Zidium.UserAccount.Models
 
         public DateTime EndDate { get; set; }
 
-        public Component Component { get; set; }
+        public ComponentForRead Component { get; set; }
 
-        public UnitTest Unittest { get; set; }
+        public UnitTestForRead Unittest { get; set; }
 
-        public Metric Metric { get; set; }
+        public MetricForRead Metric { get; set; }
+
+        public MetricTypeForRead MetricType { get; set; }
 
         public string Message { get; set; }
 

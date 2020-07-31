@@ -2,14 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Zidium.Api;
 using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.TestTools;
-using DataType = Zidium.Core.Api.DataType;
-using EventCategory = Zidium.Core.Api.EventCategory;
-using EventImportance = Zidium.Core.Api.EventImportance;
-using MonitoringStatus = Zidium.Core.Api.MonitoringStatus;
-using SendEventData = Zidium.Core.Api.SendEventData;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -39,13 +34,12 @@ namespace Zidium.Core.Tests.Dispatcher
                 Category = EventCategory.ApplicationError,
                 Importance = EventImportance.Alarm
             });
-            Assert.Equal(ResponseCode.ObjectDisabled, eventResponse.Code);
+            Assert.Equal(Zidium.Api.ResponseCode.ObjectDisabled, eventResponse.Code);
 
             // Проверим события
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var eventRepository = context.GetEventRepository();
-                var events = eventRepository.QueryAll(component.Id).ToList();
+                var events = context.Events.Where(t => t.OwnerId == component.Id).ToList();
 
                 // Должно быть 2 серого события ("Нет данных", "Выключено") внешнего статуса
                 var externalGrayEvents = events
@@ -70,10 +64,9 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.NotEqual(MonitoringStatus.Alarm, stateResponse.Data.Status);
 
             // Проверим события
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var eventRepository = context.GetEventRepository();
-                var events = eventRepository.QueryAll(component.Id).ToList();
+                var events = context.Events.Where(t => t.OwnerId == component.Id).ToList();
 
                 // Должно быть 3 серых события внешнего статуса
                 Assert.Equal(3, events.Count(t => t.Category == EventCategory.ComponentInternalStatus && t.Importance == EventImportance.Unknown));

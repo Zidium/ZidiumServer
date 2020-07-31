@@ -3,7 +3,7 @@ using System.Linq;
 using System.Web.Mvc;
 using Xunit;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models.SqlChecksModels;
@@ -38,14 +38,13 @@ namespace Zidium.UserAccount.Tests
             }
 
             // Посмотрим, как создалась проверка и правило
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 var displayName = "Sql-запрос: " + model.Name;
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.QueryAll().FirstOrDefault(t => t.DisplayName == displayName);
+                var unitTest = accountContext.UnitTests.FirstOrDefault(t => t.DisplayName == displayName);
 
                 Assert.NotNull(unitTest);
-                Assert.Equal(SystemUnitTestTypes.SqlTestType.Id, unitTest.TypeId);
+                Assert.Equal(SystemUnitTestType.SqlTestType.Id, unitTest.TypeId);
                 Assert.Equal((int)model.Period.TotalSeconds, unitTest.PeriodSeconds);
                 Assert.Equal(ObjectColor.Gray, unitTest.NoSignalColor);
                 Assert.Equal(model.ConnectionString, unitTest.SqlRule.ConnectionString);
@@ -69,20 +68,19 @@ namespace Zidium.UserAccount.Tests
             model.ConnectionString = "Data Source=Server2;Initial Catalog=Database2;User Id=User2;Password=Password2";
             model.Query = Guid.NewGuid().ToString();
             model.Period = TimeSpan.FromMinutes(20);
-            model.Provider = DatabaseProviderType.PostgreSql;
+            model.Provider = SqlRuleDatabaseProviderType.PostgreSql;
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 using (var controller = new SqlChecksController(account.Id, user.Id))
                 {
                     controller.EditSimple(model);
 
                     // Посмотрим, как изменилась проверка и правило
-                    var unitTestRepository = accountContext.GetUnitTestRepository();
-                    var unitTest = unitTestRepository.GetByIdOrNull(unitTestId);
+                    var unitTest = accountContext.UnitTests.Find(unitTestId);
 
                     Assert.NotNull(unitTest);
-                    Assert.Equal(SystemUnitTestTypes.SqlTestType.Id, unitTest.TypeId);
+                    Assert.Equal(SystemUnitTestType.SqlTestType.Id, unitTest.TypeId);
                     Assert.Equal((int)model.Period.TotalSeconds, unitTest.PeriodSeconds);
                     Assert.Equal(model.ConnectionString, unitTest.SqlRule.ConnectionString);
                     Assert.Equal(model.Query, unitTest.SqlRule.Query);

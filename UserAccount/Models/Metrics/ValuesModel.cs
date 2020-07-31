@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Linq;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models.Counters
@@ -13,6 +12,26 @@ namespace Zidium.UserAccount.Models.Counters
 
         public ColorStatusSelectorValue Color { get; set; }
 
-        public IQueryable<Metric> Items { get; set; }
+        public MetricInfo[] Items { get; set; }
+
+        public class MetricInfo
+        {
+            public Guid Id;
+
+            public double? Value;
+
+            public MonitoringStatus Status;
+
+            public string DisplayName;
+
+            public DateTime BeginDate;
+
+            public DateTime ActualDate;
+
+            public Guid ComponentId;
+
+            public ComponentBreadCrumbsModel ComponentBreadCrumbs;
+
+        }
     }
 }

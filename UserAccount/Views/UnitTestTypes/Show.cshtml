@@ -1,4 +1,5 @@
 ﻿@using Zidium.Core.Common.Helpers
+
 @model Zidium.UserAccount.Models.UnitTestTypeShowModel
 
 @{
@@ -18,7 +19,7 @@
 <div class="bottom20px">
     @if (UserHelper.CurrentUser.CanEditCommonData() && !Model.IsSystem)
     {
-        @Html.ActionLink("Редактировать", "Edit", new {id = Model.Id}, new {@class = "btn btn-default"})
+        @Html.ActionLink("Редактировать", "Edit", new { id = Model.Id }, new { @class = "btn btn-default" })
     }
     <a href="@Url.Action("Index", "UnitTestTypes")" style="margin-left:20px;">Все типы проверок</a>
 </div>
@@ -28,71 +29,68 @@
     <div class="alert alert-danger">Этот тип проверки удалён</div>
 }
 
-    <div class="row tiles-row">
-        <div class="col-md-6 tiles-column">
-            <div class="tiles-box">
-                <div class="tiles-box-header1">Информация</div>
-                <div class="tiles-box-content">
-                    <p>
-                        <span class="simple-text-header">Id: </span>
-                        <span class="simple-text-value">@Model.Id</span>
-                    </p>
+<div class="row tiles-row">
+    <div class="col-md-6 tiles-column">
+        <div class="tiles-box">
+            <div class="tiles-box-header1">Информация</div>
+            <div class="tiles-box-content">
+                <p>
+                    <span class="simple-text-header">Id: </span>
+                    <span class="simple-text-value">@Model.Id</span>
+                </p>
 
-                    <p>
-                        <span class="simple-text-header">Дружелюбное имя: </span>
-                        <span class="simple-text-value">@Model.DisplayName</span>
-                    </p>
+                <p>
+                    <span class="simple-text-header">Дружелюбное имя: </span>
+                    <span class="simple-text-value">@Model.DisplayName</span>
+                </p>
 
-                    <p>
-                        <span class="simple-text-header">Системное имя: </span>
-                        <span class="simple-text-value">@Model.SystemName</span>
-                    </p>
+                <p>
+                    <span class="simple-text-header">Системное имя: </span>
+                    <span class="simple-text-value">@Model.SystemName</span>
+                </p>
 
-                    <p>
-                        <span class="simple-text-header">Системный тип: </span>
-                        <span class="simple-text-value">@(Model.IsSystem ? "Да" : "Нет")</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 tiles-column">
-            <div class="tiles-box">
-                <div class="tiles-box-header1">Настройки</div>
-                <div class="tiles-box-content">
-                    @if (Model.IsSystem)
-                    {
-                        <p class="simple-text-header">Для системных проверок настройки не указываются</p>
-                    }
-                    else
-                    {
-                        <p>
-                            <span class="simple-text-header">Интервал актуальности: </span>
-                            @if (Model.ActualTime == null)
-                            {
-                                <span class="simple-text-value">@TimeSpanHelper.GetFriendlyText(Model.ActualTimeDefault) (по умолчанию)</span>
-                            }
-                            else
-                            {
-                                <span class="simple-text-value">@TimeSpanHelper.GetFriendlyText(Model.ActualTime.Value)</span>
-                            }
-                        </p>
-
-                        <p>
-                            <span class="simple-text-header">Цвет, если нет сигнала: </span>
-                            @if (Model.NoSignalColor == null)
-                            {
-                                <span class="simple-text-value">@Html.ObjectColorIcon(@Model.NoSignalColorDefault) (по умолчанию)</span>
-                            }
-                            else
-                            {
-                                @Html.ObjectColorIcon(Model.NoSignalColor.Value)
-                            }
-                        </p>
-                    }
-                </div>
+                <p>
+                    <span class="simple-text-header">Системный тип: </span>
+                    <span class="simple-text-value">@(Model.IsSystem ? "Да" : "Нет")</span>
+                </p>
             </div>
         </div>
     </div>
+    <div class="col-md-6 tiles-column">
+        <div class="tiles-box">
+            <div class="tiles-box-header1">Настройки</div>
+            <div class="tiles-box-content">
+                @if (Model.IsSystem)
+                {
+                    <p class="simple-text-header">Для системных проверок настройки не указываются</p>
+                }
+                else
+                {
+                    <p>
+                        <span class="simple-text-header">Интервал актуальности: </span>
+                        @if (Model.ActualTime == null)
+                        {
+                            <span class="simple-text-value">@TimeSpanHelper.GetFriendlyText(Model.ActualTimeDefault) (по умолчанию)</span>
+                        }
+                        else
+                        {
+                            <span class="simple-text-value">@TimeSpanHelper.GetFriendlyText(Model.ActualTime.Value)</span>
+                        }
+                    </p>
 
-
-
+                    <p>
+                        <span class="simple-text-header">Цвет, если нет сигнала: </span>
+                        @if (Model.NoSignalColor == null)
+                        {
+                            <span class="simple-text-value">@Html.ObjectColorIcon(@Model.NoSignalColorDefault) (по умолчанию)</span>
+                        }
+                        else
+                        {
+                            @Html.ObjectColorIcon(Model.NoSignalColor.Value)
+                        }
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

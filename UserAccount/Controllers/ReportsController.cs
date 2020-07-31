@@ -4,81 +4,72 @@ using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ReportsController : ContextController
+    public class ReportsController : BaseController
     {
         /// <summary>
         /// Статистика запусков
         /// </summary>
         public ActionResult Starts(Guid? componentTypeId = null, Guid? componentId = null, string fromDate = null, string toDate = null)
         {
-            var sDate = !string.IsNullOrEmpty(fromDate) ? DecodeDateTimeParameter(fromDate) : (DateTime?)null;
-            var eDate = !string.IsNullOrEmpty(toDate) ? DecodeDateTimeParameter(toDate) : (DateTime?)null;
+            var sDate = !string.IsNullOrEmpty(fromDate) ? DecodeDateTimeParameter(fromDate) : DateTime.Now.Date;
+            var eDate = !string.IsNullOrEmpty(toDate) ? DecodeDateTimeParameter(toDate) : DateTime.Now;
 
-            Component component = null;
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
+            ComponentForRead component = null;
             if (componentId.HasValue)
             {
-                component = componentRepository.GetById(componentId.Value);
+                component = GetStorage().Components.GetOneById(componentId.Value);
             }
 
-            ComponentType componentType = null;
-            var componentTypeRepository = CurrentAccountDbContext.GetComponentTypeRepository();
+            ComponentTypeForRead componentType = null;
             if (componentTypeId.HasValue)
             {
-                componentType = componentTypeRepository.GetById(componentTypeId.Value);
+                componentType = GetStorage().ComponentTypes.GetOneById(componentTypeId.Value);
             }
-            else
-                componentType = componentTypeRepository.QueryAll().Where(t => t.IsDeleted == false).OrderBy(t => t.DisplayName).FirstOrDefault();
 
-            EventType startEventType = null;
-            Component[] components;
+            EventTypeForRead startEventType = null;
             var items = new List<StartsReportItemModel>();
             var graph = new List<StartsReportGrapthItemModel>();
             string error = null;
 
             if (componentType != null)
             {
+                ComponentForRead[] components;
                 if (component != null)
-                    components = new[] {component};
+                    components = new[] { component };
                 else
-                    components =
-                        componentRepository.QueryAll()
-                            .Where(t => t.ComponentTypeId == componentType.Id && t.IsDeleted == false)
-                            .ToArray();
+                    components = GetStorage().Components.GetByComponentTypeId(componentType.Id);
 
                 var componentsIds = components.Select(t => t.Id).ToArray();
 
-                var eventTypeRepository = CurrentAccountDbContext.GetEventTypeRepository();
-                startEventType = eventTypeRepository.GetOneOrNullBySystemName(SystemEventType.ComponentStart);
+                startEventType = GetStorage().EventTypes.GetOneOrNullBySystemName(SystemEventType.ComponentStart);
                 if (startEventType != null)
                 {
                     var startEventTypeId = startEventType.Id;
-                    var listLockObject = new Object();
-
-                    var eventRepository = CurrentAccountDbContext.GetEventRepository();
+                    var listLockObject = new object();
 
                     // Все события запуска за указанный интервал
-                    var allEventsQuery = eventRepository.QueryAllByComponentId(componentsIds)
-                        .Where(t => t.EventTypeId == startEventTypeId);
-                    if (sDate.HasValue)
-                        allEventsQuery = allEventsQuery.Where(t => t.StartDate >= sDate.Value);
-                    if (eDate.HasValue)
-                        allEventsQuery = allEventsQuery.Where(t => t.StartDate <= eDate.Value);
+                    var allEvents = GetStorage().Events.Filter(componentsIds, startEventTypeId, sDate, eDate);
 
                     // События запуска по компонентам
                     var startEventsQuery =
-                        allEventsQuery.Select(
-                            t => new {Id = t.Id, StartDate = t.StartDate, ComponentId = t.OwnerId, Count = t.Count});
+                        allEvents.Select(t => new
+                        {
+                            Id = t.Id,
+                            StartDate = t.StartDate,
+                            ComponentId = t.OwnerId,
+                            Count = t.Count
+                        });
+
                     var startEvents = startEventsQuery.GroupBy(t => t.ComponentId).ToArray();
 
                     var list =
-                        startEvents.Join(components, a => a.Key, b => b.Id, (a, b) => new {Component = b, Events = a})
+                        startEvents.Join(components, a => a.Key, b => b.Id, (a, b) => new { Component = b, Events = a })
                             .Select(t => new StartsReportItemModel()
                             {
                                 ComponentId = t.Component.Id,
@@ -99,12 +90,17 @@ namespace Zidium.UserAccount.Controllers
                             }).ToList();
 
                     // События запуска по датам
-                    var statsEventsQuery = allEventsQuery.Select(t => new {StartDate = t.StartDate, Count = t.Count});
+                    var statsEventsQuery = allEvents.Select(t => new
+                    {
+                        StartDate = t.StartDate,
+                        Count = t.Count
+                    });
                     var stats =
-                        statsEventsQuery.GroupBy(t => DbFunctions.TruncateTime(t.StartDate))
+                        statsEventsQuery
+                            .GroupBy(t => t.StartDate.Date)
                             .Select(t => new StartsReportGrapthItemModel()
                             {
-                                Date = t.Key.Value,
+                                Date = t.Key,
                                 Count = t.Sum(x => x.Count)
                             }).ToList();
 
@@ -130,7 +126,7 @@ namespace Zidium.UserAccount.Controllers
                 Items = items.OrderBy(t => t.ComponentDisplayName).ToList(),
                 Graph = graph.OrderBy(t => t.Date).ToList(),
                 Error = error,
-                StartEventTypeId = startEventType != null ? startEventType.Id : (Guid?) null,
+                StartEventTypeId = startEventType != null ? startEventType.Id : (Guid?)null,
                 Total = items.Sum(t => t.Count)
             };
             return View(model);

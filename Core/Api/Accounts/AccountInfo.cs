@@ -11,6 +11,8 @@ namespace Zidium.Core.Api
 
         public Guid AccountDatabaseId { get; set; }
 
+        public string DatabaseConnectionString { get; set; }
+
         public string SystemName { get; set; }
 
         public string DisplayName { get; set; }

@@ -1,4 +1,5 @@
 ﻿@using Zidium.UserAccount.Helpers
+
 @model Zidium.UserAccount.Models.Metrics.EditModel
 
 <style>
@@ -27,10 +28,10 @@
 {
     <p class="submenu-title">@ViewBag.Title</p>
 
-    if (Model.Metric != null)
+    if (Model.MetricBreadCrumbs != null)
     {
         <div class="zi-bread-crumbs">
-            @Html.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", Model.Metric)
+            @Html.Partial("~/Views/Controls/MetricBreadCrumbs.cshtml", Model.MetricBreadCrumbs)
         </div>
     }
     <hr class="submenu" />
@@ -138,7 +139,4 @@
 
 @{Html.EndForm();}
 
-@section Scripts
-{
-    @Scripts.Render("~/Scripts/AllControls")
-}
+@Scripts.Render("~/Scripts/AllControls")

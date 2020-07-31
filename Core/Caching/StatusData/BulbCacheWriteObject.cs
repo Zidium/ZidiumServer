@@ -1,17 +1,11 @@
 ﻿using System;
 using Zidium.Api.Others;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
-    public class BulbCacheWriteObject : CacheWriteObjectBase<AccountCacheRequest, StatusDataCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject>, IBulbCacheReadObject
+    public class BulbCacheWriteObject : CacheWriteObjectBase<AccountCacheRequest, BulbCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject>, IBulbCacheReadObject
     {
-        protected BulbCacheWriteObject()
-        {
-            
-        }
-
         public override int GetCacheSize()
         {
             return 16 // Id
@@ -45,9 +39,9 @@ namespace Zidium.Core.Caching
 
         public Guid AccountId { get; set; }
 
-        public EventCategory EventCategory { get; set; }
+        public EventCategory EventCategory { get; private set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; private set; }
 
         public MonitoringStatus Status { get; set; }
 
@@ -148,6 +142,9 @@ namespace Zidium.Core.Caching
             var cache = new AccountCache(AccountId);
             if (EventCategory == EventCategory.UnitTestStatus)
             {
+                if (UnitTestId == null)
+                    throw new Exception($"EventCategory is UnitTestStatus, but UnitTestId is null, id: {Id}, account: {AccountId}");
+
                 var unitTest = cache.UnitTests.Read(UnitTestId.Value);
                 return cache.Components.Read(unitTest.ComponentId).UnitTestsStatusId;
                 //if (UnitTest == null)
@@ -158,6 +155,9 @@ namespace Zidium.Core.Caching
             }
             if (EventCategory == EventCategory.MetricStatus)
             {
+                if (MetricId == null)
+                    throw new Exception($"EventCategory is MetricStatus, but MetricId is null, id: {Id}, account: {AccountId}");
+
                 var metric = cache.Metrics.Read(MetricId.Value);
                 return cache.Components.Read(metric.ComponentId).MetricsStatusId;
                 //if (Metric == null)
@@ -194,7 +194,7 @@ namespace Zidium.Core.Caching
             }
             if (EventCategory == EventCategory.ComponentExternalStatus)
             {
-                if (component.IsRoot)
+                if (component.IsRoot || component.ParentId == null)
                 {
                     return null;
                 }
@@ -205,35 +205,14 @@ namespace Zidium.Core.Caching
             throw new Exception("Неизвестное значение EventCategory: " + EventCategory);
         }
 
-        public Bulb CreateEfStatusData()
+        public BulbForUpdate CreateEfBulb()
         {
-            var result = new Bulb()
-            {
-                Id = Id,
-                IsDeleted = IsDeleted,
-                LastChildBulbId = LastChildBulbId,
-                ActualDate = ActualDate,
-                Status = Status,
-                Count = Count,
-                StartDate = StartDate,
-                Message = Message,
-                StatusEventId = StatusEventId,
-                UnitTestId = UnitTestId,
-                PreviousStatus = PreviousStatus,
-                MetricId = MetricId,
-                LastEventId = LastEventId,
-                HasSignal = HasSignal,
-                FirstEventId = FirstEventId,
-                EventCategory = EventCategory,
-                EndDate = EndDate,
-                ComponentId = ComponentId,
-                CreateDate = CreateDate
-            };
+            var result = new BulbForUpdate(Id);
 
             return result;
         }
 
-        public static BulbCacheWriteObject Create(Bulb data, Guid accountId)
+        public static BulbCacheWriteObject Create(BulbForRead data, Guid accountId)
         {
             if (data == null)
             {

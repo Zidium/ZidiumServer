@@ -1,22 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
-using Zidium.Core.AccountsDb;
+using Zidium.Common;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
-    public class EventCacheStorage : StorageDbCacheStorageBase<EventCacheResponse, IEventCacheReadObject, EventCacheWriteObject>
+    public class EventCacheStorage : AccountDbCacheStorageBase<EventCacheResponse, IEventCacheReadObject, EventCacheWriteObject>
     {
-        protected override EventCacheWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext)
+        protected override EventCacheWriteObject LoadObject(AccountCacheRequest request, IStorage storage)
         {
-            var eventRepository = accountDbContext.GetEventRepository();
-            var eventObj = eventRepository.GetByIdOrNull(request.ObjectId);
+            var eventObj = storage.Events.GetOneOrNullById(request.ObjectId);
             return EventCacheWriteObject.CreateForUpdate(eventObj, request.AccountId);
         }
 
-        protected void UpdateEntity(Event dbEvent, EventCacheWriteObject cacheEvent, bool useCheck)
+        private void UpdateEntity(EventForAdd dbEvent, EventCacheWriteObject cacheEvent)
         {
             dbEvent.Id = cacheEvent.Id;
             dbEvent.Importance = cacheEvent.Importance;
@@ -39,49 +36,23 @@ namespace Zidium.Core.Caching
             dbEvent.EndDate = cacheEvent.EndDate;
             dbEvent.EventTypeId = cacheEvent.EventTypeId;
             dbEvent.FirstReasonEventId = cacheEvent.FirstReasonEventId;
-
-            foreach (var property in cacheEvent.NewEventProperties)
-            {
-                // укажим ссылку на родителя явно, чтобы не было проблем при повторном сохранении свойства
-                // когда данная ссылка уже проставлена на предыдущий объект, см. исключение ниже
-
-               //System.InvalidOperationException: Conflicting changes to the role 'EventProperty_Event_Target' of the relationship 'Zidium.Core.StorageDb.EventProperty_Event' have been detected.
-               //в System.Data.Entity.Core.Objects.DataClasses.EntityReference.AddToNavigationPropertyIfCompatible(RelatedEnd otherRelatedEnd)
-               //в System.Data.Entity.Core.Objects.DataClasses.RelatedEnd.IncludeEntity(IEntityWrapper wrappedEntity, Boolean addRelationshipAsUnchanged, Boolean doAttach)
-               //в System.Data.Entity.Core.Objects.DataClasses.EntityCollection`1.Include(Boolean addRelationshipAsUnchanged, Boolean doAttach)
-               //в System.Data.Entity.Core.Objects.DataClasses.RelationshipManager.AddRelatedEntitiesToObjectStateManager(Boolean doAttach)
-               //в System.Data.Entity.Core.Objects.ObjectContext.AddObject(String entitySetName, Object entity)
-               //в System.Data.Entity.Internal.Linq.InternalSet`1.ActOnSet(Action action, EntityState newState, Object entity, String methodName)
-               //в System.Data.Entity.Internal.Linq.InternalSet`1.Add(Object entity)
-               //в System.Data.Entity.DbSet`1.Add(TEntity entity)
-               //в Zidium.Core.StorageDb.EventRepository.Add(Event eventObj) в c:\Sasha\_Recursion\_MyProjects\appMonitoring\GIT\AppMonitoring\Core\StorageDb\Repositories\EventRepository.cs:строка 102
-               //в Zidium.Core.Caching.EventCacheStorage.AddBatchObject(StorageDbContext storageDbContext, EventCacheWriteObject eventObj, Boolean checkAdd) в c:\Sasha\_Recursion\_MyProjects\appMonitoring\GIT\AppMonitoring\Core\Caching\Events\EventCacheStorage.cs:строка 68
-               
-                property.Event = dbEvent;
-                property.EventId = dbEvent.Id;
-
-                dbEvent.Properties.Add(property);
-            }
         }
 
-        protected override void AddBatchObject(AccountDbContext accountDbContext, EventCacheWriteObject eventObj, bool checkAdd)
+        protected override void AddBatchObjects(IStorage storage, EventCacheWriteObject[] eventObjs)
         {
-            if (eventObj.NewStatuses.Count > 0)
+            var entities = eventObjs.Select(eventObj =>
             {
-                throw new Exception("eventObj.NewStatuses.Count > 0");
-            }
-            var repository = accountDbContext.GetEventRepository();
-            if (checkAdd)
-            {
-                var fromDb = repository.GetByIdOrNull(eventObj.Id);
-                if (fromDb != null)
+                if (eventObj.NewStatuses.Count > 0)
                 {
-                    return;
+                    throw new Exception("eventObj.NewStatuses.Count > 0");
                 }
-            }
-            var dbEvent = new Event();
-            UpdateEntity(dbEvent, eventObj, checkAdd);
-            repository.AddInNewContext(dbEvent);
+
+                var entity = new EventForAdd();
+                UpdateEntity(entity, eventObj);
+                return entity;
+            }).ToArray();
+
+            storage.Events.Add(entities);
         }
 
         protected override void SetResponseSaved(EventCacheWriteObject writeObject)
@@ -94,113 +65,88 @@ namespace Zidium.Core.Caching
                 statusReference.Saved = true;
             }
             writeObject.UpdateNewStatuses();
-
-            // снимаем флажок
-            //writeObject.IsArchivedStatus = false;
-
-            // очистим доп свойства
-            writeObject.NewEventProperties.Clear();
         }
 
-        protected override void UpdateBatchObject(
-            AccountDbContext accountDbContext, 
-            EventCacheWriteObject eventObj, 
-            bool useCheck)
+        protected override void UpdateBatchObjects(IStorage storage, EventCacheWriteObject[] eventObjs, bool useCheck)
         {
-            if (eventObj.Response.LastSavedData == null)
+            var entities = eventObjs.Select(eventObj =>
             {
-                throw new Exception("eventObj.Response.LastSavedData == null");
-            }
-            var dbEvent = accountDbContext.Events.Local.FirstOrDefault(x => x.Id == eventObj.Id);
-            if (dbEvent == null)
-            {
-                if (useCheck)
-                {
-                    // загрузим из БД, чтобы получить актуальные данные
-                    var repository = accountDbContext.GetEventRepository();
-                    dbEvent = repository.GetByIdOrNull(eventObj.Id);
+                var lastData = eventObj.Response.LastSavedData;
 
-                    // событие могли уже удалить
-                    if (dbEvent == null)
-                        return;
+                if (lastData == null)
+                {
+                    throw new Exception("eventObj.Response.LastSavedData == null");
                 }
-                else
+                
+                var entity = lastData.CreateEfEvent();
+
+                if (lastData.Importance != eventObj.Importance)
+                    entity.Importance.Set(eventObj.Importance);
+
+                if (lastData.IsUserHandled != eventObj.IsUserHandled)
+                    entity.IsUserHandled.Set(eventObj.IsUserHandled);
+
+                if (lastData.LastNotificationDate != eventObj.LastNotificationDate)
+                    entity.LastNotificationDate.Set(eventObj.LastNotificationDate);
+
+                if (lastData.LastStatusEventId != eventObj.LastStatusEventId)
+                    entity.LastStatusEventId.Set(eventObj.LastStatusEventId);
+
+                if (lastData.LastUpdateDate != eventObj.LastUpdateDate)
+                    entity.LastUpdateDate.Set(eventObj.LastUpdateDate);
+
+                if (lastData.Message != eventObj.Message)
+                    entity.Message.Set(eventObj.Message);
+
+                if (lastData.StartDate != eventObj.StartDate)
+                    entity.StartDate.Set(eventObj.StartDate);
+
+                if (lastData.ActualDate != eventObj.ActualDate)
+                    entity.ActualDate.Set(eventObj.ActualDate);
+
+                if (lastData.Count != eventObj.Count)
+                    entity.Count.Set(eventObj.Count);
+
+                if (lastData.EndDate != eventObj.EndDate)
+                    entity.EndDate.Set(eventObj.EndDate);
+
+                if (lastData.FirstReasonEventId != eventObj.FirstReasonEventId)
+                    entity.FirstReasonEventId.Set(eventObj.FirstReasonEventId);
+
+                return entity;
+            }).ToArray();
+
+            var eventStatusEntities = eventObjs
+                .SelectMany(t => t.NewStatuses.Select(x => new { EventObj = t, Status = x }))
+                .Where(t => !t.Status.Saved).Select(z =>
                 {
-                    // создаем копию из кэша
-                    dbEvent = eventObj.Response.LastSavedData.CreateEfEvent();
-                    accountDbContext.Events.Attach(dbEvent);
-                }
-            }
-
-            // обновляем свойства
-            UpdateEntity(dbEvent, eventObj, useCheck);
-
-            // сейчас архивный статус сохраняетя синхронно, когда создается новый статус лампочки
-
-            // создаем архивный статус
-            //if (eventObj.IsArchivedStatus)
-            //{
-            //    var archivedStatus = new ArchivedStatus()
-            //    {
-            //        EventId = eventObj.Id,
-            //        AccountId = eventObj.AccountId
-            //    };
-            //    var archivedStatusRepository = storageDbContext.GetArchivedStatusRepository();
-            //    archivedStatusRepository.Add(archivedStatus);
-            //}
-
-            // вставляем новые статусы
-            foreach (var statusReference in eventObj.NewStatuses)
-            {
-                if (statusReference.Saved)
-                {
-                    continue;
-                }
-                if (statusReference.StatusId == dbEvent.Id)
-                {
-                    throw new Exception("statusReference.StatusId == dbEvent.Id");
-                }
-                Guid fakeStatusId = statusReference.StatusId;
-
-                // проверим можно ли добавлять статус
-                bool canAdd = true;
-                if (useCheck)
-                {
-                    if (dbEvent.StatusEvents.Any(x => x.Id == fakeStatusId))
+                    if (z.Status.StatusId == z.EventObj.Id)
                     {
-                        canAdd = false;
+                        throw new Exception("statusReference.StatusId == dbEvent.Id");
                     }
-                }
-                if (canAdd)
-                {
-                    var fakeStatus = accountDbContext.Events.Local.FirstOrDefault(x => x.Id == fakeStatusId);
-                    if (fakeStatus == null)
-                    {
-                        if (useCheck)
-                        {
-                            var repository = accountDbContext.GetEventRepository();
-                            fakeStatus = repository.GetByIdOrNull(fakeStatusId);
-                            if (fakeStatus == null)
-                            {
-                                // значит статус удален
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            fakeStatus = new Event() { Id = statusReference.StatusId };
-                            accountDbContext.Events.Attach(fakeStatus);
-                            accountDbContext.Entry(fakeStatus).State = EntityState.Unchanged;
-                        }
-                    }
-                    dbEvent.StatusEvents.Add(fakeStatus);
-                }
-            }
 
-            //var entity = storageDbContext.Entry(dbEvent);
-            //var changed = GetChangedProperties(entity);
+                    return new EventStatusForAdd()
+                    {
+                        EventId = z.EventObj.Id,
+                        StatusId = z.Status.StatusId
+                    };
+                })
+                .ToArray();
+
+            using (var transaction = storage.BeginTransaction())
+            {
+                storage.Events.Update(entities);
+                storage.Events.AddStatusToEvent(eventStatusEntities);
+                transaction.Commit();
+            }
         }
 
+        public override int BatchCount
+        {
+            get { return 100; }
+        }
+
+        /*
         protected List<string> GetChangedProperties(DbEntityEntry<Event> eventEntity)
         {
             var changedList = new List<string>();
@@ -221,6 +167,7 @@ namespace Zidium.Core.Caching
             }
             return changedList;
         }
+        */
 
         protected override Exception CreateNotFoundException(AccountCacheRequest request)
         {
@@ -290,30 +237,22 @@ namespace Zidium.Core.Caching
             return ExistsInStorage(request);
         }
 
-        public IEventCacheReadObject GetForRead(Event eventObj, Guid accountId)
+        public IEventCacheReadObject GetForRead(Guid eventId, Guid accountId)
         {
-            if (eventObj == null)
-            {
-                throw new ArgumentNullException("eventObj");
-            }
             var request = new AccountCacheRequest()
             {
                 AccountId = accountId,
-                ObjectId = eventObj.Id
+                ObjectId = eventId
             };
             return Find(request);
         }
 
-        public EventCacheWriteObject GetForWrite(Event eventObj, Guid accountId)
+        public EventCacheWriteObject GetForWrite(Guid eventId, Guid accountId)
         {
-            if (eventObj == null)
-            {
-                throw new ArgumentNullException("eventObj");
-            }
             return Write(new AccountCacheRequest()
             {
                 AccountId = accountId,
-                ObjectId = eventObj.Id
+                ObjectId = eventId
             });
         }
     }

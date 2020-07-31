@@ -1,5 +1,4 @@
 ﻿using System;
-using Zidium.Core.Api;
 
 namespace Zidium.Core.ConfigDb
 {
@@ -9,6 +8,6 @@ namespace Zidium.Core.ConfigDb
 
         public string Login { get; set; }
 
-        public AccountInfo Account { get; set; }
+        public Guid AccountId { get; set; }
     }
 }

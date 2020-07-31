@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Web;
+using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount
 {
@@ -11,17 +12,17 @@ namespace Zidium.UserAccount
     {
         public static bool IsAdmin(this UserInfo user)
         {
-            return user.Roles.Any(t => t.Id == RoleId.AccountAdministrators);
+            return user.Roles.Any(t => t.Id == SystemRole.AccountAdministrators.Id);
         }
 
         public static bool IsUser(this UserInfo user)
         {
-            return user.Roles.Any(t => t.Id == RoleId.Users);
+            return user.Roles.Any(t => t.Id == SystemRole.Users.Id);
         }
 
         public static bool IsViewer(this UserInfo user)
         {
-            return user.Roles.Any(t => t.Id == RoleId.Viewers);
+            return user.Roles.Any(t => t.Id == SystemRole.Viewers.Id);
         }
 
         public static UserInfo CurrentUser
@@ -38,7 +39,7 @@ namespace Zidium.UserAccount
                     return null;
 
                 var userIdString = HttpContext.Current.User.Identity.Name;
-                var userInfo = (HttpContext.Current.Session["CurrentUser"] as UserInfo);
+                var userInfo = HttpContext.Current.Session["CurrentUser"] as UserInfo;
                 if (userInfo != null)
                 {
                     // был баг, при котором после входа в систему под другим пользователем система показывала логин старого пользователя
@@ -60,30 +61,31 @@ namespace Zidium.UserAccount
                     if (!Guid.TryParse(userIdString, out userId))
                         return null;
 
-                    using (var contexts = new DatabasesContext())
+                    var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+                    var loginInfo = configDbServicesFactory.GetLoginService().GetOneOrNullById(userId);
+
+                    if (loginInfo == null)
                     {
-                        var dbLogin = ConfigDbServicesHelper.GetLoginService().GetOneOrNullById(userId);
+                        HttpContext.Current.Session.Clear();
+                        return null;
+                    }
 
-                        if (dbLogin == null)
-                        {
-                            HttpContext.Current.Session.Clear();
-                            return null;
-                        }
+                    var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+                    var storage = accountStorageFactory.GetStorageByAccountId(loginInfo.AccountId);
+                    var user = storage.Users.GetOneOrNullById(userId);
 
-                        var service = new UserService(contexts);
-                        var user = service.GetByIdOrNull(dbLogin.Account.Id, userId);
+                    if (user == null)
+                        return null;
 
-                        if (user == null)
-                            return null;
+                    var roles = storage.Roles.GetByUserId(user.Id);
 
-                        userInfo = UserInfoByUser(user, dbLogin.Account.Id);
-                        userInfo.IsSwitched = GetIsUserSwitched();
+                    userInfo = UserInfoByUser(user, roles, loginInfo.AccountId);
+                    userInfo.IsSwitched = GetIsUserSwitched();
 
-                        // обновим статистику входа
-                        if (!userInfo.IsSwitched)
-                        {
-                            ConfigDbServicesHelper.GetLoginService().UpdateLastEntryDate(user.Id, DateTime.Now);
-                        }
+                    // обновим статистику входа
+                    if (!userInfo.IsSwitched)
+                    {
+                        configDbServicesFactory.GetLoginService().UpdateLastEntryDate(user.Id, DateTime.Now);
                     }
 
                     HttpContext.Current.Session["CurrentUser"] = userInfo;
@@ -93,7 +95,7 @@ namespace Zidium.UserAccount
             }
         }
 
-        public static UserInfo UserInfoByUser(User user, Guid accountId)
+        public static UserInfo UserInfoByUser(UserForRead user, RoleForRead[] roles, Guid accountId)
         {
             var userInfo = new UserInfo()
             {
@@ -101,17 +103,13 @@ namespace Zidium.UserAccount
                 AccountId = accountId,
                 Login = user.Login,
                 Name = user.DisplayName,
-                Roles = user.Roles.Select(t => new UserInfoRole()
+                Roles = roles.Select(t => new UserInfoRole()
                 {
-                    Id = t.Role.Id,
-                    SystemName = t.Role.SystemName,
-                    DisplayName = t.Role.DisplayName
+                    Id = t.Id,
+                    SystemName = t.SystemName,
+                    DisplayName = t.DisplayName
                 }).ToArray()
             };
-
-            var account = ConfigDbServicesHelper.GetAccountService().GetOneById(accountId);
-            userInfo.AccountName = account.SystemName;
-
             return userInfo;
         }
 

@@ -5,17 +5,18 @@ using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.TimeService;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 {
     public class VirusTotalTaskProcessor : UnitTestProcessorBase
     {
-        protected VirusTotalProcessor processor;
+        private readonly VirusTotalProcessor _processor;
 
         public VirusTotalTaskProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService) 
             : base(logger, cancellationToken, timeService)
         {
-            processor = new VirusTotalProcessor(new VirusTotalLimitManager(), new TimeService(), logger);
+            _processor = new VirusTotalProcessor(new VirusTotalLimitManager(), new TimeService(), logger);
         }
 
         private void FixInputData(VirusTotalProcessorInputData inputData)
@@ -29,8 +30,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 
         protected override UnitTestExecutionInfo GetResult(
             Guid accountId, 
-            AccountDbContext accountDbContext, 
-            UnitTest unitTest, 
+            IStorage storage, 
+            UnitTestForRead unitTest, 
             ILogger logger, 
             string accountName, 
             CancellationToken token)
@@ -40,33 +41,38 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 throw new ArgumentNullException("unitTest");
             }
 
-            var rule = unitTest.VirusTotalRule;
+            var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(unitTest.Id);
             if (rule == null)
             {
                 return null; // Правило ещё не сохранено
             }
 
-            var settingService = accountDbContext.GetAccountSettingService();
+            var settingService = new AccountSettingService(storage);
             var inputData = new VirusTotalProcessorInputData()
             {
                 ApiKey = settingService.VirusTotalApiKey,
                 Url = rule.Url,
                 ScanId = rule.ScanId,
                 NextStep = rule.NextStep,
-                ScanTime = rule.ScanTime
+                ScanTime = rule.ScanTime,
+                AttempCount = unitTest.AttempCount
             };
             FixInputData(inputData);
+
             try
             {
-                var outputData = processor.Process(inputData);
-                rule.NextStep = outputData.NextStep;
-                rule.ScanId = outputData.ScanId;
-                rule.ScanTime = outputData.ScanTime;
+                var outputData = _processor.Process(inputData);
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.NextStep.Set(outputData.NextStep);
+                ruleForUpdate.ScanId.Set(outputData.ScanId);
+                ruleForUpdate.ScanTime.Set(outputData.ScanTime);
                 if (outputData.Result != null && outputData.ErrorCode.HasValue)
                 {
-                    rule.LastRunErrorCode = outputData.ErrorCode;
+                    ruleForUpdate.LastRunErrorCode.Set(outputData.ErrorCode);
                 }
-                accountDbContext.SaveChanges();
+                storage.UnitTestVirusTotalRules.Update(ruleForUpdate);
+                
                 return new UnitTestExecutionInfo()
                 {
                     ResultRequest = outputData.Result,
@@ -85,7 +91,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.VirusTotalTestType.Id;
+            return SystemUnitTestType.VirusTotalTestType.Id;
         }
     }
 }

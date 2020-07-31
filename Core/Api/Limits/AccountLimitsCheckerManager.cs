@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zidium.Core.AccountsDb;
 
 namespace Zidium.Core.Limits
 {
@@ -8,7 +7,7 @@ namespace Zidium.Core.Limits
     {
         private static readonly object LockObject = new object();
 
-        private static Dictionary<Guid, AccountLimitsChecker> Checkers = new Dictionary<Guid, AccountLimitsChecker>();
+        private static readonly Dictionary<Guid, AccountLimitsChecker> Checkers = new Dictionary<Guid, AccountLimitsChecker>();
 
         public static AccountLimitsChecker GetCheckerForAccount(Guid accountId)
         {
@@ -30,6 +29,7 @@ namespace Zidium.Core.Limits
 
         public static int Save()
         {
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
             LastSaveException = null;
             int count = 0;
 
@@ -43,10 +43,8 @@ namespace Zidium.Core.Limits
             {
                 try
                 {
-                    using (var context = AccountDbContext.CreateFromAccountIdLocalCache(checker.AccountId))
-                    {
-                        count += checker.SaveData(context);
-                    }
+                    var storage = accountStorageFactory.GetStorageByAccountId(checker.AccountId);
+                    count += checker.SaveData(storage);
                 }
                 catch (Exception exception)
                 {

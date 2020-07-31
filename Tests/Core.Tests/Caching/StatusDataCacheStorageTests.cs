@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
@@ -14,20 +15,20 @@ namespace Zidium.Core.Tests.Caching
         [Fact]
         public void AttachTest()
         {
-            // интересна статья на эту тему
+            // интересная статья на эту тему
             // http://ethereal-developer.blogspot.ru/2014/11/a-referential-integrity-constraint.html
             var account = TestHelper.GetTestAccount();
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 accountDbContext.Configuration.AutoDetectChangesEnabled = false;
-                var child = new Bulb()
+                var child = new DbBulb()
                 {
                     Id = Guid.NewGuid(),
                     CreateDate = DateTime.Now
                 };
                 accountDbContext.Bulbs.Attach(child);
 
-                var parent1 = new Bulb()
+                var parent1 = new DbBulb()
                 {
                     Id = Guid.NewGuid(),
                     CreateDate = DateTime.Now,
@@ -37,7 +38,7 @@ namespace Zidium.Core.Tests.Caching
                
                 parent1.LastChildBulbId = Guid.NewGuid();
 
-                var parent2 = new Bulb()
+                var parent2 = new DbBulb()
                 {
                     Id = Guid.NewGuid(),
                     CreateDate = DateTime.Now,

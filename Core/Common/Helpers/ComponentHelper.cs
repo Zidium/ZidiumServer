@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common.Helpers
 {
@@ -12,9 +13,9 @@ namespace Zidium.Core.Common.Helpers
             return "Component_" + componentId;
         }
 
-        public static string GetComponentPathHtml(Component component, string accountName)
+        public static string GetComponentPathHtml(ComponentForRead component, string accountName, IStorage storage)
         {
-            var components = GetComponentsForPath(component);
+            var components = GetComponentsForPath(component, storage);
 
             var html = new StringBuilder();
             foreach (var componentObj in components)
@@ -32,9 +33,9 @@ namespace Zidium.Core.Common.Helpers
             return html.ToString();
         }
 
-        public static string GetComponentPathText(Component component)
+        public static string GetComponentPathText(ComponentForRead component, IStorage storage)
         {
-            var components = GetComponentsForPath(component);
+            var components = GetComponentsForPath(component, storage);
 
             var text = new StringBuilder();
             foreach (var componentObj in components)
@@ -50,17 +51,21 @@ namespace Zidium.Core.Common.Helpers
             return text.ToString();
         }
 
-        internal static List<Component> GetComponentsForPath(Component component)
+        internal static List<ComponentForRead> GetComponentsForPath(ComponentForRead component, IStorage storage)
         {
-            var components = new List<Component>();
+            var components = new List<ComponentForRead>();
             var current = component;
             while (true)
             {
                 components.Add(current);
-                current = current.Parent;
+
+                if (current.ParentId == null)
+                    break;
+
+                current = storage.Components.GetOneById(current.ParentId.Value);
 
                 // root НЕ включаем в путь, чтобы быть лаконичнее в письмах
-                if (current == null || current.IsRoot)
+                if (current.IsRoot())
                 {
                     break;
                 }

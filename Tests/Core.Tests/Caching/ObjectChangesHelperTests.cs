@@ -1,8 +1,8 @@
 ﻿using System;
 using Xunit;
-using Zidium.Core.Api;
 using Zidium.Core.Caching;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 
 namespace Zidium.Core.Tests.Caching
 {
@@ -12,8 +12,8 @@ namespace Zidium.Core.Tests.Caching
         public void MainTest()
         {
             // все пусто
-            var a = new Event();
-            var b = new Event();
+            var a = new DbEvent();
+            var b = new DbEvent();
             Assert.False(ObjectChangesHelper.HasChanges(a, b));
 
             // GUID

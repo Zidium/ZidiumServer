@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.ComponentStatuses
 {
@@ -31,23 +30,20 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
             DbProcessor.ForEachAccount(data =>
             {
                 if (data.Account.Type != AccountType.Test)
-                    ProcessAccount(data.Account.Id, data.AccountDbContext, data.Logger);
+                    ProcessAccount(data.Account.Id, data.Storage, data.Logger);
             });
             if (UpdateStatesCount > 0)
                 Logger.Info("Обновлено статусов: {0}", UpdateStatesCount);
         }
 
-        public void ProcessAccount(Guid accountId, AccountDbContext accountDbContext, ILogger logger)
+        public void ProcessAccount(Guid accountId, IStorage storage, ILogger logger)
         {
             var dispatcher = AgentHelper.GetDispatcherClient();
-            var repository = accountDbContext.GetComponentRepository();
-            var components = repository.QueryAll()
-                .Select(t => new { t.Id, t.SystemName })
-                .ToArray();
+            var componentIds = storage.Components.GetAllIds();
 
-            logger.Debug("Найдено компонентов: " + components.Length);
+            logger.Debug("Найдено компонентов: " + componentIds.Length);
             int index = 0;
-            foreach (var component in components)
+            foreach (var componentId in componentIds)
             {
                 DbProcessor.CancellationToken.ThrowIfCancellationRequested();
 
@@ -58,16 +54,16 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
                     Thread.Sleep(200); 
                 }
 
-                var response = dispatcher.UpdateComponentState(accountId, component.Id);
+                var response = dispatcher.UpdateComponentState(accountId, componentId);
                 if (response.Success)
                 {
                     Interlocked.Increment(ref UpdateStatesCount);
-                    logger.Debug("ComponentId: {0} name {1}; Обновлен успешно.", component.Id, component.SystemName);
+                    logger.Debug("Компонент {0} обновлён успешно.", componentId);
                 }
                 else
                 {
                     DbProcessor.SetException(new Exception(response.ErrorMessage));
-                    logger.Error("ComponentId: {0} name {1}; Ошибка проверки: {2}", component.Id, component.SystemName, response.ErrorMessage);
+                    logger.Error("Компонент {0} обновлён с ошибкой: {1}", componentId, response.ErrorMessage);
                 }
             }
         }

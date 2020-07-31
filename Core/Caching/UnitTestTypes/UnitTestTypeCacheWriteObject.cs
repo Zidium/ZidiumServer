@@ -1,6 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -21,7 +20,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public Guid AccountId { get; set; }
 
-        public DateTime? CreateDate { get; set; }
+        public DateTime? CreateDate { get; private set; }
 
         /// <summary>
         /// Признак удалённого
@@ -31,7 +30,7 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Признак того, что тип системный (НЕ создан пользователем)
         /// </summary>
-        public bool IsSystem { get; set; }
+        public bool IsSystem { get; private set; }
 
         /// <summary>
         /// Цвет проверки, если нет сигнала
@@ -43,7 +42,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public int? ActualTimeSecs { get; set; }
 
-        public static UnitTestTypeCacheWriteObject Create(UnitTestType unitTestType, Guid accountId)
+        public static UnitTestTypeCacheWriteObject Create(UnitTestTypeForRead unitTestType, Guid accountId)
         {
             if (unitTestType == null)
             {
@@ -69,19 +68,9 @@ namespace Zidium.Core.Caching
             return 200;
         }
 
-        public UnitTestType CreateEf()
+        public UnitTestTypeForUpdate CreateEf()
         {
-            return new UnitTestType()
-            {
-                Id = Id,
-                IsDeleted = IsDeleted,
-                CreateDate = CreateDate,
-                SystemName = SystemName,
-                DisplayName = DisplayName,
-                ActualTimeSecs = ActualTimeSecs,
-                NoSignalColor = NoSignalColor,
-                IsSystem = IsSystem
-            };
+            return new UnitTestTypeForUpdate(Id);
         }
     }
 }

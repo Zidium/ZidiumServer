@@ -1,27 +1,20 @@
 ﻿using System;
-using System.Data.Entity;
-using System.Linq;
 using System.Web.Mvc;
-using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ChecksController : ContextController
+    public class ChecksController : BaseController
     {
         public ActionResult Results()
         {
-            var r = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTests = r.QueryAll()
-                .Include("Bulb")
-                .Include("Type")
-                .Include("Component");
+            var unitTests = GetStorage().Gui.GetChecksResults();
 
             var model = new ResultsModel()
             {
-                Tests = unitTests.ToList()
+                Tests = unitTests
             };
 
             return View(model);
@@ -36,30 +29,29 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult Show(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = repository.GetById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
 
-            if (unitTest.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
             {
                 return RedirectToAction("Show", "HttpRequestCheck", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.PingTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.PingTestType.Id)
             {
                 return RedirectToAction("Show", "PingChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.SqlTestType.Id)
             {
                 return RedirectToAction("Show", "SqlChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.DomainNameTestType.Id)
             {
                 return RedirectToAction("Show", "DomainNamePaymentPeriodChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.SslTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.SslTestType.Id)
             {
                 return RedirectToAction("Show", "SslCertificateExpirationDateChecks", new { id });
             }
@@ -70,42 +62,41 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = repository.GetById(id);            
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
 
             var editAction = unitTest.SimpleMode ? "EditSimple" : "Edit";
 
-            if (unitTest.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
             {
                 return RedirectToAction(editAction, "HttpRequestCheck", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.PingTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.PingTestType.Id)
             {
                 return RedirectToAction(editAction, "PingChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.TcpPortTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.TcpPortTestType.Id)
             {
                 return RedirectToAction(editAction, "TcpPortChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.SqlTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.SqlTestType.Id)
             {
                 return RedirectToAction(editAction, "SqlChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.DomainNameTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.DomainNameTestType.Id)
             {
                 return RedirectToAction(editAction, "DomainNamePaymentPeriodChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.SslTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.SslTestType.Id)
             {
                 return RedirectToAction(editAction, "SslCertificateExpirationDateChecks", new { id });
             }
 
-            if (unitTest.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id)
+            if (unitTest.TypeId == SystemUnitTestType.VirusTotalTestType.Id)
             {
                 return RedirectToAction(editAction, "VirusTotal", new { id });
             }
@@ -117,15 +108,9 @@ namespace Zidium.UserAccount.Controllers
         [HttpPost]
         public ActionResult Delete(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = repository.GetById(id);
-
-            if (unitTest == null)
-            {
-                throw new UserFriendlyException("Не удалось найти проверку с Id = " + id);
-            }
-            unitTest.IsDeleted = true;
-            CurrentAccountDbContext.SaveChanges();
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var client = GetDispatcherClient();
+            client.DeleteUnitTest(CurrentUser.AccountId, id).Check();
             return RedirectToAction("Index", "UnitTests", new {unitTestTypeId = unitTest.TypeId});
         }
     }

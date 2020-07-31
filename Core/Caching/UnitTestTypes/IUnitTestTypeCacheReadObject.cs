@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -8,34 +8,34 @@ namespace Zidium.Core.Caching
         /// <summary>
         /// Системное имя
         /// </summary>
-        string SystemName { get; set; }
+        string SystemName { get; }
 
         /// <summary>
         /// Дружелюбное имя
         /// </summary>
-        string DisplayName { get; set; }
+        string DisplayName { get; }
 
-        DateTime? CreateDate { get; set; }
+        DateTime? CreateDate { get; }
 
         /// <summary>
         /// Признак удалённого
         /// </summary>
-        bool IsDeleted { get; set; }
+        bool IsDeleted { get; }
 
         /// <summary>
         /// Признак того, что тип системный (НЕ создан пользователем)
         /// </summary>
-        bool IsSystem { get; set; }
+        bool IsSystem { get; }
 
         /// <summary>
         /// Цвет проверки, если нет сигнала
         /// </summary>
-        ObjectColor? NoSignalColor { get; set; }
+        ObjectColor? NoSignalColor { get; }
 
         /// <summary>
         /// Время актуальности проверки
         /// </summary>
-        int? ActualTimeSecs { get; set; }
+        int? ActualTimeSecs { get; }
 
     }
 }

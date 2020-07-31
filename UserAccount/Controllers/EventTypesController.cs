@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
+using Zidium.Core.AccountDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
-using Zidium.UserAccount.Models.Controls;
 using Zidium.UserAccount.Models.ExtentionProperties;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class EventTypesController : ContextController
+    public class EventTypesController : BaseController
     {
-        public ActionResult Index(string importance = null, string category = null, string search = null, int? showDeleted = null)
+        public ActionResult Index(string importance = null, string category = null, string search = null)
         {
             var eventImportance = EnumHelper.StringToEnum<EventImportance>(importance);
             var eventCategory = EnumHelper.StringToEnum<EventCategory>(category);
@@ -25,29 +25,17 @@ namespace Zidium.UserAccount.Controllers
                 eventCategory = EventCategory.ComponentEvent;
             }
 
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventTypes = repository.QueryAllWithDeleted();
-
-            if (eventImportance.HasValue)
-                eventTypes = eventTypes.Where(t => t.ImportanceForNew == eventImportance);
-
-            eventTypes = eventTypes.Where(t => t.Category == eventCategory);
-
-            if (!string.IsNullOrEmpty(search))
-                eventTypes = eventTypes.Where(t => t.DisplayName.Contains(search) || t.SystemName.Contains(search) || t.Id.ToString() == search);
-
-            if (showDeleted != 1)
-                eventTypes = eventTypes.Where(t => t.IsDeleted == false);
-
-            eventTypes = eventTypes.OrderBy(t => t.DisplayName);
+            var eventTypes = GetStorage().EventTypes.Filter(
+                eventImportance,
+                eventCategory,
+                search, 100);
 
             var model = new EventTypesListModel()
             {
                 EventTypes = eventTypes,
                 Category = eventCategory,
                 Importance = eventImportance,
-                Search = search,
-                ShowDeleted = showDeleted == 1
+                Search = search
             };
             return View(model);
         }
@@ -67,9 +55,9 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = new EventType()
+            var eventType = new EventTypeForAdd()
             {
+                Id = Guid.NewGuid(),
                 DisplayName = model.DisplayName,
                 SystemName = model.SystemName,
                 Category = EventCategory.ComponentEvent,
@@ -78,15 +66,16 @@ namespace Zidium.UserAccount.Controllers
                 ImportanceForOld = model.ImportanceForOld,
                 ImportanceForNew = model.ImportanceForNew
             };
-            repository.Add(eventType);
+
+            GetStorage().EventTypes.Add(eventType);
+            
             this.SetTempMessage(TempMessageType.Success, string.Format("Добавлен тип события <a href='{1}' class='alert-link'>{0}</a>", eventType.DisplayName, Url.Action("Show", new { id = eventType.Id })));
             return RedirectToAction("Index");
         }
 
         public ActionResult Show(Guid id, TimelineInterval? period)
         {
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = repository.GetById(id);
+            var eventType = GetStorage().EventTypes.GetOneById(id);
             var model = new EventTypeShowModel()
             {
                 Id = eventType.Id,
@@ -94,7 +83,7 @@ namespace Zidium.UserAccount.Controllers
                 SystemName = eventType.SystemName,
                 Category = eventType.Category,
                 Code = eventType.Code,
-                JoinInterval = eventType.JoinInterval,
+                JoinInterval = eventType.JoinInterval(),
                 OldVersion = eventType.OldVersion,
                 ImportanceForOld = eventType.ImportanceForOld,
                 ImportanceForNew = eventType.ImportanceForNew,
@@ -109,8 +98,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = repository.GetById(id);
+            var eventType = GetStorage().EventTypes.GetOneById(id);
             CheckEditingPermissions(eventType);
             var model = new EventTypeEditModel()
             {
@@ -118,7 +106,7 @@ namespace Zidium.UserAccount.Controllers
                 DisplayName = eventType.DisplayName,
                 SystemName = eventType.SystemName,
                 Category = eventType.Category,
-                JoinInterval = eventType.JoinInterval,
+                JoinInterval = eventType.JoinInterval(),
                 OldVersion = eventType.OldVersion,
                 ImportanceForOld = eventType.ImportanceForOld,
                 ImportanceForNew = eventType.ImportanceForNew,
@@ -154,17 +142,16 @@ namespace Zidium.UserAccount.Controllers
             return RedirectToAction("Show", new { id = model.Id });
         }
 
-        protected void CheckEditingPermissions(EventType eventType)
+        protected void CheckEditingPermissions(EventTypeForRead eventType)
         {
             if (eventType.IsSystem)
-                throw new CantEditSystemObjectException(eventType.Id, Naming.EventType);
+                throw new UserFriendlyException("Нельзя изменять системный тип события");
         }
 
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = repository.GetById(id);
+            var eventType = GetStorage().EventTypes.GetOneById(id);
             CheckDeletingPermissions(eventType);
             var model = new DeleteConfirmationModel()
             {
@@ -184,26 +171,26 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
                 return View("~/Views/Shared/Dialogs/DeleteConfirmation.cshtml", model);
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = repository.GetById(Guid.Parse(model.Id));
+            var eventType = GetStorage().EventTypes.GetOneById(Guid.Parse(model.Id));
             CheckDeletingPermissions(eventType);
-            repository.Remove(eventType);
+            var eventTypeForUpdate = eventType.GetForUpdate();
+            eventTypeForUpdate.IsDeleted.Set(true);
+            GetStorage().EventTypes.Update(eventTypeForUpdate);
             this.SetTempMessage(TempMessageType.Success, "Тип события удалён");
             return RedirectToAction("Index");
         }
 
-        protected void CheckDeletingPermissions(EventType eventType)
+        protected void CheckDeletingPermissions(EventTypeForRead eventType)
         {
             if (eventType.IsSystem)
-                throw new CantDeleteSystemObjectException(eventType.Id, Naming.EventType);
+                throw new UserFriendlyException("Нельзя удалять системный тип события");
             if (eventType.IsDeleted)
-                throw new AlreadyDeletedException(eventType.Id, Naming.EventType);
+                throw new UserFriendlyException("Тип события уже удалён");
         }
 
         public JsonResult CheckSystemName(ComponentTypeEditModel model)
         {
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = repository.GetOneOrNullBySystemName(model.SystemName);
+            var eventType = GetStorage().EventTypes.GetOneOrNullBySystemName(model.SystemName);
             if (eventType != null && (model.Id == Guid.Empty || model.Id != eventType.Id))
                 return Json("Тип события с таким системным именем уже существует", JsonRequestBehavior.AllowGet);
             return Json(true, JsonRequestBehavior.AllowGet);
@@ -213,16 +200,7 @@ namespace Zidium.UserAccount.Controllers
         {
             var eventCategory = EnumHelper.StringToEnum<EventCategory>(category);
 
-            var repository = CurrentAccountDbContext.GetEventTypeRepository();
-            var query = repository.QueryAll();
-
-            if (eventCategory.HasValue)
-                query = query.Where(t => t.Category == eventCategory);
-
-            if (!string.IsNullOrEmpty(search))
-                query = query.Where(t => t.DisplayName.Contains(search) || t.SystemName.Contains(search) || t.Id.ToString().Contains(search));
-
-            query = query.OrderBy(t => t.DisplayName).Take(100);
+            var query = GetStorage().EventTypes.Filter(null, eventCategory, search, 100);
 
             var eventTypes = query.Select(t => new EventTypesMiniListItemModel()
                 {
@@ -241,8 +219,8 @@ namespace Zidium.UserAccount.Controllers
 
         public PartialViewResult LastEventInfo(Guid id)
         {
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var lastEvent = eventRepository.GetLastEventByEndDate(id);
+            var storage = GetStorage();
+            var lastEvent = storage.Events.GetLastEventByEndDate(id);
 
             if (lastEvent == null)
                 return PartialView("NoLastEventInfo");
@@ -253,28 +231,26 @@ namespace Zidium.UserAccount.Controllers
                 EndDate = lastEvent.EndDate,
                 Message = lastEvent.Message
             };
-            model.Properties = ExtentionPropertiesModel.Create(lastEvent);
+            model.Properties = ExtentionPropertiesModel.Create(storage.EventProperties.GetByEventId(lastEvent.Id));
 
             // событие метрики
             if (lastEvent.Category.IsMetricCategory())
             {
-                var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-                var metric = metricRepository.GetById(lastEvent.OwnerId);
+                var metric = storage.Metrics.GetOneById(lastEvent.OwnerId);
                 model.Metric = metric;
-                model.Component = metric.Component;
+                model.MetricType = storage.MetricTypes.GetOneById(metric.MetricTypeId);
+                model.Component = storage.Components.GetOneById(metric.ComponentId);
             }
             // событие проверки
             else if (lastEvent.Category.IsUnitTestCategory())
             {
-                var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.GetById(lastEvent.OwnerId);
+                var unitTest = storage.UnitTests.GetOneById(lastEvent.OwnerId);
                 model.Unittest = unitTest;
-                model.Component = unitTest.Component;
+                model.Component = storage.Components.GetOneById(unitTest.ComponentId);
             }
             else // событие компонента
             {
-                var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-                model.Component = componentRepository.GetById(lastEvent.OwnerId);
+                model.Component = storage.Components.GetOneById(lastEvent.OwnerId);
             }
 
             return PartialView(model);

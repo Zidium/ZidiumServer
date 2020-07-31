@@ -4,8 +4,7 @@ using System.Web.Mvc;
 using Zidium.Core.Api;
 using Xunit;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -296,7 +295,7 @@ namespace Zidium.UserAccount.Tests
             }
 
             // проверим, что настройки подписки НЕ изменились
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var subscription = accountDbContext.Subscriptions.Find(adminSubscription.Id);
                 Assert.Equal(adminSubscription.DurationMinimumInSeconds, subscription.DurationMinimumInSeconds);
@@ -340,7 +339,7 @@ namespace Zidium.UserAccount.Tests
             }
 
             // проверим, что настройки подписки пользователя изменились
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var subscription = accountDbContext.Subscriptions.Find(userSubscription.Id);
                 Assert.Equal(10, subscription.DurationMinimumInSeconds);

@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.SqlChecksModels
 {
@@ -11,7 +11,7 @@ namespace Zidium.UserAccount.Models.SqlChecksModels
 
         [Required(ErrorMessage = "Пожалуйста, выберите провайдера")]
         [Display(Name = "Провайдер")]
-        public DatabaseProviderType Provider { get; set; }
+        public SqlRuleDatabaseProviderType Provider { get; set; }
 
         [Required(ErrorMessage = "Пожалуйста, заполните строку соединения")]
         [Display(Name = "Строка соединения")]

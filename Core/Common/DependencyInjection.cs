@@ -5,6 +5,8 @@ namespace Zidium.Core
 {
     public static class DependencyInjection
     {
+        // Scoped
+
         public static T GetService<T>(params object[] args)
         {
             if (_services.TryGetValue(typeof(T), out var result))
@@ -21,6 +23,25 @@ namespace Zidium.Core
             _services.Add(typeof(TInterface), typeof(TImplementation));
         }
 
-        private static Dictionary<Type, Type> _services = new Dictionary<Type, Type>();
+        private static readonly Dictionary<Type, Type> _services = new Dictionary<Type, Type>();
+
+        // Persistent
+
+        public static T GetServicePersistent<T>()
+        {
+            if (_servicesPersistent.TryGetValue(typeof(T), out var result))
+            {
+                return (T)result;
+            }
+
+            throw new Exception($"Не найдена реализация для интерфейса {typeof(T).Name}");
+        }
+
+        public static void SetServicePersistent<TInterface>(object implementation)
+        {
+            _servicesPersistent.Add(typeof(TInterface), implementation);
+        }
+
+        private static readonly Dictionary<Type, object> _servicesPersistent = new Dictionary<Type, object>();
     }
 }

@@ -1,6 +1,7 @@
-﻿@using Zidium.Core.Api
+﻿@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Controls
+
 @model Zidium.UserAccount.Models.CheckModels.ResultsModel
 
 @{
@@ -18,7 +19,7 @@
     {
         TypeColumnName = "Тип проверки"
     };
-    var systemTestsGroups = systemUnitTests.GroupBy(x => x.TypeId);
+    var systemTestsGroups = systemUnitTests.GroupBy(x => x.Type.Id);
     foreach (var testsGroup in systemTestsGroups)
     {
         var systemType = testsGroup.First().Type;
@@ -46,13 +47,13 @@
     
     var componentTypeGroups = Model.Tests
         .Where(x => !x.Type.IsSystem)
-        .GroupBy(x => x.Component.ComponentTypeId)
+        .GroupBy(x => x.Component.ComponentType.Id)
         .ToList();
         
     foreach (var componentTypeGroup in componentTypeGroups)
     {
         var componentType = componentTypeGroup.First().Component.ComponentType;
-        var typeGroups = componentTypeGroup.GroupBy(x => x.TypeId);
+        var typeGroups = componentTypeGroup.GroupBy(x => x.Type.Id);
         foreach (var typeGroup in typeGroups)
         {
             var unitTestType = typeGroup.First().Type;
@@ -86,7 +87,7 @@
     </a>
 }
 
-<p class="pageHeader1">Количество проверок @Model.Tests.Count, из них: </p>
+<p class="pageHeader1">Количество проверок @Model.Tests.Length, из них: </p>
 
 <div id="results" class="row">
     <div class="col-md-6">

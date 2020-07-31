@@ -1,7 +1,8 @@
-﻿@using Zidium.Core.AccountsDb
-@using Zidium.Core.Common.Helpers
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Subscriptions
+
 @model ShowComponentSubscriptionsModel
 
 <style>
@@ -33,7 +34,7 @@
     }
 </style>
 
-@helper WriteImportanceTd(Subscription subscription)
+@helper WriteImportanceTd(SubscriptionForRead subscription)
 {
     if (subscription == null)
     {
@@ -45,7 +46,7 @@
     }
 }
 
-@helper WriteDurationTd(Subscription subscription)
+@helper WriteDurationTd(SubscriptionForRead subscription)
 {
     if (subscription == null || subscription.IsEnabled == false || subscription.DurationMinimumInSeconds == null)
     {
@@ -58,7 +59,7 @@
     }
 }
 
-@helper WriteNotifyBetterTd(Subscription subscription)
+@helper WriteNotifyBetterTd(SubscriptionForRead subscription)
 {
     if (subscription == null || subscription.IsEnabled == false || subscription.NotifyBetterStatus == false)
     {
@@ -70,7 +71,7 @@
     }
 }
 
-@helper WriteResendTimeTd(Subscription subscription)
+@helper WriteResendTimeTd(SubscriptionForRead subscription)
 {
     if (subscription == null || subscription.IsEnabled == false || subscription.ResendTimeInSeconds == null)
     {
@@ -83,7 +84,7 @@
     }
 }
 
-@helper WriteSendIntervalTd(Subscription subscription)
+@helper WriteSendIntervalTd(SubscriptionForRead subscription)
 {
     if (subscription == null || subscription.IsEnabled == false || !subscription.SendOnlyInInterval)
     {
@@ -132,7 +133,7 @@
                             @foreach (var channel in Model.Channels)
                             {
                                 var channelSubscription = Model.GetSubscription(Model.CurrentUserId, channel);
-                                <td>@WriteImportanceTd(channelSubscription)</td>
+                                <td>@WriteImportanceTd(channelSubscription != null ? channelSubscription.Info : null)</td>
                             }
                         </tr>
                         <tr>
@@ -140,7 +141,7 @@
                             @foreach (var channel in Model.Channels)
                             {
                                 var channelSubscription = Model.GetSubscription(Model.CurrentUserId, channel);
-                                <td>@WriteDurationTd(channelSubscription)</td>
+                                <td>@WriteDurationTd(channelSubscription != null ? channelSubscription.Info : null)</td>
                             }
                         </tr>
                         <tr>
@@ -148,7 +149,7 @@
                             @foreach (var channel in Model.Channels)
                             {
                                 var channelSubscription = Model.GetSubscription(Model.CurrentUserId, channel);
-                                <td>@WriteNotifyBetterTd(channelSubscription)</td>
+                                <td>@WriteNotifyBetterTd(channelSubscription != null ? channelSubscription.Info : null)</td>
                             }
                         </tr>
                         <tr>
@@ -156,7 +157,7 @@
                             @foreach (var channel in Model.Channels)
                             {
                                 var channelSubscription = Model.GetSubscription(Model.CurrentUserId, channel);
-                                <td>@WriteResendTimeTd(channelSubscription)</td>
+                                <td>@WriteResendTimeTd(channelSubscription != null ? channelSubscription.Info : null)</td>
                             }
                         </tr>
                         <tr>
@@ -164,7 +165,7 @@
                             @foreach (var channel in Model.Channels)
                             {
                                 var channelSubscription = Model.GetSubscription(Model.CurrentUserId, channel);
-                                <td>@WriteSendIntervalTd(channelSubscription)</td>
+                                <td>@WriteSendIntervalTd(channelSubscription != null ? channelSubscription.Info : null)</td>
                             }
                         </tr>
                     </table>
@@ -226,14 +227,14 @@
                             </tr>
                             @foreach (var subscription in Model.Subscriptions)
                             {
-                                var bgColor = GuiHelper.GetStrongBgColor(subscription.Importance);
+                                var bgColor = GuiHelper.GetStrongBgColor(subscription.Info.Importance);
                                 <tr>
                                     @if (Model.UserId == null)
                                     {
-                                        <td>@subscription.User.FioOrLogin</td>
+                                        <td>@subscription.UserName</td>
                                     }
-                                    <td>@subscription.Channel</td>
-                                    @if (subscription.IsEnabled == false)
+                                    <td>@subscription.Info.Channel</td>
+                                    @if (subscription.Info.IsEnabled == false)
                                     {
                                         <td colspan="4">
                                             <img src="/Content/Icons/forbiddance-20px.png" title="Запрещено отправлять уведомления" />
@@ -245,29 +246,29 @@
                                             <span class="subscription-badge" style="background-color: @bgColor"></span>
                                         </td>
                                         <td>
-                                            @if (subscription.DurationMinimumInSeconds > 0)
+                                            @if (subscription.Info.DurationMinimumInSeconds > 0)
                                             {
-                                                var duration = TimeSpanHelper.FromSeconds(subscription.DurationMinimumInSeconds);
+                                                var duration = TimeSpanHelper.FromSeconds(subscription.Info.DurationMinimumInSeconds);
                                                 <span>@TimeSpanHelper.Get2UnitsString(duration.Value)</span>
                                             }
                                         </td>
                                         <td>
-                                            @if (subscription.ResendTimeInSeconds > 0)
+                                            @if (subscription.Info.ResendTimeInSeconds > 0)
                                             {
-                                                var period = TimeSpanHelper.FromSeconds(subscription.ResendTimeInSeconds);
+                                                var period = TimeSpanHelper.FromSeconds(subscription.Info.ResendTimeInSeconds);
                                                 <span>@TimeSpanHelper.Get2UnitsString(period.Value)</span>
                                             }
                                         </td>
-                                        <td>@(subscription.NotifyBetterStatus ? "да" : "")</td>
+                                        <td>@(subscription.Info.NotifyBetterStatus ? "да" : "")</td>
                                         <td>
                                             @{
-                                                var from = (subscription.SendIntervalFromHour ?? 0).ToString("00") + ":" + (subscription.SendIntervalFromMinute ?? 0).ToString("00");
-                                                var to = (subscription.SendIntervalToHour ?? 0).ToString("00") + ":" + (subscription.SendIntervalToMinute ?? 0).ToString("00");
+                                                var from = (subscription.Info.SendIntervalFromHour ?? 0).ToString("00") + ":" + (subscription.Info.SendIntervalFromMinute ?? 0).ToString("00");
+                                                var to = (subscription.Info.SendIntervalToHour ?? 0).ToString("00") + ":" + (subscription.Info.SendIntervalToMinute ?? 0).ToString("00");
                                             }
                                             @from - @to
                                         </td>
                                     }
-                                    <td><a href="@Url.Action("Edit", "Subscriptions", new {id = subscription.Id})" target="_blank"><span class="glyphicon glyphicon-edit"></span></a></td>
+                                    <td><a href="@Url.Action("Edit", "Subscriptions", new {id = subscription.Info.Id})" target="_blank"><span class="glyphicon glyphicon-edit"></span></a></td>
                                 </tr>
                             }
                         </table>

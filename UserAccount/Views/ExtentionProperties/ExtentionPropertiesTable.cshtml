@@ -1,7 +1,9 @@
-﻿@using Zidium.Core.Api
-@using Zidium.Core.Common.Helpers
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.Storage
+
 @model Zidium.UserAccount.Models.ExtentionProperties.ExtentionPropertiesModel
-@if (Model.Rows.Count == 0)
+
+@if (Model.Rows.Length == 0)
 {
     <p>Нет свойств</p>
 }

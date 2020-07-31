@@ -48,13 +48,12 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
         protected void ProcessAccount(ForEachAccountData data, Guid? smsId = null)
         {
-            var repository = data.AccountDbContext.GetSendSmsCommandRepository();
-            var smss = repository.GetForSend(SendMaxCount);
+            var smss = data.Storage.SendSmsCommands.GetForSend(SendMaxCount);
 
             if (smsId.HasValue)
-                smss = smss.Where(t => t.Id == smsId.Value).ToList();
+                smss = smss.Where(t => t.Id == smsId.Value).ToArray();
 
-            var count = smss.Count;
+            var count = smss.Length;
             if (count > 0)
                 data.Logger.Debug("Всего sms для отправки: " + count);
             else
@@ -82,7 +81,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
                     // TODO Тут нужно писать метрику
 
                     // обновим статус  и статистику
-                    repository.MarkAsSendSuccessed(sms.Id, externalId);
+                    data.Storage.SendSmsCommands.MarkAsSendSuccessed(sms.Id, DateTime.Now, externalId);
                     Interlocked.Increment(ref SuccessSendCount);
 
                     data.Logger.Info("Отправлено sms на номер {0}", sms.Phone);
@@ -98,7 +97,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
                     data.Logger.Info(exception.Message, new { SmsId = sms.Id.ToString() });
 
-                    repository.MarkAsSendFail(sms.Id, exception.Message);
+                    data.Storage.SendSmsCommands.MarkAsSendFail(sms.Id, DateTime.Now, exception.Message);
                 }
                 catch (Exception exception)
                 {
@@ -107,7 +106,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
                     exception.Data.Add("SmsId", sms.Id);
                     data.Logger.Error(exception);
 
-                    repository.MarkAsSendFail(sms.Id, exception.Message);
+                    data.Storage.SendSmsCommands.MarkAsSendFail(sms.Id, DateTime.Now, exception.Message);
                 }
             }
         }

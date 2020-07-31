@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Entity;
 using Xunit;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
@@ -14,11 +14,11 @@ namespace Zidium.Core.Tests.Caching
             var account = TestHelper.GetTestAccount();
             var eventType = TestHelper.GetTestEventType(account.Id);
 
-            Event event1;
-            using (var accountDbContext = account.CreateAccountDbContext())
+            DbEvent event1;
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 var now = DateTime.Now;
-                event1 = new Event()
+                event1 = new DbEvent()
                 {
                     ActualDate = now,
                     CreateDate = now,
@@ -32,7 +32,7 @@ namespace Zidium.Core.Tests.Caching
                 accountDbContext.SaveChanges();
             }
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 accountDbContext.Events.Attach(event1);
                 var entity = accountDbContext.Entry(event1);

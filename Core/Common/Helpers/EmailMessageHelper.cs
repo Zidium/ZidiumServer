@@ -2,7 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Web;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common
 {
@@ -21,9 +21,9 @@ namespace Zidium.Core.Common
             return HttpUtility.HtmlEncode(text);
         }
 
-        public static SendEmailCommand CreateHtmlMessage(string to, string subject)
+        public static SendEmailCommandForAdd CreateHtmlMessage(string to, string subject)
         {
-            return new SendEmailCommand()
+            return new SendEmailCommandForAdd()
             {
                 Id = Guid.NewGuid(),
                 To = to,
@@ -33,7 +33,7 @@ namespace Zidium.Core.Common
             };
         }
 
-        public static SendEmailCommand NewUserLetter(string email, string url)
+        public static SendEmailCommandForAdd NewUserLetter(string email, string url)
         {
             var body = new StringBuilder();
             body.AppendLine("<h2>Вам создана учётная запись в системе Zidium!</h2>");
@@ -44,7 +44,7 @@ namespace Zidium.Core.Common
             return command;
         }
 
-        public static SendEmailCommand ResetPasswordLetter(string email, string url)
+        public static SendEmailCommandForAdd ResetPasswordLetter(string email, string url)
         {
             var body = new StringBuilder();
             body.AppendLine("<h2>Здравствуйте!</h2>");

@@ -2,17 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
     public abstract class AccountDbCacheStorageBase<TResponse, TReadObject, TWriteObject>
         : CacheStorageBaseT<AccountCacheRequest, TResponse, TReadObject, TWriteObject>
         where TReadObject : class, IAccountDbCacheReadObject
-        where TWriteObject: class, TReadObject, ICacheWriteObjectT<TResponse, TWriteObject> 
+        where TWriteObject : class, TReadObject, ICacheWriteObjectT<TResponse, TWriteObject>
         where TResponse : CacheResponse<AccountCacheRequest, TResponse, TReadObject, TWriteObject>, new()
     {
+        protected AccountDbCacheStorageBase()
+        {
+            AccountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+        }
+
+        protected readonly IAccountStorageFactory AccountStorageFactory;
+
         protected override AccountCacheRequest GetRequest(TReadObject cacheReadObject)
         {
             return new AccountCacheRequest()
@@ -22,15 +28,15 @@ namespace Zidium.Core.Caching
             };
         }
 
-        protected abstract void AddBatchObject(AccountDbContext accountDbContext, TWriteObject writeObject);
+        protected abstract void AddBatchObjects(IStorage storage, TWriteObject[] writeObjects);
 
-        protected void AddBatch(Guid accountId, List<TWriteObject> cacheObjects)
+        protected void AddBatch(Guid accountId, TWriteObject[] cacheObjects)
         {
             if (cacheObjects == null)
             {
                 throw new ArgumentNullException("cacheObjects");
             }
-            if (cacheObjects.Count == 0)
+            if (cacheObjects.Length == 0)
             {
                 return;
             }
@@ -38,28 +44,20 @@ namespace Zidium.Core.Caching
             {
                 throw new Exception("accountId == Guid.Empty");
             }
-            using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
-            {
-                accountDbContext.Configuration.AutoDetectChangesEnabled = false;
-                accountDbContext.Configuration.ValidateOnSaveEnabled = false;
-                foreach (var cacheObject in cacheObjects)
-                {
-                    AddBatchObject(accountDbContext, cacheObject);
-                }
-                accountDbContext.ChangeTracker.DetectChanges();
-                accountDbContext.SaveChanges();
-            }
+
+            var storage = AccountStorageFactory.GetStorageByAccountId(accountId);
+            AddBatchObjects(storage, cacheObjects);
         }
 
-        protected abstract void UpdateBatchObject(AccountDbContext accountDbContext, TWriteObject writeObject, bool useCheck);
+        protected abstract void UpdateBatchObjects(IStorage storage, TWriteObject[] writeObjects, bool useCheck);
 
-        protected virtual void UpdateBatch(Guid accountId, List<TWriteObject> cacheObjects, bool useCheck)
+        protected virtual void UpdateBatch(Guid accountId, TWriteObject[] cacheObjects, bool useCheck)
         {
             if (cacheObjects == null)
             {
                 throw new ArgumentNullException("cacheObjects");
             }
-            if (cacheObjects.Count == 0)
+            if (cacheObjects.Length == 0)
             {
                 return;
             }
@@ -67,17 +65,9 @@ namespace Zidium.Core.Caching
             {
                 throw new Exception("accountId == Guid.Empty");
             }
-            using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
-            {
-                accountDbContext.Configuration.AutoDetectChangesEnabled = false;
-                accountDbContext.Configuration.ValidateOnSaveEnabled = false;
-                foreach (var cacheObject in cacheObjects)
-                {
-                    UpdateBatchObject(accountDbContext, cacheObject, useCheck);
-                }
-                accountDbContext.ChangeTracker.DetectChanges();
-                accountDbContext.SaveChanges();
-            }
+
+            var storage = AccountStorageFactory.GetStorageByAccountId(accountId);
+            UpdateBatchObjects(storage, cacheObjects, useCheck);
         }
 
         public abstract int BatchCount { get; }
@@ -92,7 +82,7 @@ namespace Zidium.Core.Caching
 
                 // получим пачки
                 var batchGroups = accountGroup
-                    .OrderBy(x=>x.SaveOrder)
+                    .OrderBy(x => x.SaveOrder)
                     .Select((x, index) => new
                     {
                         Batch = index / batchCount,
@@ -109,10 +99,10 @@ namespace Zidium.Core.Caching
 
                     var batch = batchItems
                         .Select(x => x.WriteObject)
-                        .ToList();
+                        .ToArray();
 
                     AddBatch(accountId, batch);
-                    _addDataBaseCount += batch.Count;
+                    _addDataBaseCount += batch.Length;
                     Interlocked.Increment(ref AddBatchCount);
 
                     // обновим статистику
@@ -151,7 +141,7 @@ namespace Zidium.Core.Caching
                     // сохраним пачку
                     var batch = batchItems
                         .Select(x => x.WriteObject)
-                        .ToList();
+                        .ToArray();
 
                     // делаем N попыток
                     int attemps = 0;
@@ -162,7 +152,7 @@ namespace Zidium.Core.Caching
                         try
                         {
                             UpdateBatch(accountId, batch, useCheck);
-                            _updateDataBaseCount += batch.Count;
+                            _updateDataBaseCount += batch.Length;
                             break;
                         }
                         catch (Exception exception)
@@ -206,7 +196,7 @@ namespace Zidium.Core.Caching
             return result;
         }
 
-        protected abstract TWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext);
+        protected abstract TWriteObject LoadObject(AccountCacheRequest request, IStorage storage);
 
         protected override TWriteObject LoadObject(AccountCacheRequest request)
         {
@@ -218,10 +208,9 @@ namespace Zidium.Core.Caching
             {
                 throw new Exception("request.AccountId == Guid.Empty");
             }
-            using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(request.AccountId))
-            {
-                return LoadObject(request, accountDbContext);
-            }
+
+            var storage = AccountStorageFactory.GetStorageByAccountId(request.AccountId);
+            return LoadObject(request, storage);
         }
     }
 }

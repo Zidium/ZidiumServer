@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Configuration;
 using Zidium.Core.Api.Dispatcher;
-using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
 
 namespace Zidium.Core.Api
@@ -19,7 +18,8 @@ namespace Zidium.Core.Api
             {
                 if (_accessToken == null)
                 {
-                    var account = ConfigDbServicesHelper.GetAccountService().GetSystemAccount();
+                    var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+                    var account = configDbServicesFactory.GetAccountService().GetSystemAccount();
                     _accessToken = new AccessToken()
                     {
                         AccountId = account.Id,
@@ -70,6 +70,6 @@ namespace Zidium.Core.Api
             return _dispatcherClient;
         }
 
-        private static DispatcherClient _dispatcherClient = new DispatcherClient("Core");
+        private static readonly DispatcherClient _dispatcherClient = new DispatcherClient("Core");
     }
 }

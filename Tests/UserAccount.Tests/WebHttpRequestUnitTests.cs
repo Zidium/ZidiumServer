@@ -6,9 +6,9 @@ using NLog;
 using Zidium.Core.AccountsDb;
 using Xunit;
 using Zidium.Agent.AgentTasks.HttpRequests;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.Common.TimeService;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models.HttpRequestCheckModels;
@@ -50,12 +50,11 @@ namespace Zidium.UserAccount.Tests
 
             // Проверим данные созданного юнит-теста
             Guid unittestId;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = accountContext.GetUnitTestRepository();
-                var unitTest = repository.QueryAll().SingleOrDefault(t => t.DisplayName == model.CheckName);
+                var unitTest = accountContext.UnitTests.SingleOrDefault(t => t.DisplayName == model.CheckName);
                 Assert.NotNull(unitTest);
-                Assert.Equal(SystemUnitTestTypes.HttpUnitTestType.Id, unitTest.TypeId);
+                Assert.Equal(SystemUnitTestType.HttpUnitTestType.Id, unitTest.TypeId);
                 Assert.Equal(model.ComponentId, unitTest.ComponentId);
                 Assert.Equal(model.CheckName, unitTest.DisplayName);
                 Assert.Equal(model.Period, TimeSpanHelper.FromSeconds(unitTest.PeriodSeconds));

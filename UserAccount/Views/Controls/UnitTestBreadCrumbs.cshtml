@@ -1,4 +1,8 @@
-﻿@model Zidium.Core.AccountsDb.UnitTest
-@Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.Component)
+﻿@using System.Web.Mvc.Html
+
+@model Zidium.UserAccount.Models.UnitTestBreadCrumbsModel
+
+@Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.ComponentBreadCrumbs)
+
 <span style="margin-left: 2px; margin-right: 2px">/</span>
-@Html.ActionLink(Model.DisplayName, "ResultDetails", "UnitTests", new{id=Model.Id}, null)
+@Html.ActionLink(Model.DisplayName, "ResultDetails", "UnitTests", new { id = Model.Id }, null)

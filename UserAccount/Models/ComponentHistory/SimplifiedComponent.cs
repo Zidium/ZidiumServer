@@ -21,9 +21,9 @@ namespace Zidium.UserAccount.Models.ComponentHistory
 
         public bool HasEvents;
 
-        public IEnumerable<SimplifiedUnittest> Unittests;
+        public SimplifiedUnittest[] Unittests;
 
-        public IEnumerable<SimplifiedMetric> Metrics;
+        public SimplifiedMetric[] Metrics;
 
         public SimplifiedComponent()
         {

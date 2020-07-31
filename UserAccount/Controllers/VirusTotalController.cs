@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
-using Zidium.Core.ConfigDb;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.VirusTotal;
 
 namespace Zidium.UserAccount.Controllers
@@ -15,8 +16,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -24,9 +26,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
-            model.CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl();
             return View(model);
         }
 
@@ -46,13 +48,12 @@ namespace Zidium.UserAccount.Controllers
 
             if (!ModelState.IsValid)
             {
-                model.CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl();
+                model.CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl();
                 return View(model);
             }
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
         }
@@ -60,8 +61,8 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
-            model.CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl();
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
+            model.CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl();
             if (id == null)
             {
                 model.Period = TimeSpan.FromHours(6);
@@ -77,28 +78,37 @@ namespace Zidium.UserAccount.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.CommonWebsiteUrl = ConfigDbServicesHelper.GetUrlService().GetCommonWebsiteUrl();
+                model.CommonWebsiteUrl = GetConfigDbServicesFactory().GetUrlService().GetCommonWebsiteUrl();
                 return View(model);
             }
 
-            var unitTest = SaveSimpleCheck(model);
+            Uri uri;
+            try
+            {
+                uri = new Uri(model.Url);
+            }
+            catch (UriFormatException)
+            {
+                try
+                {
+                    uri = new Uri("http://" + model.Url);
+                }
+                catch
+                {
+                    ModelState.AddModelError("Url", "Пожалуйста, укажите корректный Url");
+                    return View(model);
+                }
+            }
+            model.Url = uri.OriginalString;
+
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
-        }
-
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
-        {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            return unitTestRepository.QueryAll()
-                .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.VirusTotalTestType.Id 
-                                     && t.VirusTotalRule != null 
-                                     && t.VirusTotalRule.Url == GetModelUrl(model) 
-                                     && t.IsDeleted == false);
+            return GetSuccessJsonResponse(unitTestId);
         }
 
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
@@ -106,53 +116,60 @@ namespace Zidium.UserAccount.Controllers
             return "VirusTotal " + model.Url;
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.VirusTotalRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                unitTest.VirusTotalRule = new UnitTestVirusTotalRule()
+                var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
                 {
-                    NextStep = VirusTotalStep.Scan
-                };
+                    var ruleForAdd = new UnitTestVirusTotalRuleForAdd()
+                    {
+                        UnitTestId = unitTestId,
+                        NextStep = VirusTotalStep.Scan,
+                        Url = string.Empty
+                    };
+                    storage.UnitTestVirusTotalRules.Add(ruleForAdd);
+                    rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(unitTestId);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Url.Set(GetModelUrl(model));
+                SetVirusTotalApiKey(model.ApiKey);
+                storage.UnitTestVirusTotalRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            unitTest.VirusTotalRule.Url = GetModelUrl(model);
-            SetVirusTotalApiKey(model.ApiKey);
         }
 
         protected string GetVirusTotalApiKey()
         {
-            return CurrentAccountDbContext.GetAccountSettingService().VirusTotalApiKey;
+            var service = new AccountSettingService(GetStorage());
+            return service.VirusTotalApiKey;
         }
 
         protected void SetVirusTotalApiKey(string value)
         {
-            CurrentAccountDbContext.GetAccountSettingService().VirusTotalApiKey = value;
+            var service = new AccountSettingService(GetStorage());
+            service.VirusTotalApiKey = value;
         }
 
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            model.Url = unitTest.VirusTotalRule.Url;
+            var rule = storage.UnitTestVirusTotalRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            model.Url = rule.Url;
             model.ApiKey = GetVirusTotalApiKey();
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.VirusTotalTestType.Id;
+            return SystemUnitTestType.VirusTotalTestType.Id;
         }
 
         protected string GetModelUrl(EditSimpleModel model)
         {
             return model.Url;
         }
-
-        /// <summary>
-        /// Для unit-тестов
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <param name="userId"></param>
-        public VirusTotalController(Guid accountId, Guid userId) : base(accountId, userId) { }
-
-        public VirusTotalController() { }
 
         public string ComponentDisplayName(EditSimpleModel model)
         {
@@ -176,6 +193,15 @@ namespace Zidium.UserAccount.Controllers
             string host = GetHostFromUrl(model.Url);
             return ComponentHelper.GetSystemNameByHost(host);
         }
+
+        /// <summary>
+        /// Для unit-тестов
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="userId"></param>
+        public VirusTotalController(Guid accountId, Guid userId) : base(accountId, userId) { }
+
+        public VirusTotalController() { }
 
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.TcpPortChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -14,8 +16,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -23,8 +26,8 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
             return View(model);
         }
 
@@ -46,8 +49,7 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
         }
@@ -55,7 +57,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
             return View(model);
         }
 
@@ -67,53 +69,57 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var unitTest = SaveSimpleCheck(model);
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
+            return GetSuccessJsonResponse(unitTestId);
         }
 
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
-        {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            return unitTestRepository.QueryAll()
-                .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.TcpPortTestType.Id 
-                                     && t.TcpPortRule != null && t.TcpPortRule.Host == GetModelHost(model) && t.IsDeleted == false);
-        }
-        
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Tcp порт " + GetModelHost(model) + ":" + model.Port;
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.TcpPortRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                unitTest.TcpPortRule = new UnitTestTcpPortRule()
+                var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
                 {
-                    Opened = true,
-                };
+                    var ruleForAdd = new UnitTestTcpPortRuleForAdd()
+                    {
+                        UnitTestId = unitTestId
+                    };
+                    storage.UnitTestTcpPortRules.Add(ruleForAdd);
+                    rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(unitTestId);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Host.Set(GetModelHost(model));
+                ruleForUpdate.Port.Set(model.Port.Value);
+                ruleForUpdate.Opened.Set(model.Opened);
+                storage.UnitTestTcpPortRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            unitTest.TcpPortRule.Host = GetModelHost(model);
-            unitTest.TcpPortRule.Port = model.Port.Value;
-            unitTest.TcpPortRule.Opened = model.Opened;
         }
 
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            model.Host = unitTest.TcpPortRule.Host;
-            model.Port = unitTest.TcpPortRule.Port;
-            model.Opened = unitTest.TcpPortRule.Opened;
+            var rule = storage.UnitTestTcpPortRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            model.Host = rule.Host;
+            model.Port = rule.Port;
+            model.Opened = rule.Opened;
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.TcpPortTestType.Id;
+            return SystemUnitTestType.TcpPortTestType.Id;
         }
 
         protected string GetModelHost(EditSimpleModel model)
@@ -152,15 +158,6 @@ namespace Zidium.UserAccount.Controllers
             return Json(true, JsonRequestBehavior.AllowGet);
         }
 
-        /// <summary>
-        /// Для unit-тестов
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <param name="userId"></param>
-        public TcpPortChecksController(Guid accountId, Guid userId) : base(accountId, userId) { }
-
-        public TcpPortChecksController() { }
-
         public string ComponentDisplayName(EditSimpleModel model)
         {
             return GetComponentDisplayName(model);
@@ -175,5 +172,15 @@ namespace Zidium.UserAccount.Controllers
         {
             return ComponentHelper.GetDisplayNameByHost(model.Host);
         }
+
+        /// <summary>
+        /// Для unit-тестов
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="userId"></param>
+        public TcpPortChecksController(Guid accountId, Guid userId) : base(accountId, userId) { }
+
+        public TcpPortChecksController() { }
+
     }
 }

@@ -22,5 +22,7 @@ namespace Zidium.Core.Api
         public bool ClearOverlimitEmailDate { get; set; }
 
         public Guid? UserAgentTag { get; set; }
+
+        public Guid? TariffConfigurationId { get; set; }
     }
 }

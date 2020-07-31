@@ -7,7 +7,7 @@ namespace Zidium.Core.Caching
     {
         public static EventCacheStorage Events { get; private set; }
 
-        public static StatusDataCacheStorage StatusDatas { get; private set; }
+        public static BulbCacheStorage StatusDatas { get; private set; }
 
         public static UnitTestCacheStorage UnitTests { get; private set; }
 
@@ -45,7 +45,7 @@ namespace Zidium.Core.Caching
                 Events.BeginUnloadCount = 200 * 1000;
                 Events.StopUnloadCount = 100 * 1000;
 
-                StatusDatas = new StatusDataCacheStorage();
+                StatusDatas = new BulbCacheStorage();
                 StatusDatas.MaxCount = 300 * 1000;
                 StatusDatas.BeginUnloadCount = 200 * 1000;
                 StatusDatas.StopUnloadCount = 100 * 1000;
@@ -92,6 +92,7 @@ namespace Zidium.Core.Caching
                 return new ICacheStorage[]
                 {
                     Events,
+                    StatusDatas,
                     UnitTests,
                     Components,
                     Metrics,
@@ -99,6 +100,11 @@ namespace Zidium.Core.Caching
                     UnitTestTypes
                 };
             }
+        }
+
+        static AllCaches()
+        {
+            Init();
         }
     }
 }

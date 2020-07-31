@@ -46,10 +46,12 @@ namespace Zidium.Agent.AgentTasks.OutdatedEventsStatuses
                     Interlocked.Add(ref Count, updateCount);
                     if (updateCount == 0)
                     {
-                        data.Logger.Trace("Обновлено статусов событий: " + updateCount);
+                        if (data.Logger.IsTraceEnabled)
+                            data.Logger.Trace("Обновлено статусов событий: " + updateCount);
                         return;
                     }
-                    data.Logger.Debug("Обновлено статусов событий: " + updateCount);
+                    if (data.Logger.IsDebugEnabled)
+                        data.Logger.Debug("Обновлено статусов событий: " + updateCount);
                     if (updateCount < maxCount)
                     {
                         return;

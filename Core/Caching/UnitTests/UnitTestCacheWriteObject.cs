@@ -1,9 +1,8 @@
 ﻿using System;
 using Zidium.Api.Others;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -47,12 +46,12 @@ namespace Zidium.Core.Caching
         /// Ссылка на тип юнит-теста
         /// </summary>
         public Guid TypeId { get; set; }
-        
+
         /// <summary>
         /// Период выполнения. Используется для юнит-тестов, которые запускает через определенный интервал сам АПП (например проверка открытия страницы или пинг)
         /// </summary>
         public int? PeriodSeconds { get; set; }
-        
+
         /// <summary>
         /// Ссылка на компонент
         /// </summary>
@@ -79,7 +78,7 @@ namespace Zidium.Core.Caching
         /// Комментарий к юнит-тесту (указывается при выключении)
         /// </summary>
         public string DisableComment { get; set; }
-        
+
         /// <summary>
         /// Признак что проверка включена
         /// </summary>
@@ -105,7 +104,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public bool IsDeleted { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; private set; }
 
         /// <summary>
         /// Переопределение цвета ошибки
@@ -124,14 +123,14 @@ namespace Zidium.Core.Caching
         /// </summary>
         public bool IsSystemType
         {
-            get { return SystemUnitTestTypes.IsSystem(TypeId); }
+            get { return SystemUnitTestType.IsSystem(TypeId); }
         }
 
         public int AttempCount { get; set; }
 
         public int AttempMax { get; set; }
 
-        public static UnitTestCacheWriteObject Create(UnitTest unitTest, Guid accountId)
+        public static UnitTestCacheWriteObject Create(UnitTestForRead unitTest, Guid accountId)
         {
             if (unitTest == null)
             {
@@ -166,33 +165,9 @@ namespace Zidium.Core.Caching
             };
         }
 
-        public UnitTest CreateEf()
+        public UnitTestForUpdate CreateEf()
         {
-            return new UnitTest()
-            {
-                Id = Id,
-                ErrorColor = ErrorColor,
-                Enable = Enable,
-                DisplayName = DisplayName,
-                DisableToDate = DisableToDate,
-                DisableComment = DisableComment,
-                CreateDate = CreateDate,
-                ComponentId = ComponentId,
-                IsDeleted = IsDeleted,
-                NextExecutionDate = NextExecutionDate,
-                NextStepProcessDate = NextStepProcessDate,
-                ParentEnable = ParentEnable,
-                PeriodSeconds = PeriodSeconds,
-                SimpleMode = SimpleMode,
-                StatusDataId = StatusDataId,
-                SystemName = SystemName,
-                TypeId = TypeId,
-                NoSignalColor = NoSignalColor,
-                ActualTimeSecs = TimeSpanHelper.GetSeconds(ActualTime),
-                LastExecutionDate = LastExecutionDate,
-                AttempCount = AttempCount,
-                AttempMax = AttempMax
-            };
+            return new UnitTestForUpdate(Id);
         }
     }
 }

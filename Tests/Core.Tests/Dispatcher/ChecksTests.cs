@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading;
 using Xunit;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
@@ -234,7 +234,7 @@ namespace Zidium.Core.Tests.Dispatcher
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
                 SystemName = "UnitTest." + Guid.NewGuid(),
-                NoSignalColor = Core.Common.ObjectColor.Yellow
+                NoSignalColor = ObjectColor.Yellow
             }).Data;
 
             // Отправим зелёную проверку, актуальную 1 секунду
@@ -308,7 +308,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var unitTestType = dispatcher.GetOrCreateUnitTestType(account.Id, new GetOrCreateUnitTestTypeRequestData()
             {
                 SystemName = "UnitTestType." + Guid.NewGuid(),
-                NoSignalColor = Core.Common.ObjectColor.Yellow
+                NoSignalColor = ObjectColor.Yellow
             }).Data;
 
             // Создадим новую проверку

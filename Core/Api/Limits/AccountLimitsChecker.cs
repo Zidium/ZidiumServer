@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Limits
 {
@@ -25,7 +25,8 @@ namespace Zidium.Core.Limits
 
         protected void SetAccountOverlimitSignal()
         {
-            ConfigDbServicesHelper.GetAccountService().Update(new UpdateAccountRequestData()
+            var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+            configDbServicesFactory.GetAccountService().Update(new UpdateAccountRequestData()
             {
                 Id = AccountId,
                 LastOverLimitDate = Now
@@ -36,7 +37,7 @@ namespace Zidium.Core.Limits
 
         #region Components
 
-        public LimitCheckResult CheckMaxComponents(AccountDbContext context)
+        public LimitCheckResult CheckMaxComponents(IStorage context)
         {
             var count = GetComponentsCount(context);
 
@@ -61,13 +62,13 @@ namespace Zidium.Core.Limits
 
         private int? _componentsCount;
 
-        protected int GetComponentsCount(AccountDbContext context)
+        protected int GetComponentsCount(IStorage storage)
         {
             var count = _componentsCount;
             if (!count.HasValue)
             {
-                var componentRepository = context.GetComponentRepository();
-                count = componentRepository.QueryAll().Count(t => t.ComponentTypeId != SystemComponentTypes.Root.Id);
+                // Количество без учёта Root
+                count = storage.Components.GetCount() - 1;
                 _componentsCount = count;
             }
             return count.Value;
@@ -77,7 +78,7 @@ namespace Zidium.Core.Limits
 
         #region ComponentTypes
 
-        public LimitCheckResult CheckMaxComponentTypes(AccountDbContext context)
+        public LimitCheckResult CheckMaxComponentTypes(IStorage context)
         {
             var count = GetComponentTypesCount(context);
 
@@ -102,13 +103,12 @@ namespace Zidium.Core.Limits
 
         private int? _componentTypesCount;
 
-        protected int GetComponentTypesCount(AccountDbContext context)
+        protected int GetComponentTypesCount(IStorage storage)
         {
             var count = _componentTypesCount;
             if (!count.HasValue)
             {
-                var componentTypeRepository = context.GetComponentTypeRepository();
-                count = componentTypeRepository.QueryAll().Count(t => !t.IsSystem);
+                count = storage.ComponentTypes.GetNonSystemCount();
                 _componentTypesCount = count;
             }
             return count.Value;
@@ -118,7 +118,7 @@ namespace Zidium.Core.Limits
 
         #region UnitTestTypes
 
-        public LimitCheckResult CheckMaxUnitTestTypes(AccountDbContext context)
+        public LimitCheckResult CheckMaxUnitTestTypes(IStorage context)
         {
             var count = GetUnitTestTypesCount(context);
 
@@ -143,13 +143,12 @@ namespace Zidium.Core.Limits
 
         private int? _unitTestTypesCount;
 
-        protected int GetUnitTestTypesCount(AccountDbContext context)
+        protected int GetUnitTestTypesCount(IStorage storage)
         {
             var count = _unitTestTypesCount;
             if (!count.HasValue)
             {
-                var unitTestTypeRepository = context.GetUnitTestTypeRepository();
-                count = unitTestTypeRepository.QueryAll().Count(t => !t.IsSystem);
+                count = storage.UnitTestTypes.GetNonSystemCount();
                 _unitTestTypesCount = count;
             }
             return count.Value;
@@ -159,7 +158,7 @@ namespace Zidium.Core.Limits
 
         #region UnitTests
 
-        public LimitCheckResult CheckMaxHttpChecksNoBanner(AccountDbContext context)
+        public LimitCheckResult CheckMaxHttpChecksNoBanner(IStorage context)
         {
             var count = GetHttpChecksNoBannerCount(context);
 
@@ -184,20 +183,12 @@ namespace Zidium.Core.Limits
 
         private int? _httpChecksNoBannerCount;
 
-        protected int GetHttpChecksNoBannerCount(AccountDbContext context)
+        protected int GetHttpChecksNoBannerCount(IStorage storage)
         {
             var count = _httpChecksNoBannerCount;
             if (!count.HasValue)
             {
-                var repository = context.GetUnitTestRepository();
-
-                count = repository
-                    .QueryAll()
-                    .Count(t => t.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id
-                                && t.Enable
-                                && t.HttpRequestUnitTest.LastBannerCheck.HasValue
-                                && t.HttpRequestUnitTest.HasBanner == false);
-
+                count = storage.HttpRequestUnitTests.GetHttpChecksNoBannerCount();
                 _httpChecksNoBannerCount = count;
             }
             return count.Value;
@@ -208,7 +199,7 @@ namespace Zidium.Core.Limits
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public LimitCheckResult CheckMaxUnitTestsCount(AccountDbContext context)
+        public LimitCheckResult CheckMaxUnitTestsCount(IStorage context)
         {
             var count = GetUnitTestsCount(context);
 
@@ -233,13 +224,12 @@ namespace Zidium.Core.Limits
 
         private int? _unitTestsCount;
 
-        protected int GetUnitTestsCount(AccountDbContext context)
+        protected int GetUnitTestsCount(IStorage storage)
         {
             var count = _unitTestsCount;
             if (!count.HasValue)
             {
-                var repository = context.GetUnitTestRepository();
-                count = repository.QueryAll().Count();
+                count = storage.UnitTests.GetCount();
                 _unitTestsCount = count;
             }
             return count.Value;
@@ -249,7 +239,7 @@ namespace Zidium.Core.Limits
 
         #region Metrics
 
-        public LimitCheckResult CheckMaxMetrics(AccountDbContext context)
+        public LimitCheckResult CheckMaxMetrics(IStorage context)
         {
             var count = GetMetricsCount(context);
 
@@ -274,13 +264,12 @@ namespace Zidium.Core.Limits
 
         private int? _metricsCount;
 
-        protected int GetMetricsCount(AccountDbContext context)
+        protected int GetMetricsCount(IStorage storage)
         {
             var count = _metricsCount;
             if (!count.HasValue)
             {
-                var metricTypeRepository = context.GetMetricTypeRepository();
-                count = metricTypeRepository.QueryAll().Count();
+                count = storage.MetricTypes.GetCount();
                 _metricsCount = count;
             }
             return count.Value;
@@ -290,7 +279,7 @@ namespace Zidium.Core.Limits
 
         #region PerDay
 
-        public void CheckUnitTestResultsPerDay(AccountDbContext context)
+        public void CheckUnitTestResultsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -305,7 +294,7 @@ namespace Zidium.Core.Limits
                 throw new OverLimitException("Достигнут лимит на количество результатов проверок в день (максимум " + hardLimit.UnitTestsRequestsPerDay + ")");
         }
 
-        public void AddUnitTestResultsPerDay(AccountDbContext context, Guid unitTestId)
+        public void AddUnitTestResultsPerDay(IStorage context, Guid unitTestId)
         {
             CheckForNewCurrentDataRow(context);
             var unitTestData = DataCurrent.GetUnitTestData(unitTestId);
@@ -316,7 +305,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void AddUnitTestsSizePerDay(AccountDbContext context, Int64 size)
+        public void AddUnitTestsSizePerDay(IStorage context, Int64 size)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -325,7 +314,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void CheckLogSizePerDay(AccountDbContext context, Int64 size)
+        public void CheckLogSizePerDay(IStorage context, Int64 size)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -343,7 +332,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void AddLogSizePerDay(AccountDbContext context, Int64 size)
+        public void AddLogSizePerDay(IStorage context, Int64 size)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -352,7 +341,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void CheckEventsRequestsPerDay(AccountDbContext context)
+        public void CheckEventsRequestsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -370,7 +359,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void AddEventsRequestsPerDay(AccountDbContext context)
+        public void AddEventsRequestsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -379,7 +368,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void AddEventsSizePerDay(AccountDbContext context, Int64 size)
+        public void AddEventsSizePerDay(IStorage context, Int64 size)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -388,7 +377,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void CheckMetricsRequestsPerDay(AccountDbContext context)
+        public void CheckMetricsRequestsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -403,7 +392,7 @@ namespace Zidium.Core.Limits
                 throw new OverLimitException("Достигнут лимит на количество вызовов api метрик в день (максимум " + hardLimit.MetricsRequestsPerDay + ")");
         }
 
-        public void AddMetricsRequestsPerDay(AccountDbContext context)
+        public void AddMetricsRequestsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -412,7 +401,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void AddMetricsSizePerDay(AccountDbContext context, Int64 size)
+        public void AddMetricsSizePerDay(IStorage context, Int64 size)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -421,7 +410,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void CheckSmsPerDay(AccountDbContext context)
+        public void CheckSmsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -442,7 +431,7 @@ namespace Zidium.Core.Limits
             }
         }
 
-        public void AddSmsPerDay(AccountDbContext context)
+        public void AddSmsPerDay(IStorage context)
         {
             CheckForNewCurrentDataRow(context);
             lock (this)
@@ -457,7 +446,7 @@ namespace Zidium.Core.Limits
 
         protected AccountUsedLimitsPerDayDataInfo OverallArchive;
 
-        public void CheckStorageSize(AccountDbContext context, Int64 size, out bool canIncreaseSizeInStatistics)
+        public void CheckStorageSize(IStorage context, Int64 size, out bool canIncreaseSizeInStatistics)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -483,16 +472,13 @@ namespace Zidium.Core.Limits
 
         private List<LimitDataArchiveItem> _dataArchive;
 
-        internal List<LimitDataArchiveItem> GetDataArchive(AccountDbContext context)
+        internal List<LimitDataArchiveItem> GetDataArchive(IStorage storage)
         {
             if (_dataArchive == null)
             {
                 // Загрузим историю за сегодня и вчера из базы
-                var repository = context.GetLimitDataRepository();
                 var date = Now.Date.AddDays(-1);
-                _dataArchive = repository
-                    .QueryAll()
-                    .Where(t => t.BeginDate >= date && t.Type == LimitDataType.Per5Minutes)
+                _dataArchive = storage.LimitData.Find(date, LimitDataType.Per5Minutes)
                     .Select(t => new LimitDataArchiveItem()
                     {
                         Id = t.Id,
@@ -518,7 +504,7 @@ namespace Zidium.Core.Limits
 
         protected Object DataArchiveLockObject = new object();
 
-        protected void CheckForNewCurrentDataRow(AccountDbContext context)
+        protected void CheckForNewCurrentDataRow(IStorage context)
         {
             var needRecalc = false;
             lock (DataArchiveLockObject)
@@ -571,12 +557,12 @@ namespace Zidium.Core.Limits
             };
         }
 
-        protected void RecalcDataTotal(AccountDbContext context)
+        protected void RecalcDataTotal(IStorage storage)
         {
             LimitDataArchiveItem[] rows;
             lock (DataArchiveLockObject)
             {
-                var dataArchive = GetDataArchive(context);
+                var dataArchive = GetDataArchive(storage);
                 rows = dataArchive.Where(t => t.BeginDate >= Now.Date).ToArray();
             }
 
@@ -601,8 +587,7 @@ namespace Zidium.Core.Limits
                 }
 
             // И добавляем к ним сохранённые данные из архива в базе
-            var repository = context.GetLimitDataForUnitTestRepository();
-            var archiveFromDb = repository.GetGroupedByUnitTest(Now.Date);
+            var archiveFromDb = storage.LimitDataForUnitTest.GetGroupedByUnitTest(Now.Date, LimitDataType.Per5Minutes);
             foreach (var row in archiveFromDb)
             {
                 var totalData = newDataTotal.GetUnitTestData(row.Item1);
@@ -612,27 +597,27 @@ namespace Zidium.Core.Limits
             DataTotal = newDataTotal;
 
             // Рассчитаем суммарные данные за всю историю
-            OverallArchive = GetUsedLimitsTotalData(context);
+            OverallArchive = GetUsedLimitsTotalData(storage);
         }
 
-        public int SaveData(AccountDbContext context)
+        public int SaveData(IStorage storage)
         {
-            CheckForNewCurrentDataRow(context);
+            CheckForNewCurrentDataRow(storage);
 
             List<LimitDataArchiveItem> localDataArchive;
             lock (DataArchiveLockObject)
             {
-                var dataArchive = GetDataArchive(context);
+                var dataArchive = GetDataArchive(storage);
                 localDataArchive = new List<LimitDataArchiveItem>(dataArchive);
             }
 
             // Сохраним все несохранённые записи
-            var repository = context.GetLimitDataRepository();
             var rows = localDataArchive.Where(t => t.Id == Guid.Empty).ToArray();
             foreach (var row in rows)
             {
-                var limitData = new LimitData()
+                var limitData = new LimitDataForAdd()
                 {
+                    Id = Guid.NewGuid(),
                     BeginDate = row.BeginDate,
                     EndDate = row.EndDate,
                     Type = LimitDataType.Per5Minutes,
@@ -644,16 +629,17 @@ namespace Zidium.Core.Limits
                     UnitTestsRequests = row.UnitTestsRequests,
                     UnitTestsSize = row.UnitTestsSize
                 };
-                limitData.UnitTestData = row.UnitTestData.Select(t => new LimitDataForUnitTest()
+
+                var limitUnitTestData = row.UnitTestData.Select(t => new LimitDataForUnitTestForAdd()
                 {
                     Id = Guid.NewGuid(),
-                    LimitData = limitData,
+                    LimitDataId = limitData.Id,
                     UnitTestId = t.Key,
                     ResultsCount = t.Value.ResultsCount
-                }).ToList();
-                repository.Add(limitData);
+                }).ToArray();
 
-                context.SaveChanges();
+                storage.LimitData.Add(limitData);
+                storage.LimitDataForUnitTest.Add(limitUnitTestData);
 
                 row.Id = limitData.Id;
                 row.UnitTestData = null;
@@ -661,12 +647,13 @@ namespace Zidium.Core.Limits
 
             // Проверим, есть ли запись за вчера с данными за целый день
             var yesterday = Now.Date.AddDays(-1);
-            var totalForYesterday = repository.QueryAll().FirstOrDefault(t => t.Type == LimitDataType.Per1Day && t.BeginDate == yesterday);
+            var totalForYesterday = storage.LimitData.GetOneOrNullByDateAndType(yesterday, LimitDataType.Per1Day);
             if (totalForYesterday == null)
             {
                 // Если записи за вчера нет, создадим её
-                totalForYesterday = new LimitData()
+                var totalForYesterdayForAdd = new LimitDataForAdd()
                 {
+                    Id = Guid.NewGuid(),
                     BeginDate = yesterday,
                     EndDate = yesterday.AddDays(1),
                     Type = LimitDataType.Per1Day
@@ -675,27 +662,26 @@ namespace Zidium.Core.Limits
                 // Заполним данными из архива за вчера
                 var yesterdayArchive = localDataArchive.Where(t => t.BeginDate >= yesterday && t.BeginDate < yesterday.AddDays(1)).ToList();
 
-                totalForYesterday.EventsRequests = yesterdayArchive.Sum(t => t.EventsRequests);
-                totalForYesterday.EventsSize = yesterdayArchive.Sum(t => t.EventsSize);
-                totalForYesterday.UnitTestsRequests = yesterdayArchive.Sum(t => t.UnitTestsRequests);
-                totalForYesterday.UnitTestsSize = yesterdayArchive.Sum(t => t.UnitTestsSize);
-                totalForYesterday.MetricsRequests = yesterdayArchive.Sum(t => t.MetricsRequests);
-                totalForYesterday.MetricsSize = yesterdayArchive.Sum(t => t.MetricsSize);
-                totalForYesterday.LogSize = yesterdayArchive.Sum(t => t.LogSize);
+                totalForYesterdayForAdd.EventsRequests = yesterdayArchive.Sum(t => t.EventsRequests);
+                totalForYesterdayForAdd.EventsSize = yesterdayArchive.Sum(t => t.EventsSize);
+                totalForYesterdayForAdd.UnitTestsRequests = yesterdayArchive.Sum(t => t.UnitTestsRequests);
+                totalForYesterdayForAdd.UnitTestsSize = yesterdayArchive.Sum(t => t.UnitTestsSize);
+                totalForYesterdayForAdd.MetricsRequests = yesterdayArchive.Sum(t => t.MetricsRequests);
+                totalForYesterdayForAdd.MetricsSize = yesterdayArchive.Sum(t => t.MetricsSize);
+                totalForYesterdayForAdd.LogSize = yesterdayArchive.Sum(t => t.LogSize);
 
-                repository.Add(totalForYesterday);
-                context.SaveChanges();
+                storage.LimitData.Add(totalForYesterdayForAdd);
             }
 
             // Удалим из архива в памяти те, которые старше 48 часов (сегодня + вчера)
             lock (DataArchiveLockObject)
             {
-                var dataArchive = GetDataArchive(context);
+                var dataArchive = GetDataArchive(storage);
                 dataArchive.RemoveAll(t => t.BeginDate < Now.AddHours(-48));
             }
 
             // Удалим из базы те, которые старше старше 48 часов (сегодня + вчера)
-            repository.RemoveOld(Now.AddHours(-48), LimitDataType.Per5Minutes);
+            storage.LimitData.RemoveOld(Now.AddHours(-48), LimitDataType.Per5Minutes);
 
             return rows.Length;
         }
@@ -715,37 +701,35 @@ namespace Zidium.Core.Limits
             _softTariffLimit = null;
         }
 
-        private TariffLimit _hardTariffLimit;
+        private TariffLimitForRead _hardTariffLimit;
 
-        public TariffLimit GetHardTariffLimit(AccountDbContext context)
+        public TariffLimitForRead GetHardTariffLimit(IStorage storage)
         {
             var limit = _hardTariffLimit;
             if (limit == null)
             {
-                var accountTariffRepository = context.GetAccountTariffRepository();
-                limit = accountTariffRepository.GetHardTariffLimit();
+                limit = storage.TariffLimits.GetHardTariffLimit();
                 _hardTariffLimit = limit;
             }
             return limit;
         }
 
-        private TariffLimit _softTariffLimit;
+        private TariffLimitForRead _softTariffLimit;
 
-        public TariffLimit GetSoftTariffLimit(AccountDbContext context)
+        public TariffLimitForRead GetSoftTariffLimit(IStorage storage)
         {
             var limit = _softTariffLimit;
             if (limit == null)
             {
-                var accountTariffRepository = context.GetAccountTariffRepository();
-                limit = accountTariffRepository.GetSoftTariffLimit();
+                limit = storage.TariffLimits.GetSoftTariffLimit();
                 _softTariffLimit = limit;
             }
             return limit;
         }
 
-        public AccountUsedLimitsTodayDataInfo GetUsedTodayTariffLimit(AccountDbContext context)
+        public AccountUsedLimitsTodayDataInfo GetUsedTodayTariffLimit(IStorage storage)
         {
-            CheckForNewCurrentDataRow(context);
+            CheckForNewCurrentDataRow(storage);
 
             var result = new AccountUsedLimitsTodayDataInfo()
             {
@@ -778,7 +762,7 @@ namespace Zidium.Core.Limits
             return result;
         }
 
-        public AccountUsedLimitsInstantDataInfo GetUsedInstantTariffLimit(AccountDbContext context)
+        public AccountUsedLimitsInstantDataInfo GetUsedInstantTariffLimit(IStorage context)
         {
             var result = new AccountUsedLimitsInstantDataInfo()
             {
@@ -792,7 +776,7 @@ namespace Zidium.Core.Limits
             return result;
         }
 
-        public AccountUsedLimitsOverallDataInfo GetUsedOverallTariffLimit(AccountDbContext context, int archiveDays)
+        public AccountUsedLimitsOverallDataInfo GetUsedOverallTariffLimit(IStorage context, int archiveDays)
         {
             CheckForNewCurrentDataRow(context);
 
@@ -832,15 +816,14 @@ namespace Zidium.Core.Limits
             return result;
         }
 
-        protected List<LimitData> GetPerDayHistory(AccountDbContext context)
+        protected LimitDataForRead[] GetPerDayHistory(IStorage storage)
         {
             // Получим всю историю по дням
-            var limitDataRepository = context.GetLimitDataRepository();
-            var history = limitDataRepository.QueryAll().Where(t => t.Type == LimitDataType.Per1Day).ToList();
+            var history = storage.LimitData.GetByType(LimitDataType.Per1Day);
             return history;
         }
 
-        protected AccountUsedLimitsPerDayDataInfo GetUsedLimitsTotalData(AccountDbContext context, List<LimitData> history = null)
+        protected AccountUsedLimitsPerDayDataInfo GetUsedLimitsTotalData(IStorage context, LimitDataForRead[] history = null)
         {
             // Для каждого лимита посчитаем сумму за время хранения архива из тарифа
             var today = Now.Date;

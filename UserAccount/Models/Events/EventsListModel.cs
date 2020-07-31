@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Zidium.Core;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
-using Zidium.UserAccount.Models.Events;
 
 namespace Zidium.UserAccount.Models
 {
@@ -27,13 +24,15 @@ namespace Zidium.UserAccount.Models
 
         public DateTime? ToDate { get; set; }
 
-        public UnitTest UnitTest { get; set; }
+        public UnitTestForRead UnitTest { get; set; }
 
-        public Metric Metric { get; set; }
+        public MetricForRead Metric { get; set; }
 
         public string VersionFrom { get; set; }
 
-        public IQueryable<EventsListItemModel> Events { get; set; }
+        public IStorage Storage { get; set; }
+
+        public EventsListItemModel[] Events { get; set; }
 
         /// <summary>
         /// Показывать колбасу? Показываем, если явно указан фильтр по категории какого-либо статуса
@@ -69,72 +68,9 @@ namespace Zidium.UserAccount.Models
             }
         }
 
-        public EventXmlData[] GetXmlEvents(AccountDbContext accountDbContext)
-        {
-            // загрузим все свойства
-            var eventIdArray = Events.Select(x => x.Id).ToArray();
+        public Dictionary<Guid, EventsListComponentModel> Components { get; set; }
 
-            var allProperties = accountDbContext.EventProperties
-                .Where(x => eventIdArray.Contains(x.EventId))
-                .ToArray();
-
-            var eventPropertiesGroups = allProperties
-                .GroupBy(x => x.EventId)
-                .ToDictionary(x => x.Key, x=>x.ToArray());
-
-            var events = new List<EventXmlData>();
-            foreach (var item in Events)
-            {
-                // тип события
-                EventsListEventTypeModel eventType = null;
-                EventTypes.TryGetValue(item.EventTypeId, out eventType);
-                if (eventType == null)
-                {
-                    continue;
-                }
-
-                // компонент
-                EventsListComponentModel component = null;
-                Components.TryGetValue(item.OwnerId, out component);
-                if (component == null)
-                {
-                    continue;
-                }
-
-                var eventObj = new EventXmlData()
-                {
-                    Id = item.Id,
-                    EventTypeId = eventType.Id,
-                    Count = item.Count,
-                    ActualDate = item.ActualDate,
-                    EndDate = item.EndDate,
-                    EventTypeDisplayName = eventType.DisplayName,
-                    EventTypeSystemName = eventType.SystemName,
-                    JoinKeyHash = item.JoinKey,
-                    Message = item.Message,
-                    Category = item.Category.ToString(),
-                    StartDate = item.StartDate,
-                    TypeCode = eventType.Code,
-                    OwnerId = item.OwnerId,
-                    ComponentId = component.Id,
-                    ComponentSystemName = component.SystemName,
-                    ComponentDisplayName = component.DisplayName
-                };
-
-                EventProperty[] eventProperties = null;
-                if (eventPropertiesGroups.TryGetValue(eventObj.Id, out eventProperties))
-                {
-                    eventObj.Properties = eventProperties.Select(x => new EventPropertyXml()
-                    {
-                        Key = x.Name,
-                        Type = x.DataType.ToString(),
-                        Vaue = x.Value
-                    }).ToArray();
-                }
-                events.Add(eventObj);
-            }
-            return events.ToArray();
-        }
+        public Dictionary<Guid, EventsListEventTypeModel> EventTypes { get; set; }
 
         public EventCategory[] GetEventCategoriesForFilter()
         {
@@ -158,11 +94,7 @@ namespace Zidium.UserAccount.Models
             return null;
         }
 
-        public Dictionary<Guid, EventsListComponentModel> Components { get; set; }
-
-        public Dictionary<Guid, EventsListEventTypeModel> EventTypes { get; set; }
-
         public static readonly int MaxMessageLength = 150;
-        public static readonly int MaxPropertyLength = 4000;
+
     }
 }

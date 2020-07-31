@@ -1,9 +1,9 @@
-﻿@using Zidium.Core.Api
-@using GridMvc.Html
+﻿@using GridMvc.Html
 @using GridMvc.Sorting
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
+
 @model ComponentsListModel
 
 @{
@@ -57,11 +57,11 @@
 
 @Html.Grid(Model.Components).Columns(columns =>
 {
-    columns.Add().RenderValueAs(m => Html.MonitoringStatusIcon(m.ExternalStatus.Status))
+    columns.Add().RenderValueAs(m => Html.MonitoringStatusIcon(m.ExternalStatus))
         .Encoded(false).Sanitized(false).Css("text-center");
 
     columns.Add(m => m.DisplayName).Titled("Дружелюбное имя").RenderValueAs(
-        m => Html.ActionLink(m.DisplayName, "Show", new { id = m.Id }, new { @class = GuiHelper.GetComponentStatusTextCssClass(m.ExternalStatus != null ? m.ExternalStatus.Status : MonitoringStatus.Unknown) }))
+        m => Html.ActionLink(m.DisplayName, "Show", new { id = m.Id }, new { @class = GuiHelper.GetComponentStatusTextCssClass(m.ExternalStatus) }))
         .Encoded(false).Sanitized(false).SortInitialDirection(GridSortDirection.Ascending);
 
     columns.Add(m => m.SystemName).Titled("Системное имя");
@@ -72,30 +72,19 @@
 
     columns.Add(m => m.Version).Titled("Версия");
 
-    //columns.Add().Titled("Дата статуса").RenderValueAs(m => m.State != null ? m.State.StartDate.ToString("dd.MM.yyyy HH:mm:ss") : null).Css("text-nowrap");
-
-    //columns.Add().Titled("Проект").RenderValueAs(m => m.Project != null ? Html.ActionLink(m.Project.Name, "Show", "Project", new { id = m.ProjectId }, null) : new MvcHtmlString(string.Empty));
-
     if (UserHelper.CurrentUser.CanEditCommonData())
     {
         columns.Add().Titled(string.Empty).RenderValueAs(m =>
         @<text>
-            @if (!m.IsDeleted)
-            {
-                <a href='@Url.Action("Delete", new {id = m.Id})'
-                   onclick="ziShowModalDialogByLink(this, event);"
-                   title="Удалить компонент" class="text-danger">
-                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                </a>
-            }
-            else
-            {
-                <span class="glyphicon glyphicon-minus" aria-hidden="true" title="Компонент удалён"></span>
-            }
+            <a href='@Url.Action("Delete", new {id = m.Id})'
+               onclick="ziShowModalDialogByLink(this, event);"
+               title="Удалить компонент" class="text-danger">
+                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            </a>
         </text>).Encoded(false).Sanitized(false).Css("text-center");
-    }
+            }
 
-}).Sortable().Selectable(false).WithPaging(50)
+        }).Selectable(false)
 
 @section Scripts
 {

@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -12,17 +12,15 @@ namespace Zidium.UserAccount.Models.UnitTests
         public int AlarmDays { get; set; }
         public int WarningDays { get; set; }
 
-        public static OverviewSettingsDomainModel Create(UnitTest unitTest)
+        public static OverviewSettingsDomainModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var rule = unitTest.DomainNamePaymentPeriodRule;
-            if (rule == null)
-            {
-                throw new Exception("unittest domain rule is null");
-            }
+
+            var rule = storage.DomainNamePaymentPeriodRules.GetOneByUnitTestId(unitTest.Id);
+            
             return new OverviewSettingsDomainModel()
             {
                 UnitTestId = unitTest.Id,

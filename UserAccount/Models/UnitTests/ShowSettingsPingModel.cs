@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -10,22 +10,20 @@ namespace Zidium.UserAccount.Models.UnitTests
         public string Host { get; set; }
         public TimeSpan Timeout { get; set; }
 
-        public static ShowSettingsPingModel Create(UnitTest unitTest)
+        public static ShowSettingsPingModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var ping = unitTest.PingRule;
-            if (ping == null)
-            {
-                throw new Exception("unittest ping data is null");
-            }
+
+            var rule = storage.UnitTestPingRules.GetOneByUnitTestId(unitTest.Id);
+            
             return new ShowSettingsPingModel()
             {
                 UnitTestId = unitTest.Id,
-                Timeout = TimeSpanHelper.FromMilliseconds(ping.TimeoutMs).Value,
-                Host = ping.Host
+                Timeout = TimeSpanHelper.FromMilliseconds(rule.TimeoutMs).Value,
+                Host = rule.Host
             };
         }
     }

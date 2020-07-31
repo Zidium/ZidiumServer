@@ -2,10 +2,9 @@
 using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.SendMessages
 {
@@ -44,33 +43,40 @@ namespace Zidium.Agent.AgentTasks.SendMessages
 
         protected void ProcessAccount(ForEachAccountData data, Guid? commandId = null)
         {
-            var messageCommandRepository = data.AccountDbContext.GetSendMessageCommandRepository();
-            var notificationRepository = data.AccountDbContext.GetNotificationRepository();
+            var messageCommandRepository = data.Storage.SendMessageCommands;
+            var notificationRepository = data.Storage.Notifications;
 
-            var commands = messageCommandRepository
-                .GetForSend(Channel, SendMaxCount)
-                .ToArray();
+            var commands = messageCommandRepository.GetForSend(Channel, SendMaxCount);
 
             if (commandId.HasValue)
                 commands = commands.Where(t => t.Id == commandId.Value).ToArray();
 
             var count = commands.Length;
             if (count > 0)
-                data.Logger.Debug("Всего сообщений для отправки: " + count);
+            {
+                if (data.Logger.IsDebugEnabled)
+                    data.Logger.Debug("Всего сообщений для отправки: " + count);
+            }
             else
-                data.Logger.Trace("Нет сообщений для отправки");
+            {
+                if (data.Logger.IsTraceEnabled)
+                    data.Logger.Trace("Нет сообщений для отправки");
+            }
 
             foreach (var command in commands)
             {
                 data.CancellationToken.ThrowIfCancellationRequested();
-                data.Logger.Debug("Отправляем сообщение получателю {0}", command.To);
+
+                if (data.Logger.IsDebugEnabled)
+                    data.Logger.Debug("Отправляем сообщение получателю {0}", command.To);
+
                 try
                 {
                     // отправим сообщение
                     Send(command.To, command.Body, data);
 
                     // обновим статус  и статистику
-                    messageCommandRepository.MarkAsSendSuccessed(command.Id);
+                    messageCommandRepository.MarkAsSendSuccessed(command.Id, DateTime.Now);
                     Interlocked.Increment(ref SuccessSendCount);
 
                     // если есть соответствующее уведомление, поменяем его статус
@@ -79,8 +85,9 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                         var notification = notificationRepository.GetOneOrNullById(command.ReferenceId.Value);
                         if (notification != null)
                         {
-                            notification.Status = NotificationStatus.Sent;
-                            data.AccountDbContext.SaveChanges();
+                            var notificationForUpdate = notification.GetForUpdate();
+                            notificationForUpdate.Status.Set(NotificationStatus.Sent);
+                            notificationRepository.Update(notificationForUpdate);
                         }
                     }
 
@@ -95,7 +102,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                     // Пользователь не разрешает отправку сообщений
                     // Статус поменяем, но ошибкой задачи не считаем
 
-                    messageCommandRepository.MarkAsSendFail(command.Id, exception.Message);
+                    messageCommandRepository.MarkAsSendFail(command.Id, DateTime.Now, exception.Message);
 
                     // если есть соответствующее уведомление, поменяем его статус
                     if (command.ReferenceId != null)
@@ -103,9 +110,10 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                         var notification = notificationRepository.GetOneOrNullById(command.ReferenceId.Value);
                         if (notification != null)
                         {
-                            notification.Status = NotificationStatus.Error;
-                            notification.SendError = exception.Message;
-                            data.AccountDbContext.SaveChanges();
+                            var notificationForUpdate = notification.GetForUpdate();
+                            notificationForUpdate.Status.Set(NotificationStatus.Error);
+                            notificationForUpdate.SendError.Set(exception.Message);
+                            notificationRepository.Update(notificationForUpdate);
                         }
                     }
 
@@ -128,7 +136,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                     exception.Data.Add("CommandId", command.Id);
                     data.Logger.Error(exception);
 
-                    messageCommandRepository.MarkAsSendFail(command.Id, exception.Message);
+                    messageCommandRepository.MarkAsSendFail(command.Id, DateTime.Now, exception.Message);
 
                     // если есть соответствующее уведомление, поменяем его статус
                     if (command.ReferenceId != null)
@@ -136,9 +144,10 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                         var notification = notificationRepository.GetOneOrNullById(command.ReferenceId.Value);
                         if (notification != null)
                         {
-                            notification.Status = NotificationStatus.Error;
-                            notification.SendError = exception.Message;
-                            data.AccountDbContext.SaveChanges();
+                            var notificationForUpdate = notification.GetForUpdate();
+                            notificationForUpdate.Status.Set(NotificationStatus.Error);
+                            notificationForUpdate.SendError.Set(exception.Message);
+                            notificationRepository.Update(notificationForUpdate);
                         }
                     }
 

@@ -1,12 +1,11 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Subscriptions
 {
     public class ShowSubscriptionCellModel
     {
-        public Subscription Subscription { get; set; }
+        public SubscriptionForRead Subscription { get; set; }
 
         public SubscriptionObject Object { get; set; }
 

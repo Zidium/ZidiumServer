@@ -1,8 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -25,7 +24,7 @@ namespace Zidium.UserAccount.Models
         public string SystemName { get; set; }
 
         [Display(Name = "Тип компонента")]
-        public ComponentType ComponentType { get; set; }
+        public ComponentTypeForRead ComponentType { get; set; }
         
         [MyRequired]
         [Display(Name = "Категория")]

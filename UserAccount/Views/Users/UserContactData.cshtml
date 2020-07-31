@@ -1,4 +1,5 @@
-﻿@model Zidium.Core.AccountsDb.UserContact
+﻿@model Zidium.Storage.UserContactForRead
+
 <td>@Html.ActionLink(Model.Value, "EditContact", "Users", new { id = Model.Id.ToString() }, new { onclick = "ModalBtnClick(this, event);" })</td>
 <td>@Model.Type</td>
 <td class="text-center">

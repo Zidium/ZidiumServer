@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
-using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Home;
 
 namespace Zidium.UserAccount.Controllers
 {
-    public class HomeController : ContextController
+    public class HomeController : BaseController
     {
         [Authorize]
         public ActionResult Start()
         {
-            var userRepository = CurrentAccountDbContext.GetUserRepository();
-            var user = userRepository.GetById(CurrentUser.Id);
-            var hasMobilePhone = user.UserContacts.Any(t => t.Type == UserContactType.MobilePhone && !string.IsNullOrEmpty(t.Value));
+            var hasMobilePhone = GetStorage().UserContacts 
+                .GetByType(CurrentUser.Id, UserContactType.MobilePhone)
+                .Any(t => !string.IsNullOrEmpty(t.Value));
 
             var model = new StartModel()
             {
@@ -70,9 +70,15 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return PartialView(model);
 
-            var userRepository = CurrentAccountDbContext.GetUserRepository();
-            var user = userRepository.GetById(CurrentUser.Id);
-            userRepository.AddContactToUser(user.Id, UserContactType.MobilePhone, model.Phone, MvcApplication.GetServerDateTime());
+            var userContact = new UserContactForAdd()
+            {
+                Id = Guid.NewGuid(),
+                UserId = CurrentUser.Id,
+                Type = UserContactType.MobilePhone,
+                Value = model.Phone,
+                CreateDate = MvcApplication.GetServerDateTime()
+            };
+            GetStorage().UserContacts.Add(userContact);
 
             var client = GetDispatcherClient();
 
@@ -112,19 +118,21 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                var accountName = ConfigDbServicesHelper.GetUrlService().GetAccountNameFromUrl(Url.ToAbsolute(Url.Current().ToString()));
-                var userService = new UserService(DbContext);
-                var user = userService.FindUser(model.Login, accountName);
+                var accountName = GetConfigDbServicesFactory().GetUrlService().GetAccountNameFromUrl(Url.ToAbsolute(Url.Current().ToString()));
+                var userService = new UserService(null);
+                var authInfo = userService.FindUser(model.Login, accountName);
 
-                if (user == null)
+                if (authInfo == null)
                 {
                     ModelState.AddModelError(string.Empty, "Такого пользователя не существует");
                     return View(model);
                 }
 
-                userService.StartResetPassword(user.Id);
+                userService = new UserService(GetStorage(authInfo.AccountId));
 
-                return View("PasswordRestored", (object)user.Login);
+                userService.StartResetPassword(authInfo.User.Id);
+
+                return View("PasswordRestored", (object)authInfo.User.Login);
             }
             catch (UserFriendlyException exception)
             {
@@ -140,15 +148,15 @@ namespace Zidium.UserAccount.Controllers
         [AllowAnonymous]
         public ActionResult SetPassword(Guid id, Guid accountId)
         {
-            var tokenService = new TokenService(DbContext);
+            var storage = GetStorage(accountId);
+
+            var tokenService = new TokenService(storage);
             var token = tokenService.GetOneOrNullById(accountId, id);
 
             if (token == null)
                 return View("LinkNotValid");
 
-            var accountDbContext = DbContext.GetAccountDbContext(accountId);
-            var userRepository = accountDbContext.GetUserRepository();
-            var user = userRepository.GetById(token.UserId);
+            var user = storage.Users.GetOneById(token.UserId);
 
             var model = new SetPasswordModel()
             {
@@ -171,13 +179,15 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var tokenService = new TokenService(DbContext);
+            var storage = GetStorage(model.AccountId);
+
+            var tokenService = new TokenService(storage);
             var token = tokenService.GetOneOrNullById(model.AccountId, model.TokenId);
 
             if (token == null)
                 return View("LinkNotValid");
 
-            var userService = new UserService(DbContext);
+            var userService = new UserService(storage);
 
             try
             {

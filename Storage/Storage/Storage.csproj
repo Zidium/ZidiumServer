@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DC354E32-C9C3-410A-BDF3-0C62F7E6597C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Zidium.Storage</RootNamespace>
+    <AssemblyName>Zidium.Storage</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Entities\AccountSetting\AccountSettingForRead.cs" />
+    <Compile Include="Entities\AccountSetting\AccountSettingForUpdate.cs" />
+    <Compile Include="Entities\AccountTariff\AccountTariffForAdd.cs" />
+    <Compile Include="Entities\AccountTariff\AccountTariffForRead.cs" />
+    <Compile Include="Entities\ArchivedStatus\ArchivedStatusForAdd.cs" />
+    <Compile Include="Entities\ArchivedStatus\ArchivedStatusForRead.cs" />
+    <Compile Include="Entities\ArchivedStatus\ArchivedStatusGetForNotificationsInfo.cs" />
+    <Compile Include="Entities\Bulb\BulbForAdd.cs" />
+    <Compile Include="Entities\Bulb\BulbForRead.cs" />
+    <Compile Include="Entities\Bulb\BulbForUpdate.cs" />
+    <Compile Include="Entities\Bulb\BulbGetForNotificationsInfo.cs" />
+    <Compile Include="Entities\ComponentProperty\ComponentPropertyForAdd.cs" />
+    <Compile Include="Entities\ComponentProperty\ComponentPropertyForUpdate.cs" />
+    <Compile Include="Entities\ComponentType\ComponentTypeForAdd.cs" />
+    <Compile Include="Entities\ComponentType\ComponentTypeForUpdate.cs" />
+    <Compile Include="Entities\Component\ComponentForAdd.cs" />
+    <Compile Include="Entities\Component\ComponentForRead.cs" />
+    <Compile Include="Entities\ComponentProperty\ComponentPropertyForRead.cs" />
+    <Compile Include="Entities\ComponentType\ComponentTypeForRead.cs" />
+    <Compile Include="Entities\Component\ComponentForUpdate.cs" />
+    <Compile Include="Entities\Component\ComponentGetAllIdsWithParentsInfo.cs" />
+    <Compile Include="Entities\Component\ComponentGetForNotificationsInfo.cs" />
+    <Compile Include="Entities\DefectChange\DefectChangeForAdd.cs" />
+    <Compile Include="Entities\Defect\DefectForAdd.cs" />
+    <Compile Include="Entities\Defect\DefectForRead.cs" />
+    <Compile Include="Entities\DefectChange\DefectChangeForRead.cs" />
+    <Compile Include="Entities\Defect\DefectForUpdate.cs" />
+    <Compile Include="Entities\EventProperty\EventPropertyForAdd.cs" />
+    <Compile Include="Entities\EventStatus\EventStatusForAdd.cs" />
+    <Compile Include="Entities\EventType\EventTypeForAdd.cs" />
+    <Compile Include="Entities\EventType\EventTypeForUpdate.cs" />
+    <Compile Include="Entities\Event\EventForAdd.cs" />
+    <Compile Include="Entities\Event\EventForRead.cs" />
+    <Compile Include="Entities\EventProperty\EventPropertyForRead.cs" />
+    <Compile Include="Entities\EventType\EventTypeForRead.cs" />
+    <Compile Include="Entities\Event\EventForUpdate.cs" />
+    <Compile Include="Entities\Gui\GetGuiChecksResultsInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiComponentHistoryInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiComponentListInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiComponentMiniListInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiComponentMiniTreeInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiComponentShowInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiComponentStatesInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiDefectsInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiSimplifiedComponentListInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiTimelinesChildsInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiTimelinesEventsInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiTimelinesMetricsInfo.cs" />
+    <Compile Include="Entities\Gui\GetGuiTimelinesUnitTestsInfo.cs" />
+    <Compile Include="Entities\HttpRequestUnitTestRuleData\HttpRequestUnitTestRuleDataForAdd.cs" />
+    <Compile Include="Entities\HttpRequestUnitTestRule\HttpRequestUnitTestRuleForAdd.cs" />
+    <Compile Include="Entities\HttpRequestUnitTestRule\HttpRequestUnitTestRuleForUpdate.cs" />
+    <Compile Include="Entities\HttpRequestUnitTest\HttpRequestUnitTestForAdd.cs" />
+    <Compile Include="Entities\HttpRequestUnitTest\HttpRequestUnitTestForUpdate.cs" />
+    <Compile Include="Entities\LastComponentNotification\LastComponentNotificationForAdd.cs" />
+    <Compile Include="Entities\LastComponentNotification\LastComponentNotificationForRead.cs" />
+    <Compile Include="Entities\LastComponentNotification\LastComponentNotificationForUpdate.cs" />
+    <Compile Include="Entities\LimitDataForUnitTest\LimitDataForUnitTestForAdd.cs" />
+    <Compile Include="Entities\LimitData\LimitDataForAdd.cs" />
+    <Compile Include="Entities\LimitData\LimitDataForRead.cs" />
+    <Compile Include="Entities\LimitDataForUnitTest\LimitDataForUnitTestForRead.cs" />
+    <Compile Include="Entities\LogConfig\LogConfigForAdd.cs" />
+    <Compile Include="Entities\LogConfig\LogConfigForUpdate.cs" />
+    <Compile Include="Entities\LogProperty\LogPropertyForAdd.cs" />
+    <Compile Include="Entities\Log\LogForAdd.cs" />
+    <Compile Include="Entities\Log\LogForRead.cs" />
+    <Compile Include="Entities\LogConfig\LogConfigForRead.cs" />
+    <Compile Include="Entities\LogProperty\LogPropertyForRead.cs" />
+    <Compile Include="Entities\Log\LogSearchResult.cs" />
+    <Compile Include="Entities\MetricHistory\MetricHistoryForAdd.cs" />
+    <Compile Include="Entities\MetricType\MetricTypeForAdd.cs" />
+    <Compile Include="Entities\MetricType\MetricTypeForUpdate.cs" />
+    <Compile Include="Entities\Metric\MetricForAdd.cs" />
+    <Compile Include="Entities\Metric\MetricForRead.cs" />
+    <Compile Include="Entities\MetricHistory\MetricHistoryForRead.cs" />
+    <Compile Include="Entities\MetricType\MetricTypeForRead.cs" />
+    <Compile Include="Entities\Metric\MetricForUpdate.cs" />
+    <Compile Include="Entities\NotificationHttp\NotificationHttpForAdd.cs" />
+    <Compile Include="Entities\NotificationHttp\NotificationHttpForUpdate.cs" />
+    <Compile Include="Entities\Notification\NotificationForAdd.cs" />
+    <Compile Include="Entities\Notification\NotificationForRead.cs" />
+    <Compile Include="Entities\NotificationHttp\NotificationHttpForRead.cs" />
+    <Compile Include="Entities\Notification\NotificationForUpdate.cs" />
+    <Compile Include="Entities\Role\RoleForAdd.cs" />
+    <Compile Include="Entities\Role\RoleForRead.cs" />
+    <Compile Include="Entities\SendEmailCommand\SendEmailCommandForAdd.cs" />
+    <Compile Include="Entities\SendEmailCommand\SendEmailCommandForRead.cs" />
+    <Compile Include="Entities\SendMessageCommand\SendMessageCommandForAdd.cs" />
+    <Compile Include="Entities\SendMessageCommand\SendMessageCommandForRead.cs" />
+    <Compile Include="Entities\SendSmsCommand\SendSmsCommandForAdd.cs" />
+    <Compile Include="Entities\SendSmsCommand\SendSmsCommandForRead.cs" />
+    <Compile Include="Entities\UnitTestSqlRule\UnitTestSqlRuleForUpdate.cs" />
+    <Compile Include="Entities\UnitTestSslCertificateExpirationDateRule\UnitTestSslCertificateExpirationDateRuleForAdd.cs" />
+    <Compile Include="Entities\Subscription\SubscriptionForAdd.cs" />
+    <Compile Include="Entities\Subscription\SubscriptionForRead.cs" />
+    <Compile Include="Entities\Subscription\SubscriptionForUpdate.cs" />
+    <Compile Include="Entities\TariffLimit\TariffLimitForAdd.cs" />
+    <Compile Include="Entities\TariffLimit\TariffLimitForRead.cs" />
+    <Compile Include="Entities\TariffLimit\TariffLimitForUpdate.cs" />
+    <Compile Include="Entities\TimeZone\TimeZoneForAdd.cs" />
+    <Compile Include="Entities\TimeZone\TimeZoneForRead.cs" />
+    <Compile Include="Entities\Token\TokenForAdd.cs" />
+    <Compile Include="Entities\Token\TokenForRead.cs" />
+    <Compile Include="Entities\Token\TokenForUpdate.cs" />
+    <Compile Include="Entities\UnitTestDomainNamePaymentPeriodRule\UnitTestDomainNamePaymentPeriodRuleForAdd.cs" />
+    <Compile Include="Entities\UnitTestDomainNamePaymentPeriodRule\UnitTestDomainNamePaymentPeriodRuleForRead.cs" />
+    <Compile Include="Entities\HttpRequestUnitTest\HttpRequestUnitTestForRead.cs" />
+    <Compile Include="Entities\HttpRequestUnitTestRule\HttpRequestUnitTestRuleForRead.cs" />
+    <Compile Include="Entities\HttpRequestUnitTestRuleData\HttpRequestUnitTestRuleDataForRead.cs" />
+    <Compile Include="Entities\UnitTestDomainNamePaymentPeriodRule\UnitTestDomainNamePaymentPeriodRuleForUpdate.cs" />
+    <Compile Include="Entities\UnitTestPingRule\UnitTestPingRuleForAdd.cs" />
+    <Compile Include="Entities\UnitTestPingRule\UnitTestPingRuleForRead.cs" />
+    <Compile Include="Entities\UnitTestPingRule\UnitTestPingRuleForUpdate.cs" />
+    <Compile Include="Entities\UnitTestSqlRule\UnitTestSqlRuleForAdd.cs" />
+    <Compile Include="Entities\UnitTestSqlRule\UnitTestSqlRuleForRead.cs" />
+    <Compile Include="Entities\UnitTestSslCertificateExpirationDateRule\UnitTestSslCertificateExpirationDateRule.cs" />
+    <Compile Include="Entities\UnitTestSslCertificateExpirationDateRule\UnitTestSslCertificateExpirationDateRuleForUpdate.cs" />
+    <Compile Include="Entities\UnitTestTcpPortRule\UnitTestTcpPortRuleForAdd.cs" />
+    <Compile Include="Entities\UnitTestTcpPortRule\UnitTestTcpPortRuleForRead.cs" />
+    <Compile Include="Entities\UnitTestProperty\UnitTestPropertyForAdd.cs" />
+    <Compile Include="Entities\UnitTestTcpPortRule\UnitTestTcpPortRuleForUpdate.cs" />
+    <Compile Include="Entities\UnitTestType\UnitTestTypeForAdd.cs" />
+    <Compile Include="Entities\UnitTestType\UnitTestTypeForUpdate.cs" />
+    <Compile Include="Entities\UnitTestVirusTotalRule\UnitTestVirusTotalRuleForAdd.cs" />
+    <Compile Include="Entities\UnitTestVirusTotalRule\UnitTestVirusTotalRuleForUpdate.cs" />
+    <Compile Include="Entities\UnitTest\UnitTestForAdd.cs" />
+    <Compile Include="Entities\UnitTest\UnitTestForRead.cs" />
+    <Compile Include="Entities\UnitTestProperty\UnitTestPropertyForRead.cs" />
+    <Compile Include="Entities\UnitTestType\UnitTestTypeForRead.cs" />
+    <Compile Include="Entities\UnitTestVirusTotalRule\UnitTestVirusTotalRuleForRead.cs" />
+    <Compile Include="Entities\UnitTest\UnitTestForUpdate.cs" />
+    <Compile Include="Entities\UserContact\UserContactForAdd.cs" />
+    <Compile Include="Entities\UserContact\UserContactForUpdate.cs" />
+    <Compile Include="Entities\UserRole\UserRoleForAdd.cs" />
+    <Compile Include="Entities\UserSetting\UserSettingForAdd.cs" />
+    <Compile Include="Entities\User\UserForAdd.cs" />
+    <Compile Include="Entities\User\UserForRead.cs" />
+    <Compile Include="Entities\UserContact\UserContactForRead.cs" />
+    <Compile Include="Entities\UserRole\UserRoleForRead.cs" />
+    <Compile Include="Entities\UserSetting\UserSettingForRead.cs" />
+    <Compile Include="Entities\AccountSetting\AccountSettingForAdd.cs" />
+    <Compile Include="Entities\User\UserForUpdate.cs" />
+    <Compile Include="Entities\User\UserGetForNotificationsInfo.cs" />
+    <Compile Include="Enums\BalanceOperation.cs" />
+    <Compile Include="Enums\Channel.cs" />
+    <Compile Include="Enums\DataBaseProviderType.cs" />
+    <Compile Include="Enums\DataType.cs" />
+    <Compile Include="Enums\DefectStatus.cs" />
+    <Compile Include="Enums\EMailStatus.cs" />
+    <Compile Include="Enums\EventCategory.cs" />
+    <Compile Include="Enums\EventImportance.cs" />
+    <Compile Include="Enums\LimitDataType.cs" />
+    <Compile Include="Enums\LogLevel.cs" />
+    <Compile Include="Enums\MessageStatus.cs" />
+    <Compile Include="Enums\MonitoringStatus.cs" />
+    <Compile Include="Enums\NotificationReason.cs" />
+    <Compile Include="Enums\NotificationStatus.cs" />
+    <Compile Include="Enums\ObjectColor.cs" />
+    <Compile Include="Enums\SmsStatus.cs" />
+    <Compile Include="Enums\SubscriptionChannel.cs" />
+    <Compile Include="Enums\SubscriptionObject.cs" />
+    <Compile Include="Enums\TariffLimitSource.cs" />
+    <Compile Include="Enums\TariffLimitType.cs" />
+    <Compile Include="Enums\TokenPurpose.cs" />
+    <Compile Include="Enums\UnitTestResult.cs" />
+    <Compile Include="Enums\UnitTests\DomainNamePaymentPeriodErrorCode.cs" />
+    <Compile Include="Enums\UnitTests\HttpRequestErrorCode.cs" />
+    <Compile Include="Enums\UnitTests\HttpRequestMethod.cs" />
+    <Compile Include="Enums\UnitTests\HttpRequestUnitTestRuleDataType.cs" />
+    <Compile Include="Enums\UnitTests\PingErrorCode.cs" />
+    <Compile Include="Enums\UnitTests\SslCertificateExpirationDateErrorCode.cs" />
+    <Compile Include="Enums\UnitTests\VirusTotalErrorCode.cs" />
+    <Compile Include="Enums\UnitTests\VirusTotalStep.cs" />
+    <Compile Include="Infrastructure\ChangeTracker.cs" />
+    <Compile Include="IStorage.cs" />
+    <Compile Include="IStorageFactory.cs" />
+    <Compile Include="ITransaction.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\IAccountSettingRepository.cs" />
+    <Compile Include="Repositories\IArchivedStatusRepository.cs" />
+    <Compile Include="Repositories\IBulbRepository.cs" />
+    <Compile Include="Repositories\IComponentPropertyRepository.cs" />
+    <Compile Include="Repositories\IComponentRepository.cs" />
+    <Compile Include="Repositories\IComponentTypeRepository.cs" />
+    <Compile Include="Repositories\IDefectChangeRepository.cs" />
+    <Compile Include="Repositories\IDefectRepository.cs" />
+    <Compile Include="Repositories\IEventPropertyRepository.cs" />
+    <Compile Include="Repositories\IEventRepository.cs" />
+    <Compile Include="Repositories\IEventTypeRepository.cs" />
+    <Compile Include="Repositories\IGuiRepository.cs" />
+    <Compile Include="Repositories\IHttpRequestUnitTestRepository.cs" />
+    <Compile Include="Repositories\IHttpRequestUnitTestRuleDataRepository.cs" />
+    <Compile Include="Repositories\IHttpRequestUnitTestRuleRepository.cs" />
+    <Compile Include="Repositories\ILastComponentNotificationRepository.cs" />
+    <Compile Include="Repositories\ILimitDataForUnitTestRepository.cs" />
+    <Compile Include="Repositories\ILimitDataRepository.cs" />
+    <Compile Include="Repositories\ILogConfigRepository.cs" />
+    <Compile Include="Repositories\ILogPropertyRepository.cs" />
+    <Compile Include="Repositories\ILogRepository.cs" />
+    <Compile Include="Repositories\IMetricHistoryRepository.cs" />
+    <Compile Include="Repositories\IMetricRepository.cs" />
+    <Compile Include="Repositories\IMetricTypeRepository.cs" />
+    <Compile Include="Repositories\INotificationHttpRepository.cs" />
+    <Compile Include="Repositories\INotificationRepository.cs" />
+    <Compile Include="Repositories\IRoleRepository.cs" />
+    <Compile Include="Repositories\ISendEmailCommandRepository.cs" />
+    <Compile Include="Repositories\ISendMessageCommandRepository.cs" />
+    <Compile Include="Repositories\ISendSmsCommandRepository.cs" />
+    <Compile Include="Repositories\ISubscriptionRepository.cs" />
+    <Compile Include="Repositories\ITariffLimitRepository.cs" />
+    <Compile Include="Repositories\ITimeZoneRepository.cs" />
+    <Compile Include="Repositories\ITokenRepository.cs" />
+    <Compile Include="Repositories\IUnitTestDomainNamePaymentPeriodRuleRepository.cs" />
+    <Compile Include="Repositories\IUnitTestPingRuleRepository.cs" />
+    <Compile Include="Repositories\IUnitTestRepository.cs" />
+    <Compile Include="Repositories\IUnitTestSqlRuleRepository.cs" />
+    <Compile Include="Repositories\IUnitTestSslCertificateExpirationDateRuleRepository.cs" />
+    <Compile Include="Repositories\IUnitTestTcpPortRuleRepository.cs" />
+    <Compile Include="Repositories\IUnitTestTypeRepository.cs" />
+    <Compile Include="Repositories\IUnitTestVirusTotalRuleRepository.cs" />
+    <Compile Include="Repositories\IUserContactRepository.cs" />
+    <Compile Include="Repositories\IUserRepository.cs" />
+    <Compile Include="Repositories\IUserRoleRepository.cs" />
+    <Compile Include="Repositories\IUserSettingRepository.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

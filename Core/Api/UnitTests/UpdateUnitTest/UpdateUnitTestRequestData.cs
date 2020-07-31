@@ -1,13 +1,11 @@
 ﻿using System;
-using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.Core.Api
 {
     public class UpdateUnitTestRequestData
     {
         public Guid? UnitTestId { get; set; }
-
-        public string SystemName { get; set; }
 
         public string DisplayName { get; set; }
 

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using NLog;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -14,7 +12,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
     /// </summary>
     public abstract class NotificationSenderBase
     {
-        protected ILogger Logger; 
+        protected ILogger Logger;
 
         public MultipleDataBaseProcessor DbProcessor { get; protected set; }
 
@@ -36,44 +34,47 @@ namespace Zidium.Agent.AgentTasks.Notifications
         /// <summary>
         /// Переопределите этот метод для выполнения реальной отправки
         /// </summary>
-        protected abstract void Send(ILogger logger,
-            Notification notification,
-            AccountDbContext accountDbContext,
-            string accountName, Guid accountId);
+        protected abstract void Send(
+            ILogger logger,
+            NotificationForRead notification,
+            IStorage storage,
+            string accountName,
+            Guid accountId,
+            NotificationForUpdate notificationForUpdate);
 
         /// <summary>
         /// Отправка уведомлений из указанной StorageDb
         /// </summary>
         protected void ProcessAccount(ForEachAccountData data, Guid? componentId = null)
         {
-            var notificationRepository = data.AccountDbContext.GetNotificationRepository();
+            var notificationRepository = data.Storage.Notifications;
 
-            var notificationsQuery = notificationRepository.GetForSend(Channels);
+            var notifications = notificationRepository.GetForSend(Channels, componentId, MaxNotificationCount);
 
-            if (componentId.HasValue)
-                notificationsQuery = notificationsQuery.Where(t => t.Event.OwnerId == componentId.Value);
-
-            var notifications = notificationsQuery.OrderBy(t => t.CreationDate).Take(MaxNotificationCount).ToList();
-
-            if (notifications.Count > 0)
+            if (notifications.Length > 0)
             {
-                data.Logger.Debug("Найдено уведомлений: " + notifications.Count);
+                if (data.Logger.IsDebugEnabled)
+                    data.Logger.Debug("Найдено уведомлений: " + notifications.Length);
+
                 foreach (var notification in notifications)
                 {
                     data.CancellationToken.ThrowIfCancellationRequested();
 
                     try
                     {
-                        data.Logger.Debug("Обработка уведомления " + notification.Id);
+                        if (data.Logger.IsDebugEnabled)
+                            data.Logger.Debug("Обработка уведомления " + notification.Id);
+
+                        var notificationForUpdate = notification.GetForUpdate();
 
                         Send(data.Logger,
                             notification,
-                            data.AccountDbContext,
-                            data.Account.SystemName, data.Account.Id);
+                            data.Storage,
+                            data.Account.SystemName, data.Account.Id, notificationForUpdate);
 
-                        notification.Status = NotificationStatus.Processed;
-                        notification.SendDate = DateTime.Now;
-                        data.AccountDbContext.SaveChanges();
+                        notificationForUpdate.Status.Set(NotificationStatus.Processed);
+                        notificationForUpdate.SendDate.Set(DateTime.Now);
+                        notificationRepository.Update(notificationForUpdate);
 
                         data.Logger.Info("Уведомление " + notification.Id + " отправлено на " + notification.Address);
                         Interlocked.Increment(ref CreatedNotificationsCount);
@@ -84,10 +85,11 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         data.Logger.Info(exception);
 
                         // обновим статус
-                        notification.SendError = (exception.InnerException ?? exception).ToString();
-                        notification.Status = NotificationStatus.Error;
-                        notification.SendDate = DateTime.Now;
-                        data.AccountDbContext.SaveChanges();
+                        var notificationForUpdate = notification.GetForUpdate();
+                        notificationForUpdate.SendError.Set((exception.InnerException ?? exception).ToString());
+                        notificationForUpdate.Status.Set(NotificationStatus.Error);
+                        notificationForUpdate.SendDate.Set(DateTime.Now);
+                        notificationRepository.Update(notificationForUpdate);
 
                         // TODO отправить ошибку в компонент аккаунта, чтобы её увидел админ аккаунта (а не админ Зидиума)
                     }
@@ -98,16 +100,18 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         data.Logger.Error(exception);
 
                         // обновим статус
-                        notification.SendError = exception.ToString();
-                        notification.Status = NotificationStatus.Error;
-                        notification.SendDate = DateTime.Now;
-                        data.AccountDbContext.SaveChanges();
+                        var notificationForUpdate = notification.GetForUpdate();
+                        notificationForUpdate.SendError.Set(exception.ToString());
+                        notificationForUpdate.Status.Set(NotificationStatus.Error);
+                        notificationForUpdate.SendDate.Set(DateTime.Now);
+                        notificationRepository.Update(notificationForUpdate);
                     }
                 }
             }
             else
             {
-                data.Logger.Trace("Новых уведомлений нет");
+                if (data.Logger.IsTraceEnabled)
+                    data.Logger.Trace("Новых уведомлений нет");
             }
         }
 

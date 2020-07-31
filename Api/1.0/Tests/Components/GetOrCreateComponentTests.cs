@@ -55,6 +55,7 @@ namespace ApiTests_1._0.Components
             message.DisplayName = Guid.NewGuid().ToString();
             var component2 = root.GetOrCreateChildComponentControl(message);
 
+            Assert.False(component2.IsFake());
             Assert.Equal(component.Info.Id, component2.Info.Id);
             Assert.Equal("2.0", component2.Version); // изменилась
             Assert.Equal(component.Info.DisplayName, component2.Info.DisplayName); // не изменился

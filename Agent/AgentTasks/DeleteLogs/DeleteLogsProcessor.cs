@@ -2,11 +2,10 @@
 using System.Diagnostics;
 using System.Threading;
 using NLog;
-using Zidium.Core;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.DeleteLogs
 {
@@ -76,14 +75,12 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
         public void ProcessAccount(ForEachAccountData data)
         {
-            data.AccountDbContext.Database.CommandTimeout = 0;
             var stopWatch = Stopwatch.StartNew();
 
-            var accountTariffRepository = data.AccountDbContext.GetAccountTariffRepository();
-            var tarifLimit = accountTariffRepository.GetHardTariffLimit();
+            var tarifLimit = data.Storage.TariffLimits.GetHardTariffLimit();
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-tarifLimit.LogMaxDays));
 
-            var logRepository = data.AccountDbContext.GetLogRepository();
+            var logRepository = data.Storage.Logs;
 
             long count = 0;
             while (true)

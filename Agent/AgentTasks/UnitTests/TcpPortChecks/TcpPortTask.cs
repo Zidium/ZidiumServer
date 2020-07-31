@@ -6,7 +6,7 @@ namespace Zidium.Agent.AgentTasks
     {
         public TcpPortTask()
         {
-            ExecutionPeriod = TimeSpan.FromSeconds(5);
+            ExecutionPeriod = TimeSpan.FromSeconds(10);
         }
 
         protected override AgentTaskResult Do()

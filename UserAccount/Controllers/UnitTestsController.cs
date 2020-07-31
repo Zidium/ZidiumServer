@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
@@ -13,7 +13,7 @@ using Zidium.UserAccount.Models.UnitTests;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class UnitTestsController : ContextController
+    public class UnitTestsController : BaseController
     {
         public ActionResult Index(
             Guid? componentId = null,
@@ -21,7 +21,6 @@ namespace Zidium.UserAccount.Controllers
             Guid? unitTestTypeId = null,
             ColorStatusSelectorValue color = null)
         {
-            var repository = CurrentAccountDbContext.GetUnitTestRepository();
             if (color == null)
             {
                 color = new ColorStatusSelectorValue();
@@ -29,27 +28,44 @@ namespace Zidium.UserAccount.Controllers
 
             var statuses = color.GetSelectedMonitoringStatuses();
 
-            var query = repository.QueryForGui(componentTypeId,
+            var unittests = GetStorage().UnitTests.Filter(componentTypeId,
                 componentId,
                 unitTestTypeId,
-                statuses)
-                .Include("UnitTestType").Include("Component").Include("Bulb")
-                .GroupBy(t => t.Type);
+                statuses, 100);
 
-            var items = query.Select(t => new UnitTestsListItemLevel1Model()
-            {
-                UnitTestType = t.Key,
-                UnitTests = t.Select(x => new UnitTestsListItemLevel2Model()
+            var components = GetStorage().Components.GetMany(unittests.Select(t => t.ComponentId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
+            var bulbs = GetStorage().Bulbs.GetMany(unittests.Select(t => t.StatusDataId).ToArray()).ToDictionary(a => a.Id, b => b);
+
+            var groupedUnittests = unittests.GroupBy(t => t.TypeId).ToArray();
+            var unittestTypes = GetStorage().UnitTestTypes.GetMany(groupedUnittests.Select(t => t.Key).ToArray()).ToDictionary(a => a.Id, b => b);
+
+            var items = groupedUnittests.Select(t =>
                 {
-                    Id = x.Id,
-                    Component = x.Component,
-                    Date = x.Bulb.EndDate,
-                    DisplayName = x.DisplayName ?? t.Key.DisplayName,
-                    Message = x.Bulb.Message,
-                    Result = x.Bulb.Status,
-                    HasBanner = x.HttpRequestUnitTest != null && x.HttpRequestUnitTest.HasBanner
-                }).OrderBy(x => x.DisplayName).ToList()
-            })
+                    var unittestType = unittestTypes[t.Key];
+                    return new UnitTestsListItemLevel1Model()
+                    {
+                        UnitTestType = unittestType,
+                        UnitTests = t.Select(x =>
+                        {
+                            var bulb = bulbs[x.StatusDataId];
+
+                            var httpUnitTest = x.TypeId == SystemUnitTestType.HttpUnitTestType.Id
+                                ? GetStorage().HttpRequestUnitTests.GetOneOrNullByUnitTestId(x.Id)
+                                : null;
+
+                            return new UnitTestsListItemLevel2Model()
+                            {
+                                Id = x.Id,
+                                Component = components[x.ComponentId],
+                                Date = bulb.EndDate,
+                                DisplayName = x.DisplayName ?? unittestType.DisplayName,
+                                Message = bulb.Message,
+                                Result = bulb.Status,
+                                HasBanner = httpUnitTest?.HasBanner ?? false
+                            };
+                        }).OrderBy(x => x.DisplayName).ToList()
+                    };
+                })
             .OrderBy(t => t.UnitTestType.DisplayName)
             .ToList();
 
@@ -69,6 +85,7 @@ namespace Zidium.UserAccount.Controllers
         {
             // зарегистрируем дефолтный тип пльзовательской проверки
             // чтобы в выпадающем списке всегда была хотя был хотя бы один тип пользовательской проверки
+            // TODO Move to database registrator
             var dispatcher = GetDispatcherClient();
             dispatcher.GetOrCreateUnitTestType(CurrentUser.AccountId, new GetOrCreateUnitTestTypeRequestData()
             {
@@ -79,9 +96,7 @@ namespace Zidium.UserAccount.Controllers
             var model = new UnitTestAddModel();
             if (componentId.HasValue)
             {
-                var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-                var component = componentRepository.GetById(componentId.Value);
-                model.ComponentId = component.Id;
+                model.ComponentId = componentId.Value;
             }
             return View(model);
         }
@@ -96,11 +111,9 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
             }
 
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var component = componentRepository.GetById(model.ComponentId.Value);
+            var component = GetStorage().Components.GetOneById(model.ComponentId.Value);
 
-            var unitTestTypeRepository = CurrentAccountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = unitTestTypeRepository.GetById(model.UnitTestTypeId);
+            var unitTestType = GetStorage().UnitTestTypes.GetOneById(model.UnitTestTypeId);
 
             var client = GetDispatcherClient();
             var data = new GetOrCreateUnitTestRequestData()
@@ -116,20 +129,20 @@ namespace Zidium.UserAccount.Controllers
 
             if (!Request.IsSmartBlocksRequest())
             {
-                this.SetTempMessage(TempMessageType.Success, string.Format("Добавлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("ResultDetails", new {id = unitTest.Id})));
+                this.SetTempMessage(TempMessageType.Success, string.Format("Добавлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("ResultDetails", new { id = unitTest.Id })));
                 return RedirectToAction("Index");
             }
 
             return GetSuccessJsonResponse(unitTest.Id);
         }
-        
+
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+
             // данная страница должна редактировать только пользовательские проверки
-            if (SystemUnitTestTypes.IsSystem(unitTest.TypeId))
+            if (SystemUnitTestType.IsSystem(unitTest.TypeId))
             {
                 throw new Exception("Проверка не является пользовательской");
             }
@@ -137,17 +150,14 @@ namespace Zidium.UserAccount.Controllers
             var model = new UnitTestEditModel()
             {
                 Id = unitTest.Id,
-                ComponentId = unitTest.Component.Id,
-                Date = unitTest.Bulb.EndDate,
+                ComponentId = unitTest.ComponentId,
                 DisplayName = unitTest.DisplayName,
                 IsDeleted = unitTest.IsDeleted,
-                Message = unitTest.Bulb.Message,
                 PeriodSeconds = unitTest.PeriodSeconds,
                 ActualTime = TimeSpanHelper.FromSeconds(unitTest.ActualTimeSecs),
-                NoSignalColor = ColorStatusSelectorValue.FromColor(unitTest.NoSignalColor),
-                Status = unitTest.Bulb.Status
+                NoSignalColor = ColorStatusSelectorValue.FromColor(unitTest.NoSignalColor)
             };
-            model.InitReadOnlyValues(unitTest);
+            RestoreEditModel(model);
             return View(model);
         }
 
@@ -156,8 +166,7 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(UnitTestEditModel model)
         {
-            var unitTest = GetUnitTestById(model.Id);
-            model.InitReadOnlyValues(unitTest);
+            RestoreEditModel(model);
 
             if (!ModelState.IsValid)
                 return View(model);
@@ -169,8 +178,7 @@ namespace Zidium.UserAccount.Controllers
                 DisplayName = model.DisplayName,
                 ComponentId = model.ComponentId,
                 PeriodSeconds = model.PeriodSeconds,
-                UnitTestId = model.Id,
-                SystemName = model.UnitTest.SystemName
+                UnitTestId = model.Id
             };
             var dispatcher = GetDispatcherClient();
             var response = dispatcher.UpdateUnitTest(CurrentUser.AccountId, updateData);
@@ -180,6 +188,20 @@ namespace Zidium.UserAccount.Controllers
             }
             SetCommonError(response.ErrorMessage);
             return View(model);
+        }
+
+
+        private void RestoreEditModel(UnitTestEditModel model)
+        {
+            var unittest = GetStorage().UnitTests.GetOneById(model.Id);
+            model.UnitTestType = GetStorage().UnitTestTypes.GetOneById(unittest.TypeId);
+            model.NoSignalColorDefault = model.UnitTestType.NoSignalColor ?? ObjectColor.Red;
+            model.ActualTimeDefault = TimeSpanHelper.FromSeconds(model.UnitTestType.ActualTimeSecs) ?? UnitTestHelper.GetDefaultActualTime();
+
+            var bulb = GetStorage().Bulbs.GetOneById(unittest.StatusDataId);
+            model.Date = bulb.EndDate;
+            model.Message = bulb.Message;
+            model.Status = bulb.Status;
         }
 
         [CanEditAllData]
@@ -200,24 +222,16 @@ namespace Zidium.UserAccount.Controllers
             }
         }
 
-        private Event GetUnitTestLastResultEvent(UnitTest unitTest)
+        private EventForRead GetUnitTestLastResultEvent(UnitTestForRead unitTest)
         {
-            var statusId = unitTest.Bulb.StatusEventId;
+            var statusId = GetStorage().Bulbs.GetOneById(unitTest.StatusDataId).StatusEventId;
             if (statusId != Guid.Empty)
             {
-                var status = GetEventById(statusId);
-                if (status != null)
+                var status = GetStorage().Events.GetOneById(statusId);
+                if (status.FirstReasonEventId != null)
                 {
-                    if (status.FirstReasonEventId != null)
-                    {
-                        var firstReason = CurrentAccountDbContext.Events
-                        .Where(x => x.OwnerId == unitTest.Id
-                            && x.LastStatusEventId == status.Id)
-                        .OrderByDescending(x => x.StartDate)
-                        .FirstOrDefault();
-
-                        return firstReason;
-                    }                    
+                    var firstReason = GetStorage().Events.GetByOwnerIdAndLastStatusEventId(unitTest.Id, status.Id);
+                    return firstReason;
                 }
             }
             return null;
@@ -225,168 +239,209 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult ResultDetails(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = new UnitTestResult2Model();
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var unittestType = GetStorage().UnitTestTypes.GetOneById(unitTest.TypeId);
+            var bulb = GetStorage().Bulbs.GetOneById(unitTest.StatusDataId);
+            var component = GetStorage().Components.GetOneById(unitTest.ComponentId);
 
-            // статусы
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var events = eventRepository.QueryAll(id, EventCategory.UnitTestStatus, null, null, null, null, null, 20);
-            var statuses = events.ToArray();
+            string lastRunErrorMessage = null;
 
-            model.Init(unitTest, statuses);
+            if (unittestType.Id == SystemUnitTestType.HttpUnitTestType.Id)
+            {
+                var rule = GetStorage().HttpRequestUnitTestRules.GetByUnitTestId(id).FirstOrDefault();
+                lastRunErrorMessage = rule?.LastRunErrorMessage;
+            }
+
+            var model = new UnitTestResult2Model()
+            {
+                UnitTestType = unittestType,
+                UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage()),
+                Now = MvcApplication.GetServerDateTime(),
+                UnitTestBulb = bulb,
+                Component = component,
+                LastRunErrorMessage = lastRunErrorMessage
+            };
+
+            model.Init(unitTest);
 
             return View("ResultDetails2", model);
         }
 
         public ActionResult OverviewCurrentStatus(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewCurrentStatusModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewCurrentStatusModel.Create(unitTest, GetStorage());
             return PartialView("OverviewCurrentStatus", model);
         }
 
         public ActionResult OverviewLastResult(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            
-            // последний результат
-            var statusId = unitTest.Bulb.StatusEventId;
-            Event lastResult = GetUnitTestLastResultEvent(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
 
-            var model = OverviewLastResultModel.Create(unitTest, lastResult);
+            // последний результат
+            var lastResult = GetUnitTestLastResultEvent(unitTest);
+
+            var model = OverviewLastResultModel.Create(unitTest, lastResult, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsHttp(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsHttpModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsHttpModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsPing(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsPingModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsPingModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsVirusTotal(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsVirusTotalModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsVirusTotalModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsTcpPort(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsTcpPortModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsTcpPortModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsDomain(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsDomainModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsDomainModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsSsl(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsSslModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsSslModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsSql(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsSqlModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsSqlModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewSettingsCustom(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = OverviewSettingsCustomModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = OverviewSettingsCustomModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult OverviewStatusDiagram(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
             var model = OverviewStatusDiagramModel.Create(unitTest);
             return PartialView(model);
         }
 
         public ActionResult ShowSettings(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsHttp(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsHttpModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsHttpModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsPing(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsPingModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsPingModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsVirusTotal(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsVirusTotalModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsVirusTotalModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsTcpPort(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsTcpPortModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsTcpPortModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsDomain(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsDomainModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsDomainModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsSsl(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsSslModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsSslModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsSql(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsSqlModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsSqlModel.Create(unitTest, GetStorage());
             return PartialView(model);
         }
 
         public ActionResult ShowSettingsCustom(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
-            var model = ShowSettingsCustomModel.Create(unitTest);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+            var model = ShowSettingsCustomModel.Create(unitTest, GetStorage());
+            return PartialView(model);
+        }
+
+        public ActionResult ShowStatuses(Guid id)
+        {
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
+
+            var model = new ShowStatusesModel()
+            {
+                UnitTestId = unitTest.Id,
+                MaxCount = 20
+            };
+
+            var resultEvents = GetStorage().Events.GetLastEvents(unitTest.Id, EventCategory.UnitTestStatus, model.MaxCount);
+
+            var now = Now();
+            model.Statuses = resultEvents.Select(t => new ShowStatusesModel.UnitTestStatusEvent
+            {
+                Date = t.StartDate,
+                Duration = EventHelper.GetDuration(t.StartDate, t.ActualDate, now),
+                EndDate = t.EndDate,
+                Count = t.Count,
+                Importance = t.Importance,
+                Message = t.GetUnitTestMessage(),
+                Id = t.Id,
+                UnitTestId = unitTest.Id
+            }).ToArray();
+
             return PartialView(model);
         }
 
         public ActionResult ShowExecutionResults(Guid id)
         {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = unitTestRepository.GetById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
 
             var model = new ShowExecutionResultsModel()
             {
@@ -394,13 +449,7 @@ namespace Zidium.UserAccount.Controllers
                 MaxCount = 20
             };
 
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var resultEvents = eventRepository
-                .QueryAll(unitTest.Id)
-                .Where(t => t.Category == EventCategory.UnitTestResult)
-                .OrderByDescending(t => t.StartDate)
-                .Take(model.MaxCount)
-                .ToArray();
+            var resultEvents = GetStorage().Events.GetLastEvents(unitTest.Id, EventCategory.UnitTestResult, model.MaxCount);
 
             model.ExecutionResults = resultEvents.Select(t => new UnitTestResultEventDto
             {
@@ -417,7 +466,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Delete(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
             var model = new DeleteConfirmationAjaxModel()
             {
                 Title = "Удаление проверки",
@@ -482,7 +531,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult SetResult(Guid id)
         {
-            var unitTest = GetUnitTestById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
             var model = new UnitTestSetResultModel()
             {
                 Id = unitTest.Id,
@@ -499,7 +548,7 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                var unitTest = GetUnitTestById(model.Id);
+                var unitTest = GetStorage().UnitTests.GetOneById(model.Id);
                 var client = GetDispatcherClient();
                 var response = client.SendUnitTestResult(CurrentUser.AccountId, new SendUnitTestResultRequestData()
                 {
@@ -518,21 +567,19 @@ namespace Zidium.UserAccount.Controllers
             }
         }
 
-        // не ипользуется
         [CanEditAllData]
         public ActionResult DeleteAjax(Guid id)
         {
-            var unittest = GetUnitTestById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
 
             var model = new DeleteDialogAjaxModel()
             {
-                Id = unittest.Id,
-                Message = "Вы действительно хотите удалить проверку " + unittest.DisplayName + "?"
+                Id = unitTest.Id,
+                Message = "Вы действительно хотите удалить проверку " + unitTest.DisplayName + "?"
             };
             return PartialView("Dialogs/DeleteDialogAjaxNew", model);
         }
 
-        // не ипользуется
         [CanEditAllData]
         [HttpPost]
         public JsonResult DeleteAjax(DeleteDialogAjaxModel model)
@@ -542,22 +589,20 @@ namespace Zidium.UserAccount.Controllers
             return GetSuccessJsonResponse();
         }
 
-        // не ипользуется
         [CanEditAllData]
         public ActionResult DisableAjax(Guid id)
         {
-            var unittest = GetUnitTestById(id);
+            var unitTest = GetStorage().UnitTests.GetOneById(id);
 
             var model = new DisableDialogAjaxModel()
             {
-                Id = unittest.Id,
-                Message = "На какое время выключить проверку?",
+                Id = unitTest.Id,
+                Message = "На какое время выключить проверку" + unitTest.DisplayName + "?",
                 Interval = DisableDialogAjaxModel.DisableInterval.Forever
             };
             return PartialView("Dialogs/DisableDialogAjaxNew", model);
         }
 
-        // не ипользуется
         [CanEditAllData]
         [HttpPost]
         public ActionResult DisableAjax(DisableDialogAjaxModel model)

@@ -2,16 +2,17 @@
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class LogsController : ContextController
+    public class LogsController : BaseController
     {
         /// <summary>
         /// Главная страница лога
@@ -32,8 +33,13 @@ namespace Zidium.UserAccount.Controllers
 
             if (model.ComponentId.HasValue)
             {
-                var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-                model.Component = componentRepository.GetById(model.ComponentId.Value);
+                var component = GetStorage().Components.GetOneById(model.ComponentId.Value);
+                model.Component = new LogIndexModel.ComponentInfo()
+                {
+                    Id = component.Id,
+                    DisplayName = component.DisplayName,
+                    LogConfig = GetStorage().LogConfigs.GetOneByComponentId(component.Id)
+                };
             }
 
             return View(model);
@@ -53,13 +59,12 @@ namespace Zidium.UserAccount.Controllers
 
             var levels = GetFilterLevels(filters.LogLevel);
 
-            IQueryable<Log> records;
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
+            LogForRead[] records;
 
             if (filters.Date.HasValue)
-                records = logRepository.GetFirstRecords(filters.ComponentId.Value, filters.Date, levels, filters.Context, OutputRecordCount);
+                records = GetStorage().Logs.GetFirstRecords(filters.ComponentId.Value, filters.Date, levels, filters.Context, OutputRecordCount);
             else
-                records = logRepository.GetLastRecords(filters.ComponentId.Value, null, levels, filters.Context, OutputRecordCount);
+                records = GetStorage().Logs.GetLastRecords(filters.ComponentId.Value, null, levels, filters.Context, OutputRecordCount);
 
             var model = new LogPartialModel()
             {
@@ -140,8 +145,7 @@ namespace Zidium.UserAccount.Controllers
 
             var levels = GetFilterLevels(filters.LogLevel);
 
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
-            var records = logRepository.GetPreviousRecords(filters.ComponentId.Value, toDate, order, levels, filters.Context, OutputRecordCount);
+            var records = GetStorage().Logs.GetPreviousRecords(filters.ComponentId.Value, toDate, order, levels, filters.Context, OutputRecordCount);
 
             var model = new LogPartialModel()
             {
@@ -185,8 +189,7 @@ namespace Zidium.UserAccount.Controllers
 
             var levels = GetFilterLevels(filters.LogLevel);
 
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
-            var records = logRepository.GetNextRecords(filters.ComponentId.Value, fromDate, order, levels, filters.Context, OutputRecordCount);
+            var records = GetStorage().Logs.GetNextRecords(filters.ComponentId.Value, fromDate, order, levels, filters.Context, OutputRecordCount);
 
             var model = new LogPartialModel()
             {
@@ -231,14 +234,12 @@ namespace Zidium.UserAccount.Controllers
 
             var levels = GetFilterLevels(filters.LogLevel);
 
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
-
             DateTime date;
             int order;
 
             if (filters.Id.HasValue)
             {
-                var currentRecord = logRepository.Find(filters.Id.Value, filters.ComponentId.Value);
+                var currentRecord = GetStorage().Logs.GetOneById(filters.Id.Value);
                 date = currentRecord.Date;
                 order = currentRecord.Order;
             }
@@ -248,7 +249,7 @@ namespace Zidium.UserAccount.Controllers
                 order = 0;
             }
 
-            var logSearchResult = logRepository.FindPreviousRecordByText(filters.Text, filters.ComponentId.Value, date, order, levels, filters.Context, SearchIterationRecordCount);
+            var logSearchResult = GetStorage().Logs.FindPreviousRecordByText(filters.Text, filters.ComponentId.Value, date, order, levels, filters.Context, SearchIterationRecordCount);
 
             if (!logSearchResult.Found)
             {
@@ -285,14 +286,12 @@ namespace Zidium.UserAccount.Controllers
 
             var levels = GetFilterLevels(filters.LogLevel);
 
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
-
             DateTime date;
             int order;
 
             if (filters.Id.HasValue)
             {
-                var currentRecord = logRepository.Find(filters.Id.Value, filters.ComponentId.Value);
+                var currentRecord = GetStorage().Logs.GetOneById(filters.Id.Value);
                 date = currentRecord.Date;
                 order = currentRecord.Order;
             }
@@ -302,7 +301,7 @@ namespace Zidium.UserAccount.Controllers
                 order = 0;
             }
 
-            var logSearchResult = logRepository.FindNextRecordByText(filters.Text, filters.ComponentId.Value, date, order, levels, filters.Context, SearchIterationRecordCount);
+            var logSearchResult = GetStorage().Logs.FindNextRecordByText(filters.Text, filters.ComponentId.Value, date, order, levels, filters.Context, SearchIterationRecordCount);
 
             if (!logSearchResult.Found)
             {
@@ -339,16 +338,15 @@ namespace Zidium.UserAccount.Controllers
 
             var levels = GetFilterLevels(filters.LogLevel);
 
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
-            var logRecord = logRepository.Find(filters.Id.Value, filters.ComponentId.Value);
+            var logRecord = GetStorage().Logs.GetOneById(filters.Id.Value);
 
-            var previousRecords = logRepository.GetPreviousRecords(filters.ComponentId.Value, logRecord.Date, logRecord.Order, levels, filters.Context, OutputRecordCount / 2);
+            var previousRecords = GetStorage().Logs.GetPreviousRecords(filters.ComponentId.Value, logRecord.Date, logRecord.Order, levels, filters.Context, OutputRecordCount / 2);
             var previousRecordsModel = RecordsToModel(previousRecords);
 
-            var nextRecords = logRepository.GetNextRecords(filters.ComponentId.Value, logRecord.Date, logRecord.Order, levels, filters.Context, OutputRecordCount - previousRecordsModel.Length - 1);
+            var nextRecords = GetStorage().Logs.GetNextRecords(filters.ComponentId.Value, logRecord.Date, logRecord.Order, levels, filters.Context, OutputRecordCount - previousRecordsModel.Length - 1);
             var nextRecordsModel = RecordsToModel(nextRecords);
 
-            var logRecordModel = RecordsToModel(new[] { logRecord }.AsQueryable());
+            var logRecordModel = RecordsToModel(new[] { logRecord });
 
             var model = new LogPartialModel()
             {
@@ -363,9 +361,10 @@ namespace Zidium.UserAccount.Controllers
             if (!string.IsNullOrEmpty(filters.Text))
             {
                 var textLowercase = filters.Text.ToLower();
-                if (!logRecord.Message.ToLower().Contains(textLowercase) && logRecord.Parameters.Any(t => t.Name.ToLower().Contains(textLowercase) || t.Value.ToLower().Contains(textLowercase)))
+                var properties = GetStorage().LogProperties.GetByLogId(logRecord.Id);
+                if (!logRecord.Message.ToLower().Contains(textLowercase) && properties.Any(t => t.Name.ToLower().Contains(textLowercase) || t.Value.ToLower().Contains(textLowercase)))
                 {
-                    model.ExpandedProperties = GetLogRowPropertiesModel(logRecord);
+                    model.ExpandedProperties = GetLogRowPropertiesModel(logRecord, properties);
                     model.ExpandedProperties.Text = filters.Text;
                 }
             }
@@ -391,7 +390,7 @@ namespace Zidium.UserAccount.Controllers
             LogLevel.Fatal
         };
 
-        private LogPartialModel.ItemModel[] RecordsToModel(IQueryable<Log> records)
+        private LogPartialModel.ItemModel[] RecordsToModel(LogForRead[] records)
         {
             return records.Select(t => new LogPartialModel.ItemModel()
             {
@@ -405,15 +404,13 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult GetLogRowProperties(Guid componentId, Guid logRowId)
         {
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            componentRepository.GetById(componentId);
-            var logRepository = CurrentAccountDbContext.GetLogRepository();
-            var log = logRepository.Find(logRowId, componentId);
-            var model = GetLogRowPropertiesModel(log);
+            var log = GetStorage().Logs.GetOneById(logRowId);
+            var properties = GetStorage().LogProperties.GetByLogId(logRowId);
+            var model = GetLogRowPropertiesModel(log, properties);
             return PartialView(model);
         }
 
-        private LogRowPropertiesModel GetLogRowPropertiesModel(Log log)
+        private LogRowPropertiesModel GetLogRowPropertiesModel(LogForRead log, LogPropertyForRead[] properties)
         {
             var model = new LogRowPropertiesModel()
             {
@@ -421,7 +418,7 @@ namespace Zidium.UserAccount.Controllers
                 ComponentId = log.ComponentId,
                 Context = log.Context,
                 Message = log.Message,
-                Items = log.Parameters.OrderBy(t => t.Name).Select(t => new LogRowPropertiesModel.LogRowPropertyItem()
+                Items = properties.OrderBy(t => t.Name).Select(t => new LogRowPropertiesModel.LogRowPropertyItem()
                 {
                     Id = t.Id,
                     Name = t.Name,
@@ -432,13 +429,10 @@ namespace Zidium.UserAccount.Controllers
             return model;
         }
 
-        public ActionResult GetLogFile(Guid componentId, Guid id, Guid fileId)
+        public ActionResult GetLogFile(Guid id, Guid fileId)
         {
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            componentRepository.GetById(componentId);
-            var repository = CurrentAccountDbContext.GetLogRepository();
-            var row = repository.Find(id, componentId);
-            var file = row.Parameters.SingleOrDefault(x => x.Id == fileId);
+            var properties = GetStorage().LogProperties.GetByLogId(id);
+            var file = properties.SingleOrDefault(x => x.Id == fileId);
             if (file == null)
             {
                 throw new HttpException(404, "Файл не найден");
@@ -451,8 +445,9 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid componentId)
         {
-            var repository = CurrentAccountDbContext.GetLogConfigRepository();
-            var config = repository.GetByComponentId(componentId);
+            var service = new LogService(GetStorage());
+            var config = service.GetLogConfig(componentId);
+            var component = GetStorage().Components.GetOneById(componentId);
 
             var model = new EditLogModel
             {
@@ -463,7 +458,7 @@ namespace Zidium.UserAccount.Controllers
                 IsInfoEnabled = config.IsInfoEnabled,
                 IsDebugEnabled = config.IsDebugEnabled,
                 IsTraceEnabled = config.IsTraceEnabled,
-                ComponentName = config.Component.DisplayName
+                ComponentName = component.DisplayName
             };
             return PartialView(model);
         }
@@ -475,17 +470,21 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return PartialView(model);
 
-            var repository = CurrentAccountDbContext.GetLogConfigRepository();
-            var config = repository.GetByComponentId(model.Id);
-            model.ComponentName = config.Component.DisplayName;
-            config.IsFatalEnabled = model.IsFatalEnabled;
-            config.IsErrorEnabled = model.IsErrorEnabled;
-            config.IsWarningEnabled = model.IsWarningEnabled;
-            config.IsInfoEnabled = model.IsInfoEnabled;
-            config.IsDebugEnabled = model.IsDebugEnabled;
-            config.IsTraceEnabled = model.IsTraceEnabled;
-            config.LastUpdateDate = Now();
-            CurrentAccountDbContext.SaveChanges();
+            var service = new LogService(GetStorage());
+            var config = service.GetLogConfig(model.Id);
+            var component = GetStorage().Components.GetOneById(model.Id);
+
+            model.ComponentName = component.DisplayName;
+
+            var configForUpdate = config.GetForUpdate();
+            configForUpdate.IsFatalEnabled.Set(model.IsFatalEnabled);
+            configForUpdate.IsErrorEnabled.Set(model.IsErrorEnabled);
+            configForUpdate.IsWarningEnabled.Set(model.IsWarningEnabled);
+            configForUpdate.IsInfoEnabled.Set(model.IsInfoEnabled);
+            configForUpdate.IsDebugEnabled.Set(model.IsDebugEnabled);
+            configForUpdate.IsTraceEnabled.Set(model.IsTraceEnabled);
+            configForUpdate.LastUpdateDate.Set(Now());
+            GetStorage().LogConfigs.Update(configForUpdate);
 
             return GetSuccessJsonResponse();
         }
@@ -493,7 +492,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Add(Guid componentId)
         {
-            var component = GetComponentById(componentId);
+            var component = GetStorage().Components.GetOneById(componentId);
             var model = new AddLogModel()
             {
                 ComponentId = component.Id,
@@ -511,11 +510,10 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return PartialView(model);
 
-            var component = GetComponentById(model.ComponentId);
             var client = GetDispatcherClient();
             var response = client.SendLog(CurrentUser.AccountId, new SendLogData()
             {
-                ComponentId = component.Id,
+                ComponentId = model.ComponentId,
                 Date = model.LogDate,
                 Level = model.LogLevel,
                 Message = model.Message

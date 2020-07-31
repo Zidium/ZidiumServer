@@ -1,9 +1,11 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Models.UnitTests
+
 @model OverviewLastResultModel
+
 @{ 
-    string textCss = GuiHelper.GetComponentStatusTextCssClass(Model.Status);
+    var textCss = GuiHelper.GetComponentStatusTextCssClass(Model.Status);
 }
 
 <div class="tiles-box" style="display: flex; flex-direction:column;">

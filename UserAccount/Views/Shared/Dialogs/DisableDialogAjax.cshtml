@@ -87,7 +87,7 @@
 <script>
     function initDisableDialog() {
         $("#disableDatePicker").datetimepicker({
-            format: '@ContextController.MomentDateTimeDisplayFormat',
+            format: '@BaseController.MomentDateTimeDisplayFormat',
             locale: 'ru',
             showClear: true
         });
@@ -114,7 +114,7 @@
         $("#disableComponentWaitDiv").show();
         var date = $('#disableDatePicker').data("DateTimePicker").date();
         if (date) {
-            date = date.format("@ContextController.MomentDateTimeParamFormat");
+            date = date.format("@BaseController.MomentDateTimeParamFormat");
         }
         var params = {
             interval: $("input[name=disableInterval]:checked").val(),

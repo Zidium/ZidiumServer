@@ -30,6 +30,11 @@ namespace Zidium.Core.ConfigDb
             _connectionString = connectionString;
         }
 
+        public Guid CreateDatabase(string databaseName)
+        {
+            throw new NotImplementedException();
+        }
+
         public static string ConnectionString
         {
             get { return _connectionString ?? ConfigurationManager.ConnectionStrings["DbContext"].ConnectionString; }

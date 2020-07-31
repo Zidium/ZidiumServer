@@ -557,8 +557,7 @@ namespace ApiAdapter
             var coreResponse = Dispatcher.GetChangedWebLogConfigs(coreRequest);
 
             var response = GetApiResponse<GetChangedWebLogConfigsResponseDto>(coreResponse);
-            var coreResponseData = coreResponse.InternalData;
-            response.Data = ConvertList(coreResponseData, AdapterDataConverter.ConvertToApi);
+            response.Data = AdapterDataConverter.ConvertToApi(coreResponse.InternalData);
             return response;
         }
 

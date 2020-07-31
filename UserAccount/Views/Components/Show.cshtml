@@ -1,8 +1,10 @@
-﻿@using Zidium.Core.Api
+﻿@using Zidium.Core.AccountsDb
 @using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
-@using Zidium.UserAccount.Models.Controls
+@using Zidium.UserAccount.Models.Controls  
+
 @model ComponentShowModel
 
 @{
@@ -125,7 +127,7 @@
 
     <p class="submenu-title" style="margin-top: 0">Страница компонента</p>
     <div class="zi-bread-crumbs">
-        @Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.Component)
+        @Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.ComponentBreadCrumbs)
     </div>
     <hr class="submenu" />
 
@@ -223,7 +225,7 @@
 
         <p style="margin-top: 10px;">
             <span class="simple-text-header">Статус длится</span>
-            <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.ExternalState.GetDuration(DateTime.Now))</span>,
+            <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.ExternalState.GetDuration(Model.Now))</span>,
             <span class="simple-text-header">начался</span>
             <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.ExternalState.StartDate)</span>
             @if (UserHelper.CurrentUser.CanEditCommonData())
@@ -253,7 +255,7 @@
 
         @if (UserHelper.CurrentUser.CanEditCommonData())
         {
-            if (Model.Component.Parent != null)
+            if (!Model.Component.IsRoot())
             {
                 @Html.ActionLink("Настроить", "Edit", new { id = Model.Component.Id }, new { @class = "btn btn-default" })
             }
@@ -334,18 +336,18 @@
         <div>
             <p>
                 <span class="simple-text-header">Родитель: </span>
-                @if (Model.Component.Parent == null)
+                @if (Model.Parent == null)
                 {
                     <span class="simple-text-value">нет</span>
                 }
                 else
                 {
-                    @Html.ActionLink(@Model.Component.Parent.DisplayName, "Show", "Components", new { id = Model.Component.ParentId }, null)
+                    @Html.ActionLink(Model.Parent.DisplayName, "Show", "Components", new { id = Model.Parent.Id }, null)
                 }
             </p>
             <p>
                 <span class="simple-text-header">Тип: </span>
-                @Html.ActionLink(@Model.Component.ComponentType.DisplayName, "Show", "ComponentTypes", new { id = Model.Component.ComponentTypeId }, null)
+                @Html.ActionLink(Model.ComponentType.DisplayName, "Show", "ComponentTypes", new { id = Model.ComponentType.Id }, null)
             </p>
             <p>
                 <span class="simple-text-header">Статус: </span>
@@ -370,11 +372,11 @@
     </div>
 </div>
 
-@if (Model.Component.Properties.Count > 0)
+@if (Model.Properties.Length > 0)
 {
     <p>Дополнительные свойства:</p>
     <div id="componentExtProperties" class="top10px">
-        @Html.ExtentionPropertiesTable(Model.Component)
+        @Html.ExtentionPropertiesTable(Model.Properties)
     </div>
 }
 
@@ -528,9 +530,9 @@
                 </tr>
             </thead>
             <tbody id="table-counters">
-                @foreach (var counter in Model.Metrics)
+                @foreach (var metric in Model.Metrics)
                 {
-                    @Html.Partial("ComponentCounterRow", counter)
+                    @Html.Partial("ComponentCounterRow", metric)
                 }
             </tbody>
         </table>

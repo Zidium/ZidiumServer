@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb.Classes;
+using Zidium.Common;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Defects;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class DefectsController : ContextController
+    public class DefectsController : BaseController
     {
         public ActionResult Index(
             DefectsIndexModel.ShowModeEnum? showMode,
@@ -29,14 +30,10 @@ namespace Zidium.UserAccount.Controllers
 
             // Подготовим базовый запрос
 
-            var baseQuery = CurrentAccountDbContext.Defects.AsQueryable()
-                .Include("LastChange").Include("ResponsibleUser").Include("EventType");
-
-            if (!string.IsNullOrEmpty(model.Title))
-                baseQuery = baseQuery.Where(t => t.Title.Contains(model.Title));
+            var data = GetStorage().Gui.GetDefects(model.Title);
 
             // Получим базовую информацию по дефектам
-            var defects = baseQuery.Select(t => new DefectsIndexItemModel()
+            var defects = data.Select(t => new DefectsIndexItemModel()
             {
                 Id = t.Id,
                 EventTypeId = t.EventTypeId,
@@ -52,7 +49,7 @@ namespace Zidium.UserAccount.Controllers
 
             // Отфильтруем дефекты по компоненту
             var filteredDefects = new List<DefectsIndexItemModel>();
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var eventRepository = GetStorage().Events;
 
             // Если заполнен фильтр по компоненту и это не Root, то получим Id по этого компонента и всех вложенных
             var useComponentFilter = model.ComponentId.HasValue && model.ComponentId.Value != GetCurrentAccount().RootId;
@@ -64,31 +61,34 @@ namespace Zidium.UserAccount.Controllers
 
             foreach (var defect in defects)
             {
-                // Посчитаем, сколько раз случался дефект
-                var query = eventRepository.QueryAllByAccount();
-                query = query.Where(t => t.EventTypeId == defect.EventTypeId);
-
-                // Если настроена версионность, то посчитаем только "новые" события
-                if (defect.OldVersion != null)
+                if (defect.EventTypeId.HasValue)
                 {
-                    var oldVersion = VersionHelper.FromString(defect.OldVersion) ?? -1;
-                    query = query.Where(t => (t.VersionLong ?? long.MaxValue) > oldVersion);
-                }
+                    // Посчитаем, сколько раз случался дефект
+                    var events = eventRepository.GetByEventTypeId(defect.EventTypeId.Value);
 
-                // Группируем по компоненту, чтобы посчитать количество для выбранного компонента и вложенных
-                var resultQuery = query.GroupBy(t => t.OwnerId).Select(t => new { ComponentId = t.Key, Count = t.Sum(x => x.Count) }).ToArray();
+                    // Если настроена версионность, то посчитаем только "новые" события
+                    if (defect.OldVersion != null)
+                    {
+                        var oldVersion = VersionHelper.FromString(defect.OldVersion) ?? -1;
+                        events = events.Where(t => (t.VersionLong ?? long.MaxValue) > oldVersion).ToArray();
+                    }
 
-                if (useComponentFilter)
-                {
-                    defect.Count = resultQuery.Where(t => componentIds.Contains(t.ComponentId)).Sum(t => t.Count);
+                    // Группируем по компоненту, чтобы посчитать количество для выбранного компонента и вложенных
+                    var resultQuery = events.GroupBy(t => t.OwnerId)
+                        .Select(t => new { ComponentId = t.Key, Count = t.Sum(x => x.Count) }).ToArray();
 
-                    // Если заполнен фильтр по компоненту и таких событий нет, то этот дефект не показываем
-                    if (defect.Count == 0)
-                        continue;
-                }
-                else
-                {
-                    defect.Count = resultQuery.Sum(t => t.Count);
+                    if (useComponentFilter)
+                    {
+                        defect.Count = resultQuery.Where(t => componentIds.Contains(t.ComponentId)).Sum(t => t.Count);
+
+                        // Если заполнен фильтр по компоненту и таких событий нет, то этот дефект не показываем
+                        if (defect.Count == 0)
+                            continue;
+                    }
+                    else
+                    {
+                        defect.Count = resultQuery.Sum(t => t.Count);
+                    }
                 }
 
                 filteredDefects.Add(defect);
@@ -155,26 +155,39 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return PartialView(model);
 
-            var service = CurrentAccountDbContext.GetDefectService();
-            var createUser = GetUserById(CurrentUser.Id);
-            var responsibleUser = GetUserById(model.ResponsibleUserId.Value);
+            var service = new DefectService(GetStorage());
+            var createUser = GetStorage().Users.GetOneById(CurrentUser.Id);
+            var responsibleUser = GetStorage().Users.GetOneById(model.ResponsibleUserId.Value);
             service.CreateDefect(CurrentUser.AccountId, model.Title, createUser, responsibleUser, model.Notes);
-            CurrentAccountDbContext.SaveChanges();
 
             return GetSuccessJsonResponse();
         }
 
         public ActionResult Show(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetDefectRepository();
-            var defect = repository.GetById(id);
+            var defect = GetStorage().Defects.GetOneById(id);
+            var changes = GetStorage().DefectChanges.GetByDefectId(defect.Id).OrderByDescending(x => x.Date).ToArray();
+            var lastChange = changes.First();
+            var lastChangeUser = lastChange.UserId != null ? GetStorage().Users.GetOneById(lastChange.UserId.Value) : null;
+            var responsibleUser = defect.ResponsibleUserId != null ? GetStorage().Users.GetOneById(defect.ResponsibleUserId.Value) : null;
+            var changeUsers = GetStorage().Users.GetMany(changes.Where(t => t.UserId != null).Select(t => t.UserId.Value).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
+
             var model = new ShowDefectModel()
             {
-                Defect = defect
+                Defect = defect,
+                Changes = changes.Select(t => new ShowDefectModel.DefectChangeInfo()
+                {
+                    Status = t.Status,
+                    Comment = t.Comment,
+                    Date = t.Date,
+                    UserLogin = t.UserId != null ? changeUsers[t.UserId.Value].Login : null
+                }).ToArray(),
+                LastChangeUser = lastChangeUser?.FioOrLogin(),
+                ResponsibleUser = responsibleUser?.FioOrLogin()
             };
             if (defect.EventTypeId.HasValue)
             {
-                model.EventType = GetEventTypeById(defect.EventTypeId.Value);
+                model.EventType = GetStorage().EventTypes.GetOneById(defect.EventTypeId.Value);
             }
             return View(model);
         }
@@ -182,15 +195,14 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid id)
         {
-            var repository = CurrentAccountDbContext.GetDefectRepository();
-            var defect = repository.GetById(id);
+            var defect = GetStorage().Defects.GetOneById(id);
             var model = new EditDefectModel()
             {
                 Id = id,
                 Title = defect.Title,
                 Notes = defect.Notes,
                 UserId = defect.ResponsibleUserId,
-                DefectCode = defect.GetCode()
+                DefectCode = defect.Number.ToString()
             };
             return View(model);
         }
@@ -200,17 +212,19 @@ namespace Zidium.UserAccount.Controllers
         [ValidateInput(false)]
         public ActionResult Edit(EditDefectModel model)
         {
-            var repository = CurrentAccountDbContext.GetDefectRepository();
-            var defect = repository.GetById(model.Id);
+            var defect = GetStorage().Defects.GetOneById(model.Id);
             if (ModelState.IsValid)
             {
-                defect.Title = model.Title;
-                defect.Notes = model.Notes;
-                defect.ResponsibleUserId = model.UserId;
-                CurrentAccountDbContext.SaveChanges();
+                var defectForUpdate = defect.GetForUpdate();
+                defectForUpdate.Title.Set(model.Title);
+                defectForUpdate.Notes.Set(model.Notes);
+                defectForUpdate.ResponsibleUserId.Set(model.UserId);
+                GetStorage().Defects.Update(defectForUpdate);
+
                 return RedirectToAction("Show", new { id = model.Id });
             }
-            model.DefectCode = defect.GetCode();
+
+            model.DefectCode = defect.Number.ToString();
             return View(model);
         }
 
@@ -241,12 +255,14 @@ namespace Zidium.UserAccount.Controllers
             {
                 throw new Exception("userId == null");
             }
-            var eventType = GetEventTypeById(eventTypeId.Value);
-            var defectService = CurrentAccountDbContext.GetDefectService();
-            var createUser = GetUserById(CurrentUser.Id);
-            var responsibleUser = GetUserById(userId.Value);
+
+            var storage = GetStorage();
+            var eventType = storage.EventTypes.GetOneById(eventTypeId.Value);
+            var defectService = new DefectService(storage);
+            var createUser = storage.Users.GetOneById(CurrentUser.Id);
+            var responsibleUser = storage.Users.GetOneById(userId.Value);
             var defect = defectService.GetOrCreateDefectForEventType(CurrentUser.AccountId, eventType, createUser, responsibleUser, comment);
-            CurrentAccountDbContext.SaveChanges();
+
             return GetSuccessJsonResponse(new
             {
                 defectId = defect.Id
@@ -256,16 +272,17 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult ChangeStatusDialog(Guid defectId)
         {
-            var defect = GetDefectById(defectId);
+            var defect = GetStorage().Defects.GetOneById(defectId);
             var status = DefectStatus.Open;
-            if (defect.LastChange != null)
+            if (defect.LastChangeId != null)
             {
-                status = defect.LastChange.Status;
+                var lastChange = GetStorage().DefectChanges.GetOneById(defect.LastChangeId.Value);
+                status = lastChange.Status;
             }
             var model = new ChangeDefectStatusDialogModel()
             {
                 DefectId = defectId,
-                DefectCode = defect.GetCode(),
+                DefectCode = defect.Number.ToString(),
                 Status = status
             };
             return View(model);
@@ -283,11 +300,13 @@ namespace Zidium.UserAccount.Controllers
             {
                 throw new Exception("model.Status == null");
             }
-            var defect = GetDefectById(model.DefectId.Value);
-            var defectService = CurrentAccountDbContext.GetDefectService();
-            var user = GetUserById(CurrentUser.Id);
+
+            var storage = GetStorage();
+            var defect = storage.Defects.GetOneById(model.DefectId.Value);
+            var defectService = new DefectService(storage);
+            var user = storage.Users.GetOneById(CurrentUser.Id);
             defectService.ChangeStatus(CurrentUser.AccountId, defect, model.Status.Value, user, model.Comment);
-            CurrentAccountDbContext.SaveChanges();
+
             return GetSuccessJsonResponse();
         }
 
@@ -295,38 +314,51 @@ namespace Zidium.UserAccount.Controllers
         [HttpPost]
         public ActionResult CreateAndCloseDefectForEventType(Guid eventTypeId)
         {
-            var eventType = GetEventTypeById(eventTypeId);
-            var defectService = CurrentAccountDbContext.GetDefectService();
-            var user = GetUserById(CurrentUser.Id);
-            var defect = defectService.CreateAndCloseDefectForEventType(CurrentUser.AccountId, eventType, user);
-            CurrentAccountDbContext.SaveChanges();
+            var storage = GetStorage();
+            var eventType = storage.EventTypes.GetOneById(eventTypeId);
+            var defectService = new DefectService(storage);
+            var user = storage.Users.GetOneById(CurrentUser.Id);
+            var defectId = defectService.CreateAndCloseDefectForEventType(CurrentUser.AccountId, eventType, user);
+
             return GetSuccessJsonResponse(new
             {
-                defectId = defect.Id,
+                defectId = defectId,
                 eventTypeId = eventType.Id
             });
         }
 
         public ActionResult LastError(Guid eventTypeId)
         {
-            var repository = CurrentAccountDbContext.GetEventRepository();
-            var lastEvent = repository.GetLastEventByEndDate(eventTypeId);
+            var storage = GetStorage();
+            var lastEvent = storage.Events.GetLastEventByEndDate(eventTypeId);
             var model = new DefectLastErrorModel()
             {
                 Event = lastEvent
             };
             if (lastEvent != null)
             {
-                model.Component = GetComponentById(lastEvent.OwnerId);
+                var componentService = new ComponentService(storage);
+                var component = storage.Components.GetOneById(lastEvent.OwnerId);
+                model.ComponentId = component.Id;
+                model.ComponentFullName = componentService.GetFullDisplayName(component);
+
             }
             return PartialView(model);
         }
 
         public PartialViewResult DefectControl(Guid eventTypeId)
         {
-            var eventTypeRepository = CurrentAccountDbContext.GetEventTypeRepository();
-            var eventType = eventTypeRepository.GetById(eventTypeId);
-            return PartialView(eventType);
+            var eventType = GetStorage().EventTypes.GetOneById(eventTypeId);
+            var defect = eventType.DefectId != null ? GetStorage().Defects.GetOneById(eventType.DefectId.Value) : null;
+            var lastChange = defect != null ? GetStorage().DefectChanges.GetLastByDefectId(defect.Id) : null;
+
+            var model = new DefectControlModel()
+            {
+                EventType = eventType,
+                Defect = defect,
+                LastChange = lastChange
+            };
+            return PartialView(model);
         }
     }
 }

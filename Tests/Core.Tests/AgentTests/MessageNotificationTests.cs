@@ -4,8 +4,9 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.Notifications;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -37,9 +38,9 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Создадим уведомление
             Guid notificationId;
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var notification = new Notification()
+                var notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -50,8 +51,7 @@ namespace Zidium.Core.Tests.AgentTests
                     CreationDate = DateTime.Now
                 };
 
-                var notificationRepository = context.GetNotificationRepository();
-                notificationRepository.Add(notification);
+                context.Notifications.Add(notification);
                 notificationId = notification.Id;
                 context.SaveChanges();
             }
@@ -60,11 +60,10 @@ namespace Zidium.Core.Tests.AgentTests
             var processor = new MessangerNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
             processor.Process(account.Id, component.Id);
 
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
                 // Должно появиться сообщение в очереди
-                var messageCommandRepository = context.GetSendMessageCommandRepository();
-                var command = messageCommandRepository.QueryAll().FirstOrDefault(t => t.ReferenceId == notificationId);
+                var command = context.SendMessageCommands.FirstOrDefault(t => t.ReferenceId == notificationId);
 
                 Assert.NotNull(command);
                 Assert.NotNull(command.To);
@@ -72,8 +71,7 @@ namespace Zidium.Core.Tests.AgentTests
                 Assert.Equal(channel, command.Channel);
 
                 // У уведомления должна появиться ссылка на сообщение
-                var notificationRepository = context.GetNotificationRepository();
-                var notification = notificationRepository.Find(notificationId);
+                var notification = context.Notifications.Find(notificationId);
 
                 Assert.Equal(command.Id, notification.SendMessageCommandId);
             }

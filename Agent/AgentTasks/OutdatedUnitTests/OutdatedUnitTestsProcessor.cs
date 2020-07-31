@@ -48,10 +48,12 @@ namespace Zidium.Agent.AgentTasks.OutdatedUnitTests
                     Interlocked.Add(ref Count, updateCount);
                     if (updateCount == 0)
                     {
-                        data.Logger.Trace("Обновлено статусов проверок: " + updateCount);
+                        if (data.Logger.IsTraceEnabled)
+                            data.Logger.Trace("Обновлено статусов проверок: " + updateCount);
                         return;
                     }
-                    data.Logger.Debug("Обновлено статусов проверок: " + updateCount);
+                    if (data.Logger.IsDebugEnabled)
+                        data.Logger.Debug("Обновлено статусов проверок: " + updateCount);
                     if (updateCount < maxCount)
                     {
                         return;

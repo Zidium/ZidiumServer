@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using Xunit;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -980,10 +979,10 @@ namespace Zidium.UserAccount.Tests
             Assert.True(success);
 
             // Проверим, что настройки поменялись
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = context.GetLogConfigRepository();
-                var config = repository.GetByComponentId(component.Info.Id);
+                var config = context.LogConfigs.Find(component.Info.Id);
+                Assert.NotNull(config);
                 Assert.False(config.IsTraceEnabled);
                 Assert.False(config.IsDebugEnabled);
                 Assert.False(config.IsInfoEnabled);

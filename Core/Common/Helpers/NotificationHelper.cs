@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common.Helpers
 {
@@ -9,22 +10,32 @@ namespace Zidium.Core.Common.Helpers
         /// <summary>
         /// Отправка уведомления админам аккаунта
         /// </summary>
-        public static void NotifyAccountAdmins(Guid accountId, string subject, string body, DatabasesContext dbContext)
+        public static void NotifyAccountAdmins(Guid accountId, string subject, string body)
         {
-            var accountContext = dbContext.GetAccountDbContext(accountId);
-            var userRepository = accountContext.GetUserRepository();
+            var accountStorageFactory = DependencyInjection.GetServicePersistent<IAccountStorageFactory>();
+            var storage = accountStorageFactory.GetStorageByAccountId(accountId);
 
-            var emailRepository = accountContext.GetSendEmailCommandRepository();
-
-            var admins = userRepository.QueryAll().Where(x => x.Roles.Any(y => y.RoleId == RoleId.AccountAdministrators)).ToList();
+            var userService = new UserService(storage);
+            var admins = userService.GetAccountAdmins();
 
             foreach (var admin in admins)
             {
                 var letter = HtmlToLetter(body, admin);
-                var emails = admin.UserContacts.Where(t => t.Type == UserContactType.Email).Select(t => t.Value).Distinct().ToList();
+                var emails = storage.UserContacts.GetByType(admin.Id, UserContactType.Email).Select(t => t.Value).Distinct().ToList();
                 foreach (var email in emails)
                 {
-                    emailRepository.Add(email, subject, letter, accountId);
+                    var sendEmailCommand = new SendEmailCommandForAdd()
+                    {
+                        Id = Guid.NewGuid(),
+                        To = email,
+                        Subject = subject,
+                        Body = letter,
+                        ReferenceId = accountId,
+                        Status = EmailStatus.InQueue,
+                        CreateDate = DateTime.Now,
+                        IsHtml = true
+                    };
+                    storage.SendEmailCommands.Add(sendEmailCommand);
                 }
             }
         }
@@ -33,7 +44,7 @@ namespace Zidium.Core.Common.Helpers
         /// Превращает html в итоговое письмо
         /// Добавляет стандартные для всех писем заголовок и подпись
         /// </summary>
-        public static string HtmlToLetter(string text, User user)
+        public static string HtmlToLetter(string text, UserForRead user)
         {
             var html = new HtmlRender();
 

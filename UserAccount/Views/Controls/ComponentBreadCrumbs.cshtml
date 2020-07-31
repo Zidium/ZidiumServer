@@ -1,22 +1,15 @@
-﻿@using Zidium.Core.AccountsDb
-@model Component
+﻿@model Zidium.UserAccount.Models.ComponentBreadCrumbsModel
+
 @{
-    var component = Model;
-    var components = new List<Component>();
-    while (component!=null)
+    var isFirst = true;
+
+    foreach (var element in Model.Elements)
     {
-        components.Add(component);
-        component = component.Parent;
-    }
-    components.Reverse();
-    var isfirst = true;
-    foreach (var componentObj in components)
-    {
-        if (!isfirst)
+        if (!isFirst)
         {
             <span style="margin-left: 2px; margin-right: 2px">/</span>
         }
-        isfirst = false;
-        @Html.ActionLink(componentObj.DisplayName, "Show", "Components", new{id=componentObj.Id}, null)
+        isFirst = false;
+        @Html.ActionLink(element.Name, "Show", "Components", new { id = element.Id }, null)
     }
 }

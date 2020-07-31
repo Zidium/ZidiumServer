@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Web.Mvc;
+using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
 using Zidium.UserAccount.Models;
@@ -7,11 +8,11 @@ using Zidium.UserAccount.Models;
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class AccountInfoController : ContextController
+    public class AccountInfoController : BaseController
     {
         public ActionResult Index()
         {
-            var account = ConfigDbServicesHelper.GetAccountService().GetSystemAccount();
+            var account = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>().GetAccountService().GetSystemAccount();
 
             var model = new ShowAccountModel()
             {

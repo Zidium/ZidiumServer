@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -10,17 +10,15 @@ namespace Zidium.UserAccount.Models.UnitTests
         public int AlarmDays { get; set; }
         public int WarningDays { get; set; }
 
-        public static ShowSettingsSslModel Create(UnitTest unitTest)
+        public static ShowSettingsSslModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var rule = unitTest.SslCertificateExpirationDateRule;
-            if (rule == null)
-            {
-                throw new Exception("unittest domain rule is null");
-            }
+
+            var rule = storage.UnitTestSslCertificateExpirationDateRules.GetOneByUnitTestId(unitTest.Id);
+            
             return new ShowSettingsSslModel()
             {
                 UnitTestId = unitTest.Id,

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks.HttpRequests;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
@@ -10,6 +9,8 @@ using Zidium.Core.ConfigDb;
 using Zidium.Core.Limits;
 using Xunit;
 using Zidium.Core.Common.TimeService;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
@@ -316,17 +317,16 @@ namespace Zidium.Core.Single.Tests
                     {
                         SystemName = "HttpCheck." + Guid.NewGuid(),
                         ComponentId = component.Info.Id,
-                        UnitTestTypeId = SystemUnitTestTypes.HttpUnitTestType.Id
+                        UnitTestTypeId = SystemUnitTestType.HttpUnitTestType.Id
                     }
                 };
                 var response = dispatcher.GetOrCreateUnitTest(request);
                 Assert.True(response.Success);
                 httpCheckId = response.Data.Id;
-                using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+                using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
                 {
-                    var unitTestRepository = accountContext.GetUnitTestRepository();
-                    var unitTest = unitTestRepository.GetById(httpCheckId);
-                    var rule = new HttpRequestUnitTestRule()
+                    var unitTest = accountContext.UnitTests.Find(httpCheckId);
+                    var rule = new DbHttpRequestUnitTestRule()
                     {
                         Id = Guid.NewGuid(),
                         DisplayName = "Rule",
@@ -339,17 +339,16 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Активируем проверку
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NLog.LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
             processor.ProcessAccount(account.Id, httpCheckId);
             Assert.Null(processor.DbProcessor.FirstException);
             account.SaveAllCaches();
 
             // Количество включенных проверок должно быть равно лимиту без баннера
             // Лишняя должна быть выключена
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTests = unitTestRepository.QueryAll().Where(t => t.ComponentId == component.Info.Id);
+                var unitTests = accountContext.UnitTests.Where(t => t.ComponentId == component.Info.Id && !t.IsDeleted);
                 int count = unitTests.Count(t => t.Enable && t.HttpRequestUnitTest.HasBanner == false);
                 Assert.Equal(httpUnitTestsMaxNoBanner, count);
                 Assert.Equal(1, unitTests.Count(t => t.Enable == false && t.HttpRequestUnitTest.HasBanner == false));
@@ -357,10 +356,9 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Перенастроим последнюю проверку на сайт с баннером
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTest = unitTestRepository.GetById(httpCheckId);
+                var unitTest = accountContext.UnitTests.Find(httpCheckId);
                 var rule = unitTest.HttpRequestUnitTest.Rules.First();
                 rule.Url = "http://fakesite.zidium.net";
                 unitTest.Enable = true;
@@ -374,10 +372,9 @@ namespace Zidium.Core.Single.Tests
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Все проверки выполнить заново
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-                var unitTests = unitTestRepository.QueryAll().Where(t => t.ComponentId == component.Info.Id).ToArray();
+                var unitTests = accountContext.UnitTests.Where(t => t.ComponentId == component.Info.Id).ToArray();
                 foreach (var unitTest in unitTests)
                 {
                     unitTest.Enable = true;
@@ -392,12 +389,9 @@ namespace Zidium.Core.Single.Tests
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Все проверки должны быть включены
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var unitTestRepository = accountContext.GetUnitTestRepository();
-
-                var unitTests = unitTestRepository
-                    .QueryAll()
+                var unitTests = accountContext.UnitTests
                     .Where(t => t.ComponentId == component.Info.Id)
                     .ToList();
 
@@ -803,12 +797,11 @@ namespace Zidium.Core.Single.Tests
             Assert.Equal(Zidium.Api.ResponseCode.OverLimit, response2.Code);
 
             // Получим любую метрику
-            Guid counterId;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            Guid metricTypeId;
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var counterRepository = accountContext.GetMetricTypeRepository();
-                var counter = counterRepository.QueryAll().First();
-                counterId = counter.Id;
+                var metricType = accountContext.MetricTypes.First(t => !t.IsDeleted);
+                metricTypeId = metricType.Id;
             }
 
             // Удалим эту метрику
@@ -817,7 +810,7 @@ namespace Zidium.Core.Single.Tests
                 Token = account.GetCoreToken(),
                 Data = new DeleteMetricTypeRequestData()
                 {
-                    MetricTypeId = counterId
+                    MetricTypeId = metricTypeId
                 }
             };
             var deleteResponse = dispatcher.DeleteMetricType(deleteRequest);
@@ -1144,61 +1137,59 @@ namespace Zidium.Core.Single.Tests
 
             var now = DateTime.Now.Date;
             var checker = new AccountLimitsChecker(account.Id, now);
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                // Потратим весь лимит хранилища
-                checker.AddLogSizePerDay(accountContext, 100000);
-                checker.AddEventsSizePerDay(accountContext, 10000);
-                checker.AddUnitTestsSizePerDay(accountContext, 1000);
-                checker.AddMetricsSizePerDay(accountContext, 100);
 
-                // Проверим, что лимит хранилища достигнут
-                var context = accountContext;
-                Assert.ThrowsAny<OverLimitException>(() => checker.CheckStorageSize(context, 1, out _));
+            var storage = TestHelper.GetStorage(account.Id);
+            // Потратим весь лимит хранилища
+            checker.AddLogSizePerDay(storage, 100000);
+            checker.AddEventsSizePerDay(storage, 10000);
+            checker.AddUnitTestsSizePerDay(storage, 1000);
+            checker.AddMetricsSizePerDay(storage, 100);
 
-                // Получим использованные лимиты и проверим, что размер хранилища правильный
-                var usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
-                Assert.Equal(111100, usedLimits.StorageSize);
+            // Проверим, что лимит хранилища достигнут
+            Assert.ThrowsAny<OverLimitException>(() => checker.CheckStorageSize(storage, 1, out _));
 
-                // Прошёл один день
-                now = now.AddDays(1);
-                checker.NowOverride = now;
+            // Получим использованные лимиты и проверим, что размер хранилища правильный
+            var usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
+            Assert.Equal(111100, usedLimits.StorageSize);
 
-                // Сохраним данные
-                checker.SaveData(accountContext);
+            // Прошёл один день
+            now = now.AddDays(1);
+            checker.NowOverride = now;
 
-                // Проверим размер хранилища
-                usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
-                Assert.Equal(111100, usedLimits.StorageSize);
+            // Сохраним данные
+            checker.SaveData(storage);
 
-                // Проверим размер хранилища через 4 дня
-                now = now.AddDays(4);
-                checker.NowOverride = now;
-                usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
-                Assert.Equal(111000, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 100, out _);
+            // Проверим размер хранилища
+            usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
+            Assert.Equal(111100, usedLimits.StorageSize);
 
-                // Проверим размер хранилища через 5 дней
-                now = now.AddDays(1);
-                checker.NowOverride = now;
-                usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
-                Assert.Equal(110000, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 1100, out _);
+            // Проверим размер хранилища через 4 дня
+            now = now.AddDays(4);
+            checker.NowOverride = now;
+            usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
+            Assert.Equal(111000, usedLimits.StorageSize);
+            checker.CheckStorageSize(storage, 100, out _);
 
-                // Проверим размер хранилища через 6 дней
-                now = now.AddDays(1);
-                checker.NowOverride = now;
-                usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
-                Assert.Equal(100000, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 11100, out _);
+            // Проверим размер хранилища через 5 дней
+            now = now.AddDays(1);
+            checker.NowOverride = now;
+            usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
+            Assert.Equal(110000, usedLimits.StorageSize);
+            checker.CheckStorageSize(storage, 1100, out _);
 
-                // Проверим размер хранилища через 7 дней
-                now = now.AddDays(1);
-                checker.NowOverride = now;
-                usedLimits = checker.GetUsedOverallTariffLimit(accountContext, 30).Total;
-                Assert.Equal(0, usedLimits.StorageSize);
-                checker.CheckStorageSize(accountContext, 111100, out _);
-            }
+            // Проверим размер хранилища через 6 дней
+            now = now.AddDays(1);
+            checker.NowOverride = now;
+            usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
+            Assert.Equal(100000, usedLimits.StorageSize);
+            checker.CheckStorageSize(storage, 11100, out _);
+
+            // Проверим размер хранилища через 7 дней
+            now = now.AddDays(1);
+            checker.NowOverride = now;
+            usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
+            Assert.Equal(0, usedLimits.StorageSize);
+            checker.CheckStorageSize(storage, 111100, out _);
         }
 
         [Fact]
@@ -1206,37 +1197,31 @@ namespace Zidium.Core.Single.Tests
         {
             var account = TestHelper.GetTestAccount();
             var today = DateTime.Now.Date;
+            var storage = TestHelper.GetStorage(account.Id);
 
             // 30 дней назад
             var date30 = today.AddDays(-30);
             var checker = new AccountLimitsChecker(account.Id, date30);
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 100);
-                checker.NowOverride = date30.AddDays(1);
-                checker.SaveData(accountContext);
-            }
+
+            checker.AddLogSizePerDay(storage, 100);
+            checker.NowOverride = date30.AddDays(1);
+            checker.SaveData(storage);
 
             // 1 день назад
             var date1 = today.AddDays(-1);
             checker.NowOverride = date1;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 200);
-                checker.NowOverride = date1.AddDays(1);
-                checker.SaveData(accountContext);
-            }
+
+            checker.AddLogSizePerDay(storage, 200);
+            checker.NowOverride = date1.AddDays(1);
+            checker.SaveData(storage);
 
             // Проверим, что сегодня есть архив за 30 дней
             checker.NowOverride = today;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var archive = checker.GetUsedOverallTariffLimit(accountContext, 30).Archive;
-                Assert.Equal(2, archive.Length);
-                Assert.NotNull(archive.FirstOrDefault(t => t.Date == date30 && t.Info.LogSize == 100));
-                Assert.NotNull(archive.FirstOrDefault(t => t.Date == date1 && t.Info.LogSize == 200));
-            }
 
+            var archive = checker.GetUsedOverallTariffLimit(storage, 30).Archive;
+            Assert.Equal(2, archive.Length);
+            Assert.NotNull(archive.FirstOrDefault(t => t.Date == date30 && t.Info.LogSize == 100));
+            Assert.NotNull(archive.FirstOrDefault(t => t.Date == date1 && t.Info.LogSize == 200));
         }
 
         [Fact]
@@ -1246,52 +1231,38 @@ namespace Zidium.Core.Single.Tests
             var component = account.CreateTestApplicationComponent();
             var unitTest1 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
             var unitTest2 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
+            var storage = TestHelper.GetStorage(account.Id);
 
             // Выровняем сдвиг времени по границе N минут
             var now = DateTime.Now.Date.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
             var checker = new AccountLimitsChecker(account.Id, now);
 
             // Отправим данные по первой проверке
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest1.Id);
-            }
+            checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
 
             // Отправим запись лога
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 100);
-            }
+            checker.AddLogSizePerDay(storage, 100);
 
             // Прошло N минут
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
             checker.NowOverride = now;
 
             // Отправим данные по второй проверке до лимита
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest2.Id);
-            }
+            checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
 
             // Прошло N минут
             checker.NowOverride = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
 
             // Сохраним данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var count = checker.SaveData(accountContext);
-                Assert.Equal(2, count);
-            }
+            var count = checker.SaveData(storage);
+            Assert.Equal(2, count);
 
             // Перечитаем данные из базы
             var nowOverride = checker.NowOverride;
             checker = new AccountLimitsChecker(account.Id, nowOverride);
 
             AccountUsedLimitsTodayDataInfo usedLimits;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                usedLimits = checker.GetUsedTodayTariffLimit(accountContext);
-            }
+            usedLimits = checker.GetUsedTodayTariffLimit(storage);
 
             // Проверим, что лимит по первой проверке не потерялся
             Assert.Equal(1, usedLimits.UnitTestsResults.Where(t => t.UnitTestId == unitTest1.Id).Select(t => t.ApiChecksResults).First());
@@ -1311,13 +1282,13 @@ namespace Zidium.Core.Single.Tests
             var component = account.CreateTestApplicationComponent();
             var unitTest1 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
             var unitTest2 = TestHelper.CreateTestUnitTest(account.Id, component.Id);
+            var storage = TestHelper.GetStorage(account.Id);
 
             // Запомним количество строк в истории
             int limitDatasCount;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = accountContext.GetLimitDataRepository();
-                limitDatasCount = repository.QueryAll().Count();
+                limitDatasCount = accountContext.LimitDatas.Count();
             }
 
             // Выровняем сдвиг времени по границе N минут
@@ -1325,13 +1296,10 @@ namespace Zidium.Core.Single.Tests
             var checker = new AccountLimitsChecker(account.Id, now);
 
             // Добавим данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest1.Id);
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest2.Id);
-                checker.AddEventsRequestsPerDay(accountContext);
-                checker.AddEventsSizePerDay(accountContext, 100);
-            }
+            checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
+            checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
+            checker.AddEventsRequestsPerDay(storage);
+            checker.AddEventsSizePerDay(storage, 100);
 
             // Прошло N минут
             var oldNow = now;
@@ -1339,17 +1307,13 @@ namespace Zidium.Core.Single.Tests
             checker.NowOverride = now;
 
             // Вызовем сохранение
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var count = checker.SaveData(accountContext);
-                Assert.Equal(1, count);
-            }
+            var count = checker.SaveData(storage);
+            Assert.Equal(1, count);
 
             // Проверим, что появилась новая строка в истории
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = accountContext.GetLimitDataRepository();
-                var rows = repository.QueryAll();
+                var rows = accountContext.LimitDatas;
                 var limitDatasCount2 = rows.Count();
                 Assert.True(limitDatasCount2 > limitDatasCount);
 
@@ -1369,12 +1333,9 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Добавим ещё данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest2.Id);
-                checker.AddEventsRequestsPerDay(accountContext);
-                checker.AddEventsSizePerDay(accountContext, 100);
-            }
+            checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
+            checker.AddEventsRequestsPerDay(storage);
+            checker.AddEventsSizePerDay(storage, 100);
 
             // Прошло N минут
             oldNow = now;
@@ -1382,23 +1343,16 @@ namespace Zidium.Core.Single.Tests
             checker.NowOverride = now;
 
             // Затребуем данные по лимитам
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.GetUsedTodayTariffLimit(accountContext);
-            }
+            checker.GetUsedTodayTariffLimit(storage);
 
             // Вызовем сохранение
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var count = checker.SaveData(accountContext);
-                Assert.Equal(1, count);
-            }
+            count = checker.SaveData(storage);
+            Assert.Equal(1, count);
 
             // Проверим, что появилась новая строка в истории
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = accountContext.GetLimitDataRepository();
-                var rows = repository.QueryAll();
+                var rows = accountContext.LimitDatas;
                 var limitDatasCount2 = rows.Count();
                 Assert.True(limitDatasCount2 > limitDatasCount);
 
@@ -1423,81 +1377,63 @@ namespace Zidium.Core.Single.Tests
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
             checker.NowOverride = now;
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var count = checker.SaveData(accountContext);
-                Assert.Equal(1, count);
-            }
+            count = checker.SaveData(storage);
+            Assert.Equal(1, count);
 
             // Проверим сохранение сразу 2 записей
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
             checker.NowOverride = now;
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest1.Id);
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest2.Id);
-                checker.AddEventsRequestsPerDay(accountContext);
-                checker.AddEventsSizePerDay(accountContext, 100);
-            }
+            checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
+            checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
+            checker.AddEventsRequestsPerDay(storage);
+            checker.AddEventsSizePerDay(storage, 100);
 
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
             checker.NowOverride = now;
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest1.Id);
-                checker.AddUnitTestResultsPerDay(accountContext, unitTest2.Id);
-                checker.AddEventsRequestsPerDay(accountContext);
-                checker.AddEventsSizePerDay(accountContext, 100);
-            }
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var count = checker.SaveData(accountContext);
-                Assert.Equal(2, count);
-                count = checker.SaveData(accountContext);
-                Assert.Equal(0, count);
-            }
+            checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
+            checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
+            checker.AddEventsRequestsPerDay(storage);
+            checker.AddEventsSizePerDay(storage, 100);
+
+            count = checker.SaveData(storage);
+            Assert.Equal(2, count);
+            count = checker.SaveData(storage);
+            Assert.Equal(0, count);
         }
 
         [Fact]
         public void CrossTodayBoundTest()
         {
             var account = TestHelper.GetTestAccount();
+            var storage = TestHelper.GetStorage(account.Id);
 
             // Установим время на конец дня (23:59)
             var now = DateTime.Now.Date.AddMinutes(-1);
             var checker = new AccountLimitsChecker(account.Id, now);
 
             // Отправим данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 100);
-            }
+            checker.AddLogSizePerDay(storage, 100);
 
             // Проверим, что использованный лимит за сегодня заполнен
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var usedLimits = checker.GetUsedTodayTariffLimit(accountContext);
-                Assert.Equal(100, usedLimits.LogSize);
-            }
+            var usedLimits = checker.GetUsedTodayTariffLimit(storage);
+            Assert.Equal(100, usedLimits.LogSize);
 
             // Установим время на начало следующего дня (00:01)
             now = now.AddMinutes(2);
             checker.NowOverride = now;
 
             // Проверим, что использованный лимит за сегодня пустой, так как начался новый день
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var usedLimits = checker.GetUsedTodayTariffLimit(accountContext);
-                Assert.Equal(0, usedLimits.LogSize);
-            }
+            usedLimits = checker.GetUsedTodayTariffLimit(storage);
+            Assert.Equal(0, usedLimits.LogSize);
         }
 
         [Fact]
         public void LimitDatasPer1DayLoadTest()
         {
             var account = TestHelper.GetTestAccount();
+            var storage = TestHelper.GetStorage(account.Id);
 
             // Подготовим данные за вчера и сохраним их
 
@@ -1505,33 +1441,24 @@ namespace Zidium.Core.Single.Tests
             var now = today.AddMinutes(1);
             var checker = new AccountLimitsChecker(account.Id, now);
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 101);
-                checker.AddEventsSizePerDay(accountContext, 102);
-                checker.AddUnitTestsSizePerDay(accountContext, 103);
-                checker.AddMetricsSizePerDay(accountContext, 104);
-            }
+            checker.AddLogSizePerDay(storage, 101);
+            checker.AddEventsSizePerDay(storage, 102);
+            checker.AddUnitTestsSizePerDay(storage, 103);
+            checker.AddMetricsSizePerDay(storage, 104);
 
             var yesterday = today;
             now = today.AddDays(1);
             checker.NowOverride = now;
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 10);
-                checker.AddEventsSizePerDay(accountContext, 20);
-                checker.AddUnitTestsSizePerDay(accountContext, 30);
-                checker.AddMetricsSizePerDay(accountContext, 40);
-            }
+            checker.AddLogSizePerDay(storage, 10);
+            checker.AddEventsSizePerDay(storage, 20);
+            checker.AddUnitTestsSizePerDay(storage, 30);
+            checker.AddMetricsSizePerDay(storage, 40);
 
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
             checker.NowOverride = now;
 
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.SaveData(accountContext);
-            }
+            checker.SaveData(storage);
 
             // Перечитаем данные из базы
             checker = new AccountLimitsChecker(account.Id, now);
@@ -1539,12 +1466,10 @@ namespace Zidium.Core.Single.Tests
             // Получим использованные лимиты
             AccountUsedLimitsPerDayDataInfo usedOverallLimits;
             AccountUsedLimitsArchiveDataInfo[] usedArchiveLimits;
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                var limits = checker.GetUsedOverallTariffLimit(accountContext, 30);
-                usedOverallLimits = limits.Total;
-                usedArchiveLimits = limits.Archive;
-            }
+
+            var limits = checker.GetUsedOverallTariffLimit(storage, 30);
+            usedOverallLimits = limits.Total;
+            usedArchiveLimits = limits.Archive;
 
             // Проверим, что данные не потерялись
             Assert.Equal(111, usedOverallLimits.LogSize);
@@ -1564,6 +1489,7 @@ namespace Zidium.Core.Single.Tests
         public void LimitDatasPer1DaySaveTest()
         {
             var account = TestHelper.GetTestAccount();
+            var storage = TestHelper.GetStorage(account.Id);
 
             // Установим время на начало дня
             var today = DateTime.Now.Date;
@@ -1571,32 +1497,22 @@ namespace Zidium.Core.Single.Tests
             var checker = new AccountLimitsChecker(account.Id, now);
 
             // Отправим данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 100);
-            }
+            checker.AddLogSizePerDay(storage, 100);
 
             // Установим время на конец дня
             now = today.AddDays(1).AddMinutes(-1);
             checker.NowOverride = now;
 
             // Отправим данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 200);
-            }
+            checker.AddLogSizePerDay(storage, 200);
 
             // Вызовем сохранение
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.SaveData(accountContext);
-            }
+            checker.SaveData(storage);
 
             // Проверим, что записи за вчера пока нет
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var r = accountContext.GetLimitDataRepository();
-                var data1Day = r.QueryAll().FirstOrDefault(t => t.Type == LimitDataType.Per1Day && t.BeginDate == today);
+                var data1Day = accountContext.LimitDatas.FirstOrDefault(t => t.Type == LimitDataType.Per1Day && t.BeginDate == today);
                 Assert.Null(data1Day);
             }
 
@@ -1605,22 +1521,15 @@ namespace Zidium.Core.Single.Tests
             checker.NowOverride = now;
 
             // Отправим данные
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.AddLogSizePerDay(accountContext, 50);
-            }
+            checker.AddLogSizePerDay(storage, 50);
 
             // Вызовем сохранение
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
-            {
-                checker.SaveData(accountContext);
-            }
+            checker.SaveData(storage);
 
             // Проверим, что запись за вчера появилась
-            using (var accountContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var r = accountContext.GetLimitDataRepository();
-                var data1Day = r.QueryAll().FirstOrDefault(t => t.Type == LimitDataType.Per1Day && t.BeginDate == today);
+                var data1Day = accountContext.LimitDatas.FirstOrDefault(t => t.Type == LimitDataType.Per1Day && t.BeginDate == today);
                 Assert.NotNull(data1Day);
                 Assert.Equal(300, data1Day.LogSize);
             }
@@ -1826,7 +1735,8 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Проверим, что у аккаунта нет признака превышения лимита
-            var accountInfo = ConfigDbServicesHelper.GetAccountService().GetOneById(account.Id);
+            var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+            var accountInfo = configDbServicesFactory.GetAccountService().GetOneById(account.Id);
             Assert.Null(accountInfo.LastOverLimitDate);
 
             // Создадим ещё компонент - превысим Soft-лимит
@@ -1848,7 +1758,7 @@ namespace Zidium.Core.Single.Tests
             // Перед каждым тестом очистим историю изменения лимитов
             var account = TestHelper.GetTestAccount();
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
                 foreach (var entity in accountDbContext.LimitDatasForUnitTests.ToArray())
                     accountDbContext.Entry(entity).State = System.Data.Entity.EntityState.Deleted;
@@ -1880,7 +1790,7 @@ namespace Zidium.Core.Single.Tests
                 Token = account.GetCoreLocalToken(),
                 Data = new SetAccountLimitsRequestData()
                 {
-                    Limits = SystemTariffLimits.BaseUnlimited,
+                    Limits = SystemTariffLimit.BaseUnlimited,
                     Type = TariffLimitType.Hard
                 }
             });
@@ -1889,7 +1799,7 @@ namespace Zidium.Core.Single.Tests
                 Token = account.GetCoreLocalToken(),
                 Data = new SetAccountLimitsRequestData()
                 {
-                    Limits = SystemTariffLimits.BaseUnlimited,
+                    Limits = SystemTariffLimit.BaseUnlimited,
                     Type = TariffLimitType.Soft
                 }
             });

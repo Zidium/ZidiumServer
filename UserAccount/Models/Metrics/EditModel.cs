@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Models.Metrics
@@ -48,8 +48,8 @@ namespace Zidium.UserAccount.Models.Metrics
         public Guid? ComponentId { get; set; }
 
         [Display(Name = "Тип метрики")]
-        public MetricType MetricType { get; set; }
+        public MetricTypeForRead MetricType { get; set; }
 
-        public Metric Metric { get; set; }
+        public MetricBreadCrumbsModel MetricBreadCrumbs { get; set; }
     }
 }

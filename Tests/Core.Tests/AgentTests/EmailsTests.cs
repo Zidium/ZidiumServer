@@ -3,8 +3,9 @@ using System.Threading;
 using NLog;
 using Zidium.Agent.AgentTasks.SendEMails;
 using Xunit;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -17,11 +18,11 @@ namespace Zidium.Core.Tests.AgentTests
             var account = TestHelper.GetTestAccount();
             Guid emailId;
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
 
                 // создадим письмо
-                var email = new SendEmailCommand()
+                var email = new DbSendEmailCommand()
                 {
                     Body = "test body",
                     CreateDate = DateTime.Now,
@@ -51,9 +52,9 @@ namespace Zidium.Core.Tests.AgentTests
             processor.Process(account.Id, emailId);
 
             // проверим, что письмо отправлено
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var email = accountDbContext.GetSendEmailCommandRepository().GetById(emailId);
+                var email = accountDbContext.SendEmailCommands.Find(emailId);
                 Assert.Null(email.ErrorMessage);
                 Assert.Equal(EmailStatus.Sent, email.Status);
             }
@@ -82,10 +83,10 @@ namespace Zidium.Core.Tests.AgentTests
             Guid emailId;
             Guid notificationId;
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 // создадим уведомление
-                var notification = new Notification()
+                var notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -96,13 +97,12 @@ namespace Zidium.Core.Tests.AgentTests
                     CreationDate = DateTime.Now
                 };
 
-                var notificationRepository = accountDbContext.GetNotificationRepository();
-                notificationRepository.Add(notification);
+                accountDbContext.Notifications.Add(notification);
                 notificationId = notification.Id;
                 accountDbContext.SaveChanges();
 
                 // создадим письмо
-                var email = new SendEmailCommand()
+                var email = new DbSendEmailCommand()
                 {
                     Body = "test body",
                     CreateDate = DateTime.Now,
@@ -131,16 +131,15 @@ namespace Zidium.Core.Tests.AgentTests
             processor.FakeMode = true;
             processor.Process(account.Id, emailId);
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
                 // проверим, что письмо отправлено
-                var email = accountDbContext.GetSendEmailCommandRepository().GetById(emailId);
+                var email = accountDbContext.SendEmailCommands.Find(emailId);
                 Assert.Null(email.ErrorMessage);
                 Assert.Equal(EmailStatus.Sent, email.Status);
 
                 // проверим, что статус уведомления поменялся
-                var notificationRepository = accountDbContext.GetNotificationRepository();
-                var notification = notificationRepository.Find(notificationId);
+                var notification = accountDbContext.Notifications.Find(notificationId);
                 Assert.Equal(NotificationStatus.Sent, notification.Status);
             }
         }

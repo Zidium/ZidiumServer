@@ -1,4 +1,5 @@
 ﻿using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 
 namespace Zidium.UserAccount.Models.Dialogs

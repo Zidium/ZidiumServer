@@ -11,9 +11,9 @@ namespace Zidium.Core.Tests.AgentTests
         [Fact]
         public void MainTest()
         {
-            var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://www.google.ru"));
-            date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://www.yandex.ru"));
-            //date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://zidium.net"));
+            //var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://www.google.ru"));
+            var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://www.yandex.ru"));
+            date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://zidium.net"));
             date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://doc.alcospot.ru"));
         }
 

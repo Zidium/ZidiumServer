@@ -34,7 +34,7 @@
 <div class="smart-container">
     @Html.EditorFor(m => m.SystemName, "SmartEdit")
     @Html.EditorFor(m => m.DisplayName, "SmartEdit")
-    
+
     <div class="smart-row">
         <div class="smart-col-labels smart-col-empty"></div>
         <div class="smart-col-fields">
@@ -87,6 +87,4 @@
 </div>
 @{Html.EndForm();}
 
-@section Scripts{
-    @Scripts.Render("~/Scripts/AllControls")
-}
+@Scripts.Render("~/Scripts/AllControls")

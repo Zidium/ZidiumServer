@@ -54,15 +54,15 @@ namespace Zidium.Core.Caching
             }
         }
 
-        private AccountCacheRepository<StatusDataCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject> _statusDatas;
+        private AccountCacheRepository<BulbCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject> _statusDatas;
 
-        public AccountCacheRepository<StatusDataCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject> StatusDatas
+        public AccountCacheRepository<BulbCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject> StatusDatas
         {
             get
             {
                 if (_statusDatas == null)
                 {
-                    _statusDatas = new AccountCacheRepository<StatusDataCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject>(
+                    _statusDatas = new AccountCacheRepository<BulbCacheResponse, IBulbCacheReadObject, BulbCacheWriteObject>(
                         AccountId,
                         AllCaches.StatusDatas);
                 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using Zidium.Core.Api;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common
 {

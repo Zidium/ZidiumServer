@@ -1,22 +1,21 @@
 ﻿using System;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Controllers
 {
-    public abstract class SimpleCheckBaseController<T> : ContextController
+    public abstract class SimpleCheckBaseController<T> : BaseController
         where T : CheckSimpleBaseModel, new()
     {
-        protected abstract UnitTest FindSimpleCheck(T model);
-
         protected abstract string GetUnitTestDisplayName(T model);
 
-        protected abstract void SetUnitTestParams(UnitTest unitTest, T model);
+        protected abstract void SetUnitTestParams(Guid unitTestId, T model, IStorage storage);
 
         public abstract string GetComponentDisplayName(T model);
 
@@ -34,26 +33,25 @@ namespace Zidium.UserAccount.Controllers
 
         protected virtual string GetTypeSystemName(T model)
         {
-            return SystemComponentTypes.Others.SystemName;
+            return SystemComponentType.Others.SystemName;
         }
 
         protected virtual string GetTypeDisplayName(T model)
         {
-            return SystemComponentTypes.Others.DisplayName;
+            return SystemComponentType.Others.DisplayName;
         }
 
-        protected abstract void SetModelParams(T model, UnitTest unitTest);
+        protected abstract void SetModelParams(T model, UnitTestForRead unitTest, IStorage storage);
 
         protected abstract Guid GetUnitTestTypeId();
 
-        public T LoadSimpleCheck(Guid? id, Guid? componentId)
+        public T LoadSimpleCheck(Guid? id, Guid? componentId, IStorage storage)
         {
-            UnitTest unitTest = null;
+            UnitTestForRead unitTest = null;
 
             if (id.HasValue)
             {
-                var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-                unitTest = unitTestRepository.GetByIdOrNull(id.Value);
+                unitTest = storage.UnitTests.GetOneOrNullById(id.Value);
             }
 
             if (unitTest == null)
@@ -73,20 +71,20 @@ namespace Zidium.UserAccount.Controllers
                 Period = unitTest.PeriodSeconds.HasValue ? TimeSpan.FromSeconds(unitTest.PeriodSeconds.Value) : TimeSpan.FromMinutes(10)
             };
 
-            SetModelParams(model, unitTest);
+            SetModelParams(model, unitTest, storage);
 
             return model;
         }
 
         [CanEditAllData]
-        protected UnitTest SaveSimpleCheck(T model)
+        protected Guid SaveSimpleCheck(T model, IStorage storage)
         {
             var dispatcher = GetDispatcherClient();
             var unitTestDisplayName = GetUnitTestDisplayName(model);
 
             if (model.Id.HasValue)
             {
-                var unitTest = GetUnitTestById(model.Id.Value);
+                var unitTest = storage.UnitTests.GetOneById(model.Id.Value);
                 var updateData = new UpdateUnitTestRequestData()
                 {
                     ComponentId = unitTest.ComponentId,
@@ -95,7 +93,6 @@ namespace Zidium.UserAccount.Controllers
                     UnitTestId = unitTest.Id,
                     ErrorColor = unitTest.ErrorColor,
                     NoSignalColor = ObjectColor.Gray,
-                    SystemName = unitTest.SystemName,
                     SimpleMode = true
                 };
                 dispatcher.UpdateUnitTest(CurrentUser.AccountId, updateData).Check();
@@ -105,15 +102,14 @@ namespace Zidium.UserAccount.Controllers
                 // пусть пользователь сделает это явно вручную
 
                 // Обновим параметры
-                SetUnitTestParams(unitTest, model);
-                CurrentAccountDbContext.SaveChanges();
+                SetUnitTestParams(unitTest.Id, model, storage);
 
                 if (!Request.IsSmartBlocksRequest())
                 {
                     this.SetTempMessage(TempMessageType.Success, string.Format("Обновлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("Edit", "Checks", new { id = unitTest.Id })));
                 }
 
-                return unitTest;
+                return unitTest.Id;
             }
             else // создание проверки
             {
@@ -122,14 +118,13 @@ namespace Zidium.UserAccount.Controllers
                 if (!model.ComponentId.HasValue)
                 {
                     // Создадим папку для компонента
-                    var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-                    var root = componentRepository.GetRoot();
+                    var root = storage.Components.GetRoot();
 
                     var createFolderResponse = dispatcher.GetOrCreateComponent(CurrentUser.AccountId, new GetOrCreateComponentRequestData()
                     {
                         SystemName = GetFolderSystemName(model),
                         DisplayName = GetFolderDisplayName(model),
-                        TypeId = SystemComponentTypes.Folder.Id,
+                        TypeId = SystemComponentType.Folder.Id,
                         ParentComponentId = root.Id
                     });
 
@@ -189,16 +184,15 @@ namespace Zidium.UserAccount.Controllers
                     AttempMax = 2
                 };
                 dispatcher.GetOrCreateUnitTest(CurrentUser.AccountId, createUnitTestData).Check();
-                var unitTest = GetUnitTestById(unitTestId);
-                SetUnitTestParams(unitTest, model);
 
-                CurrentAccountDbContext.SaveChanges();
+                var unitTest = storage.UnitTests.GetOneById(unitTestId);
+                SetUnitTestParams(unitTest.Id, model, storage);
 
                 if (!Request.IsSmartBlocksRequest())
                 {
                     this.SetTempMessage(TempMessageType.Success, string.Format("Добавлена проверка <a href='{1}' class='alert-link'>{0}</a>", unitTest.DisplayName, Url.Action("Edit", "Checks", new { id = unitTest.Id })));
                 }
-                return unitTest;
+                return unitTest.Id;
             }
         }
 

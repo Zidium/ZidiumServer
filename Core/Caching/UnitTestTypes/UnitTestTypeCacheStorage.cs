@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Zidium.Core.AccountsDb;
+using System.Linq;
+using Zidium.Common;
+using Zidium.Storage;
 
 namespace Zidium.Core.Caching
 {
@@ -18,7 +20,7 @@ namespace Zidium.Core.Caching
             return accountId + "#" + name.ToLowerInvariant();
         }
 
-        public IUnitTestTypeCacheReadObject FindByName(Guid accountId, string name)
+        public IUnitTestTypeCacheReadObject FindByName(Guid accountId, string name, IStorage storage)
         {
             var key = GetMapKey(accountId, name);
             Guid unitTestTypeId = Guid.Empty;
@@ -35,24 +37,21 @@ namespace Zidium.Core.Caching
                 }
             }
 
-            using (var accountDbContext = AccountDbContext.CreateFromAccountIdLocalCache(accountId))
+            var unitTestType = storage.UnitTestTypes.GetOneOrNullBySystemName(name);
+            if (unitTestType != null)
             {
-                var repository = accountDbContext.GetUnitTestTypeRepository();
-                var unitTestType = repository.GetOneOrNullBySystemName(name);
-                if (unitTestType != null)
+                unitTestTypeId = unitTestType.Id;
+                lock (UpdateMapLock)
                 {
-                    unitTestTypeId = unitTestType.Id;
-                    lock (UpdateMapLock)
-                    {
-                        NameToIdMap.TryAdd(key, unitTestTypeId);
-                    }
-                    return Read(new AccountCacheRequest()
-                    {
-                        AccountId = accountId,
-                        ObjectId = unitTestTypeId
-                    });
+                    NameToIdMap.TryAdd(key, unitTestTypeId);
                 }
+                return Read(new AccountCacheRequest()
+                {
+                    AccountId = accountId,
+                    ObjectId = unitTestTypeId
+                });
             }
+
             return null;
         }
 
@@ -152,30 +151,42 @@ namespace Zidium.Core.Caching
             return ObjectChangesHelper.HasChanges(oldObj, newObj);
         }
 
-        protected override void AddBatchObject(AccountDbContext accountDbContext, UnitTestTypeCacheWriteObject writeObject)
+        protected override void AddBatchObjects(IStorage storage, UnitTestTypeCacheWriteObject[] writeObjects)
         {
             throw new NotImplementedException();
         }
 
-        protected override void UpdateBatchObject(AccountDbContext accountDbContext, UnitTestTypeCacheWriteObject unitTestType, bool useCheck)
+        protected override void UpdateBatchObjects(IStorage storage, UnitTestTypeCacheWriteObject[] unitTestTypes, bool useCheck)
         {
-            var oldUnitTestType = unitTestType.Response.LastSavedData;
-            if (oldUnitTestType == null)
+            var entities = unitTestTypes.Select(unitTestType =>
             {
-                throw new Exception("oldUnitTestType == null");
-            }
+                var lastData = unitTestType.Response.LastSavedData;
+                if (lastData == null)
+                {
+                    throw new Exception("unitTestType.Response.LastSavedData == null");
+                }
 
-            var dbEntity = oldUnitTestType.CreateEf();
-            accountDbContext.UnitTestTypes.Attach(dbEntity);
+                var entity = lastData.CreateEf();
 
-            dbEntity.CreateDate = unitTestType.CreateDate;
-            dbEntity.IsDeleted = unitTestType.IsDeleted;
-            dbEntity.CreateDate = unitTestType.CreateDate;
-            dbEntity.SystemName = unitTestType.SystemName;
-            dbEntity.DisplayName = unitTestType.DisplayName;
-            dbEntity.ActualTimeSecs = unitTestType.ActualTimeSecs;
-            dbEntity.NoSignalColor = unitTestType.NoSignalColor;
-            dbEntity.IsSystem = unitTestType.IsSystem;
+                if (lastData.IsDeleted != unitTestType.IsDeleted)
+                    entity.IsDeleted.Set(unitTestType.IsDeleted);
+
+                if (lastData.SystemName != unitTestType.SystemName)
+                    entity.SystemName.Set(unitTestType.SystemName);
+
+                if (lastData.DisplayName != unitTestType.DisplayName)
+                    entity.DisplayName.Set(unitTestType.DisplayName);
+
+                if (lastData.ActualTimeSecs != unitTestType.ActualTimeSecs)
+                    entity.ActualTimeSecs.Set(unitTestType.ActualTimeSecs);
+
+                if (lastData.NoSignalColor != unitTestType.NoSignalColor)
+                    entity.NoSignalColor.Set(unitTestType.NoSignalColor);
+
+                return entity;
+            }).ToArray();
+
+            storage.UnitTestTypes.Update(entities);
         }
 
         public override int BatchCount
@@ -183,10 +194,9 @@ namespace Zidium.Core.Caching
             get { return 100; }
         }
 
-        protected override UnitTestTypeCacheWriteObject LoadObject(AccountCacheRequest request, AccountDbContext accountDbContext)
+        protected override UnitTestTypeCacheWriteObject LoadObject(AccountCacheRequest request, IStorage storage)
         {
-            var repository = accountDbContext.GetUnitTestTypeRepository();
-            var unitTestType = repository.GetByIdOrNull(request.ObjectId);
+            var unitTestType = storage.UnitTestTypes.GetOneOrNullById(request.ObjectId);
             return UnitTestTypeCacheWriteObject.Create(unitTestType, request.AccountId);
         }
     }

@@ -78,6 +78,7 @@ namespace Zidium.Agent.AgentTasks
         {
             MainUnitTest = _componentControl.GetOrCreateUnitTestControl("Main");
             Logger.Debug("Запуск рабочего потока задачи");
+            Logger.Info($"Period: {ExecutionPeriod}");
             try
             {
                 while (true)

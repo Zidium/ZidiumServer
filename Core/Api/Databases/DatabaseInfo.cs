@@ -4,16 +4,16 @@ namespace Zidium.Core.Api
 {
     public class DatabaseInfo 
     {
-        public Guid Id { get; set; }
+        public Guid Id;
 
-        public string SystemName { get; set; }
+        public string SystemName;
 
-        public string DisplayName { get; set; }
+        public string DisplayName;
 
-        public string Description { get; set; }
+        public string Description;
 
-        public string ConnectionString { get; set; }
+        public string ConnectionString;
 
-        public bool IsBroken { get; set; }
+        public bool IsBroken;
     }
 }

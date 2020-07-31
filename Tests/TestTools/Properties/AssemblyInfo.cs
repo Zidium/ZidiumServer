@@ -34,3 +34,11 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+
+[assembly: InternalsVisibleTo("Zidium.UserAccount.Tests")]
+[assembly: InternalsVisibleTo("Zidium.WebSite.Tests")]
+[assembly: InternalsVisibleTo("Zidium.Management.Tests")]
+[assembly: InternalsVisibleTo("Zidium.Core.Tests")]
+[assembly: InternalsVisibleTo("Zidium.Core.Single.Tests")]
+[assembly: InternalsVisibleTo("Zidium.ApiTests_1.0")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

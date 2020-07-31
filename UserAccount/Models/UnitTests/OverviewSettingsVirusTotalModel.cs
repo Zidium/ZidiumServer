@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -10,17 +10,15 @@ namespace Zidium.UserAccount.Models.UnitTests
         public TimeSpan Period { get; set; }
         public string Url { get; set; }
 
-        public static OverviewSettingsVirusTotalModel Create(UnitTest unitTest)
+        public static OverviewSettingsVirusTotalModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
-            var rule = unitTest.VirusTotalRule;
-            if (rule == null)
-            {
-                throw new Exception("unittest rule is null");
-            }
+
+            var rule = storage.UnitTestVirusTotalRules.GetOneByUnitTestId(unitTest.Id);
+            
             return new OverviewSettingsVirusTotalModel()
             {
                 UnitTestId = unitTest.Id,

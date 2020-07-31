@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.ComponentTree;
 using Zidium.UserAccount.Models.Controls;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ComponentTreeController : ContextController
+    public class ComponentTreeController : BaseController
     {
         [OutputCache(NoStore = true, Duration = 0)]
         public ActionResult Index(
@@ -24,9 +22,8 @@ namespace Zidium.UserAccount.Controllers
         {
             if (save == "1")
             {
-                var service = CurrentAccountDbContext.GetUserSettingService();
+                var service = new UserSettingService(GetStorage());
                 service.ShowComponentsAsList(CurrentUser.Id, false);
-                CurrentAccountDbContext.SaveChanges();
                 return RedirectToAction("Index", new { color = color.HasValue ? color : null, componentTypeId, search });
             }
 
@@ -82,7 +79,7 @@ namespace Zidium.UserAccount.Controllers
         }
 
         protected ComponentsTreeItemModel GetTreeItemModel(
-            List<MonitoringStatus> statuses, Guid? componentTypeId, string search,
+            MonitoringStatus[] statuses, Guid? componentTypeId, string search,
             SimplifiedComponent component,
             DateTime now,
             string[] expandedItems)
@@ -90,14 +87,16 @@ namespace Zidium.UserAccount.Controllers
             // Загружаем необходимые данные
             if (!component.ItemModelInternalDataLoaded)
             {
-                var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-                var dbComponent = componentRepository.GetById(component.Id);
+                var storage = GetStorage();
+
+                var dbComponent = storage.Components.GetOneById(component.Id);
+                var bulb = storage.Bulbs.GetOneById(dbComponent.ExternalStatusId);
 
                 component.ExternalStatus = new SimplifiedStatusData()
                 {
-                    Status = dbComponent.ExternalStatus.Status,
-                    StartDate = dbComponent.ExternalStatus.StartDate,
-                    ActualDate = dbComponent.ExternalStatus.ActualDate,
+                    Status = bulb.Status,
+                    StartDate = bulb.StartDate,
+                    ActualDate = bulb.ActualDate,
                     FirstEventId = null,
                     Message = null
                 };
@@ -112,8 +111,8 @@ namespace Zidium.UserAccount.Controllers
                 SystemName = component.SystemName,
                 Status = component.ExternalStatus.Status,
                 StatusDuration = component.ExternalStatus.GetDuration(now),
-                IsRoot = component.ComponentTypeId == SystemComponentTypes.Root.Id,
-                IsFolder = component.ComponentTypeId == SystemComponentTypes.Folder.Id,
+                IsRoot = component.ComponentTypeId == SystemComponentType.Root.Id,
+                IsFolder = component.ComponentTypeId == SystemComponentType.Folder.Id,
                 ParentId = component.ParentId,
                 ComponentTypeId = component.ComponentTypeId
             };
@@ -122,12 +121,12 @@ namespace Zidium.UserAccount.Controllers
             var expanded = result.IsRoot;
 
             // Если заполнен хотя бы один фильтр, то нужно проверять всех детей
-            var isFilterActive = (statuses != null && statuses.Count > 0) || componentTypeId.HasValue || !string.IsNullOrEmpty(search);
+            var isFilterActive = (statuses != null && statuses.Length > 0) || componentTypeId.HasValue || !string.IsNullOrEmpty(search);
             if (isFilterActive)
             {
                 var filtered = true;
 
-                if (statuses != null && statuses.Count > 0)
+                if (statuses != null && statuses.Length > 0)
                 {
                     if (!statuses.Contains(result.Status))
                         filtered = false;
@@ -145,8 +144,10 @@ namespace Zidium.UserAccount.Controllers
                         result.Id.ToString().IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
                         result.SystemName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
                         result.DisplayName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0
-                        ))
+                    ))
+                    {
                         filtered = false;
+                    }
                 }
 
                 result.Content = GetTreeItemContentModel(statuses, componentTypeId, search, component, now, expandedItems);
@@ -186,7 +187,7 @@ namespace Zidium.UserAccount.Controllers
         }
 
         protected ComponentsTreeItemContentModel GetTreeItemContentModel(
-            List<MonitoringStatus> statuses, Guid? componentTypeId, string search,
+            MonitoringStatus[] statuses, Guid? componentTypeId, string search,
             SimplifiedComponent component,
             DateTime now,
             string[] expandedItems)
@@ -194,19 +195,19 @@ namespace Zidium.UserAccount.Controllers
 
             // Загружаем необходимые данные
             var childIds = component.Childs.Select(t => t.Id).ToArray();
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var dbChildStatuses = componentRepository
-                .QueryAll()
-                .Where(t => childIds.Contains(t.Id))
-                .Include(t => t.ExternalStatus)
+
+            var storage = GetStorage();
+            var childs = storage.Components.GetMany(childIds);
+
+            var dbChildStatuses = storage.Bulbs.GetMany(childs.Select(t => t.ExternalStatusId).ToArray())
                 .Select(t => new
                 {
-                    Id = t.Id,
+                    Id = t.ComponentId,
                     ExternalStatus = new SimplifiedStatusData()
                     {
-                        Status = t.ExternalStatus.Status,
-                        StartDate = t.ExternalStatus.StartDate,
-                        ActualDate = t.ExternalStatus.ActualDate,
+                        Status = t.Status,
+                        StartDate = t.StartDate,
+                        ActualDate = t.ActualDate,
                         FirstEventId = null,
                         Message = null
                     }
@@ -233,66 +234,82 @@ namespace Zidium.UserAccount.Controllers
         protected ComponentsTreeItemDetailsModel GetTreeItemDetailsModel(SimplifiedComponent component, DateTime now, string[] expandedItems)
         {
             // Загружаем необходимые данные
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var dbComponent = componentRepository.GetById(component.Id);
+            var storage = GetStorage();
+
+            var dbComponent = storage.Components.GetOneById(component.Id);
+            var dbEventsStatus = storage.Bulbs.GetOneById(dbComponent.EventsStatusId);
+            var dbUnitTestsStatus = storage.Bulbs.GetOneById(dbComponent.UnitTestsStatusId);
+            var dbMetricsStatus = storage.Bulbs.GetOneById(dbComponent.MetricsStatusId);
 
             component.EventsStatus = new SimplifiedStatusData()
             {
-                Status = dbComponent.EventsStatus.Status,
-                StartDate = dbComponent.EventsStatus.StartDate,
-                ActualDate = dbComponent.EventsStatus.ActualDate,
-                FirstEventId = dbComponent.EventsStatus.FirstEventId,
+                Status = dbEventsStatus.Status,
+                StartDate = dbEventsStatus.StartDate,
+                ActualDate = dbEventsStatus.ActualDate,
+                FirstEventId = dbEventsStatus.FirstEventId,
                 Message = null
             };
 
             component.UnitTestsStatus = new SimplifiedStatusData()
             {
-                Status = dbComponent.UnitTestsStatus.Status,
-                StartDate = dbComponent.UnitTestsStatus.StartDate,
-                ActualDate = dbComponent.UnitTestsStatus.ActualDate,
+                Status = dbUnitTestsStatus.Status,
+                StartDate = dbUnitTestsStatus.StartDate,
+                ActualDate = dbUnitTestsStatus.ActualDate,
                 FirstEventId = null,
                 Message = null
             };
 
             component.MetricsStatus = new SimplifiedStatusData()
             {
-                Status = dbComponent.MetricsStatus.Status,
-                StartDate = dbComponent.MetricsStatus.StartDate,
-                ActualDate = dbComponent.MetricsStatus.ActualDate,
+                Status = dbMetricsStatus.Status,
+                StartDate = dbMetricsStatus.StartDate,
+                ActualDate = dbMetricsStatus.ActualDate,
                 FirstEventId = null,
                 Message = null
             };
 
-            component.Unittests = dbComponent.UnitTests.Where(a => a.IsDeleted == false).Select(x =>
-                new SimplifiedUnittest()
+            var dbUnitTests = storage.UnitTests.GetByComponentId(component.Id);
+            var dbUnitTestBulbs = storage.Bulbs.GetMany(dbUnitTests.Select(t => t.StatusDataId).ToArray()).ToDictionary(a => a.Id, b => b);
+            component.Unittests = dbUnitTests.Select(x =>
+            {
+                var bulb = dbUnitTestBulbs[x.StatusDataId];
+                return new SimplifiedUnittest()
                 {
                     Id = x.Id,
                     DisplayName = x.DisplayName,
                     StatusData = new SimplifiedStatusData()
                     {
-                        Status = x.Bulb.Status,
-                        StartDate = x.Bulb.StartDate,
-                        ActualDate = x.Bulb.ActualDate,
+                        Status = bulb.Status,
+                        StartDate = bulb.StartDate,
+                        ActualDate = bulb.ActualDate,
                         FirstEventId = null,
-                        Message = x.Bulb.Message
+                        Message = bulb.Message
                     }
-                });
+                };
+            });
 
-            component.Metrics = dbComponent.Metrics.Where(a => a.IsDeleted == false && a.MetricType.IsDeleted == false)
-                .Select(x => new SimplifiedMetric()
+            var dbMetrics = storage.Metrics.GetByComponentId(component.Id);
+            var dbMetricBulbs = storage.Bulbs.GetMany(dbMetrics.Select(t => t.StatusDataId).ToArray()).ToDictionary(a => a.Id, b => b);
+            var dbMetricTypes = storage.MetricTypes.GetMany(dbMetrics.Select(t => t.MetricTypeId).ToArray()).ToDictionary(a => a.Id, b => b);
+            component.Metrics = dbMetrics.Select(x =>
+            {
+                var bulb = dbMetricBulbs[x.StatusDataId];
+                var metricType = dbMetricTypes[x.MetricTypeId];
+                return new SimplifiedMetric()
                 {
                     Id = x.Id,
-                    DisplayName = x.MetricType.DisplayName,
+                    DisplayName = metricType.DisplayName,
                     StatusData = new SimplifiedStatusData()
                     {
-                        Status = x.Bulb.Status,
-                        StartDate = x.Bulb.StartDate,
-                        ActualDate = x.Bulb.ActualDate,
+                        Status = bulb.Status,
+                        StartDate = bulb.StartDate,
+                        ActualDate = bulb.ActualDate,
                         FirstEventId = null,
                         Message = null
                     },
                     Value = x.Value
-                });
+                };
+            });
 
             var result = new ComponentsTreeItemDetailsModel()
             {
@@ -350,22 +367,20 @@ namespace Zidium.UserAccount.Controllers
 
         public PartialViewResult GetComponentsMiniTree()
         {
-            var repository = CurrentAccountDbContext.GetComponentRepository();
+            var storage = GetStorage();
 
             // Получим нужные данные по всем компонентам
-            var query = repository
-                .QueryAll()
-                .Include("ExternalStatus")
+            var query = storage.Gui.GetComponentMiniTree()
                 .Select(t => new ComponentsMiniTreeItemModel()
                 {
                     Id = t.Id,
                     DisplayName = t.DisplayName,
                     SystemName = t.SystemName,
-                    Status = t.ExternalStatus.Status,
+                    Status = t.Status,
                     ParentId = t.ParentId,
                     ComponentTypeId = t.ComponentTypeId,
-                    IsRoot = t.ComponentTypeId == SystemComponentTypes.Root.Id,
-                    IsFolder = t.ComponentTypeId == SystemComponentTypes.Folder.Id
+                    IsRoot = t.ComponentTypeId == SystemComponentType.Root.Id,
+                    IsFolder = t.ComponentTypeId == SystemComponentType.Folder.Id
                 });
 
             var dict = query.ToDictionary(t => t.Id, t => t);
@@ -423,8 +438,7 @@ namespace Zidium.UserAccount.Controllers
             // Получаем всё дерево одним запросом
             // Детализация по каждому компоненту загружается отдельно
 
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var allComponents = componentRepository.QueryAll();
+            var allComponents = GetStorage().Gui.GetSimplifiedComponentList();
 
             var query = allComponents
                 .Select(t => new SimplifiedComponent()

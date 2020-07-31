@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.PingChecksModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -14,8 +16,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -23,8 +26,8 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
             return View(model);
         }
 
@@ -46,8 +49,7 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
         }
@@ -55,7 +57,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
             return View(model);
         }
 
@@ -67,21 +69,14 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var unitTest = SaveSimpleCheck(model);
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
-        }
-
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
-        {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            return unitTestRepository.QueryAll()
-                .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.PingTestType.Id && t.PingRule != null && t.PingRule.Host == GetModelHost(model) && t.IsDeleted == false);
+            return GetSuccessJsonResponse(unitTestId);
         }
 
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
@@ -89,26 +84,39 @@ namespace Zidium.UserAccount.Controllers
             return "Ping " + GetModelHost(model);
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.PingRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                unitTest.PingRule = new UnitTestPingRule()
+                var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
                 {
-                    TimeoutMs = 5000,
-                };
+                    var ruleForAdd = new UnitTestPingRuleForAdd()
+                    {
+                        UnitTestId = unitTestId,
+                        TimeoutMs = 5000
+                    };
+                    storage.UnitTestPingRules.Add(ruleForAdd);
+                    rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTestId);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Host.Set(GetModelHost(model));
+                storage.UnitTestPingRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            unitTest.PingRule.Host = GetModelHost(model);
         }
 
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            model.Host = unitTest.PingRule.Host;
+            var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            model.Host = rule.Host;
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.PingTestType.Id;
+            return SystemUnitTestType.PingTestType.Id;
         }
 
         protected string GetModelHost(EditSimpleModel model)
@@ -123,7 +131,7 @@ namespace Zidium.UserAccount.Controllers
         {
             try
             {
-                var result = GetModelHost(new EditSimpleModel() { Host = host });
+                GetModelHost(new EditSimpleModel() { Host = host });
                 return Json(true, JsonRequestBehavior.AllowGet);
             }
             catch (UriFormatException)

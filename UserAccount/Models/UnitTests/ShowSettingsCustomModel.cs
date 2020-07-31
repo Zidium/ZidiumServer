@@ -1,7 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.UnitTests
 {
@@ -13,26 +12,29 @@ namespace Zidium.UserAccount.Models.UnitTests
         public Guid TypeId { get; set; }
         public string TypeDisplayName { get; set; }
 
-        public static ShowSettingsCustomModel Create(UnitTest unitTest)
+        public static ShowSettingsCustomModel Create(UnitTestForRead unitTest, IStorage storage)
         {
             if (unitTest == null)
             {
                 throw new ArgumentNullException("unitTest");
             }
+
+            var unitTestType = storage.UnitTestTypes.GetOneById(unitTest.TypeId);
+
             var model = new ShowSettingsCustomModel()
             {
                 UnitTestId = unitTest.Id,
                 TypeId = unitTest.TypeId,
-                NoSignalColor = unitTest.NoSignalColor ?? unitTest.Type.NoSignalColor ?? ObjectColor.Red
+                NoSignalColor = unitTest.NoSignalColor ?? unitTestType.NoSignalColor ?? ObjectColor.Red
             };
-            model.TypeDisplayName = unitTest.Type.DisplayName;
+            model.TypeDisplayName = unitTestType.DisplayName;
             if (unitTest.ActualTimeSecs.HasValue)
             {
                 model.ActualTime = TimeSpanHelper.FromSeconds(unitTest.ActualTimeSecs).Value;
             }
-            else if (unitTest.Type.ActualTimeSecs.HasValue)
+            else if (unitTestType.ActualTimeSecs.HasValue)
             {
-                model.ActualTime = TimeSpanHelper.FromSeconds(unitTest.Type.ActualTimeSecs).Value;
+                model.ActualTime = TimeSpanHelper.FromSeconds(unitTestType.ActualTimeSecs).Value;
             }
             else
             {

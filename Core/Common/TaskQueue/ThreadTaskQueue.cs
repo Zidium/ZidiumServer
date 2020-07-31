@@ -9,12 +9,10 @@ namespace Zidium.Core.Common
     {
         private int _maxParallelTasks;
 
-        private int _runTasks;
-
         private readonly Queue<ThreadTask> _queue = new Queue<ThreadTask>();
 
         private readonly ManualResetEvent _allTaskCompleted = new ManualResetEvent(true);
-        
+
         public ThreadTaskQueue(int maxParallelTasks)
         {
             if (maxParallelTasks < 1)
@@ -34,14 +32,14 @@ namespace Zidium.Core.Common
                     throw new ArgumentException("value < 1");
                 }
                 _maxParallelTasks = value;
-                TryBeginWaitTask();
+                lock (SyncRoot)
+                {
+                    TryBeginWaitTask();
+                }
             }
         }
 
-        public int RunTasks
-        {
-            get { return _runTasks; }
-        }
+        public int RunTasks { get; private set; }
 
         public int WaitTasks
         {
@@ -50,26 +48,26 @@ namespace Zidium.Core.Common
 
         public int AllTasks
         {
-            get { return _runTasks + _queue.Count; }
+            get { return RunTasks + _queue.Count; }
         }
 
         public ThreadTask Add(ThreadStart threadStart)
         {
-            ThreadTask item = new ThreadTask(threadStart);
+            var item = new ThreadTask(threadStart);
             AddTask(item);
             return item;
         }
 
         public ThreadTask Add(ParameterizedThreadStart threadStart, object obj)
         {
-            ThreadTask item = new ThreadTask(obj, threadStart);
+            var item = new ThreadTask(obj, threadStart);
             AddTask(item);
             return item;
         }
 
         public ThreadTask Add<T>(ThreadTaskAction<T> action, T obj)
         {
-            ThreadStart newThreadStart = delegate() { action.Invoke(obj); };
+            ThreadStart newThreadStart = delegate () { action.Invoke(obj); };
             return Add(newThreadStart);
         }
 
@@ -117,7 +115,7 @@ namespace Zidium.Core.Common
         /// </summary>
         public bool HasFreeThreads
         {
-            get { return _runTasks < _maxParallelTasks; }
+            get { return RunTasks < _maxParallelTasks; }
         }
 
         public object SyncRoot
@@ -137,7 +135,7 @@ namespace Zidium.Core.Common
             {
                 BeginTaskByPersonalThread(item);
             }
-            _runTasks++;
+            RunTasks++;
         }
 
         protected void BeginTaskBySystemThreadPool(ThreadTask item)
@@ -157,19 +155,16 @@ namespace Zidium.Core.Common
         /// </summary>
         protected void TryBeginWaitTask()
         {
-            lock (SyncRoot)
+            while (HasFreeThreads && WaitTasks > 0)
             {
-                while (HasFreeThreads && WaitTasks > 0)
-                {
-                    var newItem = _queue.Dequeue();
-                    BeginTask(newItem);
-                }
+                var newItem = _queue.Dequeue();
+                BeginTask(newItem);
             }
         }
 
         protected void ExecuteTask(object item)
         {
-            ThreadTask task = item as ThreadTask;
+            var task = item as ThreadTask;
             try
             {
                 task.Execute();
@@ -182,7 +177,7 @@ namespace Zidium.Core.Common
             {
                 lock (SyncRoot)
                 {
-                    _runTasks--;
+                    RunTasks--;
                     if (AllTasks == 0)
                     {
                         _allTaskCompleted.Set();

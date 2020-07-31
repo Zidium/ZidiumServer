@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using NLog;
-using Zidium.Api;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -26,15 +25,20 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected override SubscriptionChannel[] Channels { get; } = new[] { SubscriptionChannel.Sms };
 
-        protected Event GetRecentReasonEvent(Event statusEvent, AccountDbContext accountDbContext)
+        protected EventForRead GetRecentReasonEvent(EventForRead statusEvent, IStorage storage)
         {
-            var repository = accountDbContext.GetEventRepository();
-            return repository.GetRecentReasonEvent(statusEvent);
+            var service = new EventService(storage);
+            return service.GetRecentReasonEvent(statusEvent);
         }
 
-        protected string GetStatusEventText(ILogger logger, Notification notification, Component component, AccountDbContext accountDbContext, string accountName)
+        protected string GetStatusEventText(
+            ILogger logger, 
+            NotificationForRead notification, 
+            ComponentForRead component, 
+            IStorage storage, 
+            string accountName,
+            EventForRead statusEvent)
         {
-            var statusEvent = notification.Event;
             var text = new StringBuilder();
 
             // Делаем строку:
@@ -46,67 +50,60 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
             text.Append(" - ");
 
-            var componentPathText = ComponentHelper.GetComponentPathText(component);
+            var componentPathText = ComponentHelper.GetComponentPathText(component, storage);
             text.Append(componentPathText);
 
             // Причину показываем, только если статус стал опаснее
-            if (statusEvent.ImportanceHasGrown)
+            if (statusEvent.ImportanceHasGrown())
             {
-                var reasonEvent = GetRecentReasonEvent(statusEvent, accountDbContext);
+                var reasonEvent = GetRecentReasonEvent(statusEvent, storage);
 
                 if (reasonEvent != null)
                 {
                     text.Append(", причина: ");
 
                     // причина - ошибка компонента
-                    if (reasonEvent.Category == Core.Api.EventCategory.ApplicationError)
+                    if (reasonEvent.Category == EventCategory.ApplicationError)
                     {
-                        var eventTypeRepository = accountDbContext.GetEventTypeRepository();
-                        var errorType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+                        var errorType = storage.EventTypes.GetOneById(reasonEvent.EventTypeId);
                         var errorTitle = "ошибка " + (errorType.Code != null ? errorType.Code : errorType.DisplayName);
                         text.Append(errorTitle);
                     }
 
                     // причина - событие компонента
-                    if (reasonEvent.Category == Core.Api.EventCategory.ComponentEvent)
+                    if (reasonEvent.Category == EventCategory.ComponentEvent)
                     {
-                        var eventTypeRepository = accountDbContext.GetEventTypeRepository();
-                        var componentEventType = eventTypeRepository.GetById(reasonEvent.EventTypeId);
+                        var componentEventType = storage.EventTypes.GetOneById(reasonEvent.EventTypeId);
                         var errorTitle = "событие компонента " + componentEventType.DisplayName;
                         text.Append(errorTitle);
                     }
 
                     // причина - статус дочернего компонента
-                    if (reasonEvent.Category == Core.Api.EventCategory.ComponentExternalStatus)
+                    if (reasonEvent.Category == EventCategory.ComponentExternalStatus)
                     {
-                        var componentRepository = accountDbContext.GetComponentRepository();
-                        var childComponent = componentRepository.GetById(reasonEvent.OwnerId);
+                        var childComponent = storage.Components.GetOneById(reasonEvent.OwnerId);
                         var errorTitle = "статус " + statusName + " дочернего компонента " + childComponent.DisplayName;
                         text.Append(errorTitle);
                     }
 
                     // причина - результат проверки
-                    if (reasonEvent.Category == Core.Api.EventCategory.UnitTestResult)
+                    if (reasonEvent.Category == EventCategory.UnitTestResult)
                     {
-                        var unitTestRepository = accountDbContext.GetUnitTestRepository();
-                        var unitTest = unitTestRepository.GetById(reasonEvent.OwnerId);
+                        var unitTest = storage.UnitTests.GetOneById(reasonEvent.OwnerId);
                         var errorTitle = "результат проверки " + unitTest.DisplayName;
                         text.Append(errorTitle);
                     }
 
                     // причина - значение метрики
-                    if (reasonEvent.Category == Core.Api.EventCategory.MetricStatus)
+                    if (reasonEvent.Category == EventCategory.MetricStatus)
                     {
-                        var metricRepository = accountDbContext.GetMetricRepository();
-                        var metric = metricRepository.GetById(reasonEvent.OwnerId);
-                        var metricHistoryRepository = accountDbContext.GetMetricHistoryRepository();
+                        var metric = storage.Metrics.GetOneById(reasonEvent.OwnerId);
+                        var metricType = storage.MetricTypes.GetOneById(metric.MetricTypeId);
 
-                        var firstValue = metricHistoryRepository.GetAllByStatus(reasonEvent.Id)
-                                .OrderBy(x => x.BeginDate)
-                                .FirstOrDefault();
+                        var firstValue = storage.MetricHistory.GetFirstByStatusEventId(reasonEvent.Id);
                         var firstValueText = firstValue != null ? firstValue.Value.ToString() : "null";
 
-                        var errorTitle = "значение метрики " + metric.MetricType.DisplayName + " = " + firstValueText;
+                        var errorTitle = "значение метрики " + metricType.DisplayName + " = " + firstValueText;
                         text.Append(errorTitle);
                     }
                 }
@@ -117,13 +114,15 @@ namespace Zidium.Agent.AgentTasks.Notifications
         }
 
         protected override void Send(ILogger logger,
-            Notification notification,
-            AccountDbContext accountDbContext,
-            string accountName, Guid accountId)
+            NotificationForRead notification,
+            IStorage storage,
+            string accountName, 
+            Guid accountId, 
+            NotificationForUpdate notificationForUpdate)
         {
-            var componentRepository = accountDbContext.GetComponentRepository();
-            var component = componentRepository.GetById(notification.Event.OwnerId);
-            var body = GetStatusEventText(logger, notification, component, accountDbContext, accountName);
+            var eventObj = storage.Events.GetOneById(notification.EventId);
+            var component = storage.Components.GetOneById(eventObj.OwnerId);
+            var body = GetStatusEventText(logger, notification, component, storage, accountName, eventObj);
 
             var data = new SendSmsRequestData()
             {
@@ -134,7 +133,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
             var response = Dispatcher.SendSms(accountId, data);
 
             // Лимит на количество SMS игнорируем - это нормальная ситуация
-            if (!response.Success && response.Code == ResponseCode.OverLimit)
+            if (!response.Success && response.Code == Api.ResponseCode.OverLimit)
             {
                 return;
             }
@@ -142,19 +141,19 @@ namespace Zidium.Agent.AgentTasks.Notifications
             response.Check();
         }
 
-        protected string GetEventImportanceText(Core.Api.EventImportance importance)
+        protected string GetEventImportanceText(EventImportance importance)
         {
-            if (importance == Core.Api.EventImportance.Alarm)
+            if (importance == EventImportance.Alarm)
             {
                 return "ОШИБКА";
             }
 
-            if (importance == Core.Api.EventImportance.Warning)
+            if (importance == EventImportance.Warning)
             {
                 return "ПРЕДУПРЕЖДЕНИЕ";
             }
 
-            if (importance == Core.Api.EventImportance.Success)
+            if (importance == EventImportance.Success)
             {
                 return "ВСЁ ХОРОШО";
             }

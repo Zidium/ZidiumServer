@@ -1,6 +1,6 @@
 ﻿using System;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Core.Common
 {
@@ -17,7 +17,8 @@ namespace Zidium.Core.Common
             {
                 if (_accountWebSite == null)
                 {
-                    _accountWebSite = ConfigDbServicesHelper.GetSettingService().GetAccountWebSite();
+                    var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+                    _accountWebSite = configDbServicesFactory.GetSettingService().GetAccountWebSite();
                 }
                 return _accountWebSite;
             }
@@ -44,9 +45,9 @@ namespace Zidium.Core.Common
             return GetFullUrl(accountName, url, accountWebSiteUrl);
         }
 
-        public static string GetSubscriptionEditUrl(Component component, User user, string accountName, string accountWebSiteUrl = null)
+        public static string GetSubscriptionEditUrl(Guid componentId, Guid userId, string accountName, string accountWebSiteUrl = null)
         {
-            var url = $"/Subscriptions/EditComponentSubscriptions?componentId={component.Id}&userId={user.Id}";
+            var url = $"/Subscriptions/EditComponentSubscriptions?componentId={componentId}&userId={userId}";
             return GetFullUrl(accountName, url, accountWebSiteUrl);
         }
 
@@ -64,7 +65,8 @@ namespace Zidium.Core.Common
 
         public static string GetFullUrl(string accountName, string pathAndQuery, string accountWebSiteUrl = null, string scheme = null)
         {
-            return ConfigDbServicesHelper.GetUrlService().GetFullUrl(accountName, pathAndQuery, accountWebSiteUrl, scheme);
+            var configDbServicesFactory = DependencyInjection.GetServicePersistent<IConfigDbServicesFactory>();
+            return configDbServicesFactory.GetUrlService().GetFullUrl(accountName, pathAndQuery, accountWebSiteUrl, scheme);
         }
 
         public static string GetAccountWebsiteUrl(string accountName, string pathAndQuery, string currentUrl, string accountWebSiteUrl = null)

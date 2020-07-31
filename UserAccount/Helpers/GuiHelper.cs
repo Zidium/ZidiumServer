@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -9,9 +8,8 @@ using System.Linq.Expressions;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
-using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.Controls;
 using Zidium.UserAccount.Models.ExtentionProperties;
@@ -26,18 +24,13 @@ namespace Zidium.UserAccount.Helpers
         public static readonly string StrongGrayBgColor = "#999";
 
         public static readonly string StrongRedFgColor = "#a94442";
-        public static readonly string StrongYellowFgColor = "#A07C00"; // "#f39c12"; Я поменял, потому что этот цвет плохо подходил для текста
+        public static readonly string StrongYellowFgColor = "#A07C00";
         public static readonly string StrongGreenFgColor = "#3c763d";
         public static readonly string StrongGrayFgColor = "#999";
 
         public static FormGroupBuider<TModel> GetFormBuilder<TModel>(this HtmlHelper<TModel> htmlHelper, TModel model) where TModel : class
         {
             return FormGroupBuider<TModel>.GetDefault(htmlHelper, model);
-        }
-
-        public static MvcHtmlString ComponentPath(this HtmlHelper htmlHelper, Component component)
-        {
-            return htmlHelper.Partial("~/Views/Controls/ComponentPath.cshtml", component);
         }
 
         public static ImportanceColor GetImportanceColor(MonitoringStatus status)
@@ -271,24 +264,24 @@ namespace Zidium.UserAccount.Helpers
             return htmlHelper.Partial("~/Views/Controls/MonitoringStatus.cshtml", model);
         }
 
-        public static MvcHtmlString EventLinkStartDate(this HtmlHelper htmlHelper, Event eventObj)
+        public static MvcHtmlString EventLinkStartDate(this HtmlHelper htmlHelper, EventForRead eventObj)
         {
             return htmlHelper.ActionLink(GetDateTimeString(eventObj.StartDate), "Show", "Events", new { id = eventObj.Id }, null);
         }
 
-        public static MvcHtmlString ComponentLink(this HtmlHelper htmlHelper, Component component)
+        public static MvcHtmlString ComponentLink(this HtmlHelper htmlHelper, Guid componentId, string name)
         {
-            return htmlHelper.ActionLink(component.GetFullDisplayName(), "Show", "Components", new { id = component.Id }, null);
+            return htmlHelper.ActionLink(name, "Show", "Components", new { id = componentId }, null);
         }
 
-        public static MvcHtmlString UnitTestLink(this HtmlHelper htmlHelper, UnitTest unitTest)
+        public static MvcHtmlString UnitTestLink(this HtmlHelper htmlHelper, Guid unitTestId, string name)
         {
-            return htmlHelper.ActionLink(unitTest.GetFullDisplayName(), "ResultDetails", "UnitTests", new { id = unitTest.Id }, null);
+            return htmlHelper.ActionLink(name, "ResultDetails", "UnitTests", new { id = unitTestId }, null);
         }
 
-        public static MvcHtmlString MetricLink(this HtmlHelper htmlHelper, Metric metric)
+        public static MvcHtmlString MetricLink(this HtmlHelper htmlHelper, Guid metricId, string name)
         {
-            return htmlHelper.ActionLink(metric.GetFullDisplayName(), "Show", "Metrics", new { id = metric.Id }, null);
+            return htmlHelper.ActionLink(name, "Show", "Metrics", new { id = metricId }, null);
         }
 
         public static MvcHtmlString KeyValueRow(this HtmlHelper htmlHelper, KeyValueRowModel model)
@@ -415,15 +408,15 @@ namespace Zidium.UserAccount.Helpers
             return htmlHelper.Partial("~/Views/ExtentionProperties/ExtentionPropertiesTable.cshtml", model);
         }
 
-        public static MvcHtmlString ExtentionPropertiesTable(this HtmlHelper htmlHelper, Event eventObj)
+        public static MvcHtmlString ExtentionPropertiesTable(this HtmlHelper htmlHelper, EventPropertyForRead[] properties)
         {
-            var model = ExtentionPropertiesModel.Create(eventObj);
+            var model = ExtentionPropertiesModel.Create(properties);
             return ExtentionPropertiesTable(htmlHelper, model);
         }
 
-        public static MvcHtmlString ExtentionPropertiesTable(this HtmlHelper htmlHelper, Component component)
+        public static MvcHtmlString ExtentionPropertiesTable(this HtmlHelper htmlHelper, ComponentPropertyForRead[] properties)
         {
-            var model = ExtentionPropertiesModel.Create(component);
+            var model = ExtentionPropertiesModel.Create(properties);
             return ExtentionPropertiesTable(htmlHelper, model);
         }
 
@@ -995,10 +988,10 @@ namespace Zidium.UserAccount.Helpers
                     Text = "Любой"
                 });
             }
-            var repository = FullRequestContext.Current.AccountDbContext.GetComponentTypeRepository();
-            var types = repository.QueryAll()
-                .Where(t => t.Id != SystemComponentTypes.Root.Id && t.IsDeleted == false)
-                .OrderBy(t => t.DisplayName);
+
+            var storage = FullRequestContext.Current.Controller.GetStorage();
+            var types = storage.ComponentTypes.Filter(null, 100).Where(t => t.Id != SystemComponentType.Root.Id);
+
             items.AddRange(types.Select(componentType => new SelectListItem()
             {
                 Selected = componentType.Id == selected,
@@ -1021,17 +1014,19 @@ namespace Zidium.UserAccount.Helpers
             }
             // Отображаем только те типы, для которых есть хотя бы один компонент
             // Кроме папок и корня
-            var repository = FullRequestContext.Current.AccountDbContext.GetComponentRepository();
-            var types = repository.QueryAll()
-                .Include("ComponentType")
-                .Where(t => t.IsDeleted == false && t.ComponentTypeId != SystemComponentTypes.Folder.Id && t.ComponentTypeId != SystemComponentTypes.Root.Id)
-                .GroupBy(t => t.ComponentType)
-                .OrderBy(t => t.Key.DisplayName);
+            var storage = FullRequestContext.Current.Controller.GetStorage();
+
+            var componentTypeIds = storage.Gui.GetSimplifiedComponentList().Select(t => t.ComponentTypeId).Distinct().ToArray();
+
+            var types = storage.ComponentTypes.GetMany(componentTypeIds)
+                .Where(t => t.IsDeleted == false && t.Id != SystemComponentType.Folder.Id && t.Id != SystemComponentType.Root.Id)
+                .OrderBy(t => t.DisplayName);
+
             items.AddRange(types.Select(componentType => new SelectListItem()
             {
-                Selected = componentType.Key.Id == selected,
-                Value = componentType.Key.Id.ToString(),
-                Text = componentType.Key.DisplayName
+                Selected = componentType.Id == selected,
+                Value = componentType.Id.ToString(),
+                Text = componentType.DisplayName
             }));
             return items;
         }
@@ -1048,8 +1043,10 @@ namespace Zidium.UserAccount.Helpers
                     Selected = eventTypeId == null
                 });
             }
-            var repository = FullRequestContext.Current.Controller.CurrentAccountDbContext.GetEventTypeRepository();
-            var eventTypes = repository.QueryAll().OrderBy(t => t.DisplayName);
+
+            var storage = FullRequestContext.Current.Controller.GetStorage();
+            var eventTypes = storage.EventTypes.Filter(null, null, null, 100);
+
             items.AddRange(eventTypes.Select(t => new SelectListItem()
             {
                 Value = t.Id.ToString(),
@@ -1071,11 +1068,11 @@ namespace Zidium.UserAccount.Helpers
                     Selected = userId == null
                 });
             }
-            var repository = FullRequestContext.Current.Controller.CurrentAccountDbContext.GetUserRepository();
 
-            var users = repository.QueryAll()
-                .OrderBy(t => t.Login)
-                .ToList();
+            var storage = FullRequestContext.Current.Controller.GetStorage();
+
+            var users = storage.Users.GetAll()
+                .OrderBy(t => t.Login);
 
             items.AddRange(users.Select(t => new SelectListItem()
             {
@@ -1108,9 +1105,9 @@ namespace Zidium.UserAccount.Helpers
                 });
             }
 
-            var repository = FullRequestContext.Current.Controller.CurrentAccountDbContext.GetUnitTestTypeRepository();
+            var storage = FullRequestContext.Current.Controller.GetStorage();
 
-            var unitTestTypes = repository.QueryAll().OrderBy(t => t.DisplayName);
+            var unitTestTypes = storage.UnitTestTypes.Filter(null, 100);
 
             if (!userOnly)
             {
@@ -1290,7 +1287,8 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetRolesItems(Guid? selected)
         {
-            var roles = FullRequestContext.Current.AccountDbContext.Roles.ToList();
+            var storage = FullRequestContext.Current.Controller.GetStorage();
+            var roles = storage.Roles.GetAll().OrderBy(t => t.DisplayName);
 
             var items = roles
                 .Select(x => new SelectListItem()
@@ -1306,7 +1304,7 @@ namespace Zidium.UserAccount.Helpers
             return items;
         }
 
-        public static string GetComponentLogLevels(LogConfig logConfig)
+        public static string GetComponentLogLevels(LogConfigForRead logConfig)
         {
             if (logConfig != null)
             {
@@ -1336,7 +1334,7 @@ namespace Zidium.UserAccount.Helpers
             }
         }
 
-        public static List<SelectListItem> GetAccountCounters(Guid? counterId, Guid componentId, bool allowEmpty)
+        public static List<SelectListItem> GetAccountMetricTypes(Guid? metricTypeId, Guid componentId, bool allowEmpty)
         {
             var items = new List<SelectListItem>();
             if (allowEmpty)
@@ -1345,32 +1343,31 @@ namespace Zidium.UserAccount.Helpers
                 {
                     Value = string.Empty,
                     Text = string.Empty,
-                    Selected = counterId == null
+                    Selected = metricTypeId == null
                 });
             }
-            var repository = FullRequestContext.Current.Controller.CurrentAccountDbContext.GetComponentRepository();
-            var component = repository.GetById(componentId);
 
-            var counters = component.Metrics
-                .Where(t => t.IsDeleted == false && t.MetricType.IsDeleted == false)
-                .Select(t => t.MetricType)
-                .OrderBy(t => t.SystemName)
-                .ToList();
+            var storage = FullRequestContext.Current.Controller.GetStorage();
 
-            items.AddRange(counters.Select(t => new SelectListItem()
+            var metricTypeIds = storage.Metrics.GetByComponentId(componentId).Select(t => t.MetricTypeId).Distinct().ToArray();
+
+            var metricTypes = storage.MetricTypes.GetMany(metricTypeIds).OrderBy(t => t.DisplayName);
+
+            items.AddRange(metricTypes.Select(t => new SelectListItem()
             {
                 Value = t.Id.ToString(),
                 Text = t.SystemName,
-                Selected = t.Id == counterId
+                Selected = t.Id == metricTypeId
             }));
             return items;
         }
 
         public static List<SelectListItem> GetTimeZoneItems(int offsetMinutes)
         {
-            var timeZoneRepository = FullRequestContext.Current.Controller.CurrentAccountDbContext.GetTimeZoneRepository();
-            var result = timeZoneRepository
-                .QueryAll().ToArray()
+            var storage = FullRequestContext.Current.Controller.GetStorage();
+
+            var result = storage.TimeZones.GetAll()
+                .OrderBy(t => t.OffsetMinutes)
                 .Select(t => new SelectListItem()
                 {
                     Value = t.OffsetMinutes.ToString(),

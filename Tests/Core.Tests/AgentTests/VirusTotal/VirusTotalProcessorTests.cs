@@ -1,17 +1,17 @@
 ﻿using System;
+using System.Configuration;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
-using Zidium.Core.AccountsDb;
-using Zidium.Core.Api;
 using Zidium.Core.Common.TimeService;
+using Zidium.Storage;
 
 namespace Zidium.Core.Tests.AgentTests
 {
     public class VirusTotalProcessorTests
     {
-        private string API_KEY = "a66cbd372af4bb83f6cc9c23811fda2d261bf97317f27730bcca1dc2a65b0964";
+        private readonly string _apiKey;
 
         // используем общий для всех тестов процессор, чтобы не превысить лимиты АПИ
         public static VirusTotalLimitManager limitManager = new VirusTotalLimitManager();
@@ -20,6 +20,7 @@ namespace Zidium.Core.Tests.AgentTests
 
         public VirusTotalProcessorTests()
         {
+            _apiKey = ConfigurationManager.AppSettings["VirusTotalKey"];
             processor = new VirusTotalProcessor(limitManager, new TimeService(), logger);
         }
 
@@ -45,7 +46,7 @@ namespace Zidium.Core.Tests.AgentTests
             var url = "http://recursion.ru";
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Scan
             });
@@ -60,7 +61,7 @@ namespace Zidium.Core.Tests.AgentTests
             {
                 NextStep = VirusTotalStep.Report,
                 ScanId = output.ScanId,
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 ScanTime = output.ScanTime.Value
             });
@@ -78,7 +79,7 @@ namespace Zidium.Core.Tests.AgentTests
         {
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = "http://lkfd lfkdlk", // содержит пробел
                 NextStep = VirusTotalStep.Scan
             });
@@ -97,13 +98,13 @@ namespace Zidium.Core.Tests.AgentTests
             string url = "http://recursion.ru";
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Scan
             });
             output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Report,
                 ScanTime = output.ScanTime.Value.AddDays(-30),
@@ -127,14 +128,14 @@ namespace Zidium.Core.Tests.AgentTests
             string url = "http://recursion.ru";
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Scan
             });
             var scanTime = DateTime.Now.AddHours(1); // из будущего
             output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Report,
                 ScanId = output.ScanId,
@@ -160,7 +161,7 @@ namespace Zidium.Core.Tests.AgentTests
             string url = "http://recursion.ru";
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Scan
             });
@@ -169,7 +170,7 @@ namespace Zidium.Core.Tests.AgentTests
             url = "http://recursion.ru?fake=" + DateTime.Now.Ticks; // изменили url между шагами
             output = processor.Process(new VirusTotalProcessorInputData()
             {
-                ApiKey = API_KEY,
+                ApiKey = _apiKey,
                 Url = url,
                 NextStep = VirusTotalStep.Report,
                 ScanId = output.ScanId,

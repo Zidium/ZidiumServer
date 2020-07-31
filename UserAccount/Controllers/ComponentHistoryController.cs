@@ -1,28 +1,28 @@
 ﻿using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Zidium.Api.Dto;
-using Zidium.Core.Api;
+using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 using Zidium.UserAccount.Models.ComponentHistory;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class ComponentHistoryController : ContextController
+    public class ComponentHistoryController : BaseController
     {
         [OutputCache(NoStore = true, Duration = 0)]
         public ActionResult Index(TimelineInterval? interval)
         {
-            var userSettingService = CurrentAccountDbContext.GetUserSettingService();
+            var storage = GetStorage();
+            var userSettingService = new UserSettingService(storage);
             var savedInterval = (TimelineInterval?) userSettingService.ComponentHistoryInterval(CurrentUser.Id) ?? TimelineInterval.Hour;
 
             if (interval != null)
             {
                 userSettingService.ComponentHistoryInterval(CurrentUser.Id, (int) interval.Value);
-                DbContext.SaveChanges();
             }
 
             var model = new IndexModel()
@@ -95,11 +95,7 @@ namespace Zidium.UserAccount.Controllers
             // Одним запросом получаем все нужные данные
             // Это быстрее, чем загружать данные компонентов по необходимости
 
-            var componentRepository = CurrentAccountDbContext.GetComponentRepository();
-            var allComponents = componentRepository.QueryAll();
-
-            var query = allComponents
-                .Include("EventsStatus")
+            var list = GetStorage().Gui.GetComponentHistory()
                 .Select(t => new SimplifiedComponent()
                 {
                     Id = t.Id,
@@ -108,22 +104,20 @@ namespace Zidium.UserAccount.Controllers
                     ParentId = t.ParentId,
                     ComponentTypeId = t.ComponentTypeId,
 
-                    HasEvents = t.EventsStatus.FirstEventId.HasValue,
+                    HasEvents = t.HasEvents,
 
-                    Unittests = t.UnitTests.Where(a => a.IsDeleted == false).Select(x => new SimplifiedUnittest()
+                    Unittests = t.UnitTests.Select(x => new SimplifiedUnittest()
                     {
                         Id = x.Id,
                         DisplayName = x.DisplayName
-                    }),
+                    }).ToArray(),
 
-                    Metrics = t.Metrics.Where(a => a.IsDeleted == false && a.MetricType.IsDeleted == false).Select(x => new SimplifiedMetric()
+                    Metrics = t.Metrics.Select(x => new SimplifiedMetric()
                     {
                         Id = x.Id,
-                        DisplayName = x.MetricType.DisplayName
-                    })
-                });
-
-            var list = query.ToList();
+                        DisplayName = x.DisplayName
+                    }).ToArray()
+                }).ToList();
 
             // Проставим ссылки на родителя и детей
             foreach (var component in list.ToArray())
@@ -157,9 +151,9 @@ namespace Zidium.UserAccount.Controllers
             DateTime from,
             DateTime to)
         {
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
-            var states = eventRepository.GetTimelineStates(component.Id, EventCategory.ComponentExternalStatus, from, to);
-            var okTime = eventRepository.GetTimelineOkTime(states, from, to);
+            var service = new EventService(GetStorage());
+            var states = service.GetTimelineStates(component.Id, EventCategory.ComponentExternalStatus, from, to);
+            var okTime = service.GetTimelineOkTime(states, from, to);
             var items = this.GetTimelineItemsByStates(states, from, to);
 
             var result = new ComponentsTreeItemModel()
@@ -232,18 +226,18 @@ namespace Zidium.UserAccount.Controllers
             DateTime from,
             DateTime to)
         {
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var service = new EventService(GetStorage());
 
-            var eventsStates = eventRepository.GetTimelineStates(component.Id, EventCategory.ComponentEventsStatus, from, to);
-            var eventsOkTime = eventRepository.GetTimelineOkTime(eventsStates, from, to);
+            var eventsStates = service.GetTimelineStates(component.Id, EventCategory.ComponentEventsStatus, from, to);
+            var eventsOkTime = service.GetTimelineOkTime(eventsStates, from, to);
             var eventsItems = this.GetTimelineItemsByStates(eventsStates, from, to);
 
-            var unittestsStates = eventRepository.GetTimelineStates(component.Id, EventCategory.ComponentUnitTestsStatus, from, to);
-            var unittestsOkTime = eventRepository.GetTimelineOkTime(unittestsStates, from, to);
+            var unittestsStates = service.GetTimelineStates(component.Id, EventCategory.ComponentUnitTestsStatus, from, to);
+            var unittestsOkTime = service.GetTimelineOkTime(unittestsStates, from, to);
             var unittestsItems = this.GetTimelineItemsByStates(unittestsStates, from, to);
 
-            var metricsStates = eventRepository.GetTimelineStates(component.Id, EventCategory.ComponentMetricsStatus, from, to);
-            var metricsOkTime = eventRepository.GetTimelineOkTime(metricsStates, from, to);
+            var metricsStates = service.GetTimelineStates(component.Id, EventCategory.ComponentMetricsStatus, from, to);
+            var metricsOkTime = service.GetTimelineOkTime(metricsStates, from, to);
             var metricsItems = this.GetTimelineItemsByStates(metricsStates, from, to);
 
             var result = new ComponentsTreeItemDetailsModel()
@@ -311,8 +305,8 @@ namespace Zidium.UserAccount.Controllers
 
             foreach (var unittest in result.Unittests.Items)
             {
-                var unittestStates = eventRepository.GetTimelineStates(unittest.Id, EventCategory.UnitTestStatus, from, to);
-                unittest.OkTime = eventRepository.GetTimelineOkTime(unittestStates, from, to);
+                var unittestStates = service.GetTimelineStates(unittest.Id, EventCategory.UnitTestStatus, from, to);
+                unittest.OkTime = service.GetTimelineOkTime(unittestStates, from, to);
                 var unittestItems = this.GetTimelineItemsByStates(unittestStates, from, to);
                 unittest.Timeline = new TimelineModel()
                 {
@@ -328,8 +322,8 @@ namespace Zidium.UserAccount.Controllers
 
             foreach (var metric in result.Metrics.Items)
             {
-                var metricStates = eventRepository.GetTimelineStates(metric.Id, EventCategory.MetricStatus, from, to);
-                metric.OkTime = eventRepository.GetTimelineOkTime(metricStates, from, to);
+                var metricStates = service.GetTimelineStates(metric.Id, EventCategory.MetricStatus, from, to);
+                metric.OkTime = service.GetTimelineOkTime(metricStates, from, to);
                 var metricItems = this.GetTimelineItemsByStates(metricStates, from, to);
                 metric.Timeline = new TimelineModel()
                 {

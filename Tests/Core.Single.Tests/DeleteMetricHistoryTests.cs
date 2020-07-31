@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading;
-using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.DeleteMetricHistory;
 using Zidium.Api;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
-using Zidium.Core.Common;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
@@ -39,18 +38,17 @@ namespace Zidium.Core.Single.Tests
             }).Check();
 
             // Выполним предварительную очистку истории метрик
-            var processor = new DeleteMetricHistoryProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteMetricHistoryProcessor(NLog.LogManager.GetCurrentClassLogger(), new CancellationToken());
             processor.Process(account.Id);
             Assert.Null(processor.DbProcessor.FirstException);
 
             // Создадим одно старое значение метрики и одно новое
             var now = DateTime.Now.Date;
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var metricHistoryRepository = context.GetMetricHistoryRepository();
-
-                metricHistoryRepository.Add(new MetricHistory()
+                context.MetricHistories.Add(new DbMetricHistory()
                 {
+                    Id = Guid.NewGuid(),
                     ComponentId = component.Info.Id,
                     MetricTypeId = metric.MetricTypeId,
                     BeginDate = now.AddDays(-11),
@@ -59,8 +57,9 @@ namespace Zidium.Core.Single.Tests
                     Value = 100
                 });
 
-                metricHistoryRepository.Add(new MetricHistory()
+                context.MetricHistories.Add(new DbMetricHistory()
                 {
+                    Id = Guid.NewGuid(),
                     ComponentId = component.Info.Id,
                     MetricTypeId = metric.MetricTypeId,
                     BeginDate = now.AddDays(-9),
@@ -74,10 +73,9 @@ namespace Zidium.Core.Single.Tests
 
             // Проверим, что в истории два значения
             string metricName;
-            using (var context = AccountDbContext.CreateFromAccountId(account.Id))
+            using (var context = TestHelper.GetAccountDbContext(account.Id))
             {
-                var metricTypeRepository = context.GetMetricTypeRepository();
-                var metricType = metricTypeRepository.GetById(metric.MetricTypeId);
+                var metricType = context.MetricTypes.Find(metric.MetricTypeId);
                 metricName = metricType.SystemName;
             }
 

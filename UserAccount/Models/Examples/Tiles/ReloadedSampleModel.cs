@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Zidium.UserAccount.Models.Examples.Tiles
+﻿namespace Zidium.UserAccount.Models.Examples.Tiles
 {
     public class ReloadedSampleModel
     {

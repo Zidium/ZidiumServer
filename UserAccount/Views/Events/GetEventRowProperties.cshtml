@@ -1,14 +1,16 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
-@using Zidium.UserAccount.Models.ExtentionProperties
-@model Zidium.Core.AccountsDb.Event
+@using Zidium.UserAccount.Models.ExtentionProperties              
+
+@model Zidium.UserAccount.Models.Events.GetEventRowPropertiesModel
+
 @{
     Layout = null;
 }
 
-@if (Model.Properties.Count > 0)
+@if (Model.Properties.Length > 0)
 {
-    var properties = ExtentionPropertiesModel.Create(Model);
+    var properties = ExtentionPropertiesModel.Create(Model.Properties);
     <text>@Html.ExtentionPropertiesTable(properties)</text>
 }
 else
@@ -18,16 +20,16 @@ else
     </div>
 }
 
-@if (!string.IsNullOrEmpty(Model.Version))
+@if (!string.IsNullOrEmpty(Model.Event.Version))
 {
     <div style="margin-bottom: 10px;">
-        <span class="text-prewrap text-wordbreak"><b>Версия:</b> @Model.Version</span>
+        <span class="text-prewrap text-wordbreak"><b>Версия:</b> @Model.Event.Version</span>
     </div>
 }
 
-@if (!string.IsNullOrEmpty(Model.Message) && Model.Message.Length > EventsListModel.MaxMessageLength)
+@if (!string.IsNullOrEmpty(Model.Event.Message) && Model.Event.Message.Length > EventsListModel.MaxMessageLength)
 {
     <div style="margin-bottom: 10px;">
-        <span class="text-prewrap text-wordbreak"><b>Полный текст сообщения:</b> @Model.Message</span>
+        <span class="text-prewrap text-wordbreak"><b>Полный текст сообщения:</b> @Model.Event.Message</span>
     </div>
 }

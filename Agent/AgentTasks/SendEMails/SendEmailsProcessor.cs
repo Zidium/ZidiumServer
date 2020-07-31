@@ -6,10 +6,10 @@ using System.Threading;
 using MailKit.Security;
 using MimeKit;
 using NLog;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.SendEMails
 {
@@ -161,33 +161,40 @@ namespace Zidium.Agent.AgentTasks.SendEMails
 
         protected void ProcessAccount(ForEachAccountData data, Guid? emailId = null)
         {
+            var notificationRepository = data.Storage.Notifications;
+
+            var emails = data.Storage.SendEmailCommands.GetForSend(SendMaxCount);
+
+            if (emailId.HasValue)
+                emails = emails.Where(t => t.Id == emailId.Value).ToArray();
+
+            var count = emails.Length;
+            if (count > 0)
+            {
+                if (data.Logger.IsDebugEnabled)
+                    data.Logger.Debug("Всего писем для отправки: " + count);
+            }
+            else
+            {
+                if (data.Logger.IsTraceEnabled)
+                    data.Logger.Trace("Нет писем для отправки");
+                return;
+            }
+
+            var lastSendTime = DateTime.MinValue;
+
             using (var smtpClient = GetSmtpClient())
             {
-                var emailCommandRepository = data.AccountDbContext.GetSendEmailCommandRepository();
-                var notificationRepository = data.AccountDbContext.GetNotificationRepository();
-
-                var emails = emailCommandRepository
-                    .GetForSend(SendMaxCount)
-                    .ToArray();
-
-                if (emailId.HasValue)
-                    emails = emails.Where(t => t.Id == emailId.Value).ToArray();
-
-                var count = emails.Length;
-                if (count > 0)
-                    data.Logger.Debug("Всего писем для отправки: " + count);
-                else
-                    data.Logger.Trace("Нет писем для отправки");
-
-                var lastSendTime = DateTime.MinValue;
-
                 foreach (var email in emails)
                 {
                     data.CancellationToken.ThrowIfCancellationRequested();
-                    data.Logger.Debug("Отправляем: {0} Тема: {1}", email.To, email.Subject);
+
+                    if (data.Logger.IsDebugEnabled)
+                        data.Logger.Debug("Отправляем: {0} Тема: {1}", email.To, email.Subject);
+
                     try
                     {
-                        // todo в почтовом клиенте thunderbird письма иногда не верно сортируются по дате
+                        // todo в почтовом клиенте thunderbird письма иногда неверно сортируются по дате
                         // есть предположение, что это из-за того, что дата создания округляется до секунд
                         // поэтому искуственно сделаем так, чтобы дата отправки писем отличалась как минимум на 1 секунду
                         DateTimeHelper.WaitForTime(lastSendTime.AddMilliseconds(1100));
@@ -207,7 +214,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                         // TODO Тут надо писать метрику
 
                         // обновим статус  и статистику
-                        emailCommandRepository.MarkAsSendSuccessed(email.Id);
+                        data.Storage.SendEmailCommands.MarkAsSendSuccessed(email.Id, DateTime.Now);
                         Interlocked.Increment(ref SuccessSendCount);
 
                         // если есть соответствующее уведомление, поменяем его статус
@@ -216,8 +223,9 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             var notification = notificationRepository.GetOneOrNullById(email.ReferenceId.Value);
                             if (notification != null)
                             {
-                                notification.Status = NotificationStatus.Sent;
-                                data.AccountDbContext.SaveChanges();
+                                var notificationForUpdate = notification.GetForUpdate();
+                                notificationForUpdate.Status.Set(NotificationStatus.Sent);
+                                notificationRepository.Update(notificationForUpdate);
                             }
                         }
 
@@ -236,7 +244,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             exception.Data.Add("EMailId", email.Id);
                             data.Logger.Error(exception);
 
-                            emailCommandRepository.MarkAsSendFail(email.Id, exception.Message);
+                            data.Storage.SendEmailCommands.MarkAsSendFail(email.Id, DateTime.Now, exception.Message);
 
                             // если есть соответствующее уведомление, поменяем его статус
                             if (email.ReferenceId != null)
@@ -244,9 +252,10 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                                 var notification = notificationRepository.GetOneOrNullById(email.ReferenceId.Value);
                                 if (notification != null)
                                 {
-                                    notification.Status = NotificationStatus.Error;
-                                    notification.SendError = exception.Message;
-                                    data.AccountDbContext.SaveChanges();
+                                    var notificationForUpdate = notification.GetForUpdate();
+                                    notificationForUpdate.Status.Set(NotificationStatus.Error);
+                                    notificationForUpdate.SendError.Set(exception.Message);
+                                    notificationRepository.Update(notificationForUpdate);
                                 }
                             }
                         }

@@ -13,11 +13,6 @@ namespace Zidium.Core.ConfigDb
             return new[] { _accountInfo };
         }
 
-        public AccountInfo Update(UpdateAccountRequestData data)
-        {
-            return _accountInfo;
-        }
-
         public AccountInfo GetOneOrNullBySystemName(string name)
         {
             return _accountInfo;
@@ -43,6 +38,10 @@ namespace Zidium.Core.ConfigDb
             return AccountSecretKey;
         }
 
+        public void Update(UpdateAccountRequestData data)
+        {
+        }
+
         public static readonly Guid AccountId = new Guid("11111111-1111-1111-1111-111111111111");
 
         private static AccountInfo _accountInfo = new AccountInfo()
@@ -58,7 +57,8 @@ namespace Zidium.Core.ConfigDb
             Status = AccountStatus.Active,
             SystemName = SystemAccountHelper.SystemAccountName,
             Type = AccountType.System,
-            UserAgentTag = null
+            UserAgentTag = null,
+            DatabaseConnectionString = ConfigurationManager.ConnectionStrings["DbContext"].ConnectionString
         };
 
         public static string AccountSecretKey

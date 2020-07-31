@@ -4,7 +4,8 @@ using System.Web.Mvc;
 using Newtonsoft.Json;
 using Zidium.Core.Api;
 using Xunit;
-using Zidium.Core.AccountsDb;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.UserAccount.Controllers;
 using Zidium.UserAccount.Models;
@@ -50,11 +51,10 @@ namespace Zidium.UserAccount.Tests
                 });
             var subscription = response.Data;
 
-            Notification notification;
-            using (var accountDbContext = account.CreateAccountDbContext())
+            DbNotification notification;
+            using (var accountDbContext = TestHelper.GetAccountDbContext(account.Id))
             {
-                var repository = accountDbContext.GetNotificationRepository();
-                notification = new Notification()
+                notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     CreationDate = DateTime.Now,
@@ -66,7 +66,7 @@ namespace Zidium.UserAccount.Tests
                     UserId = user.Id,
                     Address = "test@mail.ru"
                 };
-                notification = repository.Add(notification);
+                notification = accountDbContext.Notifications.Add(notification);
                 accountDbContext.SaveChanges();
             }
 
@@ -118,11 +118,11 @@ namespace Zidium.UserAccount.Tests
             });
             var subscription = response.Data;
 
-            Notification notification;
-            using (var accountDbContext = account.CreateAccountDbContext())
+            DbNotification notification;
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var repository = accountDbContext.GetNotificationRepository();
-                notification = new Notification()
+                var repository = TestHelper.GetAccountDbContext(account.Id);
+                notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     CreationDate = DateTime.Now,
@@ -134,13 +134,13 @@ namespace Zidium.UserAccount.Tests
                     UserId = user.Id,
                     Address = "test@mail.ru"
                 };
-                notification = repository.Add(notification);
+                notification = accountDbContext.Notifications.Add(notification);
                 accountDbContext.SaveChanges();
             }
 
             using (var controller = new NotificationsController(account.Id, user.Id))
             {
-                var result = (ViewResultBase)controller.Show(notification.Id, component.Info.Id);
+                var result = (ViewResultBase)controller.Show(notification.Id);
                 var model = (NotificationDetailsModel)result.Model;
                 Assert.Equal(notification.Id, model.Id);
                 Assert.Equal(notification.EventId, model.Event.Id);
@@ -182,10 +182,9 @@ namespace Zidium.UserAccount.Tests
 
             var notificationId = resultData.data.NotificationId;
 
-            using (var accountDbContext = account.CreateAccountDbContext())
+            using (var accountDbContext = account.GetAccountDbContext())
             {
-                var repository = accountDbContext.GetNotificationRepository();
-                var notification = repository.Find(notificationId);
+                var notification = accountDbContext.Notifications.Find(notificationId);
 
                 Assert.NotNull(notification);
                 Assert.Equal(user.Id, notification.UserId);

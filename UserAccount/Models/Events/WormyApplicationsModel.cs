@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models.Events
 {
@@ -10,7 +10,7 @@ namespace Zidium.UserAccount.Models.Events
     {
         public class ApplicationData
         {
-            public Component Component { get; set; }
+            public ComponentForRead Component { get; set; }
 
             public long Errors { get; set; }
         }
@@ -23,41 +23,44 @@ namespace Zidium.UserAccount.Models.Events
 
         public ApplicationData[] Applications { get; set; }
 
-        public void Load(Guid accountId, AccountDbContext accountDbContext)
-        {
-            var eventQuery = accountDbContext.GetEventRepository()
-                .GetErrorsByPeriod(PeriodRange.From, PeriodRange.To);
+        public IStorage Storage { get; set; }
 
+        // TODO move to controller
+        public void Load(Guid accountId, IStorage storage)
+        {
+            Storage = storage;
+
+            Guid[] componentIds = null;
             if (ComponentTypeId.HasValue)
             {
-                var componentArrayId = accountDbContext.GetComponentRepository().QueryAll()
-                    .Where(x => x.ComponentTypeId == ComponentTypeId.Value)
-                    .Select(x => x.Id)
-                    .ToArray();
-
-                eventQuery = eventQuery.Where(x => componentArrayId.Any(id => id == x.OwnerId));
+                componentIds = storage.Components.GetByComponentTypeId(ComponentTypeId.Value).Select(x => x.Id).ToArray();
             }
+
+            var eventQuery = storage.Events.GetErrorsByPeriod(componentIds, PeriodRange.From, PeriodRange.To);
+
             var events = eventQuery.GroupBy(x => x.OwnerId)
                 .Select(x => new
                 {
-                    componentId = x.Key,
-                    errors = x.Sum(y => y.Count)
+                    ComponentId = x.Key,
+                    Errors = x.Sum(y => y.Count)
                 })
-                .OrderByDescending(x=>x.errors)
+                .OrderByDescending(x => x.Errors)
                 .Take(Top)
                 .ToArray();
 
+            var components = storage.Components.GetMany(events.Select(t => t.ComponentId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
+
             var appList = new List<ApplicationData>();
-            foreach (var @event in events)
+            foreach (var eventObj in events)
             {
-                var component = accountDbContext.GetComponentRepository().GetById(@event.componentId);
+                var component = components[eventObj.ComponentId];
                 if (component.IsDeleted)
                 {
                     continue;
                 }
                 var appData = new ApplicationData()
                 {
-                    Errors = @event.errors,
+                    Errors = eventObj.Errors,
                     Component = component
                 };
                 appList.Add(appData);

@@ -1,7 +1,9 @@
-﻿@using Zidium.Core.Api
+﻿@using Zidium.Core.AccountsDb
 @using Zidium.Core.Common.Helpers
+@using Zidium.Storage
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
+
 @model ShowEventModel
 
 @{
@@ -27,14 +29,14 @@
 @if (Model.UnitTest != null)
 {
     <div class="zi-bread-crumbs">
-        @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTest)
+        @Html.PartialUnitTestBreadCrumbs(Model.UnitTest.Id, Model.Storage)
     </div>
 }
 else
 if (Model.Component != null)
 {
     <div class="zi-bread-crumbs">
-        @Html.Partial("~/Views/Controls/ComponentBreadCrumbs.cshtml", Model.Component)
+        @Html.PartialComponentBreadCrumbs(Model.Component.Id, Model.Storage)
     </div>
 }
 
@@ -87,15 +89,16 @@ if (Model.Component != null)
     <div class="row">
         <div class="col-sm-12">
             <div>
-                @if (UserHelper.CurrentUser.CanEditCommonData() && Model.CanChangeActuality)
+                @*@if (UserHelper.CurrentUser.CanEditCommonData() && Model.CanChangeActuality)
                 {
                     @Html.ActionLink("Неактуальное...", "SetNotActual", new { id = Model.Event.Id }, new { @class = "btn btn-default", onclick = "ModalBtnClick(this, event);" })
-                }
+                }*@
+                
                 @if (UserHelper.CurrentUser.CanEditCommonData() && Model.CanChangeImportance)
                 {
                     @Html.ActionLink("Изменить важность...", "ChangeImportance", new { id = Model.Event.Id }, new { @class = "btn btn-default", onclick = "ModalBtnClick(this, event);" })
                 }
-                
+
                 <div style="display: inline-block">
                     @Html.Action("DefectControl", "Defects", new { eventTypeId = Model.EventType.Id })
                 </div>
@@ -104,12 +107,12 @@ if (Model.Component != null)
     </div>
 }
 
-@if (Model.Event.Properties.Count > 0)
+@if (Model.Properties.Length > 0)
 {
     <div class="row" style="margin-top: 20px;">
         <div class="col-sm-12">
             <p class="simple-text-header">Дополнительные свойства:</p>
-            @Html.ExtentionPropertiesTable(Model.Event)
+            @Html.ExtentionPropertiesTable(Model.Properties)
         </div>
     </div>
 }
@@ -126,20 +129,20 @@ if (Model.Component != null)
         </p>
         <p>
             <span class="simple-text-header">Компонент: </span>
-            @Html.ComponentLink(Model.Component)
+            @Html.ComponentLink(Model.Component.Id, Model.Component.DisplayName)
         </p>
         @if (Model.Metric != null)
         {
             <p>
                 <span class="simple-text-header">Метрика: </span>
-                @Html.MetricLink(Model.Metric)
+                @Html.MetricLink(Model.Metric.Id, Model.MetricType.DisplayName)
             </p>
         }
         @if (Model.UnitTest != null)
         {
             <p>
                 <span class="simple-text-header">Проверка: </span>
-                @Html.UnitTestLink(Model.UnitTest)
+                @Html.UnitTestLink(Model.UnitTest.Id, Model.UnitTest.DisplayName)
             </p>
         }
         @if (Model.EventType.IsSystem == false)
@@ -159,7 +162,7 @@ if (Model.Component != null)
                 <span class="simple-text-header">Ключ склейки: </span>
                 <span class="simple-text-value">@Model.Event.JoinKeyHash</span>
             </p>
-            if (Model.Event.Properties.Count == 0)
+            if (Model.Properties.Length == 0)
             {
                 <p>
                     <span class="simple-text-header">Доп. свойства: </span>
@@ -256,8 +259,8 @@ if (Model.Component != null)
                             </td>
                             <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
                             <td>@reason.Event.Count</td>
-                            <td>@Html.UnitTestLink(reason.UnitTest)</td>
-                            <td>@Model.GetEventMessageText(reason.Event)</td>
+                            <td>@Html.UnitTestLink(reason.UnitTest.Id, reason.UnitTest.DisplayName)</td>
+                            <td>@Model.GetEventMessageText(reason.Event, reason.EventType)</td>
                         </tr>
                     }
                 </table>
@@ -296,8 +299,8 @@ if (Model.Component != null)
                         </td>
                         <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
                         <td>@reason.Event.Count</td>
-                        <td>@Html.MetricLink(reason.Metric)</td>
-                        <td>@Model.GetEventMessageText(reason.Event)</td>
+                        <td>@Html.MetricLink(reason.Metric.Id, reason.EventType.DisplayName)</td>
+                        <td>@Model.GetEventMessageText(reason.Event, reason.EventType)</td>
                     </tr>
                     }
                 </table>
@@ -334,8 +337,8 @@ if (Model.Component != null)
                             }
                         </td>
                         <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
-                        <td>@Html.ComponentLink(reason.Component)</td>
-                        <td>@Model.GetEventMessageText(reason.Event)</td>
+                        <td>@Html.ComponentLink(reason.Component.Id, reason.Component.DisplayName)</td>
+                        <td>@Model.GetEventMessageText(reason.Event, reason.EventType)</td>
                     </tr>
                     }
                 </table>
@@ -373,7 +376,7 @@ if (Model.Component != null)
                         </td>
                         <td>@GuiHelper.TimeSpanAsString(reason.Event.GetDuration(now))</td>
                         <td>@reason.Event.Count</td>
-                        <td>@Model.GetEventMessageText(reason.Event)</td>
+                        <td>@Model.GetEventMessageText(reason.Event, reason.EventType)</td>
                     </tr>
                     }
                 </table>

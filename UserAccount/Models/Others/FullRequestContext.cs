@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Web;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
@@ -11,21 +10,16 @@ namespace Zidium.UserAccount.Models
 {
     public class FullRequestContext
     {
-        public DatabasesContext DbContext { get; }
-
         public UserInfo CurrentUser { get; protected set; }
 
         public AccountInfo CurrentAccount { get; private set; }
 
-        public AccountDbContext AccountDbContext { get; private set; }
-
-        public ContextController Controller { get; }
+        public BaseController Controller { get; }
 
         private IEnumName _enumName;
 
-        public FullRequestContext(ContextController controller)
+        public FullRequestContext(BaseController controller)
         {
-            DbContext = new DatabasesContext();
             Controller = controller;
             if (Controller.CurrentUser != null)
             {
@@ -33,33 +27,6 @@ namespace Zidium.UserAccount.Models
             }
         }
         
-        public User GetUserById(Guid id)
-        {
-            // todo нужно убрать этот метод от сюда
-            // для ЛК нужны свои репозитории
-            var accountId = CurrentUser.AccountId;
-            var repository = AccountDbContext.GetUserRepository();
-            return repository.GetById(id);
-        }
-
-        public ComponentType GetComponentTypeById(Guid id)
-        {
-            // todo нужно убрать этот метод от сюда
-            // для ЛК нужны свои репозитории
-            var accountId = CurrentUser.AccountId;
-            var repository = AccountDbContext.GetComponentTypeRepository();
-            return repository.GetById(id);
-        }
-
-        public Component GetComponentById(Guid id)
-        {
-            // todo нужно убрать этот метод от сюда
-            // для ЛК нужны свои репозитории
-            var accountId = CurrentUser.AccountId;
-            var repository = AccountDbContext.GetComponentRepository();
-            return repository.GetById(id);
-        }
-
         public void SetUser(UserInfo user)
         {
             if (user == null)
@@ -69,7 +36,7 @@ namespace Zidium.UserAccount.Models
             CurrentUser = user;
             var accountId = user.AccountId;
             CurrentAccount = GetDispatcherClient().GetAccountById(new GetAccountByIdRequestData() { Id = accountId }).Data;
-            AccountDbContext = DbContext.GetAccountDbContextByDataBaseId(CurrentAccount.AccountDatabaseId);
+            user.AccountName = CurrentAccount.SystemName;
         }
 
         public string Ip

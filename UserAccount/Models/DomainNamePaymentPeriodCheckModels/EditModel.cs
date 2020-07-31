@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models.CheckModels;
 
 namespace Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels
@@ -16,6 +18,8 @@ namespace Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels
 
         [Display(Name = "Количество дней жёлтой проверки")]
         public int WarningDaysCount { get; set; }
+
+        public UnitTestBreadCrumbsModel UnitTestBreadCrumbs { get; set; }
 
         public override string ComponentLabelText
         {
@@ -34,22 +38,22 @@ namespace Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels
 
         public override Guid NewComponentTypeId
         {
-            get { return SystemComponentTypes.Others.Id; }
+            get { return SystemComponentType.Others.Id; }
         }
 
         public override Guid UnitTestTypeId
         {
-            get { return SystemUnitTestTypes.DomainNameTestType.Id; }
+            get { return SystemUnitTestType.DomainNameTestType.Id; }
         }
 
-        public void LoadRule()
+        public void LoadRule(Guid? id, IStorage storage)
         {
             AlarmDaysCount = 14;
             WarningDaysCount = 30;
 
-            if (UnitTest != null)
+            if (id != null)
             {
-                var rule = UnitTest.DomainNamePaymentPeriodRule;
+                var rule = storage.DomainNamePaymentPeriodRules.GetOneOrNullByUnitTestId(id.Value);
                 if (rule != null)
                 {
                     Domain = rule.Domain;
@@ -64,19 +68,26 @@ namespace Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels
             }
         }
 
-        public void SaveRule()
+        public void SaveRule(Guid id, IStorage storage)
         {
-            if (UnitTest.DomainNamePaymentPeriodRule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                var newRule = new UnitTestDomainNamePaymentPeriodRule();
-                newRule.UnitTestId = UnitTest.Id;
-                newRule.UnitTest = UnitTest;
-                UnitTest.DomainNamePaymentPeriodRule = newRule;
+                var rule = storage.DomainNamePaymentPeriodRules.GetOneOrNullByUnitTestId(id);
+                if (rule == null)
+                {
+                    var newRule = new UnitTestDomainNamePaymentPeriodRuleForAdd();
+                    newRule.UnitTestId = id;
+                    storage.DomainNamePaymentPeriodRules.Add(newRule);
+                }
+
+                var ruleForUpdate = new UnitTestDomainNamePaymentPeriodRuleForUpdate(id);
+                ruleForUpdate.Domain.Set(Domain);
+                ruleForUpdate.AlarmDaysCount.Set(AlarmDaysCount);
+                ruleForUpdate.WarningDaysCount.Set(WarningDaysCount);
+                storage.DomainNamePaymentPeriodRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            var rule = UnitTest.DomainNamePaymentPeriodRule;
-            rule.Domain = Domain;
-            rule.AlarmDaysCount = AlarmDaysCount;
-            rule.WarningDaysCount = WarningDaysCount;
         }
 
         protected override void ValidateRule()

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Web.Mvc;
-using Zidium.Core.Api;
+using Zidium.Core.AccountsDb;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Controllers
 {
     [Authorize]
-    public class TimelineController : ContextController
+    public class TimelineController : BaseController
     {
         // Рисует диаграмму указанных статусов для компонента
         public ActionResult ForComponent(Guid id, EventCategory category, DateTime? fromDate, DateTime? toDate)
@@ -17,9 +18,7 @@ namespace Zidium.UserAccount.Controllers
         // Рисует диаграмму указанных статусов для проверки
         public ActionResult ForUnitTest(Guid id, EventCategory category, DateTime? fromDate, DateTime? toDate)
         {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = unitTestRepository.GetById(id);
-            return ForOwner(unitTest.Id, category, fromDate, toDate);
+            return ForOwner(id, category, fromDate, toDate);
         }
 
         public ActionResult ForUnitTestByInterval(Guid id, EventCategory category, TimelineInterval interval)
@@ -32,9 +31,7 @@ namespace Zidium.UserAccount.Controllers
         // Рисует диаграмму указанных статусов для метрики
         public ActionResult ForMetric(Guid id, EventCategory category, DateTime? fromDate, DateTime? toDate)
         {
-            var metricRepository = CurrentAccountDbContext.GetMetricRepository();
-            var metric = metricRepository.GetById(id);
-            return ForOwner(metric.Id, category, fromDate, toDate);
+            return ForOwner(id, category, fromDate, toDate);
         }
 
         public ActionResult ForMetricByInterval(Guid id, EventCategory category, TimelineInterval interval)
@@ -50,11 +47,11 @@ namespace Zidium.UserAccount.Controllers
             var eDate = toDate ?? DateTime.Now;
             var sDate = fromDate ?? eDate.AddHours(-24);
 
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var service = new EventService(GetStorage());
 
-            var states = eventRepository.GetTimelineStates(ownerId, category, sDate, eDate);
+            var states = service.GetTimelineStates(ownerId, category, sDate, eDate);
             var items = this.GetTimelineItemsByStates(states, sDate, eDate);
-            var okTime = eventRepository.GetTimelineOkTime(states, sDate, eDate);
+            var okTime = service.GetTimelineOkTime(states, sDate, eDate);
 
             var model = new TimelineModel()
             {
@@ -75,12 +72,12 @@ namespace Zidium.UserAccount.Controllers
             var eDate = toDate ?? DateTime.Now;
             var sDate = fromDate ?? eDate.AddHours(-24);
 
-            var eventType = GetEventTypeById(eventTypeId);
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var eventType = GetStorage().EventTypes.GetOneById(eventTypeId);
+            var service = new EventService(GetStorage());
 
-            var states = eventRepository.GetTimelineStates(id, eventTypeId, sDate, eDate);
+            var states = service.GetTimelineStates(id, eventTypeId, sDate, eDate);
             var items = this.GetTimelineItemsByStates(states, sDate, eDate);
-            var okTime = eventRepository.GetTimelineOkTime(states, sDate, eDate);
+            var okTime = service.GetTimelineOkTime(states, sDate, eDate);
 
             var model = new TimelineModel()
             {
@@ -103,11 +100,11 @@ namespace Zidium.UserAccount.Controllers
             var eDate = toDate ?? DateTime.Now;
             var sDate = fromDate ?? eDate.AddHours(-24);
 
-            var eventRepository = CurrentAccountDbContext.GetEventRepository();
+            var service = new EventService(GetStorage());
 
-            var states = eventRepository.GetTimelineStatesAnyComponents(eventTypeId, sDate, eDate);
+            var states = service.GetTimelineStatesAnyComponents(eventTypeId, sDate, eDate);
             var items = this.GetTimelineItemsByStates(states, sDate, eDate);
-            var okTime = eventRepository.GetTimelineOkTime(states, sDate, eDate);
+            var okTime = service.GetTimelineOkTime(states, sDate, eDate);
 
             var model = new TimelineModel()
             {

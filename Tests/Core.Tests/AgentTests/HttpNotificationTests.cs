@@ -4,8 +4,9 @@ using System.Threading;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.Notifications;
-using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
+using Zidium.Storage;
+using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -34,9 +35,9 @@ namespace Zidium.Core.Tests.AgentTests
 
             // Создадим уведомление
             Guid notificationId;
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var notification = new Notification()
+                var notification = new DbNotification()
                 {
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
@@ -45,14 +46,13 @@ namespace Zidium.Core.Tests.AgentTests
                     Address = @"http://fakesite.zidium.net/post",
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now,
-                    NotificationHttp = new NotificationHttp()
+                    NotificationHttp = new DbNotificationHttp()
                     {
                         Json = @"{ Component: { Id: 1}"
                     }
                 };
 
-                var notificationRepository = context.GetNotificationRepository();
-                notificationRepository.Add(notification);
+                context.Notifications.Add(notification);
                 notificationId = notification.Id;
                 context.SaveChanges();
             }
@@ -62,10 +62,9 @@ namespace Zidium.Core.Tests.AgentTests
             processor.Process(account.Id, component.Id);
 
             // Проверим, что уведомление успешно отправилось
-            using (var context = account.CreateAccountDbContext())
+            using (var context = account.GetAccountDbContext())
             {
-                var notificationRepository = context.GetNotificationRepository();
-                var notification = notificationRepository.QueryAllByComponent(component.Id).First(t => t.Id == notificationId);
+                var notification = context.Notifications.First(t => t.Id == notificationId);
                 Assert.Equal(NotificationStatus.Processed, notification.Status);
             }
         }

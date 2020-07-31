@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.AccountsDb.Classes.UnitTests.HttpTests;
 using Zidium.Core.Common.Helpers;
-using Zidium.UserAccount.Helpers;
+using Zidium.Storage;
 using Zidium.UserAccount.Models;
-using Zidium.UserAccount.Models.Controls;
 using Zidium.UserAccount.Models.HttpRequestCheckModels;
 
 namespace Zidium.UserAccount.Controllers
@@ -19,8 +17,9 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Show(Guid id)
         {
             var model = new EditModel();
-            model.Load(id, null);
-            model.LoadRule();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
             return View(model);
         }
 
@@ -28,8 +27,8 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Edit(Guid? id, Guid? componentId)
         {
             var model = new EditModel();
-            model.Load(id, componentId);
-            model.LoadRule();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
             return View(model);
         }
 
@@ -50,50 +49,15 @@ namespace Zidium.UserAccount.Controllers
                 return View(model);
 
             model.SaveCommonSettings();
-            model.SaveRule();
-            CurrentAccountDbContext.SaveChanges();
+            model.SaveRule(model.Id.Value, GetStorage());
 
             return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
-        }
-
-        protected KeyValueRowModel ConvertToKeyValueRow(HttpRequestUnitTestRuleData data)
-        {
-            return new KeyValueRowModel()
-            {
-                Id = data.Id.ToString(),
-                Key = data.Key,
-                Value = data.Value
-            };
-        }
-
-        protected void AddRuleData(HttpRequestUnitTestRule rule, KeyValueRowModel row, HttpRequestUnitTestRuleDataType type)
-        {
-            var data = new HttpRequestUnitTestRuleData();
-            data.Id = row.HasId ? new Guid(row.Id) : Guid.NewGuid();
-            data.Key = row.Key;
-            data.Value = row.Value;
-            data.Type = type;
-            data.Rule = rule;
-            data.RuleId = rule.Id;
-            rule.Datas.Add(data);
-        }
-
-        protected List<KeyValueRowModel> GetRuleDatas(HttpRequestUnitTestRule rule, HttpRequestUnitTestRuleDataType type)
-        {
-            var datas = rule.Datas.Where(x => x.Type == type).ToList();
-            var rows = new List<KeyValueRowModel>();
-            foreach (var data in datas)
-            {
-                var row = ConvertToKeyValueRow(data);
-                rows.Add(row);
-            }
-            return rows;
         }
 
         [CanEditAllData]
         public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
         {
-            var model = LoadSimpleCheck(id, componentId);
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
             return View(model);
         }
 
@@ -124,27 +88,19 @@ namespace Zidium.UserAccount.Controllers
             }
             model.Url = uri.OriginalString;
 
-            var unitTest = SaveSimpleCheck(model);
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
 
             if (!Request.IsSmartBlocksRequest())
             {
-                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTest.Id });
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
             }
 
-            return GetSuccessJsonResponse(unitTest.Id);
+            return GetSuccessJsonResponse(unitTestId);
         }
 
-        protected override UnitTest FindSimpleCheck(EditSimpleModel model)
+        protected Func<HttpRequestUnitTestRuleForRead, bool> FindRulePredicate()
         {
-            var unitTestRepository = CurrentAccountDbContext.GetUnitTestRepository();
-            var unitTest = unitTestRepository.QueryAll()
-                .FirstOrDefault(t => t.TypeId == SystemUnitTestTypes.HttpUnitTestType.Id && t.HttpRequestUnitTest != null && t.IsDeleted == false && t.HttpRequestUnitTest.Rules.Any(x => x.IsDeleted == false && x.SortNumber == 0 && x.Url == model.Url));
-            return unitTest;
-        }
-
-        protected Func<HttpRequestUnitTestRule, bool> FindRulePredicate()
-        {
-            return x => x.IsDeleted == false && x.SortNumber == 0;
+            return x => x.SortNumber == 0;
         }
 
         protected string GetHostFromUrl(string url)
@@ -153,39 +109,50 @@ namespace Zidium.UserAccount.Controllers
             return uri.Host;
         }
 
-        protected string GetComponentNameFromUrl(string url)
-        {
-            var uri = new Uri(url);
-            return uri.Scheme + @"://" + uri.Authority;
-        }
-
         protected override string GetUnitTestDisplayName(EditSimpleModel model)
         {
             return "Http-запрос для сайта " + model.Url;
         }
 
-        protected override void SetUnitTestParams(UnitTest unitTest, EditSimpleModel model)
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
         {
-            if (unitTest.HttpRequestUnitTest == null)
-                unitTest.HttpRequestUnitTest = new HttpRequestUnitTest()
-                {
-                    UnitTest = unitTest
-                };
-            var rule = unitTest.HttpRequestUnitTest.Rules.FirstOrDefault(FindRulePredicate());
-            if (rule == null)
+            using (var transaction = storage.BeginTransaction())
             {
-                rule = new HttpRequestUnitTestRule()
+                var httpRequestUnitTest = GetStorage().HttpRequestUnitTests.GetOneOrNullByUnitTestId(unitTestId);
+                if (httpRequestUnitTest == null)
                 {
-                    Id = Guid.NewGuid(),
-                    Method = HttpRequestMethod.Get,
-                    ResponseCode = 200,
-                    TimeoutSeconds = 5,
-                    SortNumber = 0
-                };
-                unitTest.HttpRequestUnitTest.Rules.Add(rule);
+                    var httpRequestUnitTestForAdd = new HttpRequestUnitTestForAdd()
+                    {
+                        UnitTestId = unitTestId
+                    };
+                    GetStorage().HttpRequestUnitTests.Add(httpRequestUnitTestForAdd);
+                }
+
+                var rule = GetStorage().HttpRequestUnitTestRules.GetByUnitTestId(unitTestId).FirstOrDefault(FindRulePredicate());
+                if (rule == null)
+                {
+                    var ruleForAdd = new HttpRequestUnitTestRuleForAdd()
+                    {
+                        Id = Guid.NewGuid(),
+                        HttpRequestUnitTestId = unitTestId,
+                        Method = HttpRequestMethod.Get,
+                        ResponseCode = 200,
+                        TimeoutSeconds = 5,
+                        SortNumber = 0,
+                        DisplayName = string.Empty,
+                        Url = string.Empty
+                    };
+                    GetStorage().HttpRequestUnitTestRules.Add(ruleForAdd);
+                    rule = GetStorage().HttpRequestUnitTestRules.GetOneById(ruleForAdd.Id);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.DisplayName.Set("Правило http-проверки сайта " + model.Url);
+                ruleForUpdate.Url.Set(model.Url);
+                GetStorage().HttpRequestUnitTestRules.Update(ruleForUpdate);
+
+                transaction.Commit();
             }
-            rule.DisplayName = "Правило http-проверки сайта " + model.Url;
-            rule.Url = model.Url;
         }
 
         public override string GetComponentDisplayName(EditSimpleModel model)
@@ -200,56 +167,15 @@ namespace Zidium.UserAccount.Controllers
             return ComponentHelper.GetSystemNameByHost(host);
         }
 
-        
-
-        protected override void SetModelParams(EditSimpleModel model, UnitTest unitTest)
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
         {
-            var rule = unitTest.HttpRequestUnitTest.Rules.First(FindRulePredicate());
+            var rule = GetStorage().HttpRequestUnitTestRules.GetByUnitTestId(unitTest.Id).First(FindRulePredicate());
             model.Url = rule.Url;
         }
 
         protected override Guid GetUnitTestTypeId()
         {
-            return SystemUnitTestTypes.HttpUnitTestType.Id;
-        }
-
-        [CanEditAllData]
-        public ActionResult DeleteRule(Guid id)
-        {
-            var repository = CurrentAccountDbContext.GetHttpRequestUnitTestRuleRepository();
-            var rule = repository.GetById(id);
-            CheckRuleDeletingPermissions(rule);
-            var model = new DeleteConfirmationModel()
-            {
-                Id = id.ToString(),
-                Title = "Удаление правила проверки",
-                ModalMode = Request.IsAjaxRequest(),
-                Message = "Вы действительно хотите удалить это правило?",
-                ReturnUrl = Url.Action("Edit", new { id = rule.HttpRequestUnitTestId })
-            };
-            return View("~/Views/Shared/Dialogs/DeleteConfirmation.cshtml", model);
-        }
-
-        [CanEditAllData]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult DeleteRule(DeleteConfirmationModel model)
-        {
-            if (!ModelState.IsValid)
-                return View("~/Views/Shared/Dialogs/DeleteConfirmation.cshtml", model);
-            var repository = CurrentAccountDbContext.GetHttpRequestUnitTestRuleRepository();
-            var rule = repository.GetById(Guid.Parse(model.Id));
-            CheckRuleDeletingPermissions(rule);
-            var unitTestId = rule.HttpRequestUnitTestId;
-            repository.Remove(rule);
-            this.SetTempMessage(TempMessageType.Success, "Правило проверки удалёно");
-            return RedirectToAction("Edit", new { id = unitTestId });
-        }
-
-        protected void CheckRuleDeletingPermissions(HttpRequestUnitTestRule rule)
-        {
-            if (rule.IsDeleted)
-                throw new AlreadyDeletedException(rule.Id, Naming.HttpRequestUnitTestRule);
+            return SystemUnitTestType.HttpUnitTestType.Id;
         }
 
         /// <summary>
