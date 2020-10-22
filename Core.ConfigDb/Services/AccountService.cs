@@ -1,5 +1,5 @@
 using System;
-using System.Configuration;
+using Zidium.Common;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Accounts.ChangeApiKey;
 using Zidium.Core.Common.Helpers;
@@ -58,7 +58,7 @@ namespace Zidium.Core.ConfigDb
             SystemName = SystemAccountHelper.SystemAccountName,
             Type = AccountType.System,
             UserAgentTag = null,
-            DatabaseConnectionString = ConfigurationManager.ConnectionStrings["DbContext"].ConnectionString
+            DatabaseConnectionString = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ConnectionString
         };
 
         public static string AccountSecretKey
@@ -67,7 +67,7 @@ namespace Zidium.Core.ConfigDb
             {
                 if (_accountSecretKey == null)
                 {
-                    _accountSecretKey = ConfigurationManager.AppSettings["AccountSecretKey"];
+                    _accountSecretKey = DependencyInjection.GetServicePersistent<IConfigDbConfiguration>().AccountSecretKey;
                     if (_accountSecretKey == null)
                         _accountSecretKey = Guid.NewGuid().ToString();
                 }

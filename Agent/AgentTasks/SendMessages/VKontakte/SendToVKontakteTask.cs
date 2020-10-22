@@ -14,7 +14,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
 
         protected override AgentTaskResult Do()
         {
-            var authToken = ServiceConfiguration.VKontakteAuthToken;
+            var authToken = AgentConfiguration.VKontakteAuthToken;
 
             var processor = new SendToVKontakteProcessor(Logger, CancellationToken, authToken);
             processor.Process();

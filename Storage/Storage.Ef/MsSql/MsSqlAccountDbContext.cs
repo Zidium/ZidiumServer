@@ -5,7 +5,7 @@ namespace Zidium.Storage.Ef
 {
     internal class MsSqlAccountDbContext : AccountDbContext
     {
-        public MsSqlAccountDbContext() : base()
+        public MsSqlAccountDbContext() : base("DbContextMsSql")
         {
         }
 

@@ -1,5 +1,5 @@
 using System;
-using System.Configuration;
+using Zidium.Common;
 using Zidium.Core.Api;
 
 namespace Zidium.Core.ConfigDb
@@ -37,7 +37,7 @@ namespace Zidium.Core.ConfigDb
 
         public static string ConnectionString
         {
-            get { return _connectionString ?? ConfigurationManager.ConnectionStrings["DbContext"].ConnectionString; }
+            get { return _connectionString ?? DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ConnectionString; }
         }
 
         private static string _connectionString;

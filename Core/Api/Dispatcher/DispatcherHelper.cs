@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.ConfigDb;
 
@@ -32,18 +31,12 @@ namespace Zidium.Core.Api
 
         public static bool UseLocalDispatcher()
         {
-            var value = ConfigurationManager.AppSettings["UseLocalDispatcher"];
-            return value != null && value.Equals("true", StringComparison.OrdinalIgnoreCase);
+            return CoreConfiguration.UseLocalDispatcher;
         }
 
         public static Uri GetDispatcherUri()
         {
-            string uri = ConfigurationManager.AppSettings["DispatcherUrl"];
-            if (string.IsNullOrEmpty(uri))
-            {
-                throw new ArgumentException("Не задан параметр DispatcherUrl");
-            }
-            return new Uri(uri);
+            return CoreConfiguration.DispatcherUrl;
         }
 
         protected static IDispatcherService GetDispatcherService(bool useLocalDispatcher)
@@ -71,5 +64,21 @@ namespace Zidium.Core.Api
         }
 
         private static readonly DispatcherClient _dispatcherClient = new DispatcherClient("Core");
+
+        private static IDispatcherConfiguration _coreConfiguration;
+
+        private static IDispatcherConfiguration CoreConfiguration
+        {
+            get
+            {
+                if (_coreConfiguration == null)
+                {
+                    _coreConfiguration = DependencyInjection.GetServicePersistent<IDispatcherConfiguration>();
+                }
+
+                return _coreConfiguration;
+            }
+        }
+
     }
 }

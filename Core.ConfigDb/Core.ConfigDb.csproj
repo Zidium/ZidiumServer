@@ -31,7 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
@@ -42,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ConfigDbConfiguration.cs" />
+    <Compile Include="Configuration\IConfigDbConfiguration.cs" />
+    <Compile Include="Configuration\Options.cs" />
     <Compile Include="Initialization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AccountManagementService.cs" />
@@ -63,16 +65,19 @@
       <Version>4.4.12</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{77142e43-4b60-47bc-9c84-c6fe43247966}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Core\Core.csproj">
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
     </ProjectReference>
     <ProjectReference Include="..\Storage\Storage\Storage.csproj">
       <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>

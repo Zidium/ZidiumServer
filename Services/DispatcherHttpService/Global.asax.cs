@@ -3,6 +3,7 @@ using System.Threading;
 using System.Web;
 using NLog;
 using Zidium.Api;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.Common;
 using Zidium.Core.ConfigDb;
@@ -26,6 +27,10 @@ namespace Zidium.DispatcherHttpService
         {
             // Приложение не должно накатывать миграции или создавать базы
             StorageFactory.DisableMigrations();
+
+            var configuration = new Configuration();
+            DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(configuration);
 
             Initialization.SetServices();
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());

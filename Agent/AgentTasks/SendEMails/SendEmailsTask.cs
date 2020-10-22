@@ -14,13 +14,13 @@ namespace Zidium.Agent.AgentTasks.SendEMails
 
         protected override AgentTaskResult Do()
         {
-            var server = ServiceConfiguration.SmtpServer;
-            var port = ServiceConfiguration.SmtpPort; 
-            var login = ServiceConfiguration.SmtpLogin;
-            var from = ServiceConfiguration.SmtpFrom;
-            var password = ServiceConfiguration.SmtpPassword;
-            var useMailKit = ServiceConfiguration.SmtpUseMailKit;
-            var useSsl = ServiceConfiguration.SmtpUseSsl;
+            var server = AgentConfiguration.SmtpServer;
+            var port = AgentConfiguration.SmtpPort; 
+            var login = AgentConfiguration.SmtpLogin;
+            var from = AgentConfiguration.SmtpFrom;
+            var password = AgentConfiguration.SmtpPassword;
+            var useMailKit = AgentConfiguration.SmtpUseMailKit;
+            var useSsl = AgentConfiguration.SmtpUseSsl;
 
             var processor = new SendEmailsProcessor(Logger, CancellationToken, server, port, login, from, password, useMailKit, useSsl);
             processor.Process();

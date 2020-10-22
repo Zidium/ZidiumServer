@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Data.Entity;
 using System.Data.Entity.ModelConfiguration.Conventions;
 using Zidium.Storage.Ef.Mapping;
@@ -234,26 +233,19 @@ namespace Zidium.Storage.Ef
         /// </summary>
         public DbSet<DbTimeZone> TimeZones { get; set; }
 
-        // Skokov: без этой строки не работает построитель миграций, не удаляйте её!
-        protected AccountDbContext()
-            : base("AccountDbContext")
+        protected AccountDbContext(DbConnection connection) : base(connection, true)
         {
             IncActiveCount();
         }
 
-        protected AccountDbContext(DbConnection connection)
-            : base(connection, true)
+        protected AccountDbContext(string connectionString) : base(connectionString)
         {
             IncActiveCount();
         }
 
-        public static AccountDbContext CreateFromConnectionString(string sectionName, string connectionString)
+        public static AccountDbContext CreateFromConnectionString(string connectionString)
         {
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new ArgumentNullException("connectionString");
-            }
-            var provider = Provider.Current(sectionName);
+            var provider = Provider.Current();
             return provider.DbContext(connectionString);
         }
 
@@ -301,6 +293,7 @@ namespace Zidium.Storage.Ef
         }
 
         #endregion
+
     }
 
 }

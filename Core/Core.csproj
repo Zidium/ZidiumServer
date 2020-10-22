@@ -35,9 +35,11 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
@@ -343,7 +345,6 @@
     <Compile Include="Caching\UnitTestTypes\UnitTestTypeCacheStorage.cs" />
     <Compile Include="Caching\UnitTestTypes\UnitTestTypeCacheWriteObject.cs" />
     <Compile Include="Caching\UnitTestTypes\UnitTestTypeCacheResponse.cs" />
-    <Compile Include="Common\DependencyInjection.cs" />
     <Compile Include="Common\EnumNameHelper.cs" />
     <Compile Include="Common\EnumNames\RussianEnumName.cs" />
     <Compile Include="Common\ExceptionTempInfo.cs" />
@@ -534,6 +535,8 @@
     <Compile Include="ConfigDb\Services\IUrlService.cs" />
     <Compile Include="ConfigDb\Services\IUserAccountActivityService.cs" />
     <Compile Include="AccountDb\Services\TokenService\ITokenService.cs" />
+    <Compile Include="Configuration\IDebugConfiguration.cs" />
+    <Compile Include="Configuration\IDispatcherConfiguration.cs" />
     <Compile Include="Exceptions\AccessDeniedException.cs" />
     <Compile Include="Exceptions\AccountIsBlockedException.cs" />
     <Compile Include="Exceptions\AccountRequiredException.cs" />
@@ -624,8 +627,12 @@
       <Project>{77142E43-4B60-47BC-9C84-C6FE43247966}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Storage\Storage\Storage.csproj">
-      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Project>{DC354E32-C9C3-410A-BDF3-0C62F7E6597C}</Project>
       <Name>Storage</Name>
     </ProjectReference>
   </ItemGroup>

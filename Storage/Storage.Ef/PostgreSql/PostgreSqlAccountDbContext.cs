@@ -5,7 +5,7 @@ namespace Zidium.Storage.Ef
 {
     internal class PostgreSqlAccountDbContext : AccountDbContext
     {
-        public PostgreSqlAccountDbContext() : base()
+        public PostgreSqlAccountDbContext() : base("DbContextPostgreSql")
         {
         }
 

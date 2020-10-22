@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace Zidium.Core.Caching
 {
+    // TODO Избавиться от reflection
     public class ObjectChangesHelper
     {
         public static bool IsSimpleType(Type type)
@@ -28,6 +29,7 @@ namespace Zidium.Core.Caching
                 typeof(byte),
                 typeof(Guid),
                 typeof(DateTime),
+                typeof(TimeSpan),
                 typeof(string)
             };
             return validTypes.Contains(type);

@@ -2,7 +2,7 @@
 using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
 
-namespace Zidium.Core.Tests.AgentTests.VirusTotal
+namespace Zidium.Core.Tests.AgentTests
 {
     public class VirusTotalHelperTests
     {

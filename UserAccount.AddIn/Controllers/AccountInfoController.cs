@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Web.Mvc;
-using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.ConfigDb;
 using Zidium.UserAccount.Models;

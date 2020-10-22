@@ -39,13 +39,15 @@ namespace Zidium.Core
 
         public static Zidium.Api.IComponentControl StaticControl = new Zidium.Api.FakeComponentControl();
 
+        private static readonly object _lockObject = new object();
+
         public static DispatcherWrapper Wrapper
         {
             get
             {
                 if (_wrapper == null)
                 {
-                    lock (typeof(DispatcherService))
+                    lock (_lockObject)
                     {
                         if (_wrapper == null)
                         {
@@ -80,11 +82,11 @@ namespace Zidium.Core
 
                 // Создадим компонент
                 // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
-                var folder = !DebugHelper.IsDebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
-                var componentType = client.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? "Dispatcher" : DebugHelper.DebugComponentType);
+                var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
+                var folder = !debugConfiguration.DebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
+                var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? "Dispatcher" : DebugHelper.DebugComponentType);
                 var version = Version ?? typeof(DispatcherService).Assembly.GetName().Version.ToString();
-                var componentControl = folder
-                    .GetOrCreateChildComponentControl(componentType, "Dispatcher", version);
+                var componentControl = folder.GetOrCreateChildComponentControl(componentType, "Dispatcher", version);
 
                 // Присвоим Id компонента по умолчанию, чтобы адаптер NLog мог его использовать
                 Zidium.Api.Client.Instance = client;

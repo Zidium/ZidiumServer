@@ -30,6 +30,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -41,6 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\IDatabaseConfiguration.cs" />
+    <Compile Include="Configuration\JsonConfiguration.cs" />
     <Compile Include="Exceptions\ObjectNotFoundException.cs" />
     <Compile Include="Exceptions\SqlExtendedException.cs" />
     <Compile Include="Exceptions\UserFriedlyException.cs" />
@@ -48,6 +53,12 @@
     <Compile Include="Helpers\SqlCommandHelper.cs" />
     <Compile Include="Helpers\VersionHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Api\1.0\Api\Api.1.0.csproj">
+      <Project>{1e7f3895-5bce-4df5-aa33-3e4e8843e0eb}</Project>
+      <Name>Api.1.0</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

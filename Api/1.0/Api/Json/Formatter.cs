@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// https://github.com/mgholam/fastJSON
+
+using System.Collections.Generic;
 using System.Text;
 
 namespace Zidium.Api.JsonClasses

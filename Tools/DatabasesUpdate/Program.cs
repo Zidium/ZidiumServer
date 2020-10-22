@@ -1,48 +1,48 @@
-using System;
+﻿using System;
+using Zidium.Common;
+using Zidium.Core;
 
-namespace DatabasesUpdate
+namespace Zidium.DatabasesUpdate
 {
-    // Это приложение обновляет базу данных до последней версии
-    public class Program
+    // Это приложение обновляет базу до последней версии
+    public static class Program
     {
         public static void Main(string[] args)
         {
+            var configuration = new Configuration();
+            DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
+
             Console.WriteLine("Выберите среду для обновления баз:");
             Console.WriteLine("Work (W) - рабочая среда");
             Console.WriteLine("Test (T) - тестовая среда");
-            Console.WriteLine("Local (L) - локальная среда");
 
             var env = Console.ReadLine();
 
-            string sectionName = null;
+            IDatabaseConfiguration databaseConfiguration = null;
             var isTestEnviroment = false;
 
             if (string.Equals(env, "Work", StringComparison.OrdinalIgnoreCase) || string.Equals(env, "W", StringComparison.OrdinalIgnoreCase))
             {
-                sectionName = "DbContextWork";
+                databaseConfiguration = configuration.WorkDatabase;
                 isTestEnviroment = false;
             }                
             else if (string.Equals(env, "Test", StringComparison.OrdinalIgnoreCase) || string.Equals(env, "T", StringComparison.OrdinalIgnoreCase))
             {
-                sectionName = "DbContextTest";
-                isTestEnviroment = true;
-            }
-            else if (string.Equals(env, "Local", StringComparison.OrdinalIgnoreCase) || string.Equals(env, "L", StringComparison.OrdinalIgnoreCase))
-            {
-                sectionName = "DbContextLocal";
+                databaseConfiguration = configuration.TestDatabase;
                 isTestEnviroment = true;
             }
 
-            if (sectionName == null)
+            if (databaseConfiguration == null)
             {
                 Console.WriteLine("Неизвестная среда выполнения");
                 Console.ReadKey();
                 return;
             }
 
-            DatabasesUpdate.UpdateAll(sectionName, isTestEnviroment);
+            DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(databaseConfiguration);
+            DatabasesUpdate.UpdateAll(isTestEnviroment);
 
-            Console.WriteLine("Нажмите для выхода...");
+            Console.WriteLine("Press any key...");
             Console.ReadKey();
         }
     }

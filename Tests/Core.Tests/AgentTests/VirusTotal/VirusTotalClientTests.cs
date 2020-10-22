@@ -1,6 +1,4 @@
-﻿using System;
-using System.Configuration;
-using Xunit;
+﻿using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
 
 namespace Zidium.Core.Tests.AgentTests
@@ -11,7 +9,8 @@ namespace Zidium.Core.Tests.AgentTests
 
         public VirusTotalClientTests()
         {
-            _apiKey = ConfigurationManager.AppSettings["VirusTotalKey"];
+            var coreTestsConfiguration = DependencyInjection.GetServicePersistent<ICoreTestsConfiguration>();
+            _apiKey = coreTestsConfiguration.VirusTotalKey;
         }
 
         private void SleepLimits()

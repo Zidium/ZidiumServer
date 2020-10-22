@@ -67,7 +67,15 @@ namespace Zidium.Core.AccountsDb
 
             // значение метрики не актуальное
             // сохраняем пробел
-            SaveNoSignalColor(metric, data.ActualDate);
+            SaveNoSignalColor(metric, processDate);
+
+            // Перечитаем новые данные метрики
+            var metricRequest = new AccountCacheRequest()
+            {
+                AccountId = metric.AccountId,
+                ObjectId = metric.Id
+            };
+            metric = AllCaches.Metrics.Find(metricRequest);
 
             return metric;
         }
@@ -128,9 +136,9 @@ namespace Zidium.Core.AccountsDb
                 metric.ElseColor = data.ElseColor;
                 metric.BeginSave();
             }
-            var metrikRead = cache.Metrics.Read(metricId);
-            metrikRead.WaitSaveChanges();
-            return metrikRead;
+            var metricRead = cache.Metrics.Read(metricId);
+            metricRead.WaitSaveChanges();
+            return metricRead;
         }
 
         public void DeleteMetric(Guid accountId, DeleteMetricRequestData data)

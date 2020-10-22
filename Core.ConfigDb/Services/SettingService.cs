@@ -1,5 +1,4 @@
 using System;
-using System.Configuration;
 
 namespace Zidium.Core.ConfigDb
 {
@@ -9,7 +8,7 @@ namespace Zidium.Core.ConfigDb
         {
             if (_accountWebSite == null)
             {
-                _accountWebSite = ConfigurationManager.AppSettings["AccountWebSite"];
+                _accountWebSite = DependencyInjection.GetServicePersistent<IConfigDbConfiguration>().AccountWebSite;
                 if (_accountWebSite == null)
                     throw new Exception("Не заполнена настройка AccountWebSite в файле конфигурации");
             }

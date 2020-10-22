@@ -31,6 +31,11 @@ namespace Zidium.UserAccount
             // Приложение не должно накатывать миграции или создавать базы
             StorageFactory.DisableMigrations();
 
+            var configuration = new Configuration();
+            DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
+
             Initialization.SetServices();
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
 
@@ -88,8 +93,9 @@ namespace Zidium.UserAccount
 
             // Создадим компонент
             // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
-            var folder = !DebugHelper.IsDebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
-            var componentType = client.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? SystemComponentType.WebSite.SystemName : DebugHelper.DebugComponentType);
+            var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
+            var folder = !debugConfiguration.DebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
+            var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? SystemComponentType.WebSite.SystemName : DebugHelper.DebugComponentType);
             ComponentControl = folder
                 .GetOrCreateChildComponentControl(new GetOrCreateComponentData("UserAccountWebSite", componentType)
                 {

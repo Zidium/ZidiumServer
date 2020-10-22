@@ -33,10 +33,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
@@ -59,6 +61,8 @@
     <Compile Include="Components\UpdateComponentTests.cs" />
     <Compile Include="ComponentTypes\GetOrCreateComponentTypeTests.cs" />
     <Compile Include="ComponentTypes\GetOrCreateComponentTypeControlTests.cs" />
+    <Compile Include="Configuration\Configuration.cs" />
+    <Compile Include="Configuration\Options.cs" />
     <Compile Include="Events\ApplicationErrors\ExceptionRenderTests.cs" />
     <Compile Include="Logs\AutoCreateEventsTests.cs" />
     <Compile Include="Logs\FakeLogTests.cs" />
@@ -104,8 +108,18 @@
   <ItemGroup>
     <None Include="App.config" />
     <EmbeddedResource Include="Files\zidium-resource.config" />
+    <None Include="appsettings.user.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Common.csproj">
+      <Project>{77142e43-4b60-47bc-9c84-c6fe43247966}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Core.ConfigDb\Core.ConfigDb.csproj">
       <Project>{a75855ad-0c1a-41b7-bfe5-d13a9721b000}</Project>
       <Name>Core.ConfigDb</Name>
@@ -114,12 +128,16 @@
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Storage\Storage.Ef\Storage.Ef.csproj">
-      <Project>{f1adee86-7705-474a-9e1e-fd086391445d}</Project>
+      <Project>{F1ADEE86-7705-474A-9E1E-FD086391445D}</Project>
       <Name>Storage.Ef</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Storage\Storage\Storage.csproj">
-      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Project>{DC354E32-C9C3-410A-BDF3-0C62F7E6597C}</Project>
       <Name>Storage</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Tests\TestTools\TestTools.csproj">

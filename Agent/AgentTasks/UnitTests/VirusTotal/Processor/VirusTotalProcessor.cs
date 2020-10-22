@@ -236,7 +236,24 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             // если отчет старый
             if (scanTime < inputData.ScanTime)
             {
-                logger.Warn("Отчет старый");
+                logger.Warn("Отчет старый, scanTime: " + inputData.ScanTime);
+
+                // если прошло 2 дня, а нового отчета нет, выполним новое сканирование
+                if (inputData.AttempCount > 2 
+                    && inputData.ScanTime.HasValue &&
+                    inputData.ScanTime.Value.AddDays(2) < DateTime.Now)
+                {
+                    logger.Warn("Выполним Scan еще раз");
+                    return new VirusTotalProcessorOutputData()
+                    {
+                        NextStep = VirusTotalStep.Scan,
+                        NextStepProcessTime = DateTime.Now.AddMinutes(1), // увеличиваем паузу с ростом ошибок
+                        ScanId = inputData.ScanId,
+                        ScanTime = inputData.ScanTime
+                    };
+                }
+
+                // ждем ногово отчета
                 return new VirusTotalProcessorOutputData()
                 {
                     NextStep = VirusTotalStep.Report,
@@ -275,14 +292,11 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 {
                     return ProcessScanStep(inputData);
                 }
-                else if (inputData.NextStep == VirusTotalStep.Report)
+                if (inputData.NextStep == VirusTotalStep.Report)
                 {
                     return ProcessReportStep(inputData);
                 }
-                else
-                {
-                    throw new Exception("Неизвестный шаг: " + inputData.NextStep);
-                }
+                throw new Exception("Неизвестный шаг: " + inputData.NextStep);
             }
             catch (WebException webException)
             {

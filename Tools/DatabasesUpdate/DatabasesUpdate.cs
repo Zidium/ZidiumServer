@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Configuration;
 using System.Linq;
 using NLog;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.ConfigDb;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 
-namespace DatabasesUpdate
+namespace Zidium.DatabasesUpdate
 {
     /// <summary>
     /// Класс обновляет базу до последней версии
@@ -17,7 +17,7 @@ namespace DatabasesUpdate
     {
         private static ILogger _logger = LogManager.GetCurrentClassLogger();
 
-        public static bool UpdateAll(string sectionName, bool isTestEnviroment)
+        public static bool UpdateAll(bool isTestEnviroment)
         {
             try
             {
@@ -28,11 +28,8 @@ namespace DatabasesUpdate
                 DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
 
                 var accountDbStorageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
-                accountDbStorageFactory.OverrideSectionName(sectionName);
 
-                var connectionString = ConfigurationManager.ConnectionStrings[sectionName].ConnectionString;
-                DatabaseService.SetConnectionString(connectionString);
-
+                var connectionString = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ConnectionString;
                 var accountDbStorage = accountDbStorageFactory.GetStorage(connectionString);
                 var count = accountDbStorage.Migrate();
 
@@ -61,11 +58,27 @@ namespace DatabasesUpdate
                     componentService.CreateRoot(accountInfo.Id, accountInfo.RootId);
 
                     // создаем админа
-                    Console.Write("Укажите EMail администратора: ");
-                    var adminEMail = Console.ReadLine();
+                    string adminEMail;
+                    if (!isTestEnviroment)
+                    {
+                        Console.Write("Укажите EMail администратора: ");
+                        adminEMail = Console.ReadLine();
+                    }
+                    else
+                    {
+                        adminEMail = "admin@none";
+                    }
 
-                    Console.Write("Укажите пароль администратора: ");
-                    var adminPassword = Console.ReadLine();
+                    string adminPassword;
+                    if (!isTestEnviroment)
+                    {
+                        Console.Write("Укажите пароль администратора: ");
+                        adminPassword = Console.ReadLine();
+                    }
+                    else
+                    {
+                        adminPassword = Guid.NewGuid().ToString();
+                    }
 
                     var adminUserId = userService.CreateAccountAdmin(
                         accountInfo.Id,

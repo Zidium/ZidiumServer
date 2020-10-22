@@ -224,6 +224,54 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.True(getMetricResponse.Success);
             Assert.NotNull(getMetricResponse.Data);
             Assert.Equal(Zidium.Api.MonitoringStatus.Alarm, getMetricResponse.Data.Status);
+            Assert.Null(getMetricResponse.Data.Value);
+        }
+
+        [Fact]
+        public void OutdatedMetricValueBackTest()
+        {
+            var account = TestHelper.GetTestAccount();
+            var metricType = TestHelper.CreateTestMetricType(account.Id);
+            var component = account.CreateRandomComponentControl();
+
+            InitMetricTypeRules(account.Id, metricType.Id);
+
+            // Отправим метрику с актуальностью 1 секунда
+            var responseSend = component.SendMetric(
+                new Zidium.Api.SendMetricData()
+                {
+                    Name = metricType.SystemName,
+                    Value = 1000,
+                    ActualInterval = TimeSpan.FromSeconds(1)
+                });
+            Assert.True(responseSend.Success);
+
+            // Подождём 5 секунд
+            Thread.Sleep(5 * 1000);
+
+            // Метрика должна стать красной
+            var getMetricResponse = component.GetMetric(metricType.SystemName);
+            Assert.True(getMetricResponse.Success);
+            Assert.NotNull(getMetricResponse.Data);
+            Assert.Equal(Zidium.Api.MonitoringStatus.Alarm, getMetricResponse.Data.Status);
+            Assert.Null(getMetricResponse.Data.Value);
+
+            // Снова отправим метрику
+            responseSend = component.SendMetric(
+                new Zidium.Api.SendMetricData()
+                {
+                    Name = metricType.SystemName,
+                    Value = 500,
+                    ActualInterval = TimeSpan.FromMinutes(60)
+                });
+            responseSend.Check();
+
+            // Проверим, что метрика зелёная
+            getMetricResponse = component.GetMetric(metricType.SystemName);
+            Assert.True(getMetricResponse.Success);
+            Assert.NotNull(getMetricResponse.Data);
+            Assert.Equal(Zidium.Api.MonitoringStatus.Success, getMetricResponse.Data.Status);
+            Assert.Equal(500, getMetricResponse.Data.Value);
         }
 
         protected void InitMetricTypeRules(Guid accountId, Guid metricTypeId)

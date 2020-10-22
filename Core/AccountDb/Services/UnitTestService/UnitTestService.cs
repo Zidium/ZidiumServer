@@ -388,7 +388,7 @@ namespace Zidium.Core.AccountsDb
                 unitTest.ComponentId = data.ComponentId ?? unitTest.ComponentId;
                 unitTest.ErrorColor = data.ErrorColor ?? unitTest.ErrorColor;
                 unitTest.NoSignalColor = data.NoSignalColor ?? unitTest.NoSignalColor;
-                unitTest.ActualTime = data.ActualTime.HasValue ? TimeSpanHelper.FromSeconds(data.ActualTime) : unitTest.ActualTime;
+                unitTest.ActualTime = data.ActualTime.HasValue ? TimeSpanHelper.FromSeconds(data.ActualTime) : null;
                 unitTest.SimpleMode = data.SimpleMode ?? unitTest.SimpleMode;
                 unitTest.AttempMax = data.AttempMax ?? unitTest.AttempMax;
 

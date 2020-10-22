@@ -44,14 +44,19 @@ namespace Zidium.Agent.AgentTasks
 
         protected ILogger Logger;
 
+        protected IAgentConfiguration AgentConfiguration;
+
         protected AgentTaskBase()
         {
             TimeService = new TimeService();
             ExecutionPeriod = TimeSpan.FromMinutes(10);
             WaitOnErrorTime = TimeSpan.FromMinutes(1);
-            _maximumOfflineInterval = ServiceConfiguration.MaximumOfflineInterval;
 
-            var typeControl = Client.Instance.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? "AgentTask" : DebugHelper.DebugComponentType);
+            AgentConfiguration = DependencyInjection.GetServicePersistent<IAgentConfiguration>();
+            _maximumOfflineInterval = TimeSpan.Parse(AgentConfiguration.MaximumOfflineInterval);
+
+            var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
+            var typeControl = Client.Instance.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? "AgentTask" : DebugHelper.DebugComponentType);
             _componentControl = Client.Instance.GetDefaultComponentControl().GetOrCreateChildComponentControl(typeControl, Name);
             var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(t => t.LoggerNamePattern == "Agent");
             var minLevel = rule != null ? rule.Levels.Min() : NLog.LogLevel.Info;

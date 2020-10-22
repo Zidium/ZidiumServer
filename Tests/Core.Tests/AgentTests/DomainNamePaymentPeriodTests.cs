@@ -84,11 +84,7 @@ namespace Zidium.Core.Tests.AgentTests
         [Fact]
         public void UaWebsiteTest()
         {
-            var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("aps-tender.com.ua");
-            Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
-            Assert.True(result.Date.HasValue);
-
-            result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("azu.kiev.ua");
+            var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("catalog.i.ua");
             Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
             Assert.True(result.Date.HasValue);
         }

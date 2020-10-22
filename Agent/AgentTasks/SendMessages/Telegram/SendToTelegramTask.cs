@@ -14,7 +14,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
 
         protected override AgentTaskResult Do()
         {
-            var botToken = ServiceConfiguration.TelegramBotToken;
+            var botToken = AgentConfiguration.TelegramBotToken;
 
             var processor = new SendToTelegramProcessor(Logger, CancellationToken, botToken);
             processor.Process();

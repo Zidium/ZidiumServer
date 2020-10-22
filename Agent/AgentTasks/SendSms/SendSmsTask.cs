@@ -14,8 +14,8 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
         protected override AgentTaskResult Do()
         {
-            var apiId = ServiceConfiguration.SmsRuApiId;
-            var from = ServiceConfiguration.SmsRuFrom;
+            var apiId = AgentConfiguration.SmsRuApiId;
+            var from = AgentConfiguration.SmsRuFrom;
 
             var processor = new SendSmsProcessor(Logger, CancellationToken, apiId, from);
             processor.Process();

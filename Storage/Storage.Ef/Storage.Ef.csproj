@@ -32,7 +32,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -313,11 +312,18 @@
     <PackageReference Include="Npgsql">
       <Version>4.1.3.1</Version>
     </PackageReference>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+      <Version>4.7.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Common.csproj">
       <Project>{77142E43-4B60-47BC-9C84-C6FE43247966}</Project>
       <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
     </ProjectReference>
     <ProjectReference Include="..\Storage\Storage.csproj">
       <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>

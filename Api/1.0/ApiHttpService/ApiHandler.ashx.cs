@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -176,7 +175,7 @@ namespace Zidium.ApiHttpService
             {
                 if (_fixedAccountName == null)
                 {
-                    _fixedAccountName = ConfigurationManager.AppSettings["FixedAccountName"];
+                    _fixedAccountName = DependencyInjection.GetServicePersistent<IApiHttpServiceConfiguration>().FixedAccountName;
                     if (_fixedAccountName == null)
                         throw new Exception("Не заполнена настройка FixedAccountName в конфигурационном файле");
                 }

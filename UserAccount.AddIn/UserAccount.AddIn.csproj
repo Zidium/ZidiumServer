@@ -142,6 +142,10 @@
       <Project>{1e7f3895-5bce-4df5-aa33-3e4e8843e0eb}</Project>
       <Name>Api.1.0</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{77142e43-4b60-47bc-9c84-c6fe43247966}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Core.ConfigDb\Core.ConfigDb.csproj">
       <Project>{a75855ad-0c1a-41b7-bfe5-d13a9721b000}</Project>
       <Name>Core.ConfigDb</Name>
@@ -149,6 +153,10 @@
     <ProjectReference Include="..\Core\Core.csproj">
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
     </ProjectReference>
     <ProjectReference Include="..\UserAccount\UserAccount.csproj">
       <Project>{573cf201-63a5-4faf-bbb7-645ea8c5c3c6}</Project>

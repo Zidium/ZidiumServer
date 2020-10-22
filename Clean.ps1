@@ -1,0 +1,2 @@
+Get-ChildItem -path . -Directory -Include 'bin' -Recurse -force | Write-Host | Remove-Item -force -Recurse
+Get-ChildItem -path . -Directory -Include 'obj' -Recurse -force | Write-Host | Remove-Item -force -Recurse

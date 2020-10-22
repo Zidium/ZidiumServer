@@ -1,4 +1,6 @@
-﻿using System;
+﻿// https://github.com/mgholam/fastJSON
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 #if !SILVERLIGHT

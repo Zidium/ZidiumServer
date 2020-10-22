@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Configuration;
 using System.Data.Common;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.Linq;
 using Npgsql;
+using Zidium.Common;
 using Zidium.Storage.Ef.Migrations.MsSql;
 using Zidium.Storage.Ef.Migrations.PostgreSql;
 
@@ -18,12 +18,12 @@ namespace Zidium.Storage.Ef
     {
         protected static Provider FCurrent;
 
-        public static Provider Current(string sectionName = null)
+        public static Provider Current()
         {
             if (FCurrent == null)
             {
-                var invariantName = ConfigurationManager.ConnectionStrings[sectionName ?? "DbContext"].ProviderName;
-                FCurrent = new Provider(invariantName);
+                var providerName = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ProviderName;
+                FCurrent = new Provider(providerName);
             }
             return FCurrent;
         }
@@ -33,27 +33,15 @@ namespace Zidium.Storage.Ef
             Type = databaseProviderType;
         }
 
-        protected Provider(string invariantName)
+        protected Provider(string providerName)
         {
-            if (invariantName.Equals("System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
+            if (providerName.Equals("System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
                 Type = DatabaseProviderType.MsSql;
-            else if (invariantName.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
+            else if (providerName.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
                 Type = DatabaseProviderType.PostgreSql;
             else
-                throw new Exception("Unsupported provider " + invariantName);
+                throw new Exception("Unsupported provider " + providerName);
         }
-
-        static Provider()
-        {
-            SetSectionName("DbContext");
-        }
-
-        public static void SetSectionName(string sectionName)
-        {
-            _invariantName = ConfigurationManager.ConnectionStrings[sectionName]?.ProviderName;
-        }
-
-        private static string _invariantName;
 
         /// <summary>
         /// Тип провайдера
@@ -63,7 +51,7 @@ namespace Zidium.Storage.Ef
         /// <summary>
         /// Имя провайдера
         /// </summary>
-        public string InvariantName
+        public string ProviderName
         {
             get
             {
@@ -119,7 +107,7 @@ namespace Zidium.Storage.Ef
         public int Migrate(string connectionString)
         {
             var conf = DbMConfiguration();
-            conf.TargetDatabase = new DbConnectionInfo(connectionString, InvariantName);
+            conf.TargetDatabase = new DbConnectionInfo(connectionString, ProviderName);
             var mirgator = new DbMigrator(conf);
             var result = mirgator.GetPendingMigrations().Count();
             mirgator.Update();

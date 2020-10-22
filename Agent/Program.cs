@@ -2,13 +2,21 @@
 using System.IO;
 using System.ServiceProcess;
 using System.Reflection;
+using Zidium.Core;
+using Zidium.Common;
 
 namespace Zidium.Agent
 {
     internal static class Program
     {
-        public static void Main(String[] args)
+        public static void Main(string[] args)
         {
+            var configuration = new Configuration();
+            DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IAgentConfiguration>(configuration);
+
             if (args != null && args.Length == 1 && args[0].Length > 1 && (args[0][0] == '-' || args[0][0] == '/'))
             {
                 switch (args[0].Substring(1).ToLower())
@@ -72,8 +80,9 @@ namespace Zidium.Agent
             try
             {
                 var appAssembly = Assembly.GetEntryAssembly();
+                var agentConfiguration = DependencyInjection.GetServicePersistent<IAgentConfiguration>();
 
-                using (var installer = new ProjectInstaller(ServiceConfiguration.ServiceName, ServiceConfiguration.ServiceDescription, appAssembly))
+                using (var installer = new ProjectInstaller(agentConfiguration.ServiceName, agentConfiguration.ServiceDescription, appAssembly))
                 {
                     if (isInstall)
                     {

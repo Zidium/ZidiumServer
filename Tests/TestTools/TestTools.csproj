@@ -37,7 +37,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -47,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ITestsConfiguration.cs" />
     <Compile Include="IisExpressHelper.cs" />
     <Compile Include="TestAccountInfo.cs" />
     <Compile Include="TestHelper.cs" />
@@ -60,6 +60,10 @@
     <ProjectReference Include="..\..\Core\Core.csproj">
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Storage\Storage.Ef\Storage.Ef.csproj">
       <Project>{f1adee86-7705-474a-9e1e-fd086391445d}</Project>
@@ -77,9 +81,6 @@
     <PackageReference Include="xunit">
       <Version>2.1.0</Version>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

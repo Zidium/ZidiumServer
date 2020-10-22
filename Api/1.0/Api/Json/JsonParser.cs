@@ -1,4 +1,6 @@
-﻿using System;
+﻿// https://github.com/mgholam/fastJSON
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -352,6 +354,18 @@ namespace Zidium.Api.JsonClasses
             do
             {
                 c = json[index];
+
+                if (c == '/' && json[index + 1] == '/') // c++ style single line comments
+                {
+                    index++;
+                    index++;
+                    do
+                    {
+                        c = json[index];
+                        if (c == '\r' || c == '\n') break; // read till end of line
+                    }
+                    while (++index < json.Length);
+                }
 
                 if (c > ' ') break;
                 if (c != ' ' && c != '\t' && c != '\n' && c != '\r') break;

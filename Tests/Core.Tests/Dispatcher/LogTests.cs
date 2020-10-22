@@ -440,5 +440,29 @@ namespace Zidium.Core.Tests.Dispatcher
             Assert.Equal(100, property.Name.Length);
         }
 
+        [Fact]
+        public void SendLogWithZeroesSymbols()
+        {
+            var account = TestHelper.GetTestAccount();
+            var component = TestHelper.CreateRandomComponent();
+            var dispatcher = TestHelper.GetDispatcherClient();
+
+            dispatcher.SendLog(account.Id, new Api.SendLogData()
+            {
+                ComponentId = component.Info.Id,
+                Level = LogLevel.Info,
+                Message = "AAA" + "\x00" + "BBB",
+                Properties = new List<Api.ExtentionPropertyDto>()
+                {
+                    new Api.ExtentionPropertyDto()
+                    {
+                        Name = "Property_" + "\x00" + "_Test",
+                        Value = "AAA" + "\x00" + "BBB",
+                        Type = DataType.String
+                    }
+                }
+            }).Check();
+        }
+
     }
 }

@@ -2,6 +2,7 @@
 using System.Web;
 using NLog;
 using Zidium.Api;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
@@ -21,8 +22,9 @@ namespace Zidium.ApiHttpService
 
             // Создадим компонент
             // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
-            var folder = !DebugHelper.IsDebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
-            var componentType = client.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? "ApiWebService" : DebugHelper.DebugComponentType);
+            var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
+            var folder = !debugConfiguration.DebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
+            var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? "ApiWebService" : DebugHelper.DebugComponentType);
             var componentControl = folder
                 .GetOrCreateChildComponentControl(componentType, "ApiWebService 1.0", ApiHandler.GetVersion());
 
@@ -39,6 +41,12 @@ namespace Zidium.ApiHttpService
         {
             // Приложение не должно накатывать миграции или создавать базы
             StorageFactory.DisableMigrations();
+
+            var configuration = new Configuration();
+            DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IApiHttpServiceConfiguration>(configuration);
 
             Initialization.SetServices();
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());

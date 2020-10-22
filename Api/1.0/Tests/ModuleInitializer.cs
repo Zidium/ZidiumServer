@@ -4,10 +4,14 @@
 // modifications, this file may also be moved to any location, as long as it
 // remains a part of its current project.
 
+using Zidium;
+using Zidium.Api;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.ConfigDb;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
+using Zidium.TestTools;
 
 namespace ApiTests_1._0
 {
@@ -17,6 +21,12 @@ namespace ApiTests_1._0
         {
             // Тесты не должны накатывать миграции или создавать базы
             StorageFactory.DisableMigrations();
+
+            var configuration = new Configuration();
+            DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<ITestsConfiguration>(configuration);
 
             Initialization.SetServices();
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());

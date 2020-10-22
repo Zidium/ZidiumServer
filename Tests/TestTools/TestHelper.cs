@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
 using System.Threading;
 using ApiAdapter;
@@ -27,8 +26,6 @@ namespace Zidium.TestTools
     /// </summary>
     public class TestHelper
     {
-        public static bool CanRunApiOnIisExpress = string.Equals(ConfigurationManager.AppSettings["AutorunIisExpress"], "true", StringComparison.OrdinalIgnoreCase);
-
         public static void WaitForTime(DateTime date)
         {
             while (date > DateTime.Now)
@@ -407,11 +404,6 @@ namespace Zidium.TestTools
             return GetRoundDateTime(date1.Value) == GetRoundDateTime(date2.Value);
         }
 
-        public static bool UseLocalDispatcher()
-        {
-            return ConfigurationManager.AppSettings["UseLocalDispatcher"] == "true";
-        }
-
         public IDispatcherService GetDispatcherService()
         {
             return DispatcherHelper.GetDispatcherService();
@@ -419,19 +411,24 @@ namespace Zidium.TestTools
 
         public static IApiService GetWebService(Api.AccessToken accessToken, string accountName)
         {
-            if (UseLocalDispatcher())
+            if (DispatcherConfiguration.UseLocalDispatcher)
             {
                 var dispatcher = DispatcherService.Wrapper;
                 var dtoService = new ApiToDispatcherAdapter(dispatcher, "2.2.2.2", accountName);
                 var apiService = new ApiService(dtoService, accessToken);
                 return apiService;
             }
-            var uri = ApiHelper.GetApiUrl(accountName);
-            if (CanRunApiOnIisExpress && uri.AbsoluteUri.StartsWith("http://localhost"))
+
+            Uri uri;
+            var apiUrlFake = TestsConfiguration.ApiUrl;
+            if (!string.IsNullOrEmpty(apiUrlFake))
             {
-                CanRunApiOnIisExpress = false;
-                IisExpress.StartApiWebService();
+                apiUrlFake = apiUrlFake.Replace("*", accountName);
+                uri = new Uri(apiUrlFake);
             }
+            else
+                uri = ApiHelper.GetApiUrl(accountName);
+
             var dtoService2 = new DtoServiceProxy(uri);
             return new ApiService(dtoService2, accessToken);
         }
@@ -845,7 +842,37 @@ namespace Zidium.TestTools
             var dispatcherClient = DispatcherHelper.GetDispatcherClient();
             var accountInfo = dispatcherClient.GetAccountById(new GetAccountByIdRequestData() { Id = accountId }).Data;
             var databaseInfo = dispatcherClient.GetDatabaseById(new GetDatabaseByIdRequestData() { Id = accountInfo.AccountDatabaseId }).Data;
-            return AccountDbContext.CreateFromConnectionString(null, databaseInfo.ConnectionString);
+            return AccountDbContext.CreateFromConnectionString(databaseInfo.ConnectionString);
+        }
+
+        private static IDispatcherConfiguration _dispatcherConfiguration;
+
+        private static IDispatcherConfiguration DispatcherConfiguration
+        {
+            get
+            {
+                if (_dispatcherConfiguration == null)
+                {
+                    _dispatcherConfiguration = DependencyInjection.GetServicePersistent<IDispatcherConfiguration>();
+                }
+
+                return _dispatcherConfiguration;
+            }
+        }
+
+        private static ITestsConfiguration _testsConfiguration;
+
+        private static ITestsConfiguration TestsConfiguration
+        {
+            get
+            {
+                if (_testsConfiguration == null)
+                {
+                    _testsConfiguration = DependencyInjection.GetServicePersistent<ITestsConfiguration>();
+                }
+
+                return _testsConfiguration;
+            }
         }
 
     }

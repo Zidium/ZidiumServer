@@ -4,18 +4,16 @@ namespace Zidium.Storage.Ef
 {
     internal class Storage : IStorage
     {
-        public Storage(string sectionName, string connectionString)
+        public Storage(string connectionString)
         {
-            _sectionName = sectionName;
             _connectionString = connectionString;
         }
 
-        private readonly string _sectionName;
         private readonly string _connectionString;
 
         private AccountDbContext CreateContext()
         {
-            return AccountDbContext.CreateFromConnectionString(_sectionName, _connectionString);
+            return AccountDbContext.CreateFromConnectionString(_connectionString);
         }
 
         private AccountDbContext Context
@@ -295,7 +293,7 @@ namespace Zidium.Storage.Ef
 
         public int Migrate()
         {
-            var provider = Provider.Current(_sectionName);
+            var provider = Provider.Current();
             return provider.Migrate(_connectionString);
         }
 

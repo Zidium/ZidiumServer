@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using System.Data.Common;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
@@ -18,24 +17,15 @@ namespace Zidium.Storage.Ef
             : base(connection, contextOwnsConnection)
         {
             ConnectionString = connection.ConnectionString;
-            MyInit();
+            Prepare();
         }
 
         protected DataContextBase(string connectionString) : base(connectionString)
         {
-            var conString = ConfigurationManager.ConnectionStrings[connectionString];
-            if (conString == null)
-            {
-                ConnectionString = connectionString;
-            }
-            else
-            {
-                ConnectionString = conString.ConnectionString;
-            }
-            MyInit();
+            Prepare();
         }
 
-        protected void MyInit()
+        protected void Prepare()
         {
             // на сервере Zidium из-за openvpn отваливается периодически сеть
             // но было замечено что обычная SQL проверка с таймаутом выполнения 1 минуту всегда успешно выполнялась

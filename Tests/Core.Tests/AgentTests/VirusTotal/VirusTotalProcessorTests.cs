@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration;
 using NLog;
 using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
@@ -20,12 +19,13 @@ namespace Zidium.Core.Tests.AgentTests
 
         public VirusTotalProcessorTests()
         {
-            _apiKey = ConfigurationManager.AppSettings["VirusTotalKey"];
+            var coreTestsConfiguration = DependencyInjection.GetServicePersistent<ICoreTestsConfiguration>();
+            _apiKey = coreTestsConfiguration.VirusTotalKey;
             processor = new VirusTotalProcessor(limitManager, new TimeService(), logger);
         }
 
         [Fact]
-        private void UnknownApiKeyTest()
+        public void UnknownApiKeyTest()
         {
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
@@ -40,7 +40,7 @@ namespace Zidium.Core.Tests.AgentTests
         }
 
         [Fact]
-        private void SuccessTest()
+        public void SuccessTest()
         {
             // scan
             var url = "http://recursion.ru";
@@ -75,7 +75,7 @@ namespace Zidium.Core.Tests.AgentTests
         /// Тест проверяет случай, когда url имеет недопустимый формат
         /// </summary>
         [Fact]
-        private void InvalidUrlTest()
+        public void InvalidUrlTest()
         {
             var output = processor.Process(new VirusTotalProcessorInputData()
             {
@@ -93,7 +93,7 @@ namespace Zidium.Core.Tests.AgentTests
         /// Тест проверяет случай, когда scan_id уже неактуален (неизвестен)
         /// </summary>
         [Fact]
-        private void UnknownScanIdTest()
+        public void UnknownScanIdTest()
         {
             string url = "http://recursion.ru";
             var output = processor.Process(new VirusTotalProcessorInputData()
@@ -123,7 +123,7 @@ namespace Zidium.Core.Tests.AgentTests
         /// Тест проверяет случай, когда отчет неактуальный
         /// </summary>
         [Fact]
-        private void NotActualReportTest()
+        public void NotActualReportTest()
         {
             string url = "http://recursion.ru";
             var output = processor.Process(new VirusTotalProcessorInputData()
@@ -155,7 +155,7 @@ namespace Zidium.Core.Tests.AgentTests
         /// Тест проверяет случай, когда url ресурса изменился между шагами
         /// </summary>
         [Fact]
-        private void ChangeUrlTest()
+        public void ChangeUrlTest()
         {
             // scan
             string url = "http://recursion.ru";

@@ -4,15 +4,8 @@
     {
         public IStorage GetStorage(string connectionString)
         {
-            return new Storage(_sectionName, connectionString);
+            return new Storage(connectionString);
         }
-
-        public void OverrideSectionName(string sectionName)
-        {
-            _sectionName = sectionName;
-        }
-
-        private string _sectionName;
 
         public static void DisableMigrations()
         {

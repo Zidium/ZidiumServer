@@ -131,7 +131,7 @@ namespace Zidium.TestTools
 
         internal AccountDbContext GetAccountDbContext()
         {
-            return AccountDbContext.CreateFromConnectionString(null, ConnectionString);
+            return AccountDbContext.CreateFromConnectionString(ConnectionString);
         }
 
         public IMetricTypeCacheReadObject GetMetricTypeCache(Guid metricTypeId)

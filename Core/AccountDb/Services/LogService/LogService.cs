@@ -135,6 +135,8 @@ namespace Zidium.Core.AccountsDb
                 data.Context = data.Context.Substring(0, 255);
             }
 
+            data.Message = data.Message.FixStringSymbols();
+
             if (data.Properties != null)
             {
                 foreach (var property in data.Properties)
@@ -148,6 +150,11 @@ namespace Zidium.Core.AccountsDb
                     {
                         property.Name = property.Name.Substring(0, 100);
                     }
+
+                    property.Name = property.Name.FixStringSymbols();
+
+                    if (property.Value != null)
+                        property.Value = property.Value.FixStringSymbols();
                 }
             }
         }

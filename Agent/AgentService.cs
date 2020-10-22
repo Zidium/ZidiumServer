@@ -48,8 +48,9 @@ namespace Zidium.Agent
 
             // Создадим компонент
             // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
-            var folder = !DebugHelper.IsDebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
-            var componentType = client.GetOrCreateComponentTypeControl(!DebugHelper.IsDebugMode ? "Agent" : DebugHelper.DebugComponentType);
+            var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
+            var folder = !debugConfiguration.DebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
+            var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? "Agent" : DebugHelper.DebugComponentType);
             ComponentControl = folder
                 .GetOrCreateChildComponentControl(new GetOrCreateComponentData("Agent", componentType)
                 {
@@ -94,7 +95,9 @@ namespace Zidium.Agent
                 // ContextCountTimer = new Timer(SaveContextsCount, null, 0, (int) ContextCountTimerInterval.TotalMilliseconds);
 
                 // создаем список фоновых задач
-                _agentTasks = !ServiceConfiguration.DummyMode ? new List<AgentTaskBase>()
+                var agentConfiguration = DependencyInjection.GetServicePersistent<IAgentConfiguration>();
+
+                _agentTasks = !agentConfiguration.DummyMode ? new List<AgentTaskBase>()
                 {
                     new CreateNotificationsTask(),
                     new EmailNotificationsTask(),
@@ -138,7 +141,7 @@ namespace Zidium.Agent
                     {
                         var method = startupType.GetMethod("AddTasks", BindingFlags.Static | BindingFlags.Public);
                         if (method != null)
-                            method.Invoke(null, new object[] {_agentTasks, ServiceConfiguration.DummyMode});
+                            method.Invoke(null, new object[] {_agentTasks, agentConfiguration.DummyMode});
                     }
                 }
 

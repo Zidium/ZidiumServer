@@ -197,6 +197,7 @@ namespace Zidium.UserAccount.Controllers
             model.UnitTestType = GetStorage().UnitTestTypes.GetOneById(unittest.TypeId);
             model.NoSignalColorDefault = model.UnitTestType.NoSignalColor ?? ObjectColor.Red;
             model.ActualTimeDefault = TimeSpanHelper.FromSeconds(model.UnitTestType.ActualTimeSecs) ?? UnitTestHelper.GetDefaultActualTime();
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(model.Id, GetStorage());
 
             var bulb = GetStorage().Bulbs.GetOneById(unittest.StatusDataId);
             model.Date = bulb.EndDate;

@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountCacheTests.cs" />
+    <Compile Include="Configuration\Configuration.cs" />
+    <Compile Include="Configuration\Options.cs" />
     <Compile Include="DeleteEventsTest.cs" />
     <Compile Include="DeleteLogsTests.cs" />
     <Compile Include="DeleteMetricHistoryTests.cs" />
@@ -70,12 +72,16 @@
       <Project>{dc578e8e-de61-4f6e-976a-11f339cac837}</Project>
       <Name>Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\DependencyInjection\DependencyInjection.csproj">
+      <Project>{853409d6-3b56-429c-9b86-c19d9947788d}</Project>
+      <Name>DependencyInjection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Storage\Storage.Ef\Storage.Ef.csproj">
-      <Project>{f1adee86-7705-474a-9e1e-fd086391445d}</Project>
+      <Project>{F1ADEE86-7705-474A-9E1E-FD086391445D}</Project>
       <Name>Storage.Ef</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Storage\Storage\Storage.csproj">
-      <Project>{dc354e32-c9c3-410a-bdf3-0c62f7e6597c}</Project>
+      <Project>{DC354E32-C9C3-410A-BDF3-0C62F7E6597C}</Project>
       <Name>Storage</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\UserAccount\UserAccount.csproj">
@@ -109,10 +115,13 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="NLog.config">
+    <None Include="appsettings.user.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Zidium.config">
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
