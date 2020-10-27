@@ -36,7 +36,8 @@ namespace Zidium.TestTools
 
                 var builder = new ConfigurationBuilder()
                     .SetBasePath(appDir)
-                    .AddJsonFile("appsettings.json", true);
+                    .AddJsonFile("appsettings.json", true)
+                    .AddJsonFile("appsettings.user.json", true);
 
                 var configuration = builder.Build();
 
