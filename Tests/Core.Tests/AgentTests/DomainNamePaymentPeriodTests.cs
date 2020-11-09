@@ -13,7 +13,7 @@ using Zidium.TestTools;
 namespace Zidium.Core.Tests.AgentTests
 {
 
-    public class DomainNamePaymentPeriodTests
+    public class DomainNamePaymentPeriodTests : BaseTest
     {
         [Fact]
         public void CommonTest()

@@ -1,25 +1,16 @@
-// This file can be modified in any way, with two exceptions. 1) The name of
-// this class must be "ModuleInitializer". 2) This class must have a public or
-// internal parameterless "Run" method that returns void. In addition to these
-// modifications, this file may also be moved to any location, as long as it
-// remains a part of its current project.
-
-using Zidium;
-using Zidium.Api;
-using Zidium.Common;
-using Zidium.Core;
+п»їusing Zidium.Common;
 using Zidium.Core.ConfigDb;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
-namespace ApiTests_1._0
+namespace Zidium.Core.Tests
 {
-    internal static class ModuleInitializer
+    public abstract class BaseTest
     {
-        internal static void Run()
+        static BaseTest()
         {
-            // Тесты не должны накатывать миграции или создавать базы
+            // РўРµСЃС‚С‹ РЅРµ РґРѕР»Р¶РЅС‹ РЅР°РєР°С‚С‹РІР°С‚СЊ РјРёРіСЂР°С†РёРё РёР»Рё СЃРѕР·РґР°РІР°С‚СЊ Р±Р°Р·С‹
             StorageFactory.DisableMigrations();
 
             var configuration = new Configuration();
@@ -27,11 +18,11 @@ namespace ApiTests_1._0
             DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<ITestsConfiguration>(configuration);
+            DependencyInjection.SetServicePersistent<ICoreTestsConfiguration>(configuration);
 
             Initialization.SetServices();
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
             DependencyInjection.SetServicePersistent<IAccountStorageFactory>(new LocalAccountStorageFactory());
-
         }
     }
 }

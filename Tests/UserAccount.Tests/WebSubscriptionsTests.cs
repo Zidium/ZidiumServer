@@ -13,7 +13,7 @@ using Zidium.UserAccount.Models.Subscriptions;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebSubscriptionsTests
+    public class WebSubscriptionsTests : BaseTest
     {
         [Fact]
         public void EditTest()

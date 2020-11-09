@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Others
 {
-    public class EchoTests
+    public class EchoTests : BaseTest
     {
         [Fact]
         public void ApiServiceTest()

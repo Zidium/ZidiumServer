@@ -3,7 +3,7 @@ using Zidium.Api.XmlConfig;
 
 namespace ApiTests_1._0.Others
 {
-    public class ConfigHelperTests
+    public class ConfigHelperTests : BaseTest
     {
         [Fact]
         public void LoadFromNonExistingResourceTest()

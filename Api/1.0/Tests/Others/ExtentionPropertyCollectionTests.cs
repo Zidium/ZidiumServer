@@ -5,8 +5,7 @@ using Xunit;
 
 namespace ApiTests_1._0
 {
-    
-    public class ExtentionPropertyCollectionTests
+    public class ExtentionPropertyCollectionTests : BaseTest
     {
         [Fact]
         public void BooleanTest()

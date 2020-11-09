@@ -9,7 +9,7 @@ using Zidium.UserAccount.Models.Events;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebEventsTests
+    public class WebEventsTests : BaseTest
     {
         [Fact]
         public void ChangeImportanceTest()

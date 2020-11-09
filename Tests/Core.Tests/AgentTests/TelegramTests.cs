@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class TelegramTests
+    public class TelegramTests : BaseTest
     {
         [Fact]
         public void SendSimpleMessageTest()

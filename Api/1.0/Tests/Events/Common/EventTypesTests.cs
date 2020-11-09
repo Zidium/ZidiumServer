@@ -3,7 +3,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events.Common
 {
-    public class EventTypesTests
+    public class EventTypesTests : BaseTest
     {
         [Fact]
         public void Test()

@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
 {
-    public class UserServiceTests
+    public class UserServiceTests : BaseTest
     {
         [Fact]
         public void DeleteLastAdminTest()

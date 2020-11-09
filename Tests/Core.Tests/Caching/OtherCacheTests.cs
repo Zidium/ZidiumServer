@@ -7,7 +7,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
 {
-    public class OtherCacheTests
+    public class OtherCacheTests : BaseTest
     {
         [Fact]
         public void SendUnitTestAfterEnablingComponentTest()

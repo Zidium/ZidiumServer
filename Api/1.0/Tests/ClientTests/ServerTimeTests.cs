@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.ClientTests
 {
-    public class ServerTimeTests
+    public class ServerTimeTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что после вызова client.GetServerTime свойтсво TimeDifferenceSeconds автоматически устанавливается

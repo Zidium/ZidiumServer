@@ -15,7 +15,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
 {
-    public class TariffLimitTests : IDisposable
+    public class TariffLimitTests : BaseTest, IDisposable
     {
         [Fact]
         public void ComponentsCountTest()

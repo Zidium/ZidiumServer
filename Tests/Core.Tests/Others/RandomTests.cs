@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class RandomTests
+    public class RandomTests : BaseTest
     {
         [Fact]
         public void GetRandomItemFromListTest()

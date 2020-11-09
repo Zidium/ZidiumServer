@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
 {
-    public class DeleteMetricHistoryTests
+    public class DeleteMetricHistoryTests : BaseTest
     {
         [Fact]
         public void DeleteMetricHistoryTest()

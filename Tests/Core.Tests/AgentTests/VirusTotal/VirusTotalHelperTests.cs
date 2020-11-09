@@ -4,7 +4,7 @@ using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class VirusTotalHelperTests
+    public class VirusTotalHelperTests : BaseTest
     {
         [Fact]
         public void ParseDateTimeTest()

@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class VKontakteTests
+    public class VKontakteTests : BaseTest
     {
         [Fact]
         public void SendSimpleMessageTest()

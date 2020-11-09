@@ -6,7 +6,7 @@ using Zidium.Agent.AgentTasks;
 namespace Zidium.Core.Tests.AgentTests
 {
     
-    public class SslCertificateExpirationDateCheckTests
+    public class SslCertificateExpirationDateCheckTests : BaseTest
     {
         [Fact]
         public void MainTest()

@@ -4,7 +4,7 @@ using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class DateTimeHelperTests
+    public class DateTimeHelperTests : BaseTest
     {
         [Fact]
         public void ParseFromUrl()

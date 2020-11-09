@@ -5,7 +5,7 @@ using Zidium.Api.Dto;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class JsonTests
+    public class JsonTests : BaseTest
     {
         [Fact]
         public void UnsuccessResponseTest()

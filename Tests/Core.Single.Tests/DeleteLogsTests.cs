@@ -9,7 +9,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
 {
-    public class DeleteLogsTests
+    public class DeleteLogsTests : BaseTest
     {
         [Fact]
         public void DeleteLogsTest()

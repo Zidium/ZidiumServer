@@ -9,7 +9,7 @@ using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebUnitTests
+    public class WebUnitTests : BaseTest
     {
         [Fact]
         public void AddTest()

@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events.ComponentEvents
 {
-    public class AddTests
+    public class AddTests : BaseTest
     {
         [Fact]
         public void SimpleTest()

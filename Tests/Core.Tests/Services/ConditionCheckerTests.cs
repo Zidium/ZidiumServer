@@ -4,8 +4,7 @@ using Xunit;
 
 namespace Zidium.Core.Tests.Services
 {
-    
-    public class ConditionCheckerTests
+    public class ConditionCheckerTests : BaseTest
     {
         [Fact]
         public void SatisfiedConditionTest()

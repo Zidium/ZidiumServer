@@ -3,7 +3,7 @@ using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class DataSizeHelperTests
+    public class DataSizeHelperTests : BaseTest
     {
         [Fact]
         public void GetDataSizeTest()

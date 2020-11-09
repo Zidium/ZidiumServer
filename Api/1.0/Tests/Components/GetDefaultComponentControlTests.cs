@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class GetDefaultComponentControlTests
+    public class GetDefaultComponentControlTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет получение дефолтного контрола компонента

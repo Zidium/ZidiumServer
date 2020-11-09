@@ -10,7 +10,7 @@ using Zidium.UserAccount.Models.PingChecksModels;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebPingChecksTests
+    public class WebPingChecksTests : BaseTest
     {
         [Fact]
         public void EditSimpleTest()

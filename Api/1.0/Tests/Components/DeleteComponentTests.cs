@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class DeleteComponentTests
+    public class DeleteComponentTests : BaseTest
     {
         [Fact]
         public void DeleteComponentTest()

@@ -3,7 +3,7 @@ using Zidium.Agent.AgentTasks.UnitTests.TcpPortChecks;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class TcpPortCheckTests
+    public class TcpPortCheckTests : BaseTest
     {
         [Fact]
         public void TestOpened()

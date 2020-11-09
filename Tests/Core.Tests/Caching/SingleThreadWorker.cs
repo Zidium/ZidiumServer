@@ -4,7 +4,7 @@ using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Caching
 {
-    public class SingleThreadWorkerTest
+    public class SingleThreadWorkerTest : BaseTest
     {
         protected void Do()
         {

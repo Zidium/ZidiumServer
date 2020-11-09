@@ -12,7 +12,7 @@ using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebNotificationsTests
+    public class WebNotificationsTests : BaseTest
     {
         [Fact]
         public void NotificationsListTest()

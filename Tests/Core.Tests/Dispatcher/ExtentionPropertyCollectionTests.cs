@@ -5,7 +5,7 @@ using Zidium.Api;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class ExtentionPropertyCollectionTests
+    public class ExtentionPropertyCollectionTests : BaseTest
     {
         [Fact]
         public void BooleanTest()

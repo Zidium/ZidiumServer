@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Zidium.Api;
@@ -7,7 +6,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Metrics
 {
-    public class MetricsTests
+    public class MetricsTests : BaseTest
     {
         [Fact]
         public void GetMetricsHistory()

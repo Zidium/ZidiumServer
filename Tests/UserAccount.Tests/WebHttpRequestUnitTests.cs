@@ -15,7 +15,7 @@ using Zidium.UserAccount.Models.HttpRequestCheckModels;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebHttpRequestUnitTests
+    public class WebHttpRequestUnitTests : BaseTest
     {
         /// <summary>
         /// Был дефект, что после сохранения проверки, она начинала постоянно выполняться, как будет период равен 1 секунде

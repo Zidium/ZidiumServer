@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class GetOrCreateFolderTests
+    public class GetOrCreateFolderTests : BaseTest
     {
         [Fact]
         public void Test()

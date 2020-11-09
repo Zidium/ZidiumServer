@@ -6,7 +6,7 @@ using Zidium.Storage.Ef;
 
 namespace Zidium.Core.Tests.Caching
 {
-    public class ObjectChangesHelperTests
+    public class ObjectChangesHelperTests : BaseTest
     {
         [Fact]
         public void MainTest()

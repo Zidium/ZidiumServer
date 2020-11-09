@@ -5,7 +5,7 @@ using Zidium.Api;
 
 namespace ApiTests_1._0.Events.ApplicationErrors
 {
-    public class ExceptionRenderTests
+    public class ExceptionRenderTests : BaseTest
     {
         [Fact]
         public void SqlTimeoutExceptionMessageTest()

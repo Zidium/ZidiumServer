@@ -8,7 +8,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class MetricTypesTests
+    public class MetricTypesTests : BaseTest
     {
         [Fact]
         public void ChangeNoSignalColorTest()

@@ -16,7 +16,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class HttpTestProcessorTests
+    public class HttpTestProcessorTests : BaseTest
     {
         [Fact]
         public void IsInternetWork()

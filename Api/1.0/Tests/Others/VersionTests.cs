@@ -3,8 +3,7 @@ using Xunit;
 
 namespace ApiTests_1._0.Others
 {
-    
-    public class VersionTests
+    public class VersionTests : BaseTest
     {
         [Fact]
         public void Test()

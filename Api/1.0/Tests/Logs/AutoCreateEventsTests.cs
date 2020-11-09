@@ -7,7 +7,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Logs
 {
-    public class AutoCreateEventsTests
+    public class AutoCreateEventsTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что лог с exception уровня Fatal создаёт красное событие

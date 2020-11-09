@@ -5,8 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events.ApplicationErrors
 {
-
-    public class SendTests
+    public class SendTests : BaseTest
     {
         /// <summary>
         /// Проверим, что ошибка без поля "стек" успешно сохранится

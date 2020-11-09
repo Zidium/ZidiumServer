@@ -4,8 +4,7 @@ using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Others
 {
-    
-    public class ParseHelperTests
+    public class ParseHelperTests : BaseTest
     {
         [Fact]
         public void DateTimeTest()

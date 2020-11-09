@@ -3,8 +3,7 @@ using Xunit;
 
 namespace ApiTests_1._0.Others
 {
-    
-    public class StringHelperTests
+    public class StringHelperTests : BaseTest
     {
         class MyClass
         {

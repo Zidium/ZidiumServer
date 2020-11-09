@@ -3,7 +3,7 @@ using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class BannerHelperTests
+    public class BannerHelperTests : BaseTest
     {
         [Fact]
         public void MainTest()

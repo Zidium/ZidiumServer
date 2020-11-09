@@ -11,7 +11,7 @@ namespace ApiTests_1._0.Events
     /// Проверим, что длинные свойства обрезаются
     /// </summary>
     
-    public class PrepareEventTests
+    public class PrepareEventTests : BaseTest
     {
         [Fact]
         public void PrepareDataHelperTest()

@@ -8,7 +8,7 @@ using Zidium.Storage;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class VirusTotalProcessorTests
+    public class VirusTotalProcessorTests : BaseTest
     {
         private readonly string _apiKey;
 

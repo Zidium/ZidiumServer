@@ -10,7 +10,7 @@ using Zidium.UserAccount.Models.SqlChecksModels;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebSqlChecksTests
+    public class WebSqlChecksTests : BaseTest
     {
         [Fact]
         public void EditSimpleTest()

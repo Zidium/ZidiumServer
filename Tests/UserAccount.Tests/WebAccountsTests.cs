@@ -6,7 +6,7 @@ using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebAccountsTests
+    public class WebAccountsTests : BaseTest
     {
         [Fact]
         public void AccountInfoTest()

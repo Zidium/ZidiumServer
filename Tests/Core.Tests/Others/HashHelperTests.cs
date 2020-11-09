@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class HashHelperTests
+    public class HashHelperTests : BaseTest
     {
         [Fact]
         public void MultiThreadedHashTest()

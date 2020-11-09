@@ -8,7 +8,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class ChecksTests
+    public class ChecksTests : BaseTest
     {
         [Fact]
         public void AddPingCheckTest()

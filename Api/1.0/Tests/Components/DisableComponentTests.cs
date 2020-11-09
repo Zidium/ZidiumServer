@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class DisableComponentTests
+    public class DisableComponentTests : BaseTest
     {
         [Fact]
         public void DisableTest()

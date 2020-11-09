@@ -8,7 +8,7 @@ using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebComponentsTests
+    public class WebComponentsTests : BaseTest
     {
         [Fact]
         public void AddTest()

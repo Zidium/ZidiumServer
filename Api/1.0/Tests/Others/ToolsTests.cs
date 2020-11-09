@@ -4,7 +4,7 @@ using Xunit;
 
 namespace ApiTests_1._0.Others
 {
-    public class ToolsTests
+    public class ToolsTests : BaseTest
     {
         [Fact]
         public void ManualExceptionJoinKeyTest()

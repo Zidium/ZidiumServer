@@ -3,7 +3,7 @@ using Zidium.Api;
 
 namespace ApiTests_1._0.Logs
 {
-    public class FakeLogTests
+    public class FakeLogTests : BaseTest
     {
         [Fact]
         public void FakeSendLogTest()

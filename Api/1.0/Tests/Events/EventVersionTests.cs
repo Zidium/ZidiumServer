@@ -5,8 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events
 {
-    
-    public class EventVersionTests
+    public class EventVersionTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что версия компонента влияет на версию события, а версия события НЕ влияет на версию компонента.

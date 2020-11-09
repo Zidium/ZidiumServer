@@ -5,8 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.EventManagerTests
 {
-    
-    public class ClearEventsQueueTests
+    public class ClearEventsQueueTests : BaseTest
     {
         /// <summary>
         /// Проверяет, что очередь событий не будет бесконечно расти, а имеет ограничение

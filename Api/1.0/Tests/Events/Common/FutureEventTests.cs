@@ -5,8 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events.Common
 {
-    
-    public class FutureEventTests
+    public class FutureEventTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что нельзя отправить событие с startDate силно больше, 

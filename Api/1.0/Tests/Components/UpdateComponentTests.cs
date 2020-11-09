@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class UpdateComponentTests
+    public class UpdateComponentTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет обновление всех свойств компонента

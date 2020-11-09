@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
 {
-    public class EfTests
+    public class EfTests : BaseTest
     {
         [Fact]
         public void AttachTest()

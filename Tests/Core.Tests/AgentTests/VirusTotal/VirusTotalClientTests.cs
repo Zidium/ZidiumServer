@@ -3,7 +3,7 @@ using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class VirusTotalClientTests
+    public class VirusTotalClientTests : BaseTest
     {
         private readonly string _apiKey;
 

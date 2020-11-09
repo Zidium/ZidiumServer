@@ -8,7 +8,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class ComponentsTests
+    public class ComponentsTests : BaseTest
     {
         [Fact]
         public void CreateDeleteCreateTest()

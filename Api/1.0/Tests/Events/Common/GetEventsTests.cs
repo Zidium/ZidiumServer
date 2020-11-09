@@ -4,8 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events
 {
-    
-    public class GetEventsTests
+    public class GetEventsTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что пустой фильтр должен искать любые события

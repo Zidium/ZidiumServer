@@ -3,8 +3,7 @@ using Xunit;
 
 namespace Zidium.Core.Tests.Others
 {
-    
-    public class PasswordHelperTests
+    public class PasswordHelperTests : BaseTest
     {
         [Fact]
         public void GetRandomPasswordTest()

@@ -12,7 +12,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class CreateNotificationTests
+    public class CreateNotificationTests : BaseTest
     {
         /// <summary>
         /// Проверим влияние объекта подписки

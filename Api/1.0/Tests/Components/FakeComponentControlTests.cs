@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class FakeComponentControlTests
+    public class FakeComponentControlTests : BaseTest
     {
         [Fact]
         public void OfflineSendEventTest()

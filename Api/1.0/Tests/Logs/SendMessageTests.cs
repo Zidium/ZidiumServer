@@ -8,8 +8,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Logs
 {
-    
-    public class SendMessageTests
+    public class SendMessageTests : BaseTest
     {
         [Fact]
         public void SendLogTest()

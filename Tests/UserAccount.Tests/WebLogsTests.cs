@@ -11,7 +11,7 @@ using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebLogsTests
+    public class WebLogsTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет отображение лога, если не заполнен фильтр "дата"

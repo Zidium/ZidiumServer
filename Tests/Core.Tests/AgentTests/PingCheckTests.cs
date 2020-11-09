@@ -5,7 +5,7 @@ using Zidium.Storage;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class PingCheckTests
+    public class PingCheckTests : BaseTest
     {
         [Fact]
         public void CommonTest()

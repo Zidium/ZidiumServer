@@ -7,7 +7,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Statuses
 {
-    public class StatusDataTests
+    public class StatusDataTests : BaseTest
     {
         [Fact]
         public void Statuses()

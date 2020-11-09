@@ -40,9 +40,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseTest.cs" />
     <Compile Include="Configuration\Configuration.cs" />
     <Compile Include="Configuration\Options.cs" />
-    <Compile Include="ModuleInitializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WebAccountsTests.cs" />
     <Compile Include="WebComponentsTests.cs" />
@@ -110,11 +110,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="InjectModuleInitializer">
-      <Version>2.0.3</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.AspNet.Mvc">
       <Version>5.2.3</Version>
     </PackageReference>
@@ -145,7 +140,4 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="InjectModuleInitializer" AfterTargets="AfterBuild">
-    <Exec Command="..\..\packages\InjectModuleInitializer.2.0.3\tools\net35\InjectModuleInitializer.exe &quot;$(TargetPath)&quot;" />
-  </Target>
 </Project>

@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
 {
-    public class DeleteEventsTest
+    public class DeleteEventsTest : BaseTest
     {
         [Fact]
         public void DeleteCustomerEventsTest()

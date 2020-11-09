@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
 {
-    public class StatusDataCacheStorageTests
+    public class StatusDataCacheStorageTests : BaseTest
     {
         /// <summary>
         /// При добавлении объекта в контекст была проблема

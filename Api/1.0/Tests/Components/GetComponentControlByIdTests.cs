@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class GetComponentControlByIdTests
+    public class GetComponentControlByIdTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет получение контрола компонента по Id

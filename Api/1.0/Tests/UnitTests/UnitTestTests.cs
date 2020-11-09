@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.UnitTests
 {
-    public class UnitTestTests
+    public class UnitTestTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что если DisplayName не указан, то он будет равен SystemName

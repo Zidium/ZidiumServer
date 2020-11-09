@@ -4,7 +4,7 @@ using Zidium.Api;
 
 namespace ApiTests_1._0.UnitTests
 {
-    public class FakeUnitTestTests
+    public class FakeUnitTestTests : BaseTest
     {
         [Fact]
         public void FakeSendUnitTestResultTest()

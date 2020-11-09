@@ -10,7 +10,7 @@ using Zidium.UserAccount.Models.TcpPortChecksModels;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebTcpPortChecksTests
+    public class WebTcpPortChecksTests : BaseTest
     {
         [Fact]
         public void EditSimpleTest()

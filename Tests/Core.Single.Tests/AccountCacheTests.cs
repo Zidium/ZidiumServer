@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Single.Tests
 {
-    public class AccountCacheTests
+    public class AccountCacheTests : BaseTest
     {
         [Fact]
         public void LockRepeat()
@@ -14,18 +14,18 @@ namespace Zidium.Core.Single.Tests
             var componentId = componentObj.Id;
             ComponentCacheWriteObject component0 = null;
             var cache = new AccountCache(account.Id);
-            
-                var component1 = cache.Components.Write(componentId);
-                Assert.Equal(1, component1.Response.Lock.Count);
 
-                var component2 = cache.Components.Write(componentId);
-                Assert.Equal(2, component1.Response.Lock.Count);
+            var component1 = cache.Components.Write(componentId);
+            Assert.Equal(1, component1.Response.Lock.Count);
 
-                component0 = component1;
+            var component2 = cache.Components.Write(componentId);
+            Assert.Equal(2, component1.Response.Lock.Count);
+
+            component0 = component1;
 
             component1.Dispose();
             component2.Dispose();
-           
+
             Assert.False(component0.Response.Lock.IsLocked);
             Assert.Equal(0, component0.Response.Lock.Count);
 

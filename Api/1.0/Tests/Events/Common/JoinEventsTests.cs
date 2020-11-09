@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events
 {
-    public class JoinEventsTests
+    public class JoinEventsTests : BaseTest
     {
         /// <summary>
         /// Проверим, что 2-ое событие с 0-ым интервалом склейки не приклеится.

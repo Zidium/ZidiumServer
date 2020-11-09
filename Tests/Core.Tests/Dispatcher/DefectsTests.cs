@@ -7,7 +7,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class DefectsTests
+    public class DefectsTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что событие без версии переоткрывает закрытый дефект

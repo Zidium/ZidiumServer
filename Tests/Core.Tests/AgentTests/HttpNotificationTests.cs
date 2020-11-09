@@ -11,7 +11,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class HttpNotificationTests
+    public class HttpNotificationTests : BaseTest
     {
         [Fact]
         public void SendHttpNotificationTest()

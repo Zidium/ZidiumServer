@@ -11,7 +11,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class EmailNotificationTests
+    public class EmailNotificationTests : BaseTest
     {
         [Fact]
         public void SendEmailNotificationTest()

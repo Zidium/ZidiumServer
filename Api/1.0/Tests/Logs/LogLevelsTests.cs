@@ -7,8 +7,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Logs
 {
-    
-    public class LogLevelsTests
+    public class LogLevelsTests : BaseTest
     {
         [Fact]
         public void Test()

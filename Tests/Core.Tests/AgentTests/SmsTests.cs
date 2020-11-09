@@ -9,7 +9,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class SmsTests
+    public class SmsTests : BaseTest
     {
         [Fact]
         public void ProcessQueueTest()

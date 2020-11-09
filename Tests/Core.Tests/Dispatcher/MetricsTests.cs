@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class MetricsTests
+    public class MetricsTests : BaseTest
     {
         [Fact]
         public void MetricRedRuleTest()

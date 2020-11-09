@@ -3,7 +3,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.EventTypes
 {
-    public class CreateFromOthersComponentTypes
+    public class CreateFromOthersComponentTypes : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что 2 события с одинаковым системным именем будут иметь одинаковые ИД типов, 

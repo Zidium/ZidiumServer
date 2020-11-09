@@ -8,7 +8,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Logs
 {
-    public class LogTests
+    public class LogTests : BaseTest
     {
         [Fact]
         public void FixText()

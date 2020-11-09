@@ -13,7 +13,7 @@ namespace Zidium.Core.Tests.Dispatcher
     /// <summary>
     /// Баги ТСД событий
     /// </summary>
-    public class TsdFixEventsTests
+    public class TsdFixEventsTests : BaseTest
     {
         /// <summary>
         /// TSD отправляло каждый 10 минут событие диагностики с интервалом актуальности 20 минут

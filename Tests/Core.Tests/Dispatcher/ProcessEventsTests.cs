@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class ProcessEventsTests
+    public class ProcessEventsTests : BaseTest
     {
         /// <summary>
         /// Проверяет, что настройки типа события влияют на устанавливаемые у экземпляра события свойства (важность, признак обработки)

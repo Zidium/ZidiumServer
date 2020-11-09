@@ -4,8 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events
 {
-    
-    public class EventMaxCountTests
+    public class EventMaxCountTests : BaseTest
     {
         [Fact]
         public void Test()

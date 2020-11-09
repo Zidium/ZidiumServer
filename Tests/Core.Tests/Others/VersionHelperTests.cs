@@ -3,8 +3,7 @@ using Zidium.Common;
 
 namespace Zidium.Core.Tests.Others
 {
-    
-    public class VersionHelperTests
+    public class VersionHelperTests : BaseTest
     {
         [Fact]
         public void NullVersionTest()

@@ -4,8 +4,7 @@ using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Tests.Others
 {
-    
-    public class TimeSpanHelperString
+    public class TimeSpanHelperString : BaseTest
     {
         [Fact]
         public void Test()

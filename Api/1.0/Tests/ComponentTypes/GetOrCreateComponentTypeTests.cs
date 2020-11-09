@@ -5,9 +5,8 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.ComponentTypes
 {
-    public class GetOrCreateComponentTypeTests
+    public class GetOrCreateComponentTypeTests : BaseTest
     {
-
         [Fact]
         public void GetOrCreateComponentTypeTest()
         {

@@ -7,7 +7,7 @@ using Zidium.Storage;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class SqlCheckProcessorTests
+    public class SqlCheckProcessorTests : BaseTest
     {
         [Fact]
         public void MsSqlTest()

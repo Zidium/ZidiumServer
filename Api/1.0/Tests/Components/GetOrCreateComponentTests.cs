@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class GetOrCreateComponentTests
+    public class GetOrCreateComponentTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что повторное создание компонента не создает дубль

@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class ControlWrapperTests
+    public class ControlWrapperTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что при выключенном интернете контролы фейковые, а при включеном становятся нормальными

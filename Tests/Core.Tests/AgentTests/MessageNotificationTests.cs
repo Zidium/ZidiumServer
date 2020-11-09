@@ -11,7 +11,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class MessageNotificationTests
+    public class MessageNotificationTests : BaseTest
     {
         [Theory]
         [InlineData(SubscriptionChannel.Telegram)]

@@ -4,7 +4,7 @@ using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class LockObjectTests
+    public class LockObjectTests : BaseTest
     {
         [Fact]
         public void GetByGuid()

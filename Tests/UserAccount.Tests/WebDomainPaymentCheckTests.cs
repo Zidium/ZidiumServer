@@ -10,7 +10,7 @@ using Zidium.UserAccount.Models.DomainNamePaymentPeriodCheckModels;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebDomainPaymentCheckTests
+    public class WebDomainPaymentCheckTests : BaseTest
     {
         [Fact]
         public void EditSimpleTest()

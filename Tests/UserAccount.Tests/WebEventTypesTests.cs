@@ -11,7 +11,7 @@ using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebEventTypesTests
+    public class WebEventTypesTests : BaseTest
     {
         [Fact]
         public void EventTypesListTest()

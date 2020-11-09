@@ -10,8 +10,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Others
 {
-    
-    public class SerializerTests
+    public class SerializerTests : BaseTest
     {
         protected List<ISerializer> GetSerializers()
         {

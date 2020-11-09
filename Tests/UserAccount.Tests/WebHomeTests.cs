@@ -13,7 +13,7 @@ using Zidium.UserAccount.Models.Home;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebHomeTests
+    public class WebHomeTests : BaseTest
     {
         [Fact]
         public void QuickAddMobilePhoneTest()

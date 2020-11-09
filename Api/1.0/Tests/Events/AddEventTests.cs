@@ -5,8 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Events
 {
-    
-    public class AddEventTests
+    public class AddEventTests : BaseTest
     {
         /// <summary>
         /// Тест проверет:

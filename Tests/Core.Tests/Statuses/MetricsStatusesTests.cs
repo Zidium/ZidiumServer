@@ -9,7 +9,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Statuses
 {
-    public class MetricsStatusesTests
+    public class MetricsStatusesTests : BaseTest
     {
         [Fact]
         public void Outdated()

@@ -8,7 +8,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class EventsTests
+    public class EventsTests : BaseTest
     {
         [Fact]
         public void DisableRedComponentTest()

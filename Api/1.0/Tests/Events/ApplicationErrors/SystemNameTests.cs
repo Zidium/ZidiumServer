@@ -5,7 +5,7 @@ using Xunit;
 
 namespace ApiTests_1._0.Events.ApplicationErrors
 {
-    public class SystemNameTests
+    public class SystemNameTests : BaseTest
     {
         private void X1(string text, Exception x, FileInfo fileInfo)
         {

@@ -6,7 +6,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class SubscriptionsTests
+    public class SubscriptionsTests : BaseTest
     {
         /// <summary>
         /// Проверим, что создание нового типа компонента НЕ создает новых подписок

@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class GetRootComponentTests
+    public class GetRootComponentTests : BaseTest
     {
         [Fact]
         public void UniqueRootWrapperTest()

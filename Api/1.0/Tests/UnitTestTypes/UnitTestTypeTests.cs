@@ -3,8 +3,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.UnitTestTypes
 {
-    
-    public class UnitTestTypeTests
+    public class UnitTestTypeTests : BaseTest
     {
         [Fact]
         public void GetOrCreateTest()

@@ -2,8 +2,7 @@
 
 namespace ApiTests_1._0.Others
 {
-    
-    public class DateTimeTests
+    public class DateTimeTests : BaseTest
     {
         [Fact]
         public void ZoneTest()

@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.ComponentTypes
 {
-    public class GetOrCreateComponentTypeControlTests
+    public class GetOrCreateComponentTypeControlTests : BaseTest
     {
         /// <summary>
         /// Простая проверка того, что запрос успешно отрабатывает

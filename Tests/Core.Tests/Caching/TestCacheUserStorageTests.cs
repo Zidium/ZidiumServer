@@ -8,7 +8,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
 {
-    public class TestCacheUserStorageTests
+    public class TestCacheUserStorageTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что блокировки объектов выполняются корректно

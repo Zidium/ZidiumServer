@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Statuses
 {
-    public class ComponentStatusTests
+    public class ComponentStatusTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет влияние дочерних компонентов на родителя

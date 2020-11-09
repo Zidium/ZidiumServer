@@ -5,7 +5,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class UserSettingTests
+    public class UserSettingTests : BaseTest
     {
         [Fact]
         public void RepositorySetAndGetSettingTest()

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace ApiTests_1._0.Others
 {
-    public class ConfigTests
+    public class ConfigTests : BaseTest
     {
         protected string GetConfigPath(string name)
         {

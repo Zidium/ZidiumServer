@@ -4,7 +4,7 @@ using Zidium.Core.Common.Helpers;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class GetStackTraceTests
+    public class GetStackTraceTests : BaseTest
     {
         private void DoItem()
         {

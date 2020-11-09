@@ -10,7 +10,7 @@ using Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels;
 
 namespace Zidium.UserAccount.Tests
 {
-    public class WebSslCertificateExpirationDateChecksTests
+    public class WebSslCertificateExpirationDateChecksTests : BaseTest
     {
         [Fact]
         public void EditSimpleTest()

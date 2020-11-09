@@ -10,7 +10,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    public class EmailsTests
+    public class EmailsTests : BaseTest
     {
         [Fact]
         public void SendSimpleEmailTest()

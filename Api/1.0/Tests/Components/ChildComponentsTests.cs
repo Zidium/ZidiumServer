@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class ChildComponentsTests
+    public class ChildComponentsTests : BaseTest
     {
         /// <summary>
         /// Проверяет, что 3 созданных компонента успешно читаются из БД

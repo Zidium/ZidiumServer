@@ -7,7 +7,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class UnittestTests
+    public class UnittestTests : BaseTest
     {
         [Fact]
         public void CreateUnittestWithoutTypeTest()

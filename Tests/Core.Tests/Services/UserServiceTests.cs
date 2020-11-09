@@ -9,7 +9,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Services
 {
-    public class UserServiceTests
+    public class UserServiceTests : BaseTest
     {
         [Fact]
         public void ValidUserAuthTest()

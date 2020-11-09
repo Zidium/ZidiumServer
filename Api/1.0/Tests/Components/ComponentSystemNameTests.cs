@@ -4,7 +4,7 @@ using Zidium.TestTools;
 
 namespace ApiTests_1._0.Components
 {
-    public class ComponentSystemNameTests
+    public class ComponentSystemNameTests : BaseTest
     {
         /// <summary>
         /// Тест проверяет, что системные имена должны быть уникальны только для родителя

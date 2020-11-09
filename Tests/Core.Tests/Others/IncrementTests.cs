@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Zidium.Core.Tests.Others
 {
-    public class IncrementTests
+    public class IncrementTests : BaseTest
     {
         public int Value = 0;
 

@@ -9,7 +9,7 @@ using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
-    public class LogTests
+    public class LogTests : BaseTest
     {
         [Fact]
         public void GetLogsByComponentIdOnlyTest()
