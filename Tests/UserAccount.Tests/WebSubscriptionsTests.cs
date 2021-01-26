@@ -50,8 +50,8 @@ namespace Zidium.UserAccount.Tests
                 model.MinimumDuration = TimeSpan.FromSeconds(10);
                 model.ResendTime = TimeSpan.FromSeconds(20);
                 model.SendOnlyInInterval = true;
-                model.SendIntervalFrom = new Time() {Hour = 10, Minute = 30};
-                model.SendIntervalTo = new Time() {Hour = 18, Minute = 50};
+                model.SendIntervalFrom = new Time() { Hour = 10, Minute = 30 };
+                model.SendIntervalTo = new Time() { Hour = 18, Minute = 50 };
 
                 using (var controller = new SubscriptionsController(account.Id, user.Id))
                 {
@@ -345,5 +345,52 @@ namespace Zidium.UserAccount.Tests
                 Assert.Equal(10, subscription.DurationMinimumInSeconds);
             }
         }
+
+        [Fact]
+        public void DeleteTest()
+        {
+            var channels = SubscriptionHelper.AvailableSubscriptionChannels;
+
+            foreach (var channel in channels)
+            {
+                // Создадим пользователя
+                var account = TestHelper.GetTestAccount();
+                var user = TestHelper.CreateTestUser(account.Id);
+                var dispatcher = TestHelper.GetDispatcherClient();
+
+                // Создадим тип компонента
+                var componentType = TestHelper.CreateRandomComponentType(account.Id);
+
+                // Настроим подписку на тип
+                var response = dispatcher.CreateSubscription(account.Id, new CreateSubscriptionRequestData()
+                {
+                    UserId = user.Id,
+                    Object = SubscriptionObject.ComponentType,
+                    ComponentTypeId = componentType.Id,
+                    Channel = channel
+                });
+                var data = response.Data;
+
+                // Удалим подписку
+                DeleteConfirmationSmartModel model;
+                using (var controller = new SubscriptionsController(account.Id, user.Id))
+                {
+                    var result = (ViewResultBase)controller.Delete(data.Id);
+                    model = (DeleteConfirmationSmartModel)result.Model;
+                }
+
+                using (var controller = new SubscriptionsController(account.Id, user.Id))
+                {
+                    controller.Delete(model);
+                }
+
+                // Проверим, что подписки больше нет
+                var storage = TestHelper.GetStorage(account.Id);
+                var subscription = storage.Subscriptions.GetOneOrNullById(data.Id);
+                Assert.Null(subscription);
+
+            }
+        }
+
     }
 }

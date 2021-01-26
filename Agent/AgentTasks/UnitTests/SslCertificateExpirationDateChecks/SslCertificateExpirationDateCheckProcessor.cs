@@ -21,6 +21,8 @@ namespace Zidium.Agent.AgentTasks
         public static DateTime GetPaymentDate(Uri uri)
         {
             var request = (HttpWebRequest)WebRequest.Create(uri);
+            request.AllowAutoRedirect = false;
+
             using (var response = (HttpWebResponse) request.GetResponse())
             {
                 response.Close();

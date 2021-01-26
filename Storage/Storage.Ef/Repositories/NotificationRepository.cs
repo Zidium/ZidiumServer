@@ -79,13 +79,13 @@ namespace Zidium.Storage.Ef
                         WHERE {contextWrapper.Context.FormatColumnName("NotificationId")} IN (
                         SELECT {contextWrapper.Context.FormatColumnName("Id")} 
                         FROM {contextWrapper.Context.FormatTableName("Notifications")}
-                        WHERE {contextWrapper.Context.FormatColumnName("SubscriptionId")} = @SubscriptionId)
+                        WHERE {contextWrapper.Context.FormatColumnName("SubscriptionId")} = @SubscriptionId);
 
-                        DELETE {contextWrapper.Context.FormatTableName("NotificationsHttp")}
+                        DELETE FROM {contextWrapper.Context.FormatTableName("NotificationsHttp")}
                         WHERE {contextWrapper.Context.FormatColumnName("NotificationId")} IN (
                         SELECT {contextWrapper.Context.FormatColumnName("Id")} 
                         FROM {contextWrapper.Context.FormatTableName("Notifications")}
-                        WHERE {contextWrapper.Context.FormatColumnName("SubscriptionId")} = @SubscriptionId)
+                        WHERE {contextWrapper.Context.FormatColumnName("SubscriptionId")} = @SubscriptionId);
 
                         DELETE FROM {contextWrapper.Context.FormatTableName("Notifications")}
                         WHERE {contextWrapper.Context.FormatColumnName("SubscriptionId")} = @SubscriptionId";

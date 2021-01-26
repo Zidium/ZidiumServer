@@ -5,7 +5,6 @@ using Zidium.Agent.AgentTasks;
 
 namespace Zidium.Core.Tests.AgentTests
 {
-    
     public class SslCertificateExpirationDateCheckTests : BaseTest
     {
         [Fact]
@@ -15,6 +14,12 @@ namespace Zidium.Core.Tests.AgentTests
             var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://www.yandex.ru"));
             date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://zidium.net"));
             date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://doc.alcospot.ru"));
+        }
+
+        [Fact]
+        public void TooManyRedirectionsTest()
+        {
+            var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://owa.aps-tender.com"));
         }
 
         [Fact]

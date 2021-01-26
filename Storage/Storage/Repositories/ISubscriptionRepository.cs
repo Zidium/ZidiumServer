@@ -10,6 +10,8 @@ namespace Zidium.Storage
 
         SubscriptionForRead GetOneById(Guid id);
 
+        SubscriptionForRead GetOneOrNullById(Guid id);
+
         SubscriptionForRead FindOneOrNull(
             Guid userId,
             SubscriptionObject subscriptionObject,

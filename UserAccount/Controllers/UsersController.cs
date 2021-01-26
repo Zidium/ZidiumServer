@@ -312,6 +312,7 @@ namespace Zidium.UserAccount.Controllers
             contactForUpdate.Type.Set(model.Type);
             contactForUpdate.Value.Set(model.Value);
             GetStorage().UserContacts.Update(contactForUpdate);
+            contact = GetStorage().UserContacts.GetOneById(contactForUpdate.Id);
 
             if (model.ModalMode)
                 return PartialView("UserContactData", contact);
@@ -365,6 +366,7 @@ namespace Zidium.UserAccount.Controllers
                 Value = model.Value,
                 CreateDate = MvcApplication.GetServerDateTime()
             };
+            GetStorage().UserContacts.Add(contactForAdd);
             var contact = GetStorage().UserContacts.GetOneById(contactForAdd.Id);
 
             if (model.ModalMode)

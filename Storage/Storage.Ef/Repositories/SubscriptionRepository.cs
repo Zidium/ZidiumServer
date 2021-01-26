@@ -193,5 +193,10 @@ namespace Zidium.Storage.Ef
                 entity.DurationMinimumInSeconds, entity.ResendTimeInSeconds, entity.LastUpdated, entity.SendOnlyInInterval,
                 entity.SendIntervalFromHour, entity.SendIntervalFromMinute, entity.SendIntervalToHour, entity.SendIntervalToMinute);
         }
+
+        public SubscriptionForRead GetOneOrNullById(Guid id)
+        {
+            return DbToEntity(DbGetOneOrNullById(id));
+        }
     }
 }

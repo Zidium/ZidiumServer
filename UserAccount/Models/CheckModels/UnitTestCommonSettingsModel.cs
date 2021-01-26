@@ -48,6 +48,7 @@ namespace Zidium.UserAccount.Models.CheckModels
         {
             if (id.HasValue)
             {
+                Id = id;
                 var test = storage.UnitTests.GetOneById(id.Value);
                 CheckName = test.DisplayName;
                 ComponentId = test.ComponentId;
@@ -82,7 +83,6 @@ namespace Zidium.UserAccount.Models.CheckModels
         public abstract Guid NewComponentTypeId { get; }
 
         public abstract Guid UnitTestTypeId { get; }
-
 
         protected void ValidateCommonSettings()
         {
