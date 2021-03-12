@@ -11,7 +11,7 @@
     int redCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Alarm);
     int yellowCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Warning);
     int greenCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Success);
-    int grayCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Unknown);
+    int grayCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled);
 
     var systemUnitTests = Model.Tests.Where(x => x.Type.IsSystem).ToList();
 
@@ -34,7 +34,7 @@
             RedCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Alarm),
             YellowCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Warning),
             GreenCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Success),
-            GrayCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Unknown),
+            GrayCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled),
             TypeName = systemType.DisplayName
         };
         systemTestsModel.Rows.Add(row); 
@@ -70,7 +70,7 @@
                 RedCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Alarm),
                 YellowCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Warning),
                 GreenCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Success),
-                GrayCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Unknown),
+                GrayCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled),
                 TypeName = unitTestType.DisplayName
             };
             byTypeModel.Rows.Add(row);
