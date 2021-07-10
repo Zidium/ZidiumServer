@@ -1,0 +1,142 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.EditLogModel
+
+<style>
+    #logLevelsTable td {
+        padding: 5px 10px;
+    }
+
+    .levelName {
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .levelValue {}
+</style>
+
+<div class="alert alert-info">
+    <p>Укажите настройки Web-лога для компонента @Model.ComponentName</p>
+    <p>Записи с выбранными уровнями будут записаны в лог</p>
+    <p>Записи с выключенными уровнями будут проигнорированы</p>
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new {@class = "form-horizontal smart-block-form", id = "log-levels-form"}))
+{
+    @Html.HiddenFor(m => m.Id)
+
+    <div id="levelButtons">
+        <a href="#" class="btn btn-default" data-level="Trace">Trace</a>
+        <a href="#" class="btn btn-default" data-level="Debug">Debug</a>
+        <a href="#" class="btn btn-default" data-level="Info">Info</a>
+        <a href="#" class="btn btn-default" data-level="Warning">Warning</a>
+        <a href="#" class="btn btn-default" data-level="Error">Error</a>
+        <a href="#" class="btn btn-default" data-level="Fatal">Fatal</a>
+        <a href="#" class="btn btn-default" data-level="" id="disableAll">Выключить всё</a>
+    </div>
+
+    <hr/>
+
+    <table id="logLevelsTable">
+        <tr>
+            <td class="levelName">Trace</td>
+            <td class="levelValue"></td>
+            @Html.HiddenFor(x => x.IsTraceEnabled)
+        </tr>
+        <tr>
+            <td class="levelName">Debug</td>
+            <td class="levelValue"></td>
+            @Html.HiddenFor(x => x.IsDebugEnabled)
+        </tr>
+        <tr>
+            <td class="levelName">Info</td>
+            <td class="levelValue"></td>
+            @Html.HiddenFor(x => x.IsInfoEnabled)
+        </tr>
+        <tr>
+            <td class="levelName">Warning</td>
+            <td class="levelValue"></td>
+            @Html.HiddenFor(x => x.IsWarningEnabled)
+        </tr>
+        <tr>
+            <td class="levelName">Error</td>
+            <td class="levelValue"></td>
+            @Html.HiddenFor(x => x.IsErrorEnabled)
+        </tr>
+        <tr>
+            <td class="levelName">Fatal</td>
+            <td class="levelValue"></td>
+            @Html.HiddenFor(x => x.IsFatalEnabled)
+        </tr>
+    </table>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary smart-block-button" data-smart-button-loader="blue">Сохранить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+}
+
+<script>
+    var logLevels = ["Trace", "Debug", "Info", "Warning", "Error", "Fatal"];
+
+    function setLogLevel(level, value) {
+        var hidden = $("#Is" + level + "Enabled");
+        hidden.val(value);
+    }
+
+    function setLogLevelRange(event) {
+        event.preventDefault();
+
+        var level = $(this).data('level');
+        var value = false;
+        logLevels.forEach(function (element) {
+            if (element == level) {
+                value = true;
+            }
+            setLogLevel(element, value);
+        });
+        updateLevels();
+    }
+
+    function updateLevels() {
+        var buttons = $("#levelButtons .btn");
+        buttons.removeClass("btn-success");
+        buttons.removeClass("btn-danger");
+        buttons.removeClass("btn-default");
+        buttons.addClass("btn-default");
+        var hiddens = $("#logLevelsTable input");
+        var lastActiveLevel = null;
+        hiddens.each(function(index, elem) {
+            var hidden = $(elem);
+            var tdValue = hidden.parent().find(".levelValue").eq(0);
+            var tdName = hidden.parent().find(".levelName").eq(0);
+            var val = hidden.val();
+            if (val == "true" || val == "True") {
+                tdValue.html("<span style='color: @GuiHelper.StrongGreenFgColor;'><span class='glyphicon glyphicon-ok-sign'></span> Включено</span>");
+                if (lastActiveLevel == null) {
+                    lastActiveLevel = tdName.text();
+                }
+            } else {
+                tdValue.html("<span style='color: @GuiHelper.StrongRedFgColor'><span class='glyphicon glyphicon-remove-sign'></span> Выключено</span>");
+            }
+        });
+        if (lastActiveLevel) {
+            $("#levelButtons .btn").each(function(index, elem) {
+                elem = $(elem);
+                var text = elem.text();
+                if (text == lastActiveLevel) {
+                    elem.removeClass("btn-default");
+                    elem.addClass("btn-success");
+                }
+            });
+        } else {
+            $("#disableAll").addClass("btn-danger");
+        }
+    }
+
+    $(function () {
+        $('#levelButtons').on('click', 'a', setLogLevelRange);
+
+        updateLevels();
+    });
+</script>

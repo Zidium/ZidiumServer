@@ -1,0 +1,64 @@
+﻿@using Zidium.UserAccount.Models.ComponentTreeDetails
+
+@model UnittestDetailsModel
+
+<div id="object-details-caption">
+    <a href="@Url.Action("ResultDetails", "Unittests", new { id = Model.Id })" target="_blank" class="text-normal">@Model.Name</a>
+
+    @if (Model.CanEdit)
+    {
+        <a href="@Url.Action("Edit", "Checks", new {id = Model.Id})" target="_blank" class="text-muted" id="edit-object-link" title="Настроить проверку">
+            <span class="glyphicon glyphicon-edit"></span>
+        </a>
+    }
+
+    <a href="#" id="update-panel-link" class="text-muted" title="Обновить данные">
+        <span class="glyphicon glyphicon-refresh"></span>
+    </a>
+</div>
+
+<hr class="object-details-hr" />
+
+<div id="metric-details-container" class="tree-details-container">
+    <div class="tree-details-menu">
+        <div class="tree-details-menu-item" data-group="unittest-state">
+            <a href="#" title="Текущее состояние">
+                <span class="glyphicon glyphicon-info-sign"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="unittest-settings">
+            <a href="#" title="Настройки">
+                <span class="glyphicon glyphicon-cog"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="unittest-history">
+            <a href="#" title="История">
+                <span class="glyphicon glyphicon-signal"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="unittest-results">
+            <a href="#" title="Результаты">
+                <span class="glyphicon glyphicon-list"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="tree-details-main-area">
+        <div class="tree-details-content collapse" data-group="unittest-state">
+            <div class="tree-details-content-caption">Текущее состояние</div>
+            <div class="smart-block" data-url="@Url.Action("UnittestDetailsState", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="unittest-settings">
+            <div class="tree-details-content-caption">Настройки</div>
+            <div class="smart-block" data-url="@Url.Action("UnittestDetailsSettings", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="unittest-history">
+            <div class="tree-details-content-caption">История</div>
+            <div class="smart-block" data-url="@Url.Action("UnittestDetailsHistory", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="unittest-results">
+            <div class="tree-details-content-caption">Результаты</div>
+            <div class="smart-block" data-url="@Url.Action("UnittestDetailsResults", new { id = Model.Id })"></div>
+        </div>
+    </div>
+</div>

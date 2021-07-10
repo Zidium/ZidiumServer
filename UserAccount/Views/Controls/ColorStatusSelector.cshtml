@@ -1,0 +1,43 @@
+﻿@using Zidium.Api.Dto
+
+@model Zidium.UserAccount.Models.Controls.ColorStatusSelectorModel
+
+@{
+    string divId = Model.PropertyName + "_Div";
+}                      
+
+<div id ="@divId">
+    <input type="hidden" name="@Model.PropertyName" id="@Model.PropertyName" />
+    <div class="btn-group">
+        <button type="button" class="btn btn-default btn-color-select" data-color="Red">
+            @Html.ObjectColorIcon(ObjectColor.Red)
+        </button>
+        <button type="button" class="btn btn-default btn-color-select" data-color="Yellow">
+            @Html.ObjectColorIcon(ObjectColor.Yellow)
+        </button>
+        <button type="button" class="btn btn-default btn-color-select" data-color="Green">
+            @Html.ObjectColorIcon(ObjectColor.Green)
+        </button>
+        <button type="button" class="btn btn-default btn-color-select" data-color="Gray">
+            @Html.ObjectColorIcon(ObjectColor.Gray)
+        </button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        var selector = getColorStatusSelector("#@divId");
+
+        selector.setValue("Red", @Model.Value.RedChecked.ToString().ToLowerInvariant());
+        selector.setValue("Yellow", @Model.Value.YellowChecked.ToString().ToLowerInvariant());
+        selector.setValue("Green", @Model.Value.GreenChecked.ToString().ToLowerInvariant());
+        selector.setValue("Gray", @Model.Value.GrayChecked.ToString().ToLowerInvariant());
+
+        selector.multiSelectMode = @(Model.MultiSelectMode.ToString().ToLowerInvariant());
+        selector.autoRefresh = @(Model.AutoRefreshPage.ToString().ToLowerInvariant());
+        selector.callback = '@Model.Callback';
+
+        selector.update();
+    });
+</script>
+

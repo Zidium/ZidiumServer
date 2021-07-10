@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Zidium.Agent.Single.Tests</AssemblyName>
+    <RootNamespace>Zidium.Agent.Single.Tests</RootNamespace>
+    <UserSecretsId>b1447a2e-e7e2-442b-8b76-15fa6a58a0bb</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="5.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Agent\Agent.Core\Agent.Core.csproj" />
+    <ProjectReference Include="..\..\Api.Dto\Api.Dto.csproj" />
+    <ProjectReference Include="..\..\Api\Api.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Core\Core.csproj" />
+    <ProjectReference Include="..\..\DependencyInjection\DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\Storage\Storage.Ef\Storage.Ef.csproj" />
+    <ProjectReference Include="..\..\Storage\Storage\Storage.csproj" />
+    <ProjectReference Include="..\TestTools\TestTools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,1038 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.ComponentTree
+@using Zidium.UserAccount.Models.Controls
+
+@model ComponentsTreeModel
+
+@{
+    ViewBag.Title = "Дерево компонентов";
+    ViewBag.ActiveMenuItems = "Components,ComponentsMenu";
+    ViewBag.UseFixedHeader = true;
+}
+
+<link href="~/Content/css/components/tree.css" rel="stylesheet" />
+<link href="~/Content/css/components/tree-details.css" rel="stylesheet" />
+
+<style>
+        span.badge.badge-importance-@EventImportance.Alarm {
+            background-color: white;
+            border-color: @GuiHelper.StrongRedFgColor;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 12px;
+        }
+
+        span.badge.badge-importance-@EventImportance.Alarm > a {
+            color: @GuiHelper.StrongRedFgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Alarm {
+            background-color: @GuiHelper.StrongRedBgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Alarm > a {
+            color: white;
+        }
+</style>
+
+<style>
+        span.badge.badge-importance-@EventImportance.Warning {
+            background-color: white;
+            border-color: @GuiHelper.StrongYellowFgColor;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 12px;
+        }
+
+        span.badge.badge-importance-@EventImportance.Warning > a {
+            color: @GuiHelper.StrongYellowFgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Warning {
+            background-color: @GuiHelper.StrongYellowBgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Warning > a {
+            color: white;
+        }
+</style>
+
+<style>
+        span.badge.badge-importance-@EventImportance.Success {
+            background-color: white;
+            border-color: @GuiHelper.StrongGreenFgColor;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 12px;
+        }
+
+        span.badge.badge-importance-@EventImportance.Success > a {
+            color: @GuiHelper.StrongGreenFgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Success {
+            background-color: @GuiHelper.StrongGreenBgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Success > a {
+            color: white;
+        }
+</style>
+
+<style>
+        span.badge.badge-importance-@EventImportance.Unknown {
+            background-color: white;
+            border-color: @GuiHelper.StrongGrayFgColor;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 12px;
+        }
+
+        span.badge.badge-importance-@EventImportance.Unknown > a {
+            color: @GuiHelper.StrongGrayFgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Unknown {
+            background-color: @GuiHelper.StrongGrayBgColor;
+        }
+
+        span.badge.active.badge-importance-@EventImportance.Unknown > a {
+            color: white;
+        }
+</style>
+
+<script src="~/Scripts/componentTreeDetails.js"></script>
+
+@section Header
+{
+    <div class="submenu-title">
+        @ViewBag.Title
+        <div id="tree-header-container-mini">
+            <a id="tree-header-restore" href="#" class="text-muted">
+                <span class="glyphicon glyphicon-filter" id="tree-header-restore-icon" title="Показать фильтры"></span>
+            </a>
+        </div>
+    </div>
+    <hr class="submenu" />
+
+    <div id="tree-header-container-full" class="collapse">
+        @using (Html.BeginSmartForm(new SmartBlocksFormOptions()
+        {
+            ActionName = "GetComponentsTree",
+            Method = FormMethod.Get,
+            ContainerHtmlId = "components-tree",
+            LoaderHtmlId = "loader"
+        }, new { id = "filters" }))
+        {
+            <div class="smart-container">
+                <div class="smart-row">
+                    <div class="smart-col-fields" id="filter-search">
+                        @Html.LabelFor(m => m.Search, "Название или Id")
+                        @Html.TextFilter("Search", "Введите часть названия или Id", Model.Search, false)
+                    </div>
+
+                    <div class="smart-col-fields" id="filter-type">
+                        @Html.LabelFor(m => m.ComponentTypeId, "Тип")
+                        @Html.ComponentTypeSelector("ComponentTypeId", Model.ComponentTypeId, true, false)
+                    </div>
+
+                    <div class="smart-col-fields" id="filter-status">
+                        @Html.LabelFor(m => m.Color, "Статус")
+                        @Html.ColorStatusSelector(x => x.Color, new ColorStatusSelectorOptions()
+                   {
+                       AutoRefreshPage = false,
+                       Callback = "submitForm"
+                   })
+                    </div>
+
+                    <div class="smart-col-fields" id="filter-col-minimize">
+                        <button type="button" class="btn btn-default" id="tree-header-minimize" title="Скрыть фильтры">
+                            <span class="glyphicon glyphicon-chevron-up"></span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="collapse">
+                <button type="submit" class="btn btn-default">Поиск</button>
+            </div>
+        }
+    </div>
+
+    <div id="tree-error" class="collapse alert alert-danger">
+        <button type="button" class="close" id="tree-error-hide-button"><span>&times;</span></button>
+        <p id="tree-error-text"></p>
+    </div>
+}
+
+<div id="relative-container">
+
+    <div id="components-tree" class="css-treeview smart-block" data-smart-block-begin="onBegin" data-smart-block-complete="onFormSubmitComplete">
+        @Html.Action("GetComponentsTree", new { color = Model.Color, componentTypeId = Model.ComponentTypeId, search = Model.Search })
+    </div>
+
+    <div id="details-panel" class="collapse">
+        <div id="details-panel-close">
+            <button type="button" id="details-panel-close-button" class="close" aria-hidden="true">×</button>
+        </div>
+
+        <div>
+            <div id="details-panel-container" class="smart-block" data-smart-block-loader="details-panel-loader">
+            </div>
+
+            <div id="details-panel-loader" class="collapse overlapped-loader">
+                <div class="loader-container">
+                    <div class="loader-caption">
+                        <div class="loader-caption-container">
+                            <img src="~/Content/Icons/ajax-loader.gif" />
+                            <span>Обновление...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <ul class="dropdown-menu collapse" id="menu-component">
+        <li><a href="#" id="menu-component-add-component">Добавить дочерний компонент</a></li>
+        <li><a href="#" id="menu-component-delete">Удалить</a></li>
+
+        <li role="separator" class="divider"></li>
+
+        <li><a href="#" id="menu-component-add-http-unittest">Добавить Http-проверку</a></li>
+        <li><a href="#" id="menu-component-add-ping-unittest">Добавить Ping-проверку</a></li>
+        <li><a href="#" id="menu-component-add-tcp-port-unittest">Добавить проверку Tcp порта</a></li>
+        <li><a href="#" id="menu-component-add-domain-unittest">Добавить проверку оплаты домена</a></li>
+        <li><a href="#" id="menu-component-add-ssl-unittest">Добавить проверку Ssl-сертификата</a></li>
+        <li><a href="#" id="menu-component-add-sql-unittest">Добавить Sql-проверку</a></li>
+        <li><a href="#" id="menu-component-add-virus-total-unittest">Добавить проверку VirusTotal</a></li>
+        <li><a href="#" id="menu-component-add-custom-unittest">Добавить пользовательскую проверку</a></li>
+
+        <li role="separator" class="divider"></li>
+
+        <li><a href="#" id="menu-component-add-metric">Добавить метрику</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-unittest">
+        <li><a href="#" id="menu-unittest-delete">Удалить</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-metric">
+        <li><a href="#" id="menu-metric-delete">Удалить</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-unittests">
+        <li><a href="#" id="menu-unittests-add-http">Добавить Http-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-ping">Добавить Ping-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-tcp-port">Добавить проверку Tcp порта</a></li>
+        <li><a href="#" id="menu-unittests-add-domain">Добавить проверку оплаты домена</a></li>
+        <li><a href="#" id="menu-unittests-add-ssl">Добавить проверку Ssl-сертификата</a></li>
+        <li><a href="#" id="menu-unittests-add-sql">Добавить Sql-проверку</a></li>
+        <li><a href="#" id="menu-unittests-add-virus-total">Добавить проверку VirusTotal</a></li>
+        <li><a href="#" id="menu-unittests-add-custom">Добавить пользовательскую проверку</a></li>
+    </ul>
+
+    <ul class="dropdown-menu collapse" id="menu-metrics">
+        <li><a href="#" id="menu-metrics-add">Добавить метрику</a></li>
+    </ul>
+</div>
+
+<div id="loader" class="collapse overlapped-loader">
+    <div class="loader-container">
+        <div class="loader-caption">
+            <div class="loader-caption-container">
+                <img src="~/Content/Icons/ajax-loader.gif" />
+                <span>Обновление...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="~/Scripts/js.cookie.js"></script>
+}
+
+<script>
+    $(function () {
+        // Подгрузка разворачиваемых узлов
+        $('#components-tree').on('change', 'input.components-tree-item-checkbox-component', function () {
+            var me = $(this);
+            loadItem(me);
+        });
+
+        // Запоминание состояний узлов в cookie
+        $('#components-tree').on('change', 'input.components-tree-item-checkbox', function () {
+            var me = $(this);
+            saveItemState(me);
+        });
+
+        // Обработчик клика по названию компонента
+        $('#components-tree').on('click', '.component-name-link', onComponentNameClick);
+
+        // Обработчик клика по названию проверки
+        $('#components-tree').on('click', '.unittest-name-link', onUnittestNameClick);
+
+        // Обработчик клика по названию метрики
+        $('#components-tree').on('click', '.metric-name-link', onMetricNameClick);
+
+        // Обработчик клика по событиям
+        $('#components-tree').on('click', '.events-link', onEventsClick);
+
+        // Обработчик клика по проверкам
+        $('#components-tree').on('click', '.unittests-link', onUnittestsClick);
+
+        // Обработчик клика по метрикам
+        $('#components-tree').on('click', '.metrics-link', onMetricsClick);
+
+        // Обработчик кнопки скрытия детализации
+        $('#details-panel-close-button').click(function () { hideDetailsPanel()});
+
+        // Обработчик прокрутки окна
+        $(window).scroll(onWindowScroll);
+
+        // Обработчик вызова меню по компоненту
+        $('#components-tree').on('click', '.tree-item-component-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-component')
+                .data('id', me.closest('li').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
+        // Обработчик вызова меню по проверке
+        $('#components-tree').on('click', '.tree-item-unittest-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-unittest')
+                .data('id', me.closest('li').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
+        // Обработчик вызова меню по метрике
+        $('#components-tree').on('click', '.tree-item-metric-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-metric')
+                .data('id', me.closest('li').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
+        // Обработчик вызова меню по разделу проверок
+        $('#components-tree').on('click', '.tree-item-unittests-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-unittests')
+                .data('id', me.closest('li[data-id]').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
+        // Обработчик вызова меню по разделу метрик
+        $('#components-tree').on('click', '.tree-item-metrics-menu-button', function (event) {
+            event.preventDefault();
+            var me = $(this);
+            $('#menu-metrics')
+                .data('id', me.closest('li[data-id]').data('id'))
+                .css({
+                    left: me.offset().left - me.offsetParent().offset().left,
+                    top: me.offset().top - me.offsetParent().offset().top + me.outerHeight()
+                })
+                .show();
+            $('#components-tree').on('click', hideAllContextMenus);
+        });
+
+        // Скрытие меню компонента при выборе любого пункта
+        $('#menu-component').on('click', 'li > a', hideAllContextMenus);
+
+        // Скрытие меню проверки при выборе любого пункта
+        $('#menu-unittest').on('click', 'li > a', hideAllContextMenus);
+
+        // Скрытие меню раздела проверок при выборе любого пункта
+        $('#menu-unittests').on('click', 'li > a', hideAllContextMenus);
+
+        // Скрытие меню метрики при выборе любого пункта
+        $('#menu-metric').on('click', 'li > a', hideAllContextMenus);
+
+        // Скрытие меню раздела метрик при выборе любого пункта
+        $('#menu-metrics').on('click', 'li > a', hideAllContextMenus);
+
+        // Скрытие меню при клике вне меню
+        function hideAllContextMenus() {
+            $('#components-tree').off('click', hideAllContextMenus);
+            $('#menu-component').hide();
+            $('#menu-unittest').hide();
+            $('#menu-unittests').hide();
+            $('#menu-metric').hide();
+            $('#menu-metrics').hide();
+        }
+
+        // Меню компонента - Добавить
+        $('#menu-component #menu-component-add-component').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("Add", "Components")';
+            var id = $('#menu-component').data('id');
+            var data = { parentId: id };
+            dialogs.showModal(url, 'Добавление компонента', function() {
+                submitForm();
+            }, data);
+        });
+
+        // Меню компонента - Удалить
+        $('#menu-component #menu-component-delete').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("DeleteAjax", "Components")';
+            var id = $('#menu-component').data('id');
+            var data = { id: id };
+            dialogs.showModal(url, 'Удаление компонента', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню проверки - Удалить
+        $('#menu-unittest #menu-unittest-delete').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("DeleteAjax", "UnitTests")';
+            var id = $('#menu-unittest').data('id');
+            var data = { id: id };
+            dialogs.showModal(url, 'Удаление проверки', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню метрики - Удалить
+        $('#menu-metric #menu-metric-delete').click(function (event) {
+            event.preventDefault();
+
+            var url = '@Url.Action("DeleteAjax", "Metrics")';
+            var id = $('#menu-metric').data('id');
+            var data = { id: id };
+            dialogs.showModal(url, 'Удаление метрики', function() {
+                hideDetailsPanel(id);
+                submitForm();
+            }, data);
+        });
+
+        // Меню раздела проверок - Добавить Http-проверку
+        $('#menu-unittests #menu-unittests-add-http').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addHttpUnitTest(id);
+        });
+
+        // Меню компонента - Добавить Http-проверку
+        $('#menu-component #menu-component-add-http-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addHttpUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить Ping-проверку
+        $('#menu-unittests #menu-unittests-add-ping').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addPingUnitTest(id);
+        });
+
+        // Меню компонента - Добавить Ping-проверку
+        $('#menu-component #menu-component-add-ping-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addPingUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить проверку tcp порта
+        $('#menu-unittests #menu-unittests-add-tcp-port').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addTcpPortUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку tcp порта
+        $('#menu-component #menu-component-add-tcp-port-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addTcpPortUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить проверку virus total
+        $('#menu-unittests #menu-unittests-add-virus-total').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addVirusTotalUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку tcp порта
+        $('#menu-component #menu-component-add-virus-total-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addVirusTotalUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить проверку домена
+        $('#menu-unittests #menu-unittests-add-domain').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addDomainUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку домена
+        $('#menu-component #menu-component-add-domain-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addDomainUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить проверку Ssl-сертификата
+        $('#menu-unittests #menu-unittests-add-ssl').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addSslUnitTest(id);
+        });
+
+        // Меню компонента - Добавить проверку Ssl-сертификата
+        $('#menu-component #menu-component-add-ssl-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addSslUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить Sql-проверку
+        $('#menu-unittests #menu-unittests-add-sql').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addSqlUnitTest(id);
+        });
+
+        // Меню компонента - Добавить Sql-проверку
+        $('#menu-component #menu-component-add-sql-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addSqlUnitTest(id);
+        });
+
+        // Меню раздела проверок - Добавить пользовательскую проверку
+        $('#menu-unittests #menu-unittests-add-custom').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-unittests').data('id');
+            addCustomUnitTest(id);
+        });
+
+        // Меню компонента - Добавить пользовательскую проверку
+        $('#menu-component #menu-component-add-custom-unittest').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addCustomUnitTest(id);
+        });
+
+        // Меню раздела метрик - Добавить метрику
+        $('#menu-metrics #menu-metrics-add').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-metrics').data('id');
+            addMetric(id);
+        });
+
+        // Меню компонента - Добавить метрику
+        $('#menu-component #menu-component-add-metric').click(function (event) {
+            event.preventDefault();
+
+            var id = $('#menu-component').data('id');
+            addMetric(id);
+        });
+
+        // Обработчик ссылки скрытия шапки
+        $('#tree-header-minimize').click(function(event) {
+            event.preventDefault();
+            $('#tree-header-container-full').hide();
+            $('#tree-header-container-mini').show();
+            fixedHeader.updateHeader();
+        });
+
+        // Обработчик ссылки восстановления шапки
+        $('#tree-header-restore').click(function(event) {
+            event.preventDefault();
+            $('#tree-header-container-mini').hide();
+            $('#tree-header-container-full').show();
+            fixedHeader.updateHeader();
+        });
+
+        // Кнопка скрывает сообщение об ошибке
+        $('#tree-error-hide-button').click(function () {
+            hideError();
+        });
+
+        var form = $('#filters');
+
+        // Изменения полей запускают таймер
+        $('#Search', form).bind('input', onFilterInput);
+        $('#ComponentTypeId', form).bind('change', submitForm);
+
+        // Обработчик изменения высоты фиксированного заголовка страницы
+        $('body').on('fixedHeaderUpdated', function () {
+            // Не чаще 100 мс
+            if (resizeTimer != null) {
+                clearTimeout(resizeTimer);
+            }
+            resizeTimer = setTimeout(onHeaderHeightChanged, 100);
+        });
+
+        // Обработчик кнопки обновления детализации
+        $('#details-panel').on('click', '#update-panel-link', function (event) {
+            event.preventDefault();
+            componentTreeDetails.accordionReloadCurrentGroup();
+        });
+    });
+
+    function loadItem(me, onLoadCallback) {
+        var isOpening = me.is(":checked");
+        if (isOpening) {
+            var item = me.closest('li');
+
+            var contentDiv = $('> div.components-tree-item-content', item);
+            var contentDivLoaded = $('> div.components-tree-item-content-loaded', contentDiv);
+            var isContentLoaded = contentDivLoaded.length > 0;
+            if (!isContentLoaded) {
+                var contentUrl = '@Url.Action("GetComponentsTreeItemContent")';
+                var contentData = {
+                    id: item.data('id')
+                };
+                contentDiv.load(contentUrl, contentData, function() {
+                    if (onLoadCallback)
+                        onLoadCallback();
+                });
+                return;
+            }
+
+            var detailsDiv = $('> div.components-tree-item-details', contentDivLoaded);
+            var detailsDivLoaded = $('> div.components-tree-item-details-loaded', detailsDiv);
+            var isDetailsLoaded = detailsDivLoaded.length > 0;
+            if (!isDetailsLoaded) {
+                var detailsUrl = '@Url.Action("GetComponentsTreeItemDetails")';
+                var detailsData = {
+                    id: item.data('id')
+                };
+                detailsDiv.load(detailsUrl, detailsData, function () {
+                    if (onLoadCallback)
+                        onLoadCallback();
+                });
+                return;
+            }
+            else {
+                if (onLoadCallback)
+                    onLoadCallback();
+            }
+        }
+    }
+
+    function saveItemState(me) {
+        var expanded = me.is(":checked");
+        var id = me[0].id;
+
+        var items = getExpandedItemsFromCookie();
+        if (expanded) {
+            if ($.inArray(id, items) === -1) {
+                items.push(id);
+            }
+        } else {
+            var index = $.inArray(id, items);
+            if (index !== -1) {
+                items.splice(index, 1);
+            }
+        }
+        setExpandedItemsToCookie(items);
+    }
+
+    function addHttpUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "HttpRequestCheck")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление Http-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addPingUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "PingChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление Ping-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addTcpPortUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "TcpPortChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки tcp порта', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addVirusTotalUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "VirusTotal")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки VirusTotal', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addDomainUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки оплаты домена', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addSslUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление проверки Ssl-сертификата', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addSqlUnitTest(id, parent) {
+        var url = '@Url.Action("EditSimple", "SqlChecks")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление Sql-проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function addCustomUnitTest(id, parent) {
+        var url = '@Url.Action("Add", "UnitTests")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление пользовательской проверки', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentUnitTests(id);
+            });
+        }, data);
+    }
+
+    function expandComponentUnitTests(id) {
+        var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
+        componentItem.prop('checked', true);
+        loadItem(componentItem, function () {
+            saveItemState(componentItem);
+            var unittestsItem = $('#components-tree li[data-id="' + id + '"] #unittests-' + id);
+            unittestsItem.prop('checked', true);
+            saveItemState(unittestsItem);
+        });
+    }
+
+    function addMetric(id, parent) {
+        var url = '@Url.Action("Edit", "Metrics")';
+        var data = { componentId: id };
+        dialogs.showModal(url, 'Добавление метрики', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(parent);
+            submitForm(function () {
+                expandComponentMetrics(id);
+            });
+        }, data, true);
+    }
+
+    function expandComponentMetrics(id) {
+        var componentItem = $('#components-tree li[data-id="' + id + '"] > input.components-tree-item-checkbox-component');
+        componentItem.prop('checked', true);
+        loadItem(componentItem, function () {
+            saveItemState(componentItem);
+            var metricsItem = $('#components-tree li[data-id="' + id + '"] #metrics-' + id);
+            metricsItem.prop('checked', true);
+            saveItemState(metricsItem);
+        });
+    }
+
+    function getExpandedItemsFromCookie() {
+        var result = Cookies.getJSON('@ComponentsTreeModel.ExpandedItemsCookieName');
+
+        if (!result) {
+            var items = $('#components-tree input.components-tree-item-checkbox:checked').toArray();
+            result = $.map(items, function (element) {
+                return element.id;
+            });
+        }
+
+        return result;
+    }
+
+    function setExpandedItemsToCookie(items) {
+        Cookies.set('@ComponentsTreeModel.ExpandedItemsCookieName', items);
+    }
+
+    // Обработчик клика по названию компонента
+    function onComponentNameClick(event) {
+        event.preventDefault();
+
+        var id = $(this).closest('li').data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("ComponentDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("component", url, { id : id });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по названию проверки
+    function onUnittestNameClick(event) {
+        event.preventDefault();
+
+        var id = $(this).closest('li').data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("UnittestDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("unitTest", url, { id : id });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по названию метрики
+    function onMetricNameClick(event) {
+        event.preventDefault();
+
+        var id = $(this).closest('li').data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("MetricDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("metric", url, { id : id });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по событиям
+    function onEventsClick(event) {
+        event.preventDefault();
+
+        var id = $(this).data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("EventsDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("events", url, { id : id });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по проверкам
+    function onUnittestsClick(event) {
+        event.preventDefault();
+
+        var id = $(this).data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("ComponentDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("component", url, { id: id }, function () {
+            componentTreeDetails.showGroup('component-unittests');
+        });
+
+        highlightOn($(this));
+    }
+
+    // Обработчик клика по метрикам
+    function onMetricsClick(event) {
+        event.preventDefault();
+
+        var id = $(this).data('id');
+        showDetailsPanel(id);
+
+        var url = '@Url.Action("ComponentDetails", "ComponentTreeDetails")';
+        componentTreeDetails.load("component", url, { id: id }, function () {
+            componentTreeDetails.showGroup('component-metrics');
+        });
+
+        highlightOn($(this));
+    }
+
+    // Выделение элемента
+    function highlightOn(element) {
+        highlightOff();
+        element.closest('.highlight-container').addClass('selected');
+    }
+
+    function highlightOff() {
+        $('#components-tree .selected').removeClass('selected');
+    }
+
+    // Отображение детализации
+    function showDetailsPanel(id) {
+        var scrollTop = $(window).scrollTop();
+        var containerTop = $('#relative-container').offset().top - scrollTop - fixedHeader.height();
+        var top = -containerTop;
+        if (top < 0)
+            top = 0;
+
+        $('#details-panel')
+            .css({ top: top })
+            .data('prevScrollTop', scrollTop)
+            .data('id', id)
+            .show();
+    }
+
+    // Скрытие детализации
+    function hideDetailsPanel(id) {
+        if (id == null || id == $('#details-panel').data('id')) {
+            $('#details-panel').hide();
+            highlightOff();
+        }
+    }
+
+    // Выравнивание детализации при прокрутке окна
+    function onWindowScroll() {
+        var prevScrollTop = $('#details-panel').data('prevScrollTop');
+        var scrollTop = $(window).scrollTop();
+        var detailsHeight = $('#details-panel').outerHeight();
+        var windowHeight = $(window).height() - fixedHeader.height();
+        var top = null;
+
+        if (prevScrollTop < scrollTop) {
+
+            if (detailsHeight > windowHeight) {
+                // Выравнивание по нижнему краю
+                var offsetFromWindowBottom =
+                    $('#details-panel').offset().top + detailsHeight - scrollTop - windowHeight - fixedHeader.height() + 20;
+                if (offsetFromWindowBottom < 0) {
+                    var offset = scrollTop + windowHeight - detailsHeight + fixedHeader.height() - 20;
+                    top = offset - $('#relative-container').offset().top;
+                }
+            } else {
+                // Выравнивание по верхнему краю
+                var offsetFromWindowTop = $('#details-panel').offset().top - scrollTop - 0 - fixedHeader.height();
+                if (offsetFromWindowTop < 0) {
+                    var offset = scrollTop + 0 + fixedHeader.height();
+                    top = offset - $('#relative-container').offset().top;
+                }
+            }
+        } else {
+            // Выравнивание по верхнему краю
+            var offsetFromWindowTop = $('#details-panel').offset().top - scrollTop - 0 - fixedHeader.height();
+            if (offsetFromWindowTop > 0) {
+                var offset = scrollTop + 0 + fixedHeader.height();
+                top = offset - $('#relative-container').offset().top;
+            }
+        }
+
+        if (top < 0)
+            top = 0;
+
+        $('#details-panel').css({ top: top });
+
+        $('#details-panel').data('prevScrollTop', scrollTop);
+    }
+
+    // Скрытие ошибки
+    function hideError() {
+        $('#tree-error').hide();
+        fixedHeader.updateHeader();
+    }
+
+    function onHeaderHeightChanged() {
+        // Настроим loader
+        $('#loader').css('top', fixedHeader.height() + 'px');
+    }
+
+    var resizeTimer = null;
+
+    // Любое изменение фильтров перезапускает таймер в 1 сек
+    function onFilterInput() {
+        if (filtersTimer != null) {
+            clearTimeout(filtersTimer);
+        }
+
+        filtersTimer = setTimeout(submitForm, 1000);
+    }
+
+    // Если фильтры не менялись дольше 1 сек, применим их
+    function submitForm(onComplete) {
+        onFormSubmitCompleteRunOnce = onComplete;
+        var form = $('#filters');
+        form.trigger('submit');
+    }
+
+    var filtersTimer = null;
+
+    // При обновлении дерева скрываем ошибку, отменяем таймер и заменяем адрес в браузере
+    function onBegin(params) {
+        var url = '@Url.Action("Index")' + (params !== "" ? "?" + params : "");
+        window.history.pushState(null, window.document.title, url);
+        if (filtersTimer != null) {
+            clearTimeout(filtersTimer);
+            filtersTimer = null;
+        }
+        hideError();
+    }
+
+    var onFormSubmitCompleteRunOnce = undefined;
+
+    function onFormSubmitComplete() {
+        if (onFormSubmitCompleteRunOnce) {
+            onFormSubmitCompleteRunOnce();
+            onFormSubmitCompleteRunOnce = undefined;
+        }
+    }
+
+</script>
+
+

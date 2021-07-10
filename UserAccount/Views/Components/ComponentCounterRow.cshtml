@@ -1,0 +1,49 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+
+@model Zidium.Storage.GetGuiComponentShowInfo.MetricInfo
+
+@{
+    var statusData = Model.Bulb;
+    var status = statusData != null ? statusData.Status : MonitoringStatus.Unknown;
+    var hasSignal = statusData != null && statusData.HasSignal;
+}
+
+<tr id="ccr_@Model.Id.ToString()" style="color: @GuiHelper.GetStrongFgColor(status)">
+    <td class="text-center">
+        @Html.MonitoringStatusIcon(status)
+    </td>
+    <td class="text-nowrap">@(statusData != null ? GuiHelper.GetDateTimeString(statusData.EndDate) : null)</td>
+    <td>@Html.ActionLink(Model.MetricType.DisplayName, "Show", "Metrics", new { id = Model.Id }, new { })</td>
+    @if (hasSignal)
+    {
+        <td class="text-nowrap text-center">@(Model.Value)</td>
+        <td class="text-nowrap">@GuiHelper.GetDateTimeString(statusData.ActualDate)</td>
+    }
+    else
+    {
+        <td colspan="2" class="text-nowrap">нет актуального значения</td>
+    }
+    @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+    {
+        <td class="text-right">
+            @if (Model.Enable)
+            {
+                <a href='@Url.Action("Disable", "Metrics", new {id = Model.Id})' onclick="ziShowModalDialogByLink(this, event);" title="Выключить метрику" style="margin-left: 10px;" class="text-muted">
+                    <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+                </a>
+            }
+            else
+            {
+                <a href='@Url.Action("Enable", "Metrics", new {id = Model.Id})' onclick="enableObject(this, event);" title="Включить метрику" style="margin-left: 10px;" class="text-muted enable-btn">
+                    <span class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                </a>
+            }
+        </td>
+        <td class="text-right">
+            <a href='@Url.Action("Delete", "Metrics", new {id = Model.Id})' onclick="ziShowModalDialogByLink(this, event);" title="Удалить метрику" class="text-danger">
+                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            </a>
+        </td>
+    }
+</tr>

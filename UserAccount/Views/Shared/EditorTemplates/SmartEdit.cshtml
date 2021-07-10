@@ -1,0 +1,109 @@
+﻿@using Zidium.Storage
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@using Zidium.Api.Dto 
+@inject ModelExpressionProvider provider
+
+@model dynamic
+
+@{
+    var metadata = provider.CreateModelExpression(ViewData, m => m).Metadata;
+    var type = metadata.ModelType;
+    var basetype = Nullable.GetUnderlyingType(type);
+    if (basetype != null)
+    {
+        type = basetype;
+    }
+    var placeholder = ViewData.ModelMetadata.Description ?? ViewData.ModelMetadata.DisplayName;
+    var colClass = "smart-col-fields";
+    if (type == typeof(TimeSpan) || type == typeof(int) || type == typeof(SqlRuleDatabaseProviderType) || type == typeof(ObjectColor))
+    {
+        colClass += " smart-col-fixed";
+    }
+}
+
+<div class="smart-row">
+    <div class="smart-col-labels">
+        @Html.LabelFor(m => m, new { @class = "control-label" })
+    </div>
+
+    <div class="@colClass">
+        <div class="smart-subcol">
+            @{
+                if (type.IsEnum)
+                {
+                    @Html.EnumSelector(m => m)
+                }
+                else if (type == typeof(TimeSpan))
+                {
+                    @Html.TimeSpanSelector(m => m)
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "Component")
+                {
+                    @Html.ComponentSelectorNew(m => m, new ComponentSelectorOptions()
+                    {
+                        ShowAsList = false,
+                        ShowComponentStatusSelector = false,
+                        ShowCreateButton = true
+                    })
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "ComponentTree")
+                {
+                    @Html.ComponentSelectorNew(m => m, new ComponentSelectorOptions()
+                    {
+                        ShowAsList = false,
+                        ShowComponentStatusSelector = false,
+                        ShowCreateButton = true
+                    })
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "ComponentType")
+                {
+                    @Html.ComponentTypeSelector(m => m)
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "EventType")
+                {
+                    @Html.EventTypeSelector(m => m)
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "UnitTestType")
+                {
+                    @Html.UnitTestTypeSelector(m => m, userOnly: true)
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "User")
+                {
+                    @Html.UserSelector(m => m)
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == "Date")
+                {
+                    @Html.DateSelector(m => m)
+                }
+                else if (type == typeof(Time))
+                {
+                    @Html.TimeSelector(m => m)
+                }
+                else if (ViewData.ModelMetadata.DataTypeName == System.ComponentModel.DataAnnotations.DataType.Password.ToString())
+                {
+                    @Html.PasswordFor(m => m, new { @class = "form-control", placeholder = @placeholder })
+                }
+                else if (type == typeof(ColorStatusSelectorValue))
+                {
+                    @Html.ColorStatusSelector(m => m, new ColorStatusSelectorOptions() { MultiSelectMode = false, AutoRefreshPage = false })
+                }
+                else
+                {
+                    if (ViewData.ModelMetadata.DataTypeName == "TextArea")
+                    {
+                        @Html.TextAreaFor(m => m, new { @class = "form-control", placeholder = @placeholder })
+                    }
+                    else
+                    {
+                        @Html.TextBoxFor(m => m, new { @class = "form-control", placeholder = @placeholder })
+                    }
+                }
+            }
+        </div>
+
+        <div>
+            @Html.ValidationMessageFor(m => m, null, null, "p")
+        </div>
+    </div>
+</div>

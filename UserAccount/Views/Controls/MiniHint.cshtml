@@ -1,0 +1,11 @@
+﻿@using System.Web
+@model Zidium.UserAccount.Models.MiniHintModel
+@{
+    var id = Guid.NewGuid();
+}
+<span class="glyphicon glyphicon-question-sign text-muted" id="hint-@id" title='@Html.Raw(HttpUtility.HtmlEncode(Model.Hint))'></span>
+<script>
+    $(function() {
+        setTableHeaderTooltip($('#hint-@id'), '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Hint))');
+    });
+</script>

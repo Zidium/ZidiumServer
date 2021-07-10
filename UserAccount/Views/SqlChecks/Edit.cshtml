@@ -1,0 +1,76 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.SqlChecksModels.EditModel
+
+@{
+    ViewBag.Title = Model.Id.HasValue ? "Настройка проверки Sql" : "Добавление проверки Sql";
+}
+
+@Html.Partial("_PageTitle")
+
+<form class="form-horizontal" method="POST" id="myForm">
+    @Html.Partial("~/Views/Checks/EditCheckCommonSettings.cshtml", Model)
+    <hr />
+    <br />
+    <div class="form-group">
+        @Html.RequiredLabelFor(x => x.OpenConnectionTimeoutMs, null, "col-sm-3")
+        <div class="col-sm-3">
+            @Html.TextBoxFor(x => x.OpenConnectionTimeoutMs, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.RequiredLabelFor(x => x.CommandTimeoutMs, null, "col-sm-3")
+        <div class="col-sm-3">
+            @Html.TextBoxFor(x => x.CommandTimeoutMs, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.RequiredLabelFor(x => x.Provider, null, "col-sm-3")
+        <div class="col-sm-3">
+            @Html.DropDownListFor(m => m.Provider, Html.GetEnumSelectList(Model.Provider.GetType()), new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.RequiredLabelFor(x => x.ConnectionString, null, "col-sm-3")
+        <div class="col-sm-9">
+            @Html.TextBoxFor(x => x.ConnectionString, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.RequiredLabelFor(x => x.Query, null, "col-sm-3")
+        <div class="col-sm-9">
+            @Html.TextAreaFor(x => x.Query, new { @class = "form-control", rows = 5 })
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-3"></div>
+        <div class="col-sm-3">
+            <div class="btn-group ">
+                <button value="Сохранить" class="btn btn-primary">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="form-group">
+        <div class="col-sm-12">
+            <div class="checkDescription">
+                <h3>Пример:</h3>
+                <pre>
+IF (exists(SELECT * FROM MyTable WHERE X=1))
+    SELECT 'alarm', 'Случилась беда'
+ELSE
+    SELECT 'success', 'Всё OK'</pre>
+                <p>
+                    Sql-запрос должен всегда возвращать 1 строку формата {code, message}.
+                    <br /> - code = результат проверки (alarm, warning, success, unknown)
+                    <br /> - message = сообщение проверки (любая строка).
+                </p>
+                @*<p>Параметры проверки:</p>
+            <ul>
+                <li>время выполнения запроса</li>
+                <li>возвращаемое значение</li>
+            </ul>*@
+            </div>
+        </div>
+    </div>
+</form>

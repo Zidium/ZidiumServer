@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Zidium.Agent.Core</AssemblyName>
+    <RootNamespace>Zidium.Agent</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="2.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Api.Dto\Api.Dto.csproj" />
+    <ProjectReference Include="..\..\Api\Api.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Core\Core.csproj" />
+    <ProjectReference Include="..\..\DependencyInjection\DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\Storage\Storage.Ef\Storage.Ef.csproj" />
+    <ProjectReference Include="..\..\Storage\Storage\Storage.csproj" />
+  </ItemGroup>
+
+</Project>

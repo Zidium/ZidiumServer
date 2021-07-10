@@ -1,0 +1,59 @@
+﻿@{
+    ViewBag.Title = "Smart blocks - Ajax-запрос";
+}
+
+<style>
+    #form {
+        border: 1px solid lightgray;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+        width: 500px;
+    }
+</style>
+
+<h1>@ViewBag.Title</h1>
+
+<p>
+    Пример, в котором по нажатию кнопки собираются данные из формы, делается Ajax-запрос и анализируется результат.
+</p>
+<p>
+    Если возникла любая ошибка (Name == 2), то вызовется обработчик onError.
+</p>
+<p>
+    Если всё ок, то вызовется обработчик onAction, в него передаётся json с результатом.
+    По нему можно, например, закрыть диалоговое окно или перейти на другую страницу.
+</p>
+<p>
+    Независимо от результата в конце вызовется обработчик onComplete, в нём можно, например, скрыть loader.
+</p>
+<p>
+    Белая область &mdash; форма.<br />
+</p>
+
+<div id="form">
+    <label for="name">Name</label>
+    <p>
+        <input type="text" id="name" class="form-control"/>
+    </p>
+    <p>
+        <button type="button" class="btn btn-default" id="button-filter">Action</button>
+    </p>
+</div>
+
+<script>
+    $(function () {
+        $('#button-filter').click(function () {
+            var name = $('#name').val();
+            var data = { name: name };
+            var url = '@Url.Action("Example4Action")';
+            var button = $(this);
+            smartButtons.beginAction(button);
+            smartBlocks.doAjax(url, 'POST', data,
+                function (result) { dialogs.info('Result: ' + result); },
+                function () { smartButtons.endAction(button); },
+                function (message) { dialogs.error("Error: " + message); }
+                );
+        });
+    });
+</script>

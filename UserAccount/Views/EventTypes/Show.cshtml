@@ -1,0 +1,242 @@
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+
+@model EventTypeShowModel
+
+@{
+    ViewBag.Title = "Тип события";
+    ViewBag.ActiveMenuItems = "Events,EventTypes";
+}   
+
+<style>
+    #timeline-events .timeline-subcontainer {
+        height: 16px;
+    }
+</style>
+
+<script src="~/Scripts/Controls/DefectControl.js"></script>
+
+@Html.Partial("_PageTitle")
+
+@if (UserHelper.CurrentUser(Context).CanEditCommonData())
+{
+    <div class="bottom20px">
+        @Html.ActionLink("Настроить", "Edit", new { id = Model.Id }, new { @class = "btn btn-default" })
+        <div style="display: inline-block; margin-left: 40px;">
+            @Html.Action("DefectControl", "Defects", new { eventTypeId = Model.Id })
+        </div>
+    </div>
+}
+
+<div class="zidiumHeader1">
+    @if (!string.IsNullOrEmpty(Model.Code))
+    {
+        <text>
+            @Model.Code
+            &mdash;
+        </text>
+    }
+    @Model.DisplayName
+</div>
+
+<div class="bottom10px">
+    <span class="space-right">История за</span>
+    <div class="btn-group" data-toggle="buttons">
+        <a class="btn btn-default" id="btn-stats-hour" href="#">
+            <input type="radio" autocomplete="off">
+            Час
+        </a>
+        <a class="btn btn-default active" id="btn-stats-day" href="#">
+            <input type="radio" autocomplete="off" checked>
+            День
+        </a>
+        <a class="btn btn-default" id="btn-stats-week" href="#">
+            <input type="radio" autocomplete="off">
+            Неделя
+        </a>
+        <a class="btn btn-default" id="btn-stats-month" href="#">
+            <input type="radio" autocomplete="off">
+            Месяц
+        </a>
+    </div>
+    <span id="timeline-loader" class="collapse">
+        <img src="~/Content/Icons/ajax-loader-white.gif" />
+    </span>
+</div>
+
+<div id="timeline-events" class="bottom20px">
+    <img src="~/Content/Icons/ajax-loader.gif" />
+</div>
+
+
+<hr />
+<p class="zidiumHeader1">Последнее событие</p>
+@Html.Action("LastEventInfo", new { id = Model.Id })
+
+
+<hr/>
+<a data-toggle="collapse" href="#eventTypeDetails" style="font-size: 12px; color: gray">Дополнительные настройки</a>
+<div id="eventTypeDetails" class="collapse">
+    <p class="zidiumHeader1">Настройки типа события</p>
+    <div class="row">
+        <div class="col-sm-12">
+            @if (Model.IsDeleted)
+            {
+                <div class="alert alert-danger">Этот тип события удалён</div>
+            }
+            <p>
+                <span class="simple-text-header">Id: </span>
+                <span class="simple-text-value">@Model.Id</span>
+            </p>
+            <p>
+                <span class="simple-text-header">Дружелюбное имя:</span>
+                <span class="simple-text-value">@Model.DisplayName</span>
+                <span class="ziTooltipContent">
+                    Дружелюбное имя может быть любым, оно используется только для отображения названия типа в GUI. Переопределите его так, чтобы Вам было понятно и удобно его читать.
+                </span>
+            </p>
+            <p>
+                <span class="simple-text-header">Системное имя:</span>
+                <span class="simple-text-value">@Model.SystemName</span>
+                <span class="ziTooltipContent">
+                    Системное имя типа события должно быть уникально, оно используется для склейки событий.
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6 col-auto-width col-auto-width-margin-right">
+            <p>
+                <span class="simple-text-header">Категория: </span>
+                <span class="simple-text-value">@Model.Category</span>
+            </p>
+            <p>
+                <span class="simple-text-header">Создан: </span>
+                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Created)</span>
+            </p>
+        </div>
+
+        <div class="col-sm-6 col-auto-width col-auto-width-margin-right">
+            @if (Model.Category == EventCategory.ApplicationError)
+            {
+                <p>
+                    <span class="simple-text-header">Код:</span>
+                    <span class="simple-text-value">@(Model.Code ?? "не указан")</span>
+                    <span class="ziTooltipContent">
+                        Код типа события. Используется для ошибок.
+                    </span>
+                </p>
+            }
+            <p>
+                <span class="simple-text-header">Системный тип: </span>
+                <span class="simple-text-value">@(Model.IsSystem ? "Да" : "Нет")</span>
+            </p>
+        </div>
+    </div>
+
+    <p class="zidiumHeader3">Настройки для обработки событий</p>
+
+    <div class="row">
+        <div class="col-sm-6 col-auto-width col-auto-width-margin-right">
+            <p>
+                <span class="simple-text-header">Интервал склейки: </span>
+                @if (Model.JoinInterval == null)
+                {
+                    <span class="simple-text-value">из события</span>
+                }
+                else
+                {
+                    <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.JoinInterval.Value)</span>
+                }
+
+            </p>
+
+            <p>
+                <span class="simple-text-header">Важность для новых:</span>
+                @if (Model.ImportanceForNew == null)
+                {
+                    <span class="simple-text-value">из события</span>
+                }
+                else
+                {
+                    <span class="simple-text-value">@Html.EventImportanceLabel(Model.ImportanceForNew.Value)</span>
+                }
+                <span class="ziTooltipContent">
+                    Если типу события указать важность, то все "новые" события данного типа будут иметь эту важность (даже если при отправке события через API явно указана другая важность)
+                </span>
+            </p>
+        </div>
+
+        <div class="col-sm-6 col-auto-width col-auto-width-margin-right">
+            <p>
+                <span class="simple-text-header">Номер старой версии: </span>
+                <span class="simple-text-value">@(Model.OldVersion ?? "не указан")</span>
+                <span class="ziTooltipContent">
+                    Если указать версию 1.9 и важность Warning,
+                    то все события данного типа от компонентов версии 1.9 и ниже будут иметь важность Warning.
+                    <br /><br />
+                    Это можно использовать, когда ошибка исправлена в версии 2.0,
+                    но некоторые пользователи продолжают пользоваться старой программой версии 1.9.
+                    Нет смысла получать уведомления об ошибках, которые уже исправлены.
+                </span>
+            </p>
+            <p>
+                <span class="simple-text-header">Важность для старых: </span>
+                @if (Model.ImportanceForOld == null)
+                {
+                    <span class="simple-text-value">нет</span>
+                }
+                else
+                {
+                    <span class="simple-text-value">@Html.EventImportanceLabel(Model.ImportanceForOld.Value)</span>
+                }
+                <span class="ziTooltipContent">
+                    Если типу события указать важность, то все "старые" события данного типа будут иметь эту важность (даже если при отправке события через API явно указана другая важность)
+                </span>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        initTooltips();
+
+        $('#btn-stats-hour').click(function (event) { event.preventDefault(); loadStats('@TimelineInterval.Hour'); });
+        $('#btn-stats-day').click(function (event) { event.preventDefault(); loadStats('@TimelineInterval.Day'); });
+        $('#btn-stats-week').click(function (event) { event.preventDefault(); loadStats('@TimelineInterval.Week'); });
+        $('#btn-stats-month').click(function (event) { event.preventDefault(); loadStats('@TimelineInterval.Month'); });
+
+        @if (Model.Period == TimelineInterval.Hour)
+        {
+            <text>$('#btn-stats-hour').click();</text>
+        }
+        else if (Model.Period == TimelineInterval.Day)
+        {
+            <text>$('#btn-stats-day').click();</text>
+        }
+        else if (Model.Period == TimelineInterval.Week)
+        {
+            <text>$('#btn-stats-week').click();</text>
+        }
+        else if (Model.Period == TimelineInterval.Month)
+        {
+            <text>$('#btn-stats-month').click();</text>
+        }
+    });
+
+    function loadStats(interval) {
+        $('#timeline-loader').show();
+
+        var url = '@Html.Raw(Url.Action("ForEventTypeAnyComponentsByInterval", "Timeline", new { eventTypeId = Model.Id }))';
+        var params = { interval: interval };
+
+        $('#timeline-events').load(url, params, function () {
+            $('#timeline-loader').hide();
+        });
+    }
+</script>

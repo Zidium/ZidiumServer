@@ -1,0 +1,57 @@
+﻿@using Zidium.Api.Dto
+
+@model Zidium.UserAccount.Models.LogRowPropertiesModel
+    
+<tr id="logProperties_@Model.LogId" class="log-properties-row">
+    <td colspan="4">
+        @if (Model.Items.Length > 0)
+        {
+            <table class="table grid-table simpleTableClear table-condensed table-bordered" style="margin-bottom: 10px;">
+                <tr>
+                    <th class="text-nowrap">Параметр</th>
+                    <th>Значение</th>
+                </tr>
+                @foreach (var property in Model.Items)
+                {
+                    <tr>
+                        @if (property.DataType == DataType.Binary)
+                        {
+                            <td>
+                                <a href='@Url.Action("GetLogFile", new {id = Model.LogId, componentId = Model.ComponentId, fileId = property.Id})'>
+                                    @Html.Highlight(property.Name, Model.Text)
+                                </a>
+                            </td>
+                            <td>
+                                @Html.ActionLink("Открыть", "GetLogFile", new { id = Model.LogId, componentId = Model.ComponentId, fileId = property.Id })
+                            </td>
+                        }
+                        else
+                        {
+                            <td>@Html.Highlight(property.Name, Model.Text)</td>
+                            <td class="text-prewrap text-wordbreak">@Html.Highlight(property.Value, Model.Text)</td>
+                        }
+                    </tr>
+                }
+            </table>
+        }
+        else
+        {
+            <div style="margin-bottom: 10px;">
+                <b>Параметры:</b> нет
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Context))
+        {
+            <div style="margin-bottom: 10px;">
+                <b>Контекст:</b>
+                <a class="text-prewrap link-context" href="#" data-context="@Model.Context">@Model.Context</a>
+            </div>
+        }
+
+        <div style="margin-bottom: 10px;">
+            <span class="text-prewrap"><b>Полный текст сообщения:</b> @Html.Highlight(Model.Message, Model.Text)</span>
+        </div>
+        
+    </td>
+</tr>

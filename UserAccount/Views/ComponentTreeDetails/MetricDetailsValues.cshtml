@@ -1,0 +1,32 @@
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.ComponentTreeDetails.MetricDetailsValuesModel
+
+@if (Model.Data.Length > 0)
+{
+    <table class="table simpleTableClear table-condensed" id="metric-details-values-table">
+        <thead>
+            <tr>
+                <th class="column-date">Дата</th>
+                <th class="th-result">Значение</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var history in Model.Data)
+            {
+                var color = GuiHelper.GetStrongFgColor(history.Color);
+                <tr style="color: @color">
+                    <td>@DateTimeHelper.GetRussianDateTime(history.Date)</td>
+                    <td>
+                        @GuiHelper.GetMetricValueHtml(history.Value, history.Color, history.HasSignal)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Нет значений</p>
+}

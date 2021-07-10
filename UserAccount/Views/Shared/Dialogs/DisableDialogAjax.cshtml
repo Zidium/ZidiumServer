@@ -1,0 +1,141 @@
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Controllers
+@using Microsoft.AspNetCore.Http.Extensions
+@model Zidium.UserAccount.Models.DisableDialogGetModel
+
+@{
+    ViewBag.Title = Model.Title;
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+<style>
+    #disableTable td {
+        padding: 5px 10px;
+    }
+
+    .disable-header {
+        font-weight: bold;
+    }
+</style>
+<div id="disableComponentError" class="alert alert-danger" style="display: none">Ошибка ошибка ошибка</div>
+<p class="disable-header">@Model.Message</p>
+<input type="hidden" id="disableInterval" name="disableInterval" />
+<table id="disableTable">
+    <tr>
+        <td>
+            <input type="radio" name="disableInterval" id="disableIntervalDefault" value="forever" checked="checked" onclick="setDisableInterval();" />
+        </td>
+        <td>
+            <span>навсегда</span>
+        </td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+            <input type="radio" name="disableInterval" value="1h" onclick="setDisableInterval();" />
+        </td>
+        <td>
+            <span>на 1 час</span>
+        </td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+            <input type="radio" name="disableInterval" value="1d" onclick="setDisableInterval();" />
+        </td>
+        <td>
+            <span>на 1 день</span>
+        </td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+            <input type="radio" name="disableInterval" value="7d" onclick="setDisableInterval();" />
+        </td>
+        <td>
+            <span>на 1 неделю</span>
+        </td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+            <input type="radio" name="disableInterval" value="my" onclick="setMyDisableTime();" />
+        </td>
+        <td>
+            <span>указать дату и время</span>
+        </td>
+        <td>
+            <div style="position: relative; width: 200px; height: 20px; top: -5px;">
+                <div style="position: absolute">
+                    <div class='input-group date' id="disableDatePicker">
+                        <input type="text" id="disableDate" name="disableDate" value="" data-inputmask="'mask': '99.99.9999 99:99:99'" class="form-control" />
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                    </div>
+                    @*<input type="text" id="disableDate" name="disableDate" disabled="disabled" value="" data-inputmask="'mask': '99.99.9999 99:99:99'" class="form-control" />*@
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+<hr />
+<p class="disable-header">Комментарий:</p>
+<textarea id="disableComment" style="width: 100%; height: 60px"></textarea>
+<hr />
+<a href="#" class="btn btn-primary" id="disableComponentSaveBtn" onclick="beginDisableComponent(); return false;">Применить</a>
+<div id="disableComponentWaitDiv" style="display: none">
+    <img src="/Content/Icons/ajax-loader.gif" /> Пожалуйста подождите...
+</div>
+<script>
+    function initDisableDialog() {
+        $("#disableDatePicker").datetimepicker({
+            format: '@BaseController.MomentDateTimeDisplayFormat',
+            locale: 'ru',
+            showClear: true
+        });
+
+        $("#disableIntervalDefault").click();
+    }
+
+    function setDisableInterval() {
+        var control = $("#disableDate");
+        control.prop('disabled', true);
+    }
+
+    function setMyDisableTime() {
+        var control = $("#disableDate");
+        control.prop('disabled', false);
+        var val = control.val();
+        if (!val) {
+            control.val('@DateTime.Now.AddDays(1).ToString(DateTimeFormat.RUS_DDMMYYYY_HHMMSS)');
+        }
+    }
+
+    function beginDisableComponent() {
+        $("#disableComponentSaveBtn").hide();
+        $("#disableComponentWaitDiv").show();
+        var date = $('#disableDatePicker').data("DateTimePicker").date();
+        if (date) {
+            date = date.format("@BaseController.MomentDateTimeParamFormat");
+        }
+        var params = {
+            interval: $("input[name=disableInterval]:checked").val(),
+            date: date,
+            comment: $("#disableComment").val()
+        };
+        var url = '@Context.Request.GetDisplayUrl()';
+        var successCallback = function() {
+            document.location.reload();
+        };
+        var errorCallback = function (error) {
+            var errorDiv = $("#disableComponentError");
+            errorDiv.text(error);
+            errorDiv.show();
+            $("#disableComponentSaveBtn").show();
+            $("#disableComponentWaitDiv").hide();
+        };
+        ziExecuteJsonUrl(url, params, successCallback, errorCallback);
+    }
+
+    initDisableDialog();
+</script>

@@ -1,0 +1,59 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.HttpRequestCheckModels.EditModel
+
+@{
+    ViewBag.Title = "Просмотр http-проверки";
+}
+
+<style>
+    #requestsTable td {
+        vertical-align: top;
+    }
+
+    .webFormsData td {
+        padding-left: 10px;
+    }
+</style>
+
+<style>
+    .smart-col-labels {
+        min-width: 220px;
+    }
+</style>
+
+<p class="submenu-title">@ViewBag.Title</p>
+
+<div class="zi-bread-crumbs">
+    @Html.Partial("~/Views/Controls/UnitTestBreadCrumbs.cshtml", Model.UnitTestBreadCrumbs)
+</div>
+
+<hr class="submenu" />
+
+<div class="smart-container">
+    @Html.Partial("~/Views/Checks/ShowCheckCommonSettings.cshtml", Model)
+
+    <p class="pageHeader1">Настройки запроса</p>
+
+    @Html.DisplayFor(m => m.Method, "SmartDisplay")
+    @Html.DisplayFor(m => m.Url, "SmartDisplay")
+    @Html.DisplayFor(m => m.TimeOutSeconds, "SmartDisplay")
+    @Html.DisplayFor(m => m.Body, "SmartDisplay")
+
+    <div style="margin-top: 20px;">
+        @Html.ShowKeyValueTable(x => x.RequestHeaders)
+    </div>
+    <div style="margin-top: 30px;">
+        @Html.ShowKeyValueTable(x => x.WebFormDatas)
+    </div>
+    <div style="margin-top: 30px;">
+        @Html.ShowKeyValueTable(x => x.RequestCookies)
+    </div>
+
+    <p class="pageHeader1">Настройки ответа</p>
+    
+    @Html.DisplayFor(m => m.ResponseCode, "SmartDisplay")
+    @Html.DisplayFor(m => m.SuccessHtml, "SmartDisplay")
+    @Html.DisplayFor(m => m.ErrorHtml, "SmartDisplay")
+
+</div>

@@ -1,0 +1,143 @@
+﻿@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+
+@model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsStateModel
+
+<div style="margin-top: 20px;">   
+    <span id="component-details-state-status">
+        @Html.MonitoringStatusLabel(Model.Status, Model.StatusEventId, 18)
+    </span>
+    <span class="simple-text-value" id="component-details-state-duration">
+        @TimeSpanHelper.Get2UnitsString(Model.StatusDuration)
+    </span>
+    
+    @if (Model.CanEdit)
+    {
+        <div class="pull-right" style="display: inline">
+            @if (Model.IsEnabled)
+            {
+                <button id="component-details-disable-component" type="button" data-id="@Model.Id" class="btn btn-default">Выключить</button>
+            }
+            else
+            {
+                <button id="component-details-enable-component" type="button" data-id="@Model.Id" class="btn btn-default">Включить</button>
+            }
+            <button id="component-details-delete-component" type="button" data-id="@Model.Id" class="btn btn-default">Удалить</button>
+        </div>
+    }
+</div>
+
+<br/>
+<table id="component-details-state-table">
+    <tr>
+        <th class="text-nowrap">
+            <a href='@Url.Action("Index", "UnitTests", new { componentId = Model.Id })'>Проверки</a>
+        </th>
+        <td>
+            @Html.ColorCircleWithNumber(Model.UnittestsMiniStatus.Alarm, ImportanceColor.Red, Model.UnittestsMiniStatus.AlarmUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.UnittestsMiniStatus.Warning, ImportanceColor.Yellow, Model.UnittestsMiniStatus.WarningUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.UnittestsMiniStatus.Success, ImportanceColor.Green, Model.UnittestsMiniStatus.SuccessUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.UnittestsMiniStatus.Unknown, ImportanceColor.Gray, Model.UnittestsMiniStatus.UnknownUrl)
+        </td>
+    </tr>
+
+    <tr>
+        <th class="text-nowrap">
+            <a href='@Url.Action("Index", "Events", new { ComponentId = Model.Id, FromDate = GuiHelper.GetUrlDateTimeString(DateTime.Now) })'>События</a>
+        </th>
+        <td>
+            @Html.ColorCircleWithNumber(Model.EventsMiniStatus.Alarm, ImportanceColor.Red, Model.EventsMiniStatus.AlarmUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.EventsMiniStatus.Warning, ImportanceColor.Yellow, Model.EventsMiniStatus.WarningUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.EventsMiniStatus.Success, ImportanceColor.Green, Model.EventsMiniStatus.SuccessUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.EventsMiniStatus.Unknown, ImportanceColor.Gray, Model.EventsMiniStatus.UnknownUrl)
+        </td>
+    </tr>
+
+    <tr>
+        <th class="text-nowrap">
+            <a href='@Url.Action("Values", "Metrics", new { componentId = Model.Id })'>Метрики</a>
+        </th>
+        <td>
+            @Html.ColorCircleWithNumber(Model.MetricsMiniStatus.Alarm, ImportanceColor.Red, Model.MetricsMiniStatus.AlarmUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.MetricsMiniStatus.Warning, ImportanceColor.Yellow, Model.MetricsMiniStatus.WarningUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.MetricsMiniStatus.Success, ImportanceColor.Green, Model.MetricsMiniStatus.SuccessUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.MetricsMiniStatus.Unknown, ImportanceColor.Gray, Model.MetricsMiniStatus.UnknownUrl)
+        </td>
+    </tr>
+
+    <tr>
+        <th class="text-nowrap">
+            <a href='@Url.Action("List", "Components", new { parentComponentId = Model.Id })'>Дети</a>
+        </th>
+        <td>
+            @Html.ColorCircleWithNumber(Model.ChildsMiniStatus.Alarm, ImportanceColor.Red, Model.ChildsMiniStatus.AlarmUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.ChildsMiniStatus.Warning, ImportanceColor.Yellow, Model.ChildsMiniStatus.WarningUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.ChildsMiniStatus.Success, ImportanceColor.Green, Model.ChildsMiniStatus.SuccessUrl)
+        </td>
+        <td>
+            @Html.ColorCircleWithNumber(Model.ChildsMiniStatus.Unknown, ImportanceColor.Gray, Model.ChildsMiniStatus.UnknownUrl)
+        </td>
+    </tr>
+
+</table>
+
+<script>
+    $('#component-details-enable-component').click(function() {
+        var me = $(this);
+        var url = '@Url.Action("EnableAjax", "Components")';
+        var id = me.data('id');
+        var data = { id: id };
+        smartButtons.beginAction(me);
+        smartBlocks.doAjax(url, 'POST', data, function () {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, function () {
+            smartButtons.endAction(me);
+        });
+    });
+
+    $('#component-details-disable-component').click(function() {
+        var me = $(this);
+        var url = '@Url.Action("DisableAjax", "Components")';
+        var id = me.data('id');
+        var data = { id: id };
+        dialogs.showModal(url, 'Выключение компонента', function() {
+            componentTreeDetails.accordionReloadCurrentGroup(me);
+            submitForm();
+        }, data);
+    });
+
+    $('#component-details-delete-component').click(function() {
+        var me = $(this);
+        var url = '@Url.Action("DeleteAjax", "Components")';
+        var id = me.data('id');
+        var data = { id: id };
+        dialogs.showModal(url, 'Удаление компонента', function() {
+            hideDetailsPanel();
+            submitForm();
+        }, data);
+    });
+</script>

@@ -1,0 +1,23 @@
+﻿@using Zidium.UserAccount.Models.UnitTests
+
+@model ShowSettingsVirusTotalModel
+
+<div class="col-md-8 tiles-column">
+    <div class="tiles-box" style="display: flex; flex-direction:column;">
+        <div style="flex: 1 0 auto;">
+            <div class="tiles-box-header1">Настройки VirusTotal</div>
+            <div class="tiles-box-content">
+                <p>
+                    <span class="simple-text-header">Url ресурса</span>
+                    <br />
+                    <span class="simple-text-value">@Model.Url</span>
+                </p>               
+                <p>
+                    <span class="simple-text-header">ApiKey</span>
+                    <br />
+                    <span class="simple-text-value">@Model.ApiKey</span>
+                </p>                
+            </div>
+        </div>
+    </div>
+</div>

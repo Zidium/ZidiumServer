@@ -1,0 +1,80 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.LogPartialModel
+
+@if (Model.Previous != null)
+{
+    <tr class="smart-block" data-smart-block-on-error="onError" data-smart-block-mode="replace" data-smart-block-loader="loader">
+        <td colspan="4">
+            <a href="#" class="link-show-previous-records"
+               data-date="@GuiHelper.GetUrlDateTimeString(Model.Previous.Date)"
+               data-order="@Model.Previous.Order">
+                Предыдущие @Model.OutputRecordCount записей
+            </a>
+        </td>
+    </tr>
+}
+
+@if (Model.NoPreviousRecords)
+{
+    <tr>
+        <td colspan="4">
+            <span class="text-muted">Это начало лога</span>
+        </td>
+    </tr>
+}
+
+@if (Model.Items.Length > 0)
+{
+    foreach (var item in Model.Items)
+    {
+        <tr data-id="@item.Id">
+            @{
+                var linkClass = GuiHelper.GetLogLevelTextCssClass(item.Level);
+            }
+            <td class='cell-mark @(Model.MarkAsNew ? "cell-new" : null)'></td>
+            <td>@Html.LogLevelIcon(item.Level)</td>
+            <td>
+                <span class="@linkClass">@item.Date.ToString(GuiHelper.DateTimeDisplayFormat)</span>
+                @if (Model.ScrollToId == item.Id)
+                {
+                    @Html.ScrollToMe(50)
+                }
+            </td>
+            <td>
+                @if (Model.ScrollToId == item.Id)
+                {
+                    <span class='log-message @linkClass text-wordbreak'>@Html.Highlight(item.Message, Model.Filters.Text)</span>
+                }
+                else
+                {
+                    <span class='log-message @linkClass text-wordbreak'>@item.Message</span>
+                }
+            </td>
+        </tr>
+        if (Model.ScrollToId == item.Id && Model.ExpandedProperties != null)
+        {
+             @Html.Partial("GetLogRowProperties", Model.ExpandedProperties)
+        }
+    }
+}
+
+@if (Model.Next != null)
+{
+    <tr class="smart-block" data-smart-block-on-error="onError" data-smart-block-mode="replace" data-smart-block-loader="loader">
+        <td colspan="4">
+            <a href="#" class="link-show-next-records"
+               data-date="@GuiHelper.GetUrlDateTimeString(Model.Next.Date)"
+               data-order="@Model.Next.Order">
+                @if (Model.NoNextRecords)
+                {
+                    <span>Нет новых записей (проверить)</span>
+                }
+                else
+                {
+                    <span>Следующие @Model.OutputRecordCount записей</span>
+                }
+            </a>
+        </td>
+    </tr>
+}

@@ -1,0 +1,194 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+
+@model ComponentShowTimelinesPartialModel
+
+<tr>
+    <th class="text-nowrap" id="header-total-state" colspan="2">
+        <a id="timeline-main-link" href="#">
+            <b>Итоговое состояние</b>
+            <span id="timeline-main-link-span" class="expand-icon"></span>
+        </a>
+    </th>
+    <td class="full-width">
+        <div id="timeline-external">
+            @Html.Action("ForComponent", "Timeline", new { id = Model.ComponentId, category = EventCategory.ComponentExternalStatus.ToString(), fromDate = Model.FromDate, toDate = Model.ToDate })
+        </div>
+    </td>
+</tr>
+
+<tr>
+    <td>
+        <div class="bottom10px"></div>
+    </td>
+    <td></td>
+</tr>
+
+<tr class="timeline-hidden-row collapse">
+    <th class="text-nowrap">
+        @{GroupCirclesCaption("Проверки", "unittests");}
+    </th>
+    <td class="mini-status-count">
+        @{GroupCircles("unittests");}
+    </td>
+    <td class="full-width">
+        <div id="timeline-unittests">
+            @Html.Action("ForComponent", "Timeline", new { id = Model.ComponentId, category = EventCategory.ComponentUnitTestsStatus.ToString(), fromDate = Model.FromDate, toDate = Model.ToDate })
+        </div>
+    </td>
+</tr>
+@{GroupRow("unittests", "ShowTimelinesUnitTestsPartial");}
+
+<tr class="timeline-hidden-row collapse">
+    <th class="text-nowrap">
+        @{GroupCirclesCaption("События", "events");}
+    </th>
+    <td class="mini-status-count">
+        @{GroupCircles("events");}
+    </td>
+    <td class="full-width">
+        <div id="timeline-events">
+            @Html.Action("ForComponent", "Timeline", new { id = Model.ComponentId, category = EventCategory.ComponentEventsStatus.ToString(), fromDate = Model.FromDate, toDate = Model.ToDate })
+        </div>
+    </td>
+</tr>
+@{GroupRow("events", "ShowTimelinesEventsPartial");}
+
+<tr class="timeline-hidden-row collapse">
+    <th class="text-nowrap">
+        @{GroupCirclesCaption("Метрики", "metrics");}
+    </th>
+    <td class="mini-status-count">
+        @{GroupCircles("metrics");}
+    </td>
+    <td class="full-width">
+        <div id="timeline-metrics">
+            @Html.Action("ForComponent", "Timeline", new { id = Model.ComponentId, category = EventCategory.ComponentMetricsStatus.ToString(), fromDate = Model.FromDate, toDate = Model.ToDate })
+        </div>
+    </td>
+</tr>
+@{GroupRow("metrics", "ShowTimelinesMetricsPartial");}
+
+<tr class="timeline-hidden-row collapse">
+    <th class="text-nowrap">
+        @{GroupCirclesCaption("Дети", "childs");}
+    </th>
+    <td class="mini-status-count">
+        @{GroupCircles("childs");}
+    </td>
+    <td class="full-width">
+        <div id="timeline-childs">
+            @Html.Action("ForComponent", "Timeline", new { id = Model.ComponentId, category = EventCategory.ComponentChildsStatus.ToString(), fromDate = Model.FromDate, toDate = Model.ToDate })
+        </div>
+    </td>
+</tr>
+@{GroupRow("childs", "ShowTimelinesChildsPartial");}
+
+@{void GroupCircles(string name)
+    {
+        ColorBadge(EventImportance.Alarm, name);
+        ColorBadge(EventImportance.Warning, name);
+        ColorBadge(EventImportance.Success, name);
+        ColorBadge(EventImportance.Unknown, name);
+    }
+}
+
+@{void ColorBadge(EventImportance importance, string name, bool active = false)
+    {
+        var colorCss = "badge-importance-" + importance;
+        <a href="#" class="circle-group" data-div-id="timeline-td-@name" data-importance="@importance">
+            <span class='badge @colorCss @(active ? "active" : null)'></span>
+        </a>
+    }
+}
+
+@{void GroupRow(string name, string action)
+    {
+        <tr class="timelines-group timeline-hidden-row collapse">
+            <td></td>
+            <td></td>
+            <td id="timeline-td-@name" data-url='@Url.Action(action, new { id = Model.ComponentId, fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate), toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate) })'>
+                @Html.Action(action, new { id = Model.ComponentId, fromDate = GuiHelper.GetUrlDateTimeString(Model.FromDate), toDate = GuiHelper.GetUrlDateTimeString(Model.ToDate), importance = string.Empty })
+            </td>
+        </tr>
+    }
+}
+
+@{void GroupCirclesCaption(string caption, string name)
+    {
+        <a href="#" class="circle-group-caption" data-div-id="timeline-td-@name">
+            @caption
+        </a>
+    }
+}
+
+<script>
+    $(function () {
+        $('a.circle-group').click(onCircleGroupClick);
+        $('a.circle-group-caption').click(onCircleGroupCaptionClick);
+        $('#timeline-main-link').click(onTimelineMainLinkClick);
+    });
+
+    function onCircleGroupClick(event) {
+        event.preventDefault();
+
+        var me = $(this);
+        var badge = $('.badge', me);
+        if (badge.hasClass('active'))
+            badge.removeClass('active');
+        else
+            badge.addClass('active');
+
+        var array = [];
+        $.each($('.circle-group > .badge.active', me.parent()), function (index, element) {
+            array.push($(element).parent().data('importance'));
+        });
+
+        loadGroup(array, me.data('div-id'));
+    }
+
+    function onCircleGroupCaptionClick(event) {
+        event.preventDefault();
+
+        var me = $(this);
+        var tr = me.closest('tr');
+        var badges = $('a.circle-group .badge', tr);
+        var hasActive = badges.filter('.active').length > 0;
+
+        $.each(badges, function (index, element) {
+            if (!hasActive)
+                $(element).addClass('active');
+            else
+                $(element).removeClass('active');
+        });
+
+        var array = !hasActive ? [
+            '@EventImportance.Alarm',
+            '@EventImportance.Warning',
+            '@EventImportance.Success',
+            '@EventImportance.Unknown'
+        ] : [];
+
+        loadGroup(array, me.data('div-id'));
+    }
+
+    function loadGroup(importancesArray, divId) {
+        var importances = importancesArray.join("~");
+
+        var div = $('#' + divId);
+        var url = div.data('url');
+        url += '&importance=' + importances;
+
+        div.load(url);
+    }
+
+    function onTimelineMainLinkClick(event) {
+        event.preventDefault();
+
+        $('#timeline-main-link-span').toggleClass('expanded');
+        $('.timeline-hidden-row').toggle();
+
+        window.dispatchEvent(new Event('resize'));
+    }
+</script>

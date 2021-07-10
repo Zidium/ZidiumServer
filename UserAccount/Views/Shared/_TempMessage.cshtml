@@ -1,0 +1,11 @@
+﻿@using Zidium.UserAccount.Helpers
+@{
+    var tempMessage = GuiHelper.GetTempMessage(Context);
+    if (tempMessage != null)
+    {
+        <div class='alert @tempMessage.CssClass alert-dismissible' role="alert" id="TempMessage">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Закрыть"><span aria-hidden="true">&times;</span></button>
+            @Html.Raw(tempMessage.Message)
+        </div>
+    }
+}

@@ -1,0 +1,11 @@
+﻿@model Zidium.UserAccount.Models.Errors.HandleErrorInfo
+
+@{
+    ViewBag.Title = "Ошибка";
+    if (Context.Request.IsAjaxRequest() || ViewBag.IsChildAction == true)
+    {
+        Layout = null;
+    }
+}
+
+@Html.Error(Model.Exception)

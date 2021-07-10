@@ -1,0 +1,98 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.MetricTypes.ShowModel
+
+<style>
+    .smart-col-labels {
+        min-width: 200px;
+    }
+
+    #ModalDlgBody {
+        padding-bottom: 0px;
+    }
+</style>
+
+@if (Model.ModalMode)
+{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Просмотр типа метрики";
+    ViewBag.ActiveMenuItems = "Metrics,MetricTypes";
+}
+
+@if (!Model.ModalMode)
+{
+    @Html.Partial("_PageTitle")
+}
+
+<div class="smart-container">
+    @if (!Model.ModalMode)
+    {
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields">
+                <div>
+                    @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                    {
+                        @Html.ActionLink("Настроить", "Edit", new {id = Model.Id}, new {@class = "btn btn-primary smart-button"})
+                    }
+
+                    @Html.ActionLink("Текущие значения", "values", "Metrics", new {metricTypeId = Model.Id}, new {@class = "btn btn-default smart-button"})
+                    @Html.ActionLink("Вернуться к списку", "Index", null, new {@class = "btn btn-default smart-button"})
+                    
+                    @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                    {
+                        @Html.ActionLink("Создать метрику", "Edit", "Metrics", new {metricTypeId = Model.Id}, new {@class = "btn btn-default smart-button"})
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @*@Html.DisplayFor(m => m.Id, "SmartDisplay")*@
+    @Html.DisplayFor(m => m.SystemName, "SmartDisplay")
+    @Html.DisplayFor(m => m.DisplayName, "SmartDisplay")
+    
+    <div class="smart-row">
+        <div class="smart-col-labels smart-col-empty"></div>
+        <div class="smart-col-fields">
+            <p class="form-control-static">
+                <strong>Настройки обработки</strong>
+            </p>
+        </div>
+    </div>
+
+    @Html.DisplayFor(m => m.ActualTime, "SmartDisplay")
+    @Html.DisplayFor(m => m.NoSignalColor, "SmartDisplay")
+    
+    <div class="smart-row">
+        <div class="smart-col-labels smart-col-empty"></div>
+        <div class="smart-col-fields">
+            <p class="form-control-static">
+                <strong>Правила для цветов</strong>
+            </p>
+        </div>
+    </div>
+
+    @Html.DisplayFor(m => m.ConditionRed, "SmartDisplay")
+    @Html.DisplayFor(m => m.ConditionYellow, "SmartDisplay")
+    @Html.DisplayFor(m => m.ConditionGreen, "SmartDisplay")
+    @Html.DisplayFor(m => m.ElseColor, "SmartDisplay")
+
+    @if (Model.ModalMode)
+    {
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields text-right">
+                <div>
+                    @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                    {
+                        @Html.ActionLink("Редактировать", "Edit", new {id = Model.Id}, new {@class = "btn btn-warning smart-button", onclick = "ModalBtnClick(this, event);"})
+                    }
+                    <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>

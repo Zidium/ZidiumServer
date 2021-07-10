@@ -1,0 +1,9 @@
+﻿@model Zidium.Storage.UserContactForRead
+
+<td>@Html.ActionLink(Model.Value, "EditContact", "Users", new { id = Model.Id.ToString() }, new { onclick = "ModalBtnClick(this, event);" })</td>
+<td>@Model.Type</td>
+<td class="text-center">
+    <a href='@Url.Action("DeleteContact", new {id = Model.Id.ToString()})' onclick="ModalBtnClick(this, event);" title="Удалить контакт" class="text-danger">
+        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+    </a>
+</td>

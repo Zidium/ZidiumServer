@@ -1,0 +1,60 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using System.Web 
+
+@model Zidium.UserAccount.Models.Components.CreateNewInFolderModel
+
+@{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+    ViewBag.Title = "Создание нового компонента";
+}
+
+@{ Html.BeginForm("CreateNewInFolder", "Components", FormMethod.Post,
+         new { data_ajax = "true", data_ajax_method = "post", data_ajax_mode = "replace-with", data_ajax_update = "#create-new-component-form", id = "create-new-component-form" });
+}
+
+@Html.HiddenFor(x => x.FolderSystemName)
+@Html.HiddenFor(x => x.FolderDisplayName)
+
+<div class="bottom10px">
+    @if (Model.ErrorMessage != null)
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @Html.RequiredLabelFor(x => x.ComponentTypeId)
+    @Html.ComponentTypeSelectorNew(x => x.ComponentTypeId, new ComponentTypeSelectorOptions()
+        {
+            AllowEmpty = false,
+            AutoRefreshPage = false,
+            Mode = ComponentTypeSelectorMode.ShowAllTypes
+        })
+    @Html.ValidationMessageFor(x => x.ComponentTypeId)
+</div>
+
+<div class="bottom10px">
+    @Html.RequiredLabelFor(x => x.SystemName)
+    @Html.TextBoxFor(x => x.SystemName, new { @class = "form-control", autocomplete = "off" })
+    @Html.ValidationMessageFor(x => x.SystemName)
+</div>
+
+<div class="bottom20px">
+    @Html.LabelFor(x => x.DisplayName)
+    @Html.TextBoxFor(x => x.DisplayName, new { @class = "form-control", autocomplete = "off" })
+    @Html.ValidationMessageFor(x => x.DisplayName)
+</div>
+
+<div class="text-right">
+    <button type="button" class="btn btn-default smart-button" data-dismiss="modal">Закрыть</button>
+    <input type="submit" value="Создать" class="btn btn-primary smart-button" />
+</div>
+
+@if (Model.ComponentId.HasValue)
+{
+    <script>
+        var componentId = '@Model.ComponentId';
+        var componentName = '@(HttpUtility.JavaScriptStringEncode(Model.DisplayName ?? Model.SystemName))';
+        setNewComponentData(componentId, componentName);
+    </script>
+}
+
+@{Html.EndForm();}

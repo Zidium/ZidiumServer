@@ -1,0 +1,75 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.SendNotificationModel
+
+@{
+    ViewBag.Title = "Проверка уведомлений";
+    ViewBag.ActiveMenuItems = "Manage,NotificationsList";
+    var isSmartBlocks = Context.Request.IsSmartBlocksRequest();
+    if (isSmartBlocks)
+    {
+        Layout = null;
+    }
+}
+
+<style>
+    .smart-col-labels {
+        min-width: 90px;
+    }
+</style>
+
+@if (!isSmartBlocks)
+{
+    @Html.Partial("_PageTitle")
+}
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" + (isSmartBlocks ? " smart-block-form" : "") }))
+{
+    @Html.AntiForgeryToken()
+    @Html.MyValidationSummary(true)
+
+    <div class="smart-container">
+        @{
+            var form = Html.GetFormBuilder(Model);
+        }
+
+        @if (UserHelper.CurrentUser(Context).CanManageAccount())
+        {
+            @form.GroupFor(m => m.UserId).Control(t => Html.UserSelector(Html.NameFor(m => m.UserId).ToString(), Model.UserId, false, false)).Partial()
+        }
+        else
+        {
+            @Html.HiddenFor(m => m.UserId)
+        }
+
+        @form.GroupFor(m => m.Channel).DropDownList(DropDownListHelper.GetSubscriptionChannels(Model.Channel, false)).Partial()
+
+        @form.Group("").Control(@<text>
+            <a href='https://zidium.net/wiki/how-to/subscriptions/messangers' target="_blank">
+                Как настроить отправку через мессенджеры?
+            </a>
+        </text>).Partial()
+
+    @if (!isSmartBlocks)
+    {
+        @form.Group("Submit").Control(@<text>
+            <button type="submit" class="btn btn-primary">
+                Отправить
+            </button>
+            @Html.ActionLink("Отмена", "Index", "Notifications", null, new { @class = "btn btn-default" })
+        </text>).Partial()
+    }
+</div>
+
+if (isSmartBlocks)
+{
+    <hr />
+    <div class="text-right top10px">
+        <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">
+            Отправить
+        </button>
+        <button type="button" class="btn btn-default smart-button" data-dismiss="modal">
+            Отмена
+        </button>
+    </div>
+}
+}

@@ -1,0 +1,45 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.AddUserModel
+
+@{
+    ViewBag.Title = "Добавление пользователя";
+    ViewBag.ActiveMenuItems = "Manage,Users";
+}
+
+@Html.Partial("_PageTitle")
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.MyValidationSummary()
+    @Html.EditorFor(m => m.Login, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.Post, "LabeledEdit", new { HorizontalForm = true })
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.RoleId, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-4">
+            @Html.DropDownListFor(x => x.RoleId, GuiHelper.GetRolesItems(Model.RoleId), new { @class = "form-control" })
+        </div>
+        <div class="col-sm-6">
+            @Html.ValidationMessageFor(x => x.RoleId)
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.TimeZoneOffsetMinutes, new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-4">
+            @Html.DropDownListFor(x => x.TimeZoneOffsetMinutes, GuiHelper.GetTimeZoneItems(Model.TimeZoneOffsetMinutes), new { @class = "form-control" })
+        </div>
+        <div class="col-sm-6">
+            @Html.ValidationMessageFor(x => x.TimeZoneOffsetMinutes)
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-4">
+            <input type="submit" value="Добавить" class="btn btn-primary" />
+            @Html.ActionLink("Вернуться к списку", "Index", "Users", null, new { @class = "btn btn-default" })
+        </div>
+    </div>
+}

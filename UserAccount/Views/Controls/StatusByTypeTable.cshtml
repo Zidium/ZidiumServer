@@ -1,0 +1,92 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@model StatusByTypeTableModel
+
+@{
+    var groups = Model.Rows.GroupBy(x => x.GroupName).ToList();
+}
+
+@if (Model.Rows.Count > 0)
+{
+
+    <table class="table grid-table simpleTableClear table-condensed" style="width: auto !important">
+        <tr>
+            <th>@Model.TypeColumnName</th>
+            <th style="text-align: center">Всего</th>
+            <th style="text-align: center">@Html.ObjectColorIcon(ObjectColor.Red)</th>
+            <th style="text-align: center">@Html.ObjectColorIcon(ObjectColor.Yellow)</th>
+            <th style="text-align: center">@Html.ObjectColorIcon(ObjectColor.Green)</th>
+            <th style="text-align: center">@Html.ObjectColorIcon(ObjectColor.Gray)</th>
+        </tr>
+        @foreach (var group in groups)
+        {
+            string groupName = group.Key;
+            if (string.IsNullOrEmpty(groupName) == false)
+            {
+                var getByGroupUrl = group.First().GetByGroupUrl;
+                <tr>
+                    <td colspan="6" style="font-weight: bold;">
+                        <a href="@getByGroupUrl">@groupName</a>
+                    </td>
+                </tr>
+            }
+            foreach (var row in group)
+            {
+                string typeName = row.TypeName;
+                string getByTypeUrl = row.GetByTypeUrl;
+                string typeColor = "black";
+
+
+                if (row.RedCount > 0)
+                {
+                    typeColor = GuiHelper.StrongRedFgColor;
+                }
+                else if (row.YellowCount > 0)
+                {
+                    typeColor = GuiHelper.StrongYellowFgColor;
+                }
+                else if (row.GreenCount > 0)
+                {
+                    typeColor = GuiHelper.StrongGreenFgColor;
+                }
+                else if (row.GrayCount > 0)
+                {
+                    typeColor = GuiHelper.StrongGrayFgColor;
+                }
+
+                string getByAllCountUrl = row.GetByAllCountUrl;
+                string redUrl = getByAllCountUrl + "&Color=Red";
+                string yellowUrl = getByAllCountUrl + "&Color=Yellow";
+                string greenUrl = getByAllCountUrl + "&Color=Green";
+                string grayUrl = getByAllCountUrl + "&Color=Gray";
+
+                <tr>
+                    <td>
+                        <a style="color: @typeColor; margin-left: @(groupName == null ? 0 : 20)px;" href="@row.GetByTypeUrl">@typeName</a>
+                    </td>
+                    <td class="text-center">
+                        <a style="color: gray;" href='@getByAllCountUrl'><b>@row.Count()</b></a>
+                    </td>
+
+                    @{WriteCell(ImportanceColor.Red, row.RedCount, redUrl);}
+                    @{WriteCell(ImportanceColor.Yellow, row.YellowCount, yellowUrl);}
+                    @{WriteCell(ImportanceColor.Green, row.GreenCount, greenUrl);}
+                    @{WriteCell(ImportanceColor.Gray, row.GrayCount, grayUrl);}
+                </tr>
+            }
+        }
+    </table>
+}
+else
+{
+    <p>Таких проверок пока нет</p>
+}
+
+@{void WriteCell(ImportanceColor color, int count, string url)
+    {
+        <td class="text-center" style="width: 60px;">
+            @Html.ColorCircleWithNumber(count, color, url)
+        </td>
+    }
+}

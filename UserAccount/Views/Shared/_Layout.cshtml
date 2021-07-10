@@ -1,0 +1,134 @@
+﻿@using Zidium.UserAccount.Helpers
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=10" />
+    <title>@(ViewBag.Title + " - Zidium")</title>
+
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-datetimepicker.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-chosen.css" rel="stylesheet" />
+    <link href="~/Content/site.css" rel="stylesheet" />
+    <link href="~/Content/timeline.css" rel="stylesheet" />
+    <link href="~/Content/css-treeview.css" rel="stylesheet" />
+    <link href="~/Content/smart.css" rel="stylesheet" />
+    <link href="~/Content/jquery-ui-1.11.4/jquery-ui.css" rel="stylesheet" />
+    <link href="~/Content/jquery-ui-1.11.4/jquery-ui.structure.css" rel="stylesheet" />
+    <link href="~/Content/jquery-ui-1.11.4/jquery-ui.theme.css" rel="stylesheet" />
+    <link href="~/Content/errors.css" rel="stylesheet" />
+    <link href="~/Content/tooltipster.css" rel="stylesheet" />
+    <link href="~/Content/smart-blocks.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/Content/Gridmvc.css" />
+
+    @RenderSection("Styles", required: false)
+
+    @await Html.PartialAsync("_Styles")
+
+    <script src="~/Scripts/jquery-2.2.0.js"></script>
+    <script src="~/Scripts/jquery.validate.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.js"></script>
+    <script src="~/Scripts/jquery.unobtrusive-ajax.js"></script>
+    <script src="~/Scripts/bootstrap.js"></script>
+    <script src="~/Scripts/bootbox.js"></script>
+    <script src="~/Scripts/mainmenu.js"></script>
+    <script src="~/Scripts/moment-with-locales.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.js"></script>
+    <script src="~/Scripts/chosen.jquery.js"></script>
+    <script src="~/Scripts/jquery.inputmask/inputmask.js"></script>
+    <script src="~/Scripts/jquery.inputmask/jquery.inputmask.js"></script>
+    <script src="~/Scripts/jquery.inputmask/inputmask.date.extensions.js"></script>
+    <script src="~/Scripts/jquery.inputmask/inputmask.numeric.extensions.js"></script>
+    <script src="~/Scripts/jquery.inputmask/inputmask.phone.extensions.js"></script>
+    <script src="~/Scripts/jquery.inputmask/phone-codes/phone.js"></script>
+    <script src="~/Scripts/utils.js"></script>
+    <script src="~/Content/jquery-ui-1.11.4/jquery-ui.js"></script>
+    <script src="~/Scripts/errors.js"></script>
+    <script src="~/Scripts/ajaxtable.js"></script>
+    <script src="~/Scripts/jquery.tooltipster.min.js"></script>
+    <script src="~/Scripts/smart-blocks/smart-blocks.js"></script>
+    <script src="~/Scripts/smart-blocks/smart-buttons.js"></script>
+    <script src="~/Scripts/smart-blocks/smart-config.js"></script>
+    <script src="~/Scripts/dialogs.js"></script>
+    <script src="~/Scripts/fixed-header.js"></script>
+    <script src="~/Scripts/floatThead/jquery.floatThead.js"></script>
+    <script src="~/Scripts/global.js"></script>
+    <script src="~/Scripts/reloaded-tiles.js"></script>
+
+    <script src="~/Scripts/Controls/ColorStatusSelector.js"></script>
+    <script src="~/Scripts/Controls/ComponentSelector.js"></script>
+    <script src="~/Scripts/Controls/ComponentSelectorNew.js"></script>
+    <script src="~/Scripts/Controls/DropdownSelectorBase.js"></script>
+    <script src="~/Scripts/Controls/DateSelector.js"></script>
+    <script src="~/Scripts/Controls/ComponentTypeSelector.js"></script>
+    <script src="~/Scripts/Controls/EventTypeSelector.js"></script>
+    <script src="~/Scripts/Controls/UserSelector.js"></script>
+    <script src="~/Scripts/Controls/CounterSelector.js"></script>
+    <script src="~/Scripts/Controls/UnitTestTypeSelector.js"></script>
+    <script src="~/Scripts/Controls/ComponentStatusSelector.js"></script>
+    <script src="~/Scripts/Controls/FilterButton.js"></script>
+    <script src="~/Scripts/Controls/BooleanButton.js"></script>
+    <script src="~/Scripts/Controls/TextFilter.js"></script>
+    <script src="~/Scripts/gridmvc.js"></script>
+
+    @RenderSection("Scripts", required: false)
+
+</head>
+
+<body>
+    @await Html.PartialAsync("_JavaScriptCheck")
+    <div class="javascript-required">
+
+        <div id="@(ViewBag.UseFixedHeader != null ? "fixed-header": null)">
+            <div id="topLogoRow">
+                <a id="zidiumLogoName" href='https://zidium.net'>Zidium</a>
+                <div class="pull-right" id="topLogoRowRight">
+                    @await Html.PartialAsync("_LoginPartial")
+                </div>
+            </div>
+
+            <div class="navbar navbar-default">
+                @await Html.PartialAsync("_Menu")
+            </div>
+
+            <div class="container-fluid">
+                @RenderSection("Header", false)
+            </div>
+        </div>
+
+        <div class="container-fluid body-content">
+            @await Html.PartialAsync("_TempMessage")
+            @await Html.PartialAsync("~/Views/Errors/ErrorPartial.cshtml")
+            @RenderBody()
+            <hr style="margin-top: 40px;" />
+
+            <footer>
+                <table style="width: 100%; margin-bottom: 40px;">
+                    <tr>
+                        <td style="width: 50%; text-align: left;">
+                            <p>Система мониторинга Zidium</p>
+                            <p><a href="mailto:info@zidium.net">info@zidium.net</a></p>
+                        </td>
+                        <td style="width: 50%; text-align: right;">
+                            <a href="https://vk.com/zidium" class="footerSocialIcon" target="_blank" title="ВКонтакте">
+                                <img src="~/Content/Icons/VKontakte.png" />
+                            </a>
+                            <a href="https://twitter.com/ZidiumNet" class="footerSocialIcon" target="_blank" title="Twitter">
+                                <img src="~/Content/Icons/Twitter.png" />
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                @*@if (DebugHelper.IsDebugMode)
+            {
+                <p>@Html.ActionLink("GuiExamples", "Index", "TilesExamples")</p>
+            }*@
+            </footer>
+        </div>
+    </div>
+
+</body>
+</html>

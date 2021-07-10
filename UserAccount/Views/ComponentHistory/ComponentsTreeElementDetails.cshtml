@@ -1,0 +1,108 @@
+﻿@model Zidium.UserAccount.Models.ComponentHistory.ComponentsTreeItemDetailsModel
+
+<div class="components-tree-item-details-loaded">
+    @if (Model.HasEvents)
+    {
+        <div class="components-tree-item-details-events">
+            <a href="@Url.Action("Index", "Events", new {ComponentId = Model.Id, fromDate = Model.From, toDate = Model.To})">
+                @(Model.Path + " / События")
+            </a>
+            
+            <span>&mdash; @(Model.EventsOkTime)%</span>
+
+            <div class="components-tree-timeline-groups">
+                @Html.Partial("~/Views/Timeline/TimelinePartial.cshtml", Model.EventsTimeline)
+            </div>
+        </div>
+    }
+
+    @{
+        var hasExpandableItems = Model.Unittests.Items.Length > 0 || Model.Metrics.Items.Length > 0;
+    }
+
+    @if (hasExpandableItems)
+    {
+        @Html.Raw("<ul>")
+    }
+
+    @if (Model.Unittests.Items.Length > 0)
+    {
+        <li style="white-space: nowrap;">
+            <input type="checkbox" class="components-tree-item-checkbox" id='@Model.Unittests.HtmlId' @(Model.Unittests.Expanded ? "checked" : string.Empty) />
+
+            <div>
+                <a href='@Url.Action("Index", "UnitTests", new { componentId = Model.Id })'>
+                    @(Model.Path + " / Проверки") 
+                </a>
+                
+                <span>&mdash; @(Model.UnittestsOkTime)%</span>
+
+                <label for='@Model.Unittests.HtmlId' class="components-tree-timeline-label"></label>
+            </div>
+            
+            <div class="components-tree-timeline-groups">
+                @Html.Partial("~/Views/Timeline/TimelinePartial.cshtml", Model.UnittestsTimeline)
+            </div>
+
+            <ul class="components-tree-details-list">
+                @foreach (var unittest in Model.Unittests.Items)
+                {
+                    <li style="white-space: nowrap;">
+                        <a href='@Url.Action("ResultDetails", "UnitTests", new { id = unittest.Id })'>
+                            @(Model.Path + " / Проверки / " + unittest.DisplayName)
+                        </a>
+                        
+                        <span>&mdash; @(unittest.OkTime)%</span>
+
+                        <div class="components-tree-timeline-details">
+                            @Html.Partial("~/Views/Timeline/TimelinePartial.cshtml", unittest.Timeline)
+                        </div>
+                    </li>
+                }
+            </ul>
+        </li>
+    }
+
+    @if (Model.Metrics.Items.Length > 0)
+    {
+        <li style="white-space: nowrap;">
+            <input type="checkbox" class="components-tree-item-checkbox" id='@Model.Metrics.HtmlId' @(Model.Metrics.Expanded ? "checked" : string.Empty) />
+
+            <div>
+                <a href='@Url.Action("Values", "Metrics", new { componentId = Model.Id })'>
+                    @(Model.Path + " / Метрики") 
+                </a>
+                
+                <span>&mdash; @(Model.MetricsOkTime)%</span>
+
+                <label for='@Model.Metrics.HtmlId' class="components-tree-timeline-label"></label>
+            </div>
+            
+            <div class="components-tree-timeline-groups">
+                @Html.Partial("~/Views/Timeline/TimelinePartial.cshtml", Model.MetricsTimeline)
+            </div>
+
+            <ul class="components-tree-details-list">
+                @foreach (var metric in Model.Metrics.Items)
+                {
+                    <li style="white-space: nowrap;">
+                        <a href='@Url.Action("Show", "Metrics", new { id = metric.Id })'>
+                            @(Model.Path + " / Метрики / " + metric.DisplayName)
+                        </a>
+                        
+                        <span>&mdash; @(metric.OkTime)%</span>
+
+                        <div class="components-tree-timeline-details">
+                            @Html.Partial("~/Views/Timeline/TimelinePartial.cshtml", metric.Timeline)
+                        </div>
+                    </li>
+                }
+            </ul>
+        </li>
+    }
+
+    @if (hasExpandableItems)
+    {
+        @Html.Raw("</ul>")
+    }
+</div>

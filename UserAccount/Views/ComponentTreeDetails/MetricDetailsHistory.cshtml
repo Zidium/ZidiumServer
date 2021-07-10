@@ -1,0 +1,69 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Models
+
+@model Zidium.UserAccount.Models.ComponentTreeDetails.MetricDetailsHistoryModel
+
+<p>
+    История за
+    <span class="btn-group space-right" data-toggle="buttons" id="metric-details-history-buttons">
+        <label class="btn btn-default btn-xs" id="btn-stats-hour">
+            <input type="radio" autocomplete="off">
+            Час
+        </label>
+        <label class="btn btn-default btn-xs active" id="btn-stats-day">
+            <input type="radio" autocomplete="off" checked>
+            День
+        </label>
+        <label class="btn btn-default btn-xs" id="btn-stats-week">
+            <input type="radio" autocomplete="off">
+            Неделя
+        </label>
+        <label class="btn btn-default btn-xs" id="btn-stats-month">
+            <input type="radio" autocomplete="off">
+            Месяц
+        </label>
+    </span>
+
+    <span id="metric-details-history-loader" class="collapse">
+        <img src="~/Content/Icons/ajax-loader-white.gif" />
+    </span>
+</p>
+
+<div id="metric-details-history-timeline">
+    <img src="~/Content/Icons/ajax-loader.gif" />
+</div>
+
+<div id="metric-details-history-graph">
+    <img src="~/Content/Icons/ajax-loader.gif" />
+</div>
+
+<script>
+    $('#metric-details-history-buttons #btn-stats-hour').click(function () { metricDetailsHistoryLoadStats('@TimelineInterval.Hour'); });
+    $('#metric-details-history-buttons #btn-stats-day').click(function () { metricDetailsHistoryLoadStats('@TimelineInterval.Day'); });
+    $('#metric-details-history-buttons #btn-stats-week').click(function () { metricDetailsHistoryLoadStats('@TimelineInterval.Week'); });
+    $('#metric-details-history-buttons #btn-stats-month').click(function () { metricDetailsHistoryLoadStats('@TimelineInterval.Month'); });
+    $('#metric-details-history-buttons #btn-stats-day').click();
+
+    function metricDetailsHistoryLoadStats(interval) {
+        $('#metric-details-history-loader').show();
+
+        var timelineUrl = '@Url.Action("ForMetricByInterval", "Timeline")';
+        var timelineParams = { id : '@Model.Id', interval: interval, category: "@EventCategory.MetricStatus" };
+
+        $('#metric-details-history-timeline')
+            .load(timelineUrl,
+                timelineParams,
+                function () {
+
+                    var graphUrl = '@Url.Action("GraphByInterval", "MetricsData")';
+                    var graphParameters = { id : '@Model.Id', interval: interval };
+
+                    $('#metric-details-history-graph').load(graphUrl,
+                        graphParameters,
+                        function() {
+                            $('#metric-details-history-loader').hide();
+                        });
+
+                });
+    }
+</script>

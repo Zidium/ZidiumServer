@@ -1,0 +1,47 @@
+﻿@model Zidium.UserAccount.Models.DeleteConfirmationModel
+
+@if (Model.ModalMode)
+{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+@{ ViewBag.Title = Model.Title; }
+
+@if (!Model.ModalMode)
+{
+    <legend>@Model.Title</legend>
+}
+
+@if (Model.ModalMode && !string.IsNullOrEmpty(Model.AjaxUpdateTargetId))
+{
+    Html.BeginForm(null, null, FormMethod.Post, 
+        new { data_ajax = "true", data_ajax_method = "post", data_ajax_mode = "replace-with", data_ajax_update = "#" + Model.AjaxUpdateTargetId, data_ajax_success = Model.OnAjaxSuccess });
+}
+else
+{
+    Html.BeginForm();
+}
+
+@Html.AntiForgeryToken()
+@Html.HiddenFor(model => model.Id)
+@Html.HiddenFor(model => model.ModalMode)
+@Html.HiddenFor(model => model.ReturnUrl)
+<div class="alert alert-danger">
+    @Html.DisplayTextFor(model => model.Message)
+</div>
+<div class="row" style="text-align: @(Model.ModalMode ? "right" : "left")">
+    <div class="col-sm-12">
+        <input type="submit" value="Удалить" class="btn btn-danger" />
+        &nbsp;
+        @if (!Model.ModalMode)
+        {
+            <a class="btn btn-default" href="@Model.ReturnUrl">Отмена</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+        }
+    </div>
+</div>
+
+@{Html.EndForm();}

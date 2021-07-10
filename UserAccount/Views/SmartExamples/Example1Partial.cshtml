@@ -1,0 +1,33 @@
+﻿@model Zidium.UserAccount.Models.Examples.Smart.Example1PartialModel
+
+<style>
+    #form {
+        background-color: beige;
+        border: 1px solid burlywood;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+
+<p>Partial header</p>
+
+@using (Html.BeginSmartForm(new SmartBlocksFormOptions()
+{
+    ActionName = "Example1Partial",
+    Method = FormMethod.Post
+}, new { @class = "test", id = "form" }))
+{
+    @Html.LabelFor(m => m.Name)
+    <p>
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+    </p>
+    <p>
+        @Html.ValidationMessageFor(m => m.Name)
+    </p>
+    <p>
+        <button type="submit" class="btn btn-primary smart-block-button" data-smart-button-loader="blue">Submit</button>
+    </p>
+}
+
+<p>Partial footer</p>

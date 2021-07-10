@@ -1,0 +1,49 @@
+﻿@using Zidium.Storage
+@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.Subscriptions.SubscriptionsTableModel
+
+@if (Model.Rows.Length == 0)
+{
+    <p>нет подписок</p>
+}
+else
+{
+    <table class="simpleTableClear">
+        <tr>
+            <th style="min-width: 200px">@Model.SubscriptionName</th>
+            @foreach (var channel in Model.Channels)
+            {
+                <th style="width: 100px; text-align: center">@channel</th>
+            }
+        </tr>
+
+        @foreach (var row in Model.Rows)
+        {
+            <tr>
+                <td>
+                    @if (row.SubscriptionObject == SubscriptionObject.Default)
+                    {
+                        <span>Подписка по умолчанию</span>
+                    }
+                    else if (row.SubscriptionObject == SubscriptionObject.ComponentType)
+                    {
+                        <span>@row.Text</span>
+                    }
+                    else if (row.SubscriptionObject == SubscriptionObject.Component)
+                    {
+                        <text>
+                            @Html.ComponentLink(row.ComponentId.GetValueOrDefault(), row.Text)
+                        </text>
+                    }
+                </td>
+                @foreach (var cell in row.Cells)
+                {
+                    <td style="text-align: center">
+                        @Html.Partial("ShowSubscriptionCell", cell)
+                    </td>
+                }
+            </tr>
+        }
+    </table>
+}
+

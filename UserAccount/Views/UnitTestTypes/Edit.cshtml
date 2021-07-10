@@ -1,0 +1,69 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Models.Controls
+
+@model Zidium.UserAccount.Models.UnitTestTypeEditModel
+
+@{
+    ViewBag.Title = "Настройка типа проверки";
+    ViewBag.ActiveMenuItems = "UnitTests,UnitTestTypes";
+    string actualTimeDefault = TimeSpanHelper.GetFriendlyText(Model.ActualTimeDefault);
+}
+
+@Html.Partial("_PageTitle")
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.MyValidationSummaryVertical()
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.IsDeleted)
+    @Html.HiddenFor(m => m.IsSystem)
+
+    <div class="smart-container">
+
+        @Html.EditorFor(m => m.DisplayName, "SmartEdit")
+        @Html.EditorFor(m => m.SystemName, "SmartEdit")
+
+        <div class="smart-row">
+            <div class="smart-col-labels">
+                <label class="control-label" for="ActualTime">Интервал актуальности</label>
+            </div>
+            <div class="smart-col-fields">
+                <div style="width:230px; float: left; margin-right: 20px;">
+                    @Html.TimeSpanSelector(m => m.ActualTime)
+                </div>
+                <div style="font-size: 12px; width: 400px; display: inline-block; color: gray; margin-top: 10px;">по умолчанию @actualTimeDefault</div>
+            </div>
+            <div>
+                @Html.ValidationMessageFor(m => m.ActualTime, null, null, "p")
+            </div>
+        </div>
+
+        <div class="smart-row">
+            <div class="smart-col-labels">
+                <label class="control-label" for="NoSignalColor">Цвет, если нет сигнала</label>
+            </div>
+            <div class="smart-col-fields">
+                <div style="float: left; margin-right: 20px;">
+                    @Html.ColorStatusSelector(m => m.NoSignalColor, new ColorStatusSelectorOptions() { MultiSelectMode = false, AutoRefreshPage = false })
+                </div>
+                <div style="font-size: 12px; width: 400px; display: inline-block; color: gray; margin-top: 10px;">по умолчанию @Model.NoSignalColorDefault</div>
+            </div>
+            <div>
+                @Html.ValidationMessageFor(m => m.NoSignalColor, null, null, "p")
+            </div>
+        </div>
+
+        <div class="smart-row">
+            <div class="smart-col-labels smart-col-empty"></div>
+            <div class="smart-col-fields">
+                <div>
+                    <input type="submit" value="Сохранить" class="btn btn-primary smart-button" />
+                    @Html.ActionLink("Вернуться к типу", "Show", new { id = Model.Id }, new { @class = "btn btn-default smart-button" })
+                    @Html.ActionLink("Удалить", "Delete", new { id = @Model.Id }, new { @class = "btn btn-default smart-button", onclick = "ModalBtnClick(this, event);" })
+                </div>
+            </div>
+        </div>
+
+    </div>
+}

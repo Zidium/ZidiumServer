@@ -1,0 +1,63 @@
+﻿@using Zidium.UserAccount.Helpers 
+@model Zidium.UserAccount.Models.ShowUserModel
+
+@using GridMvc.Html
+
+@{
+    ViewBag.Title = "Просмотр пользователя";
+    ViewBag.ActiveMenuItems = "Manage,Users";
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="form-horizontal">
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            @if (UserHelper.CurrentUser(Context).CanEditPrivateData())
+            {
+                @Html.ActionLink("Редактировать", "Edit", "Users", new {id = Model.Id}, new {@class = "btn btn-primary"})
+            }
+            @if (UserHelper.CurrentUser(Context).IsAdmin() || UserHelper.CurrentUser(Context).Id == Model.Id)
+            {
+               <a href="#" id="change-password-btn" class="btn btn-default">Сменить пароль</a> 
+            }
+            @if (UserHelper.CurrentUser(Context).CanManageAccount())
+            {
+                @Html.ActionLink("Список пользователей", "Index", "Users", null, new { @class = "btn btn-default" })
+            }
+            @Html.ActionLink("Подписки", "Index", "Subscriptions", new {userId = Model.Id}, new {@class = "btn btn-default"})
+        </div>
+    </div>
+
+    @Html.DisplayFor(m => m.Login, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.DisplayName, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.Role, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.SendMeNews, "LabeledDisplay", new { HorizontalForm = true })
+    @Html.DisplayFor(m => m.TimeZone, "LabeledDisplay", new { HorizontalForm = true })
+
+    <div class="form-group">
+        @Html.Label(string.Empty, "Контакты", new { @class = "col-sm-2 control-label" })
+        <div class="col-sm-4">
+            <div class="form-control-static">
+                @Html.Grid(Model.Contacts).Columns(columns =>
+                {
+                    columns.Add(m => m.Value).Titled("Контакт");
+                    columns.Add(m => m.Type).Titled("Тип");
+                }).Selectable(false)
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(function () {
+            var url = '@Url.Action("ChangePasswordDialog", new { id = Model.Id })';
+            $("#change-password-btn").click(function(event) {
+                event.preventDefault();
+                dialogs.showModal(url, "Изменить пароль");
+            });
+        });
+    </script>
+}

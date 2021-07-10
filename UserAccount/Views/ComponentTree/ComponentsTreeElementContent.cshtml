@@ -1,0 +1,26 @@
+﻿@model Zidium.UserAccount.Models.ComponentTree.ComponentsTreeItemContentModel
+
+<div class="components-tree-item-content-loaded">
+
+    <div class="components-tree-item-details">
+        @if (Model.Details != null)
+        {
+            @Html.Partial("ComponentsTreeElementDetails", Model.Details)
+        }
+        else
+        {
+            <div class="components-tree-item-details-loading">
+                <img src="~/Content/Icons/ajax-loader-white.gif" />
+                <span>Загрузка...</span>
+            </div>
+        }
+    </div>
+
+    <ul>
+        @foreach (var child in Model.Childs)
+        {
+            @Html.Partial("ComponentsTreeElement", child)
+        }
+    </ul>
+
+</div>

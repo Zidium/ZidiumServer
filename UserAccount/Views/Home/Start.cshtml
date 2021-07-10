@@ -1,0 +1,144 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.Home.StartModel
+
+@{
+    ViewBag.Title = "Старт";
+    ViewBag.ActiveMenuItems = "Home,Start";
+}
+
+@section styles {
+    <style>
+        .col-start {
+            float: left;
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-bottom: 30px;
+            width: 500px;
+            border-right: 1px solid #F3F3F3;
+            margin-right: 15px;
+        }
+
+        .col-start-subdiv {
+            padding-top: 10px;
+            padding-bottom: 20px;
+        }
+
+        .col-start-subdiv-caption {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .col-examples {
+            float: left;
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-bottom: 30px;
+            width: 300px;
+            border-right: 1px solid #F3F3F3;
+            margin-right: 15px;
+        }
+
+        .col-hints {
+            float: left;
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-bottom: 30px;
+            width: 300px;
+            border-right: 1px solid #F3F3F3;
+            margin-right: 15px;
+        }
+
+    </style>
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="col-start">
+    <p class="pageHeader1-first">С чего мне начать?</p>
+    <p>
+        Систему мониторинга можно использовать двумя способами:
+    </p>
+
+    <div class="col-start-subdiv">
+        <p class="col-start-subdiv-caption">Без API</p>
+        <p>
+            Без API можно использовать только системные проверки.
+        </p>
+        
+        @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+        {
+            <p>
+                Просто создайте нужные проверки кнопками ниже. <br/>
+                Никакого кода для этого писать не потребуется.
+            </p>
+            <p>
+                <a class="btn btn-default" href="@Url.Action("EditSimple", "HttpRequestCheck")">Http</a>
+                <a class="btn btn-default" href="@Url.Action("EditSimple", "PingChecks")">Ping</a>
+                <a class="btn btn-default" href="@Url.Action("EditSimple", "SslCertificateExpirationDateChecks")">Ssl</a>
+                <a class="btn btn-default" href="@Url.Action("EditSimple", "DomainNamePaymentPeriodChecks")">Domain</a>
+                <a class="btn btn-default" href="@Url.Action("EditSimple", "SqlChecks")">Sql</a>
+            </p>
+        }
+
+        <p>
+            Без API вы не сможете использовать большую часть возможностей &mdash; ошибки, события, пользовательские проверки, метрики, логи.
+        </p>
+    </div>
+
+    <div class="col-start-subdiv">
+        <p class="col-start-subdiv-caption">Через API</p>
+        <p>
+            Через API вам будет доступен весь функционал системы: ошибки, события, пользовательские проверки, метрики, логи.
+        </p>
+        <p>
+            Сейчас доступны API для .Net и для Json. <br />
+        </p>
+        <p>
+            <a target="_blank" href="http://zidium.net/wiki/api/dot-net">
+                Документация на API для .Net
+            </a>
+        </p>
+        <p>
+            <a target="_blank" href="http://zidium.net/wiki/api/json">
+                Документация на API для Json
+            </a>
+        </p>
+    </div>
+
+</div>
+
+<div class="col-examples">
+    <p class="pageHeader1-first">Примеры</p>
+
+    <p>
+        <a target="_blank" href="http://zidium.net/wiki/usage-examples/dot-net/monitoring-asp-net-mvc">
+            Мониторинг приложения Asp.Net MVC
+        </a>
+    </p>
+
+    <p>
+        <a target="_blank" href="https://habrahabr.ru/post/323906/">
+            Мониторинг windows-службы на .Net
+        </a>
+    </p>
+</div>
+    
+@if (Model.HasHints)
+{
+    <div class="col-hints">
+        <p class="pageHeader1-first">Рекомендации</p>
+        
+        @if (Model.HintSetMobilePhone)
+        {
+            <p>
+                Укажите номер мобильного телефона, чтобы получать уведомления по SMS.
+            </p>
+            <p>
+                <a href='#' data-href="@Url.Action("QuickSetMobilePhone")" class="btn btn-default btn-modal">Указать мобильный</a>
+            </p>
+        }
+
+    </div>
+}
+
+<div class="clearfix"></div>

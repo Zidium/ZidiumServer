@@ -1,0 +1,97 @@
+﻿@model Zidium.UserAccount.Models.SslCertificateExpirationDateChecksModels.EditSimpleModel
+
+@{
+    ViewBag.Title = (Model.Id.HasValue ? "Настройка" : "Добавление") + " проверки SSL-сертификата";
+    ViewBag.ActiveMenuItems = "UnitTests";
+    var isSmartBlocks = Context.Request.IsSmartBlocksRequest();
+    if (isSmartBlocks)
+    {
+        Layout = null;
+    }
+}
+
+<link href="~/Content/Checks/ssl-check-simple.css" rel="stylesheet" />
+
+@if (!isSmartBlocks)
+{
+    @Html.Partial("_PageTitle")
+}
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "form-horizontal" + (isSmartBlocks ? " smart-block-form" : "") }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.ComponentId)
+
+    <div class="row">
+        <div class="table-cell-sm table-cell-full">
+            <div class="smart-container">
+
+                @if (Model.Id.HasValue)
+                {
+                    <div class="smart-row">
+                        <div class="smart-col-labels smart-col-empty"></div>
+                        <div class="smart-col-fields">
+                            <div>
+                                @Html.ActionLink("Результат проверки", "ResultDetails", "UnitTests", new { id = Model.Id }, new { @class = "btn btn-default" })
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="smart-row">
+                    <div class="smart-col-labels smart-col-empty"></div>
+                    <div class="smart-col-fields">
+                        <div>
+                            <p class="form-control-static text-muted">
+                                Zidium будет проверять дату окончания SSL-сертификата каждый день.
+                                <br />
+                                За 30 дней до окончания срока проверка станет жёлтой.
+                                <br />
+                                За 14 дней проверка станет красной.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                @Html.EditorFor(m => m.Url, "SmartEdit", new { HorizontalForm = true })
+
+                @if (!isSmartBlocks)
+                {
+                    <div class="smart-row">
+                        <div class="smart-col-labels smart-col-empty"></div>
+                        <div class="smart-col-fields">
+                            <div>
+                                <input type="submit" value='@(Model.Id.HasValue ? "Сохранить" : "Добавить")' class="btn btn-primary" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (!isSmartBlocks)
+        {
+            <div class="table-cell-sm">
+                @Html.ActionLink("Расширенные настройки", "Edit", null, new { id = Model.Id }, new { @class = "btn btn-default" })
+            </div>
+        }
+        else
+        {
+            <div style="display: table-cell; padding-left: 1px"></div>
+        }
+    </div>
+
+    if (isSmartBlocks)
+    {
+        <hr />
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary smart-button smart-block-button" data-smart-button-loader="blue">
+                @(Model.Id.HasValue ? "Сохранить" : "Добавить")
+            </button>
+            <button type="button" class="btn btn-default smart-button" data-dismiss="modal">
+                Отмена
+            </button>
+        </div>
+    }
+}

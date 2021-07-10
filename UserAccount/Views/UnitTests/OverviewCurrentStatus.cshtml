@@ -1,0 +1,77 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers
+@using Zidium.Api.Dto
+@using Zidium.UserAccount.Models.UnitTests
+
+@model OverviewCurrentStatusModel
+
+@{
+    var durationText = TimeSpanHelper.Get2UnitsString(Model.StatusDuration);
+}
+
+<div class="tiles-box" style="display: flex; flex-direction:column;">
+    <div style="flex: 1 0 auto;">
+        <div class="tiles-box-header1">Текущий статус</div>
+        <div class="tiles-box-content">
+            <table style="width:auto; margin-top: 30px; margin-right: auto; margin-left: 10px;">
+                <tr>
+                    <td style="width: 160px;">
+                        <span id="unittest-status">
+                            @Html.MonitoringStatusLabel(Model.Status, Model.StatusId)
+                        </span>
+                    </td>
+                    <td>
+                        <div style="margin-top: 8px; padding-left: 20px; text-align: left">
+                            <span class="textCss" style="font-size: 24px;">@durationText</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            @if (Model.Status == MonitoringStatus.Disabled)
+            {
+                <br />
+                if (Model.DisableEndTime == null)
+                {
+                    <p><span class="simple-text-header">Выключена на неопределенный срок</span></p>
+                }
+                else
+                {
+                    <p>
+                        <span class="simple-text-header">Выключена до @GuiHelper.GetDateTimeString(Model.DisableEndTime)</span>
+                    </p>
+                }
+                if (string.IsNullOrEmpty(Model.DisableComment) == false)
+                {
+                    <p><span class="simple-text-header">@Model.DisableComment</span></p>
+                }
+            }
+        </div>
+    </div>
+    <div style="flex: 0 0 auto;">
+        <div class="tiles-box-content">
+            <div class="btn-group" role="group" aria-label="...">
+                @if (Model.Status == MonitoringStatus.Disabled)
+                {
+                    <button type="button" id="enableBtn" class="btn btn-success" data-ajax-url="@Url.Action("Enable", new { id = Model.UnitTestId })">
+                        <span class="glyphicon glyphicon-off" aria-hidden="true" style="margin-right: 10px;"></span>Включить
+                    </button>
+                }
+                else
+                {
+                    <button type="button" id="disableBtn" class="btn btn-default" data-ajax-url="@Url.Action("Disable", new { id = Model.UnitTestId })">
+                        <span class="glyphicon glyphicon-play-circle" aria-hidden="true" style="margin-right: 10px;"></span>Выключить
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function init() {
+        ziCreateModalDialog("#disableBtn");
+        ziSetAjaxLink("#enableBtn");
+    }
+    init();
+</script>
+

@@ -1,0 +1,25 @@
+﻿@using Zidium.UserAccount.Models.UnitTests
+
+@model ShowSettingsDomainModel
+
+<div class="col-md-8 tiles-column">
+    <div class="tiles-box" style="display: flex; flex-direction:column;">
+        <div style="flex: 1 0 auto;">
+            <div class="tiles-box-header1">Настройки проверки домена</div>
+            <div class="tiles-box-content">
+                <p>
+                    <span class="simple-text-header">Домен</span>
+                    <br />
+                    <span class="simple-text-value">@Model.Domain</span>
+                </p>  
+                <p>
+                    <span class="simple-text-header">Если осталось менее:</span>
+                    <br />
+                    <span class="simple-text-value">@Model.AlarmDays дней - alarm</span>
+                    <br />
+                    <span class="simple-text-value">@Model.WarningDays дней - warning</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

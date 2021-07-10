@@ -1,0 +1,59 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.Metrics.SetActualValueModel
+
+@{
+    ViewBag.Title = "Установка актуального значения метрики";
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+<div class="alert alert-info">Укажите актуальное значение для метрики @Model.MetricTypeName</div>
+
+<form class="form-horizontal" method="POST" id="setMetricValueForm">
+    <div class="form-group">
+        <div class="col-sm-12">
+            <div class="alert alert-danger" id="errorMessage" style="display: none"></div>
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("value", "Значение", new{@class="col-sm-4 control-label"})
+        <div class="col-sm-8">
+            <input type="text" class="form-control" id="value"/>
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("actualTime", "Время актуальности", new { @class = "col-sm-4 control-label" })
+        <div class="col-sm-8">
+            @Html.TimeSpanSelector(m => m.ActualTime)
+        </div>
+    </div>
+    <hr />
+    <div class="form-group">
+        <div class="col-sm-9 col-sm-offset-3 text-right">
+            <a href="#" class="btn btn-primary" onclick="setActualMetricValue(this, event)">Установить</a>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    function setActualMetricValue(elem, event) {
+        event.preventDefault();
+        var form = $("#setMetricValueForm");
+        var value = $("#value", form).val();
+        var actualTime = $("#" + "@Html.IdFor(m => m.ActualTime)", form).val();
+        var onSuccess = null; // будет перезагружена страница
+        var onError = function(errorMessage) {
+            var alertDiv = $("#errorMessage", form);
+            alertDiv.text(errorMessage);
+            alertDiv.show();
+        }
+        var url = "@Url.Action("SetActualValue", "Metrics")";
+        var data = {
+            id: "@Model.Id",
+            value: value,
+            actualTime: actualTime
+        };
+        ziWaitAjaxRequest(elem, url, data, onSuccess, onError);
+    }
+</script>

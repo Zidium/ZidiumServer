@@ -1,0 +1,108 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.Limits.IndexModel
+
+@{
+    ViewBag.Title = "Лимиты";
+    ViewBag.ActiveMenuItems = "Manage,Limits";
+}
+
+@section styles {
+    <style>
+        .top15px {
+            margin-top: 20px;
+        }
+
+        .div-api-check-results {
+            margin-bottom: 20px;
+            padding-left: 15px;
+        }
+    </style>
+}
+
+@Html.Partial("_PageTitle")
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="top15px">
+            <h4>Лог</h4>
+            <p>Размер лога за сегодня: @{UsedAndMaxSizeLimit(Model.Limits.UsedToday.LogSize);}</p>
+            <p>Сколько дней хранится лог: <strong>@Model.LogicSettings.LogMaxDays</strong></p>
+        </div>
+
+        <div class="top15px">
+            <h4>События</h4>
+            <p>Отправлено событий за сегодня: @{UsedAndMaxLimit(Model.Limits.UsedToday.EventRequests);}</p>
+            <p>Размер событий за сегодня: <strong>@GuiHelper.FormatSize(Model.Limits.UsedToday.EventsSize)</strong></p>
+            <p>Сколько дней хранятся события: <strong>@Model.LogicSettings.EventsMaxDays</strong></p>
+        </div>
+
+        <div class="top15px">
+            <h4>Метрики</h4>
+            <p>Отправлено метрик за сегодня: @{UsedAndMaxLimit(Model.Limits.UsedToday.MetricRequests);}</p>
+            <p>Размер метрик за сегодня: <strong>@GuiHelper.FormatSize(Model.Limits.UsedToday.MetricsSize)</strong></p>
+            <p>Сколько дней хранятся метрики: <strong>@Model.LogicSettings.MetricsMaxDays</strong></p>
+        </div>
+
+        <div class="top15px">
+            <h4>Проверки</h4>
+        </div>
+        <div>
+            <p>Отправлено результатов за сегодня: @{UsedAndMaxLimit(Model.Limits.UsedToday.UnitTestsRequests);}</p>
+        </div>
+
+        <div class="top15px">
+            <h4>Хранилище</h4>
+            <p>Всего получено данных: @{UsedAndMaxSizeLimit(Model.Limits.UsedOverall.Total.StorageSize);}</p>
+        </div>
+    </div>
+
+    @if (Model.Limits.UsedToday.UnitTestsResults.Length > 0)
+    {
+        <div class="col-sm-6">
+            <h4>Количество результатов проверок за сегодня</h4>
+            @{
+                var templist = Model.Limits.UsedToday.UnitTestsResults
+                    .Select(t => new
+                    {
+                        UnitTest = Model.UnitTests[t.UnitTestId],
+                        ApiChecksResults = t.ApiChecksResults
+                    })
+                    .GroupBy(t => t.UnitTest.Type);
+            }
+            @foreach (var group in templist.OrderBy(t => t.Key.DisplayName))
+            {
+                <div>
+                    <p>
+                        <a href='@("#ApiChecksResults-" + group.Key.Id)' data-toggle="collapse" class="link-dotted">@(group.Key.DisplayName)</a>:
+                        <strong>@(group.Sum(t => t.ApiChecksResults))</strong>
+                    </p>
+                    <div id='@("ApiChecksResults-" + group.Key.Id)' class="collapse div-api-check-results">
+                        @foreach (var data in group.OrderBy(t => t.UnitTest.DisplayName))
+                        {
+                            <p>
+                                @(data.UnitTest.DisplayName + " (" + data.UnitTest.Component.DisplayName + ")"): <strong>@data.ApiChecksResults</strong>
+                            </p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@{void UsedAndMaxLimit(int used)
+    {
+        <span class='text-strongfggreen'>
+            <strong>@(used)</strong>
+        </span>
+    }
+}
+
+@{void UsedAndMaxSizeLimit(Int64 used)
+    {
+        <span class='text-strongfggreen'>
+            <strong>@(GuiHelper.FormatSize(used))</strong>
+        </span>
+    }
+}

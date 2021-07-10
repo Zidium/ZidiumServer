@@ -1,0 +1,24 @@
+﻿<div class="modal" id="ModalDlg" tabindex="-1" role="dialog" aria-labelledby="ModalDlgLabel" aria-hidden="true" style="display:none">
+    <div class="modal-dialog @(ViewBag.Large == true ? "modal-lg" : string.Empty)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="ModalDlgLabel">@ViewBag.Title</h4>
+            </div>
+            <div class="modal-body" id="ModalDlgBody">
+                @RenderBody()
+            </div>
+        </div>
+        <script type="text/javascript">
+            function ReValidate() {
+                var form = $("form", $('#ModalDlg'));
+                form.removeData('validator');
+                form.removeData('unobtrusiveValidation');
+                $.validator.unobtrusive.parse(form);
+            }
+
+            // Чтобы работала unobtrusive validation после загрузки диалога через  ajax
+            ReValidate();
+        </script>
+    </div>
+</div>

@@ -1,0 +1,93 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using GridMvc.Html
+@using GridMvc.Sorting
+@using Zidium.Api.Dto
+
+@model EventTypesListModel
+
+@{
+    ViewBag.Title = "Типы событий";
+    ViewBag.ActiveMenuItems = "Events,EventTypes";
+}
+
+@Html.Partial("_PageTitle")
+     
+@if (UserHelper.CurrentUser(Context).CanEditCommonData())
+{
+    <div class="bottom20px">
+        <a href="@Url.Action("Add")" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span>
+            Создать новый тип события
+        </a>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6 bottom10px">
+        @Html.Label("Название или Id")
+        @Html.TextFilter("search", "Введите часть названия или Id", Model.Search, true)
+    </div>    
+    <div class="col-md-3 bottom10px">
+        @Html.Label("Категория")
+        @Html.DropDownListFor(x => x.Category, DropDownListHelper.GetCustomEventCategories(Model.Category, true), new {@class = "form-control"})
+    </div>
+    <div class="col-md-3 bottom10px">
+        @Html.Label("Важность")
+        @Html.EnumSelector("importance", Model.Importance, typeof(EventImportance?), true)
+    </div>
+</div>
+
+@Html.Grid(Model.EventTypes).Columns(columns =>
+{
+    columns.Add(t => t.DisplayName).Titled("Дружелюбное имя")
+        .RenderValueAs(t => Html.HtmlBlock(x =>
+        {
+            var displayName = t.DisplayName.Length <= EventTypesListModel.MaxMessageLength ? t.DisplayName : t.DisplayName.Substring(0, EventTypesListModel.MaxMessageLength);
+            return Html.ActionLink(displayName, "Show", new { id = t.Id }, null);
+        }))
+        .SortInitialDirection(GridSortDirection.Ascending).Encoded(false).Sanitized(false).Css("text-wordbreak");
+
+    columns.Add(t => t.SystemName).Titled("Системное имя")
+        .RenderValueAs(t => Html.HtmlBlock(x =>
+        {
+            var systemName = t.SystemName.Length <= EventTypesListModel.MaxMessageLength ? t.SystemName : t.SystemName.Substring(0, EventTypesListModel.MaxMessageLength);
+            return Html.ActionLink(systemName, "Show", new { id = t.Id }, null);
+        }))
+        .Encoded(false).Sanitized(false).Css("text-wordbreak");
+    
+    columns.Add().Titled("Системный?").RenderValueAs(m => m.IsSystem ? "Да" : "Нет").Css("text-center");
+
+    if (UserHelper.CurrentUser(Context).CanEditCommonData())
+    {
+        columns.Add().Titled(string.Empty).RenderValueAs(m => Html.HtmlBlock(
+            @<text>
+                @if (!m.IsSystem)
+                {
+                    if (!m.IsDeleted)
+                    {
+                        <a href='@Url.Action("Delete", new {id = m.Id.ToString()})' class="text-danger" onclick="ModalBtnClick(this, event);" title="Удалить тип события">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="glyphicon glyphicon-minus" aria-hidden="true" title="Тип события удалён"></span>
+                    }
+                }
+             </text>)).Encoded(false).Sanitized(false).Css("text-center").SetWidth(30);
+    }
+}).Selectable(false)
+
+<script>
+
+    $(function() {
+        $("#Category").change(function () {
+            var elem = $(this);
+            var value = elem.val();
+            elem.data('paramvalue', value);
+            autoRefreshPage(elem);
+        });
+    });
+    
+</script>

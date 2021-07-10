@@ -1,0 +1,14 @@
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace Zidium.UserAccount.Models.Controls
+{
+    public class TimeSpanSelectorModel
+    {
+        public string Name { get; set; }
+
+        public string Value { get; set; }
+
+        public IHtmlHelper HtmlHelper { get; set; }
+
+    }
+}

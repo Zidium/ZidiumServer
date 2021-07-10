@@ -1,0 +1,144 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.Components
+@using System.Web
+
+@model ComponentSelectorModel
+
+@{
+    var textBoxName = Model.Name + "_Text";
+    var containerName = Model.Name + "_Container";
+    var divName = Model.Name + "_Div";
+    var typeSelectorSize = Model.ShowComponentStatusSelector ? 6 : 12;
+    var statusSelectorSize = Model.ShowComponentTypeSelector ? 6 : 12;
+}
+
+<div style="width: 100%; position: relative;" class="dropdown" id="@containerName">
+
+    @if (Model.ShowCreateNewButton || Model.ShowFindButton)
+    {
+        <div class="input-group" style="width: 100%;">
+            <input type="text" id="@textBoxName" class="form-control" autocomplete="off" placeholder="Выберите компонент...">
+            <span class="input-group-btn">
+                @if (Model.ShowCreateNewButton)
+                {
+                    <button class="btn btn-default" type="button" onclick="showCreateNewComponentDialog()">Создать новый</button>
+                }
+                @if (Model.ShowFindButton)
+                {
+                    <button id="findComponentButton" class="btn btn-default" type="button">Выбрать</button>
+                }
+            </span>
+        </div>
+    }
+    else
+    {
+        <input type="text" id="@textBoxName" class="form-control" autocomplete="off" placeholder="Выберите компонент...">
+    }
+
+    @if (Model.Expression == null)
+    {
+        @Html.Hidden(Model.Name, null, new { id = Model.Name, data_toggle = "dropdown", data_filter = !Model.HideWhenFilter ? "true" : "false" })
+    }
+    else
+    {
+        @Model.HtmlHelper.HiddenFor(Model.Expression, new { id = Model.Name, data_toggle = "dropdown", data_filter = !Model.HideWhenFilter ? "true" : "false" })
+    }
+
+    <div class="dropdown-menu" id="@divName" style="width: 100%; padding: 0; margin: 0; padding-top: 5px; margin-top: 5px;">
+
+        <div class="clearfix">
+            @if (Model.ShowComponentTypeSelector)
+            {
+                <div class="col-xs-@typeSelectorSize" style="margin-bottom: 10px;">
+                    @Html.Label("Тип")
+                    @Html.ComponentTypeSelector(Model.Name + "_componentTypeId", null, true, false, true)
+                </div>
+            }
+            @if (Model.ShowComponentStatusSelector)
+            {
+                <div class="col-xs-@statusSelectorSize" style="margin-bottom: 10px;">
+                    @Html.Label("Статус")
+                    @Html.ComponentStatusSelector(Model.Name + "_status", new MonitoringStatus[0], false, true)
+                </div>
+            }
+        </div>
+
+        <div id="loading" style="display: none;" class="clearfix">
+            <div class="col-sm-12" style="margin-bottom: 10px; margin-top: 10px;">
+                <img src="/Content/Icons/ajax-loader.gif" style="margin-right: 10px;" />
+                <span>Обновление...</span>
+            </div>
+        </div>
+
+        @{
+            var url = Model.ShowAsList ? Url.Action("GetComponentsMiniList", "Components") :
+                Url.Action("GetComponentsMiniTree", "ComponentTree");
+        }
+
+        <div class="clearfix">
+            <div class="col-sm-12">
+                <div id="components" class='@(Model.ShowAsList ? string.Empty : "css-treeview")'
+                     data-url='@url'
+                     style="overflow: auto; margin-top: 5px; max-height: 300px; display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function setNewComponentData(componentId, componentName) {
+        $("#@textBoxName").val(componentName);
+        $("#@Model.Name").val(componentId);
+        HideModal();
+    }
+
+    function showCreateNewComponentDialog() {
+        var url = '@Html.Raw(Url.Action(
+            "CreateNewInFolder",
+            "Components",
+            new CreateNewInFolderModel()
+                  {
+                      ComponentTypeId = Model.CreateNewDialogDefualtComponentTypeId,
+                      FolderSystemName = Model.NewComponentFolderSystemName,
+                      FolderDisplayName = Model.NewComponentFolderDisplayName
+                  }))';
+        UrlShowModal(url);
+        return false;
+    }
+
+    $(function () {
+        var hidden = $('#@Model.Name');
+        var textBox = $('#@textBoxName');
+        var div = $('#@divName');
+        var value = '@(Model.ComponentId.HasValue ? Model.ComponentId.Value.ToString() : string.Empty)';
+        if (value.length == 0)
+            value = null;
+        var allowEmpty = '@Model.AllowEmpty.ToString()' == 'True';
+        var callback = function () {
+            if ('@Model.AutoRefreshPage.ToString()' == 'True') {
+                document.location.href = SetQueryParamFromControl(document.location.href, hidden);
+            }
+        };
+        var selector = new ComponentSelector(hidden, textBox, div, value, '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.GetComponentName()))', callback, allowEmpty, '@Model.Name');
+        @if (Model.ExternalComponentTypeSelectId != null)
+        {
+        <text>
+        selector.externalComponentTypeSelectId = '@Model.ExternalComponentTypeSelectId';
+        </text>
+        }
+        @if (Model.ShowFindButton)
+        {
+        <text>
+        selector.Selector.OnFocus = function () { }; // чтобы не показывать при наборе имени нового компонента
+        $("#@containerName #findComponentButton").click(function () {
+            selector.Selector.Open();
+            return false;
+        });
+        </text>
+        }
+    });
+</script>

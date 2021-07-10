@@ -1,0 +1,162 @@
+﻿using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Zidium.Common;
+using Zidium.Core.AccountsDb;
+using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
+using Zidium.UserAccount.Models;
+using Zidium.UserAccount.Models.PingChecksModels;
+
+namespace Zidium.UserAccount.Controllers
+{
+    [Authorize]
+    public class PingChecksController : SimpleCheckBaseController<EditSimpleModel>
+    {
+        public ActionResult Show(Guid id)
+        {
+            var model = new EditModel();
+            model.Load(id, null, GetStorage());
+            model.LoadRule(id, GetStorage());
+            model.UnitTestBreadCrumbs = UnitTestBreadCrumbsModel.Create(id, GetStorage());
+            return View(model);
+        }
+
+        [CanEditAllData]
+        public ActionResult Edit(Guid? id, Guid? componentId)
+        {
+            var model = new EditModel();
+            model.Load(id, componentId, GetStorage());
+            model.LoadRule(id, GetStorage());
+            return View(model);
+        }
+
+        [CanEditAllData]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(EditModel model)
+        {
+            try
+            {
+                model.Validate();
+            }
+            catch (UserFriendlyException exception)
+            {
+                ModelState.AddModelError(string.Empty, exception.Message);
+            }
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            model.SaveCommonSettings();
+            model.SaveRule(GetStorage());
+
+            return RedirectToAction("ResultDetails", "UnitTests", new { id = model.Id });
+        }
+
+        [CanEditAllData]
+        public ActionResult EditSimple(Guid? id = null, Guid? componentId = null)
+        {
+            var model = LoadSimpleCheck(id, componentId, GetStorage());
+            return View(model);
+        }
+
+        [CanEditAllData]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditSimple(EditSimpleModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var unitTestId = SaveSimpleCheck(model, GetStorage());
+
+            if (!Request.IsSmartBlocksRequest())
+            {
+                return RedirectToAction("ResultDetails", "UnitTests", new { id = unitTestId });
+            }
+
+            return GetSuccessJsonResponse(unitTestId);
+        }
+
+        protected override string GetUnitTestDisplayName(EditSimpleModel model)
+        {
+            return "Ping " + GetModelHost(model);
+        }
+
+        protected override void SetUnitTestParams(Guid unitTestId, EditSimpleModel model, IStorage storage)
+        {
+            using (var transaction = storage.BeginTransaction())
+            {
+                var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTestId);
+                if (rule == null)
+                {
+                    var ruleForAdd = new UnitTestPingRuleForAdd()
+                    {
+                        UnitTestId = unitTestId,
+                        TimeoutMs = 5000
+                    };
+                    storage.UnitTestPingRules.Add(ruleForAdd);
+                    rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTestId);
+                }
+
+                var ruleForUpdate = rule.GetForUpdate();
+                ruleForUpdate.Host.Set(GetModelHost(model));
+                storage.UnitTestPingRules.Update(ruleForUpdate);
+
+                transaction.Commit();
+            }
+        }
+
+        protected override void SetModelParams(EditSimpleModel model, UnitTestForRead unitTest, IStorage storage)
+        {
+            var rule = storage.UnitTestPingRules.GetOneOrNullByUnitTestId(unitTest.Id);
+            model.Host = rule.Host;
+        }
+
+        protected override Guid GetUnitTestTypeId()
+        {
+            return SystemUnitTestType.PingTestType.Id;
+        }
+
+        protected string GetModelHost(EditSimpleModel model)
+        {
+            if (Uri.CheckHostName(model.Host) == UriHostNameType.Unknown)
+                throw new UriFormatException();
+
+            return model.Host;
+        }
+
+        public JsonResult CheckHost(string host)
+        {
+            try
+            {
+                GetModelHost(new EditSimpleModel() { Host = host });
+                return Json(true);
+            }
+            catch (UriFormatException)
+            {
+                return Json("Пожалуйста, укажите IP или домен");
+            }
+        }
+
+        /// <summary>
+        /// Для unit-тестов
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="userId"></param>
+        internal PingChecksController(Guid userId) : base(userId) { }
+
+        public PingChecksController() { }
+
+        protected override string GetComponentSystemName(EditSimpleModel model)
+        {
+            return ComponentHelper.GetSystemNameByHost(model.Host);
+        }
+
+        public override string GetComponentDisplayName(EditSimpleModel model)
+        {
+            return ComponentHelper.GetDisplayNameByHost(model.Host);
+        }
+    }
+}

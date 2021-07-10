@@ -1,0 +1,16 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@model ComponentStatusSelectorModel   
+           
+@Html.ListBox(Model.Name + "_", GuiHelper.GetComponentStatusItems(Model.Statuses), new { @class = "form-control", id = @Model.Name, data_filter = !Model.HideWhenFilter ? "true" : "false"})
+
+<script>
+    $(function() {
+        var control = $('#@Model.Name');
+        var componentStatusSelector = new ComponentStatusSelector(control, function() {
+            if ('@Model.AutoRefreshPage.ToString()' == 'True') {
+                document.location.href = SetQueryParamFromControl(document.location.href, control);
+            }
+        });
+    });
+</script>

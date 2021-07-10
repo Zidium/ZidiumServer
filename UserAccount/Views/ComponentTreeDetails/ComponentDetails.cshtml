@@ -1,0 +1,101 @@
+﻿@using Zidium.UserAccount.Models.ComponentTreeDetails
+
+@model ComponentDetailsModel
+
+<div id="object-details-caption">
+    <a href="@Url.Action("Show", "Components", new { id = Model.Id })" target="_blank" class="text-normal">@Model.Name</a>
+
+    @if (Model.CanEdit)
+    {
+        <a href="@Url.Action("Edit", "Components", new {id = Model.Id})" target="_blank" class="text-muted" id="edit-object-link" title="Настроить компонент">
+            <span class="glyphicon glyphicon-edit"></span>
+        </a>
+    }
+
+    <a href="#" id="update-panel-link" class="text-muted" title="Обновить данные">
+        <span class="glyphicon glyphicon-refresh"></span>
+    </a>
+</div>
+
+<hr class="object-details-hr" />
+
+<div id="metric-details-container" class="tree-details-container">
+    <div class="tree-details-menu">
+        <div class="tree-details-menu-item" data-group="component-state">
+            <a href="#" title="Текущее состояние">
+                <span class="glyphicon glyphicon-info-sign"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-history">
+            <a href="#" title="История">
+                <span class="glyphicon glyphicon-signal"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-unittests">
+            <a href="#" title="Проверки">
+                <span class="glyphicon glyphicon-check"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-events">
+            <a href="#" title="Ошибки">
+                <span class="glyphicon glyphicon-fire"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-metrics">
+            <a href="#" title="Метрики">
+                <span class="glyphicon glyphicon-scale"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-log">
+            <a href="#" title="Лог">
+                <span class="glyphicon glyphicon-list"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-subscriptions">
+            <a href="#" title="Подписки">
+                <span class="glyphicon glyphicon-star-empty"></span>
+            </a>
+        </div>
+        <div class="tree-details-menu-item" data-group="component-info">
+            <a href="#" title="Информация">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
+            </a>
+        </div>
+    </div>
+
+    <div class="tree-details-main-area">
+        <div class="tree-details-content collapse" data-group="component-state">
+            <div class="tree-details-content-caption">Текущее состояние</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsState", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-history">
+            <div class="tree-details-content-caption">История</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsHistory", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-unittests">
+            <div class="tree-details-content-caption">Проверки</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsUnittests", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-events">
+            <div class="tree-details-content-caption">Ошибки</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsEvents", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-metrics">
+            <div class="tree-details-content-caption">Метрики</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsMetrics", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-log">
+            <div class="tree-details-content-caption">Лог</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsLog", new { id = Model.Id })"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-subscriptions">
+            <div class="tree-details-content-caption">Подписки</div>
+            <div class="smart-block" data-config="component-subscriptions" data-url="@Url.Action("ShowComponentSubscriptions", "Subscriptions", new {ComponentId = Model.Id})"></div>
+        </div>
+        <div class="tree-details-content collapse" data-group="component-info">
+            <div class="tree-details-content-caption">Информация</div>
+            <div class="smart-block" data-url="@Url.Action("ComponentDetailsInfo", new { id = Model.Id })"></div>
+        </div>
+
+    </div>
+</div>

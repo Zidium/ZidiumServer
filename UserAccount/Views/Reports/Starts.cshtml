@@ -1,0 +1,245 @@
+﻿@using GridMvc.Html
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+@model Zidium.UserAccount.Models.StartsReportModel
+
+@{
+    ViewBag.Title = "Запуски компонентов";
+    ViewBag.ActiveMenuItems = "Analytics,ComponentsStarts";
+}
+
+@Html.Partial("_PageTitle")
+
+<div id="filters">
+    <div class="row">
+        <div class="col-sm-6 bottom10px">
+            @Html.Label("Тип")
+            @Html.ComponentTypeSelector("ComponentTypeId", Model.ComponentTypeId, false, false)
+        </div>
+        <div class="col-sm-6 bottom10px">
+            @Html.Label("Компонент")
+            @Html.ComponentSelector(m => m.ComponentId, new ComponentSelectorOptions()
+                {
+                    ShowAsList = false,
+                    ExternalComponentTypeSelectId = "ComponentTypeId",
+                    ShowComponentStatusSelector = false
+                })
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-3 bottom10px">
+            @Html.Label("Дата от")
+            @Html.DateSelector("fromDate", Model.FromDate, false)
+        </div>
+        <div class="col-sm-3 bottom10px">
+            @Html.Label("Дата до")
+            @Html.DateSelector("toDate", Model.ToDate, false)
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 bottom10px">
+            @Html.FilterButton("filters")
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger" role="alert">
+                <span class="text-prewrap">@Model.Error</span>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.Graph.Count > 0)
+{
+    <div id="graph" style="width: 100%; height: 300px;">
+    </div>
+}
+
+<table class="table grid-table simpleTableClear table-condensed">
+    <thead>
+        <tr>
+            <th rowspan="2" style="vertical-align: middle;" class="grid-header">
+                <div class="sorted-desc sorted grid-header-title">
+                    <span>Компонент</span>
+                    <span class="grid-sort-arrow"></span>
+                </div>
+            </th>
+            <th rowspan="2" style="vertical-align: middle;">
+                Дата создания
+            </th>
+            <th rowspan="2" style="vertical-align: middle;">
+                Версия
+            </th>
+            <th colspan="3" style="text-align: center;">
+                За период
+            </th>
+        </tr>
+        <tr>
+            <th>
+                Первый запуск
+            </th>
+            <th>
+                Последний запуск
+            </th>
+            <th>
+                Количество
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var grid = Html.Grid(Model.Items);
+            grid.RenderOptions.RenderRowsOnly = true;
+            grid.Columns(columns =>
+            {
+                columns.Add(m => m.ComponentDisplayName).RenderValueAs(m => Html.HtmlBlock(x =>
+                    Html.ActionLink(m.ComponentDisplayName, "Show", "Components", new { id = m.ComponentId }, new { title = m.ComponentSystemName })))
+                    .Encoded(false).Sanitized(false);
+
+                columns.Add(m => m.CreateDate).Format(GuiHelper.GridMvcDateTimeDisplayFormat);
+
+                columns.Add(m => m.Version);
+
+                columns.Add(m => m.FirstStart).RenderValueAs(m => Html.HtmlBlock(x =>
+                    m.FirstStart.HasValue ?
+                        Html.ActionLink(m.FirstStart.Value.ToString(GuiHelper.DateTimeDisplayFormat), "Show", "Events", new { id = m.FirstStartId, componentId = m.ComponentId }, null)
+                        : null))
+                    .Encoded(false).Sanitized(false);
+
+                columns.Add(m => m.LastStart).RenderValueAs(m => Html.HtmlBlock(x =>
+                    m.LastStart.HasValue ?
+                        Html.ActionLink(m.LastStart.Value.ToString(GuiHelper.DateTimeDisplayFormat), "Show", "Events", new { id = m.LastStartId, componentId = m.ComponentId }, null)
+                        : null))
+                    .Encoded(false).Sanitized(false);
+
+                columns.Add(m => m.Count).RenderValueAs(m => Html.HtmlBlock(x =>
+                    Html.ActionLink(m.Count.ToString(), "Index", "Events", new { componentId = m.ComponentId, eventTypeId = Model.StartEventTypeId }, null)))
+                    .Encoded(false).Sanitized(false);
+            });
+        }
+        @Html.Raw(Html.HtmlBlock(x => grid))
+    </tbody>
+</table>
+
+@section Scripts
+{
+    @if (Model.Graph.Count > 0)
+    {
+        <script href="~/Scripts/HighCharts/highcharts.js"></script>
+        <script href="~/Scripts/HighCharts/modules/exporting.js"></script>
+
+        <script>
+            $(function () {
+                Highcharts.setOptions({
+                    lang: {
+                        resetZoom: 'Сброс масштаба',
+                        resetZoomTitle: 'Вернуть масштаб 1:1'
+                    }
+                });
+
+                $('#graph').highcharts({
+                    chart: {
+                        type: 'column',
+                        zoomType: 'x',
+                        resetZoomButton: {
+                            position: {
+                                x: 0,
+                                y: 0
+                            }
+                        }
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    title: {
+                        text: 'Всего запусков за период: <b>@Model.Total</b>',
+                        floating: true,
+                        margin: 0,
+                        style: {
+                            fontSize: 14
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        title: {
+                            text: 'Дата',
+                            style: { 'fontSize': '14px', 'font-weight': 'normal', 'color': 'black', 'font-family': "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+                        },
+                        dateTimeLabelFormats: {
+                            millisecond: '%d.%m.%Y',
+                            second: '%d.%m.%Y',
+                            minute: '%d.%m.%Y',
+                            hour: '%d.%m.%Y',
+                            day: '%d.%m.%Y',
+                            week: '%d.%m.%Y',
+                            month: '%d.%m.%Y',
+                            year: '%d.%m.%Y'
+                        },
+                        labels: {
+                            rotation: -90,
+                            style: { 'fontSize': '14px', 'font-weight': 'normal', 'color': 'black', 'font-family': "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+                        },
+                        tickInterval: 24 * 3600 * 1000
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Количество запусков',
+                            style: { 'fontSize': '14px', 'font-weight': 'normal', 'color': 'black', 'font-family': "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+                        },
+                        labels: {
+                            style: { 'fontSize': '14px', 'font-weight': 'normal', 'color': 'black', 'font-family': "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+                        },
+                        min: 0
+                    },
+                    series: [
+                        {
+                            data: [
+                                @Html.Raw(Model.JsGraphData)
+                            ],
+                            animation: false,
+                            dataLabels: {
+                                enabled: true,
+                                inside: true,
+                                verticalAlign: 'top',
+                                style: { 'fontSize': '14px', 'font-family': "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+                            }
+                        }
+                    ],
+                    tooltip: {
+                        animation: false,
+                        shared: true,
+                        useHTML: true,
+                        headerFormat: 'Дата: <b>{point.key}</b><br>',
+                        pointFormat: 'Количество: <b>{point.y}</b>',
+                        xDateFormat: '%d.%m.%Y'
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0,
+                            borderWidth: 0,
+                            groupPadding: 0,
+                            shadow: false,
+                            color: '#31708f',
+                            states: {
+                                hover: {
+                                    brightness: 0.3
+                                }
+                            }
+                        }
+                    }
+
+                });
+            });
+        </script>
+    }
+}

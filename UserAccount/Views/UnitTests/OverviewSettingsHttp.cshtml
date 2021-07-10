@@ -1,0 +1,42 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.UnitTests
+
+@model OverviewSettingsHttpModel
+
+@{ 
+    string periodText = GuiHelper.TimeSpanAsString(Model.Period);
+    string timeoutText = GuiHelper.TimeSpanAsString(Model.Timeout);
+}
+
+<div class="tiles-box" style="display: flex; flex-direction:column;">
+    <div style="flex: 1 0 auto;">
+        <div class="tiles-box-header1">Основные настройки</div>
+        <div class="tiles-box-content">
+            <p>
+                <span class="simple-text-header">Период проверки</span>
+                <br />
+                <span class="simple-text-value">@periodText</span>
+            </p>
+            <p>
+                <span class="simple-text-header">@Model.Method</span>
+                <br />
+                <a href="@Model.Url">@Model.Url</a>
+            </p>
+            <p>
+                <span class="simple-text-header">Таймаут</span>
+                <br />
+                <span class="simple-text-value">@timeoutText</span>
+            </p>
+        </div>
+    </div>
+    <div style="flex: 0 0 auto;">
+        <div class="tiles-box-content">
+            <div class="btn-group" role="group" aria-label="...">
+                <a href="@Url.Action("Edit", "Checks", new { id = Model.UnitTestId })" class="btn btn-default">
+                    <span class="glyphicon glyphicon-cog" aria-hidden="true" style="margin-right: 10px;"></span>Настроить
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

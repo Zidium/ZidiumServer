@@ -1,0 +1,10 @@
+﻿@model Zidium.UserAccount.Models.Controls.KeyValueTableModel
+<table class="simpleTable keyValueTable table-bordered">    
+    @foreach (var row in Model.Rows)
+    {
+        <tr>
+            <td style="width: 1%; white-space:nowrap">@row.Key</td>
+            <td>@row.Value</td>
+        </tr>
+    }
+</table>

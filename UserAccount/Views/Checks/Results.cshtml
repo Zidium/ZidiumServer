@@ -1,0 +1,113 @@
+﻿@using Zidium.Api.Dto
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+
+@model Zidium.UserAccount.Models.CheckModels.ResultsModel
+
+@{
+    ViewBag.Title = "Результаты проверок";
+    ViewBag.ActiveMenuItems = "UnitTests";
+
+    int redCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Alarm);
+    int yellowCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Warning);
+    int greenCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Success);
+    int grayCount = Model.Tests.Count(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled);
+
+    var systemUnitTests = Model.Tests.Where(x => x.Type.IsSystem).ToList();
+
+    var systemTestsModel = new StatusByTypeTableModel()
+    {
+        TypeColumnName = "Тип проверки"
+    };
+    var systemTestsGroups = systemUnitTests.GroupBy(x => x.Type.Id);
+    foreach (var testsGroup in systemTestsGroups)
+    {
+        var systemType = testsGroup.First().Type;
+        string getByAllCountUrl = "/UnitTests?unitTestTypeId=" + systemType.Id;
+        string getByTypeUrl = "/UnitTests?unitTestTypeId=" + systemType.Id;
+        var row = new StatusByTypeTableModel.Row()
+        {
+            GetByGroupUrl = null,
+            GroupName = null,
+            GetByTypeUrl = getByTypeUrl,
+            GetByAllCountUrl = getByAllCountUrl,
+            RedCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Alarm),
+            YellowCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Warning),
+            GreenCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Success),
+            GrayCount = testsGroup.Count(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled),
+            TypeName = systemType.DisplayName
+        };
+        systemTestsModel.Rows.Add(row); 
+    }
+
+    var byTypeModel = new StatusByTypeTableModel()
+    {
+        TypeColumnName = "Тип проверки"
+    };
+    
+    var componentTypeGroups = Model.Tests
+        .Where(x => !x.Type.IsSystem)
+        .GroupBy(x => x.Component.ComponentType.Id)
+        .ToList();
+        
+    foreach (var componentTypeGroup in componentTypeGroups)
+    {
+        var componentType = componentTypeGroup.First().Component.ComponentType;
+        var typeGroups = componentTypeGroup.GroupBy(x => x.Type.Id);
+        foreach (var typeGroup in typeGroups)
+        {
+            var unitTestType = typeGroup.First().Type;
+            string getByGroupUrl = "/UnitTests?componentTypeId=" + componentType.Id;
+            string getByTypeUrl = "/UnitTests?unitTestTypeId=" + unitTestType.Id;
+            string getByAllCountUrl = "/UnitTests?componentTypeId=" + componentType.Id + "&unitTestTypeId=" + unitTestType.Id;
+
+            var row = new StatusByTypeTableModel.Row()
+            {
+                GroupName = componentType.DisplayName,
+                GetByGroupUrl = getByGroupUrl,
+                GetByTypeUrl = getByTypeUrl,
+                GetByAllCountUrl = getByAllCountUrl,
+                RedCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Alarm),
+                YellowCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Warning),
+                GreenCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Success),
+                GrayCount = typeGroup.Count(x => x.Bulb.Status == MonitoringStatus.Unknown || x.Bulb.Status == MonitoringStatus.Disabled),
+                TypeName = unitTestType.DisplayName
+            };
+            byTypeModel.Rows.Add(row);
+        }
+    } 
+}
+
+@Html.Partial("_PageTitle")
+    
+@if (UserHelper.CurrentUser(Context).CanEditCommonData())
+{
+    <a href='@Url.Action("Add")' class="btn btn-default">
+        Добавить проверку
+    </a>
+}
+
+<p class="pageHeader1">Количество проверок @Model.Tests.Length, из них: </p>
+
+<div id="results" class="row">
+    <div class="col-md-6">
+        <div class="row">
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Red, redCount, "/UnitTests?Color=red"))
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Yellow, yellowCount, "/UnitTests?Color=yellow"))
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="row">
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Green, greenCount, "/UnitTests?Color=green"))
+            @Html.BigColorBlock(new BigColorBlockModel(ImportanceColor.Gray, grayCount, "/UnitTests?Color=gray"))
+        </div>
+    </div>
+</div>
+<div style="clear: both"></div>
+
+<p class="pageHeader1">Системные проверки:</p>
+@Html.StatusByTypeTable(systemTestsModel)
+
+<p class="pageHeader1">Пользовательские проверки с группировкой по типу компонента:</p>
+@Html.StatusByTypeTable(byTypeModel)
+

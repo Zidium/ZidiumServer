@@ -1,0 +1,160 @@
+﻿@using Zidium.Core.Common
+@using Zidium.Core.Common.Helpers
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.Controls
+
+@model Zidium.UserAccount.Models.Defects.ShowDefectModel
+
+@{
+    ViewBag.ActiveMenuItems = "Defects";
+    var defect = Model.Defect;
+    var title = "Дефект " + Model.Defect.Number;
+    if (string.IsNullOrEmpty(defect.Title) == false)
+    {
+        title += ": " + defect.Title;
+    }
+    ViewBag.Title = title;
+    var eventType = Model.EventType;
+    var changes = Model.Changes;
+    var lastChange = changes.First();
+    var showEventTypeUrl = string.Empty;
+    if (eventType != null)
+    {
+        showEventTypeUrl = Url.Action("Show", "EventTypes", new {id = eventType.Id});
+    }
+    var enumName = EnumNameHelper.Get(Language.Russian);
+    var duration = DateTime.Now - lastChange.Date;
+    var statusModel = new ObjectStatusModel()
+    {
+        Text = enumName.GetName(lastChange.Status)
+    };
+    statusModel.SetColor(lastChange.Status);
+}
+<style>
+    .event-div {
+        padding: 5px 10px;
+        /*background-color: #eee;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    #status-changes-table td {
+        vertical-align: top;
+    }
+</style>
+
+@Html.Partial("_PageTitle")
+
+<table style="margin-top: 30px;">
+    <tr>
+        <td style="vertical-align: top">
+            <div style="margin-top: 5px; ">
+                @Html.PartialObjectStatus(statusModel)
+            </div>
+            <div style="font-size: 12px; color: gray; margin-top: 15px; text-align: center">
+                @TimeSpanHelper.Get2UnitsString(duration) назад
+            </div>
+        </td>
+        <td style="min-width: 220px; padding-left: 30px; vertical-align: top; padding-top: 0px;">
+            @if (lastChange != null)
+            {
+                <div>@Model.LastChangeUser <span style="margin-left: 20px;">@lastChange.Date.ToString("dd.MM.yyyy HH:mm")</span></div>
+                <div style="font-weight: bold; white-space: pre">@lastChange.Comment</div>
+            }
+        </td>
+    </tr>
+</table>
+   
+@if (UserHelper.CurrentUser(Context).CanEditCommonData())
+{
+    <div style="margin-top: 20px;">
+        <a href="#"
+           class="btn btn-default zi-ajax-link"
+           data-ajax-url="@Url.Action("ChangeStatusDialog", new {defectId = Model.Defect.Id})">Изменить статус</a>
+        <a href="@Url.Action("Edit", new {id = defect.Id})" class="btn btn-default">Редактировать</a>
+    </div>
+}
+
+<table style="width: 100%; margin-top: 30px;">
+    <tr>
+        @if (eventType != null)
+        {
+            <td style="width: 50%">
+                <div style="font-weight: bold">Тип ошибки</div>
+                <a href="@showEventTypeUrl">@eventType.DisplayName</a>
+            </td>
+        }
+        <td>
+            <div style="font-weight: bold">Ответственный</div>
+            <div style="white-space: nowrap">
+                <span>@Model.ResponsibleUser</span>
+                @*<a href="#" class="btn btn-sm btn-default">Изменить</a>*@
+            </div>
+        </td>
+    </tr>
+</table>
+
+@if (eventType != null)
+{
+    <div style="margin-top: 30px; font-weight: bold">Последняя ошибка</div>
+    <div id="last-error-div">
+        <div>&nbsp;</div>
+        <div>&nbsp;</div>
+    </div>
+} 
+
+@if (!string.IsNullOrEmpty(defect.Notes))
+{
+    <div style="margin-top: 30px; font-weight: bold">Заметки</div>
+    <div class="well" style="white-space: pre;">@defect.Notes</div>
+}
+
+<p style="margin-top: 30px; font-weight: bold">История изменений</p>
+<table class="simpleTable" id="status-changes-table">
+@foreach (var change in changes)
+{
+    <tr>
+        <td style="white-space: nowrap">@DateTimeHelper.GetRussianDateTime(change.Date)</td>
+        <td style="white-space: nowrap">@enumName.GetName(change.Status)</td>
+        <td style="white-space: nowrap">@change.UserLogin</td>
+        <td style="width: 100%; white-space: pre">@change.Comment</td>
+    </tr>
+}
+</table>
+
+<script>
+    $(function () {
+        changeStatusDialogCallback = function() {
+            ziReloadPage();
+        }
+        ziCreateModalDialog(".zi-ajax-link");
+        reloadLastErrorDiv();
+    });
+
+    function reloadLastErrorDiv() {
+        @if (eventType == null)
+        {
+            <text>return;</text>
+        }
+        else
+        {
+            <text>
+        var lastErrorDiv = $("#last-error-div");
+        ziBeginWaitAnimation(lastErrorDiv);
+        var url = '@Url.Action("LastError", "Defects")';
+        var data = {
+            eventTypeId: '@eventType.Id'
+        };
+        var onSuccess = function (html) {
+            ziStopWaitAnimation(lastErrorDiv);
+            lastErrorDiv.html(html);
+        };
+        var onError = function () {
+            ziStopWaitAnimation(lastErrorDiv);
+            lastErrorDiv.html('ajax error...');
+        }
+        $.post(url, data, onSuccess, 'html');
+            </text>
+        }
+    }
+</script>

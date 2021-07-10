@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Http.Extensions; 
+@model Zidium.UserAccount.Models.DeleteConfirmationAjaxModel
+
+@{
+    ViewBag.Title = Model.Title; // для названия диалога
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+    var postUrl = Context.Request.GetDisplayUrl();
+}
+<div class="alert alert-danger" id="delete-confirmation-alert">
+    @Model.Message
+</div>
+<div class="row" style="text-align: right">
+    <div class="col-sm-12">
+        <a id="deleteConfirmationBtn" href="@postUrl" class="btn btn-danger">Удалить</a>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+</div>
+
+<script>
+    function onDeleteError(errorMessage) {
+        $("#delete-confirmation-alert").text(errorMessage);
+    }
+
+    ziSetAjaxLink("#deleteConfirmationBtn", null, onDeleteError);
+</script>

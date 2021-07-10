@@ -1,0 +1,23 @@
+﻿@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.ComponentsMiniListModel
+
+<ul style="padding-left: 0;">
+    @foreach (var component in Model.Components)
+    {
+        <li style="white-space: nowrap; list-style: none; padding-bottom: 10px;"
+            data-componenttype='@component.ComponentTypeId.ToString()'
+            data-status='@component.Status.ToString()'
+            data-name='@component.NameForSearch'
+            data-isitem='True'>
+
+            @{
+                var linkClass = GuiHelper.GetComponentStatusTextCssClass(component.Status);
+            }
+               
+            <span style="margin-right: 5px;">
+                @Html.MonitoringStatusIcon(component.Status)
+            </span>
+            <a data-id='@component.Id.ToString()' data-full-name='@component.DisplayName' class="@linkClass" style="cursor: pointer;">@component.DisplayName</a>
+        </li>
+    }
+</ul>

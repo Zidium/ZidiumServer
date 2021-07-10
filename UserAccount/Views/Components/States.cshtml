@@ -1,0 +1,261 @@
+﻿@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models
+@using Zidium.UserAccount.Models.Controls
+
+@model Zidium.UserAccount.Models.Components.StatesModel
+
+@{
+    ViewBag.Title = "Состояния компонентов";
+    ViewBag.ActiveMenuItems = "Components,ComponentsByStatus";
+    Guid lastTypeId = Guid.Empty;
+    bool hasEvents = Model.Rows.Any(x => x.Events.All > 0);
+    bool hasChecks = Model.Rows.Any(x => x.Checks.All > 0);
+    bool hasChilds = Model.Rows.Any(x => x.Childs.All > 0);
+    bool hasCounters = Model.Rows.Any(x => x.Counters.All > 0);
+}
+
+<style>
+    .groupName {
+        font-weight: bold;
+        background-color: #f9f9f9;
+    }
+</style>
+
+@Html.Partial("_PageTitle")
+
+<form method="GET" id="myForm">
+    <div class="row">
+        <div class="col-sm-3 form-group">
+            @Html.Label("Тип компонента")
+            @Html.ComponentTypeSelectorNew(x => x.ComponentTypeId, new ComponentTypeSelectorOptions()
+       {
+           AutoRefreshPage = true,
+           SelectedValue = Model.ComponentTypeId,
+           Mode = ComponentTypeSelectorMode.ShowOnlyUsedTypes,
+           AllowEmpty = true
+       })
+        </div>
+        <div class="col-sm-3 form-group">
+            @Html.Label("Компонент")
+            @Html.ComponentSelector(x => x.ComponentId, new ComponentSelectorOptions()
+       {
+           AutoRefreshPage = true,
+           ExternalComponentTypeSelectId = "ComponentTypeId",
+           ShowAsList = false
+       })
+        </div>
+        <div class="col-sm-3 form-group">
+            @Html.Label("Поиск по строке")
+            @Html.TextBoxFor(x => x.SearchString, new { @class = "form-control" })
+        </div>
+        <div class="col-sm-3 form-group">
+            @Html.Label("Цвет компонента")
+            <div class="clearfix"></div>
+            @Html.ColorStatusSelector(x => x.Color)
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 form-group">
+            <input type="submit" class="btn btn-primary" value="Обновить" />
+
+            <div style="display: inline-block; margin-left: 30px;">
+                <div class="checkbox">
+                    <label>
+                        @Html.CheckBoxFor(x => x.AllColors, new { style = "top: -4px;" })
+                        <span>Подробно</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+@{void WriteCell(ImportanceColor color, ColorCountGroupItem item)
+    {
+        <td class="text-center" style="width: 60px;">
+            @if (item.Count > 0)
+            {
+                <span class="badge" style="background-color: @GuiHelper.GetStrongBgColor(color)">
+                    @if (item.Url == null)
+                    {
+                        <text>@item.Count</text>
+                    }
+                    else
+                    {
+                        <a style="color: white" href='@item.Url'>@item.Count </a>
+                    }
+                </span>
+            }
+            else
+            {
+                <span style="color: gray">0</span>
+            }
+        </td>
+    }
+}
+
+@{void WriteGroup(ColorCountGroup group)
+    {
+        if (group.All == -1)
+        {
+            <td colspan="4" style=" width: 240px; color: gray; text-align: center">нет</td>
+        }
+        else
+        {
+            if (Model.AllColors)
+            {
+                WriteCell(ImportanceColor.Red, group.RedItem);
+                WriteCell(ImportanceColor.Yellow, group.YellowItem);
+                WriteCell(ImportanceColor.Green, group.GreenItem);
+                WriteCell(ImportanceColor.Gray, group.GrayItem);
+            }
+            else
+            {
+                if (group.HighImportanceColor == ImportanceColor.Red)
+                {
+                    WriteCell(ImportanceColor.Red, group.RedItem);
+                }
+                else if (group.HighImportanceColor == ImportanceColor.Yellow)
+                {
+                    WriteCell(ImportanceColor.Yellow, group.YellowItem);
+                }
+                else if (group.HighImportanceColor == ImportanceColor.Green)
+                {
+                    WriteCell(ImportanceColor.Green, group.GreenItem);
+                }
+                else
+                {
+                    WriteCell(ImportanceColor.Gray, group.GrayItem);
+                }
+            }
+        }
+    }
+}
+
+@if (Model.IsFilterEmpty() == false)
+{
+    <p>Найдено компонентов: @Model.Rows.Count</p>
+    <table class="table grid-table simpleTableClear table-condensed" style="width: auto !important">
+        <tr>
+            <th>Компонент</th>
+            @if (hasChecks)
+            {
+                if (Model.AllColors)
+                {
+                    <th colspan="4">Проверки</th>
+                }
+                else
+                {
+                    <th>Проверки</th>
+                }
+
+            }
+            @if (hasEvents)
+            {
+                if (Model.AllColors)
+                {
+                    <th colspan="4">События</th>
+                }
+                else
+                {
+                    <th>События</th>
+                }
+
+            }
+            @if (hasChilds)
+            {
+                if (Model.AllColors)
+                {
+                    <th colspan="4">Дети</th>
+                }
+                else
+                {
+                    <th>Дети</th>
+                }
+            }
+            @if (hasCounters)
+            {
+                if (Model.AllColors)
+                {
+                    <th colspan="4">Метрики</th>
+                }
+                else
+                {
+                    <th>Метрики</th>
+                }
+            }
+        </tr>
+        @if (Model.Rows.Count == 0)
+        {
+            <tr>
+                @if (Model.AllColors)
+                {
+                    <td colspan="13">Нет данных</td>
+                }
+                else
+                {
+                    <td colspan="4">Нет данных</td>
+                }
+            </tr>
+        }
+        else
+        {
+            foreach (var row in Model.Rows)
+            {
+                if (lastTypeId != row.ComponentTypeId)
+                {
+                    lastTypeId = row.ComponentTypeId;
+                    <tr>
+                        @if (Model.AllColors)
+                        {
+                            <td colspan="13" class="groupName">@row.ComponentTypeName</td>
+                        }
+                        else
+                        {
+                            <td colspan="4" class="groupName">@row.ComponentTypeName</td>
+                        }
+                    </tr>
+                }
+                <tr>
+                    <td style="padding-left: 30px;">
+                        @Html.ActionLink(row.ComponentName, "Show", "Components", new { id = row.ComponentId }, new { style = "color: " + GuiHelper.GetStrongFgColor(row.HighImportanceColor) })
+                    </td>
+                    @if (hasChecks)
+                    {
+                        WriteGroup(row.Checks);
+                    }
+                    @if (hasEvents)
+                    {
+                        WriteGroup(row.Events);
+                    }
+                    @if (hasChilds)
+                    {
+                        WriteGroup(row.Childs);
+                    }
+                    @if (hasCounters)
+                    {
+                        WriteGroup(row.Counters);
+                    }
+                </tr>
+            }
+        }
+    </table>
+}
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var changeEnable = true;
+        $(function () {
+            $("#AllColors").change(function () {
+                if (changeEnable) {
+                    changeEnable = false;
+                }
+                $("#myForm").submit();
+            });
+        });
+    </script>
+}

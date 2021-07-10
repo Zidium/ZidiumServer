@@ -1,0 +1,158 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.UserAccount.Helpers
+@using Zidium.UserAccount.Models.Controls
+
+@model Zidium.UserAccount.Models.CheckModels.UnitTestCommonSettingsModel
+
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="Id" id="Id" value="@Model.Id" />
+
+@Html.MyValidationSummaryVertical()
+
+<div class="row">
+    <div class="col-sm-6 col-sm-offset-3">
+        @if (Model.Id.HasValue)
+        {
+            @Html.ActionLink("Результат проверки", "ResultDetails", "UnitTests", new { id = Model.Id }, new { @class = "btn btn-default bottom10px" })
+        }
+        @Html.ActionLink("Простой режим", "EditSimple", null, new { id = Model.Id, componentId = Model.ComponentId }, new { @class = "btn btn-default bottom10px" })
+
+        @if (Model.Id.HasValue)
+        {
+            if (Model.Enable)
+            {
+                @Html.ActionLink("Выключить", "Disable", "UnitTests", new { id = Model.Id }, new { @class = "btn btn-default bottom10px", id = "disabeUnitTestBtn" })
+            }
+            else
+            {
+                @Html.ActionLink("Включить", "Enable", "UnitTests", new { id = Model.Id }, new { @class = "btn btn-success bottom10px", id = "enableUnitTestBtn" })
+            }
+        }
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="CheckName" class="control-label col-sm-3">
+        <span>Название проверки</span>&nbsp;<sup><span class="text-danger glyphicon glyphicon-asterisk" style="font-size: 7px;"></span></sup>
+        <span class="ziTooltipContent">
+            Любая строка, по которой Вам будет понятен смысл проверки.
+        </span>
+    </label>
+    <div class="col-sm-6">
+        @Html.TextBoxFor(x => x.CheckName, new { @class = "form-control" })
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="ComponentId" class="control-label col-sm-3">
+        <span>Выберите компонент (хост)</span>&nbsp;<sup><span class="text-danger glyphicon glyphicon-asterisk" style="font-size: 7px;"></span></sup>
+        <span class="ziTooltipContent">
+            Проверка не может быть сама по себе.
+            Все проверки принадлежат какому-нибудь компоненту.
+            У компонента может быть любое количество проверок.
+        </span>
+    </label>
+    <div class="col-sm-6">
+        @Html.ComponentSelector(x => x.ComponentId, new ComponentSelectorOptions()
+   {
+       ShowAsList = false
+   }.SetShowCreateNewButton(
+            Model.NewComponentTypeId,
+            Model.NewComponentFolder.SystemName,
+            Model.NewComponentFolder.DisplayName))
+    </div>
+</div>
+
+@if (SystemUnitTestType.CanEditPeriod(Model.UnitTestTypeId))
+{
+    // для проверки домена период НЕ показываем, всегда проверяем 1 раз в день
+    <div class="form-group">
+        <label for="Period" class="control-label col-sm-3">
+            <span>Период</span>&nbsp;<sup><span class="text-danger glyphicon glyphicon-asterisk" style="font-size: 7px;"></span></sup>
+            <span class="ziTooltipContent">
+                Период - это интервал времени, через который будет выполнятся проверка.
+                Например, если период 10 минут, то проверка будет выполнятся раз в 10 минут.
+            </span>
+        </label>
+        <div class="col-sm-3">
+            @Html.TimeSpanSelector(m => m.Period)
+        </div>
+        <div class="col-sm-6">
+            <p class="form-control-static">@Html.ValidationMessageFor(m => m.Period)</p>
+        </div>
+    </div>
+}
+
+@if (!SystemUnitTestType.IsSystem(Model.UnitTestTypeId))
+{
+    // Интервал актуальности настраивается только для пользовательских проверок
+    <div class="form-group">
+        <label class="col-sm-3 control-label" for="ActualTime">
+            Время актуальности
+            <span class="ziTooltipContent">
+                Время актуальности - это время в течении которого должен обязательно придти следующий результат проверки, иначе проверка будет считаться неактуальной (нет сигнала).
+                По умолчанию неактуальные проверки становятся красными (статус alarm).
+                <br /><br />
+                Рекомендуется время актуальности ставит в раза больше периода опроса.
+                <br />
+                Если время актуальности будет равно периоду опроса,
+                то будут ложные статусы "нет сигнала", из-за того, что новый результат проверки пришел с небольшим опозданием.
+            </span>
+        </label>
+        <div class="col-sm-3">
+            @Html.TimeSpanSelector(m => m.ActualTime)
+        </div>
+        <div class="col-sm-6">
+            <p class="form-control-static">@Html.ValidationMessageFor(m => m.ActualTime)</p>
+        </div>
+    </div>
+}
+
+<div class="form-group">
+    <label class="control-label col-sm-3" for="ErrorColor">
+        Цвет проверки при ошибке
+        <span class="ziTooltipContent">
+            По умолчанию, если проверка выполняется с ошибкой, то проверка становится красной (alarm).
+            Например, если проверка не является критической,
+            то можно сказать системе, чтобы в случае ошибки проверка становилась желтой (warning).
+        </span>
+    </label>
+    <div class="col-sm-6">
+        @Html.ColorStatusSelector(x => Model.ErrorColor, new ColorStatusSelectorOptions()
+   {
+       AutoRefreshPage = false,
+       MultiSelectMode = false
+   })
+    </div>
+</div>
+
+@if (!SystemUnitTestType.IsSystem(Model.UnitTestTypeId))
+{
+    // Цвет без сигнала настраивается только для пользовательских проверок
+
+    <div class="form-group">
+        <label for="NoSignalColor" class="control-label col-sm-3">
+            Цвет, если нет сигнала
+            <span class="ziTooltipContent">
+                Если время актуальности последнего результата проверки истекло,
+                то считается, что у проверки "нет сигнала",
+                по умолчанию, проверка становится красной (alarm).
+            </span>
+        </label>
+        <div class="col-sm-6">
+            @Html.ColorStatusSelector(x => Model.NoSignalColor, new ColorStatusSelectorOptions()
+       {
+           AutoRefreshPage = false,
+           MultiSelectMode = false
+       })
+        </div>
+    </div>
+}
+
+<script>
+    $(function () {
+        setPostLink("#enableUnitTestBtn");
+        initTooltips();
+    });
+</script>

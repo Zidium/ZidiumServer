@@ -1,0 +1,36 @@
+﻿@using Zidium.UserAccount.Helpers
+@{
+    ViewBag.Title = "Пример обновляемых плиток";
+}
+
+<p class="submenu-title">@ViewBag.Title</p>
+<br />
+
+<div class="row tiles-row">
+    <div class="col-md-1 tiles-column">
+        @Html.PartialReloadedTile(Url.Action("CounterValue", new { id = "01" }))
+    </div>
+    <div class="col-md-2 tiles-column">
+        @Html.PartialReloadedTile(Url.Action("CounterValue", new { id = "02" }))
+    </div>
+    <div class="col-md-3 tiles-column">
+        @Html.PartialReloadedTile(Url.Action("CounterValue", new { id = "03" }))
+    </div>
+    <div class="col-md-6 tiles-column">
+        @Html.PartialReloadedTile(Url.Action("CounterValue", new { id = "04" }))
+    </div>
+</div>
+
+<script>
+
+    function reloadTiles() {
+        reloadedTiles.reload(".reloaded-tile");
+    }
+
+    $(function () {
+        setInterval(reloadTiles, 1000);
+    });
+
+</script>
+
+

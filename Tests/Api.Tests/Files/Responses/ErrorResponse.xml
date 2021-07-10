@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GetRootControlDataResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Code>80</Code>
+  <ErrorMessage>
+    System.Reflection.TargetInvocationException: Адресат вызова создал исключение. ---&gt; Zidium.Core.Api.ParameterRequiredException: В запросе отсутсвует параметр: Request.Token.SecretKey
+    в Zidium.Core.DispatcherService.CheckRequest(Request request) в c:\Projects\Recursion\Zidium\Zidium\Core\Api\Dispatcher\DispatcherService.cs:строка 43
+    в Zidium.Core.DispatcherService.GetDispatcherContext(Request request) в c:\Projects\Recursion\Zidium\Zidium\Core\Api\Dispatcher\DispatcherService.cs:строка 77
+    в Zidium.Core.DispatcherService.GetRootControlData(GetRootControlDataRequest request) в c:\Projects\Recursion\Zidium\Zidium\Core\Api\Dispatcher\DispatcherService.cs:строка 123
+    --- Конец трассировки внутреннего стека исключений ---
+    в System.RuntimeMethodHandle.InvokeMethod(Object target, Object[] arguments, Signature sig, Boolean constructor)
+    в System.Reflection.RuntimeMethodInfo.UnsafeInvokeInternal(Object obj, Object[] parameters, Object[] arguments)
+    в System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+    в System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+    в DispatcherHttpService.DispatcherHandler.GetResponse(HttpContext context, ISerializer serializer) в c:\Projects\Recursion\Zidium\Zidium\DispatcherHttpService\DispatcherHandler.ashx.cs:строка 94
+    в DispatcherHttpService.DispatcherHandler.ProcessRequest(HttpContext context) в c:\Projects\Recursion\Zidium\Zidium\DispatcherHttpService\DispatcherHandler.ashx.cs:строка 106
+  </ErrorMessage>
+</GetRootControlDataResponse>

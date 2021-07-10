@@ -1,0 +1,18 @@
+﻿@model Zidium.UserAccount.Models.Controls.TimeSpanSelectorModel
+
+<div class="input-group">
+    @Model.HtmlHelper.TextBox(Model.Name, Model.Value, new { @class = "form-control", placeholder = "Например, 1д 2ч 30м 10с" })
+    <span class="input-group-addon" id='@(Model.HtmlHelper.Id(Model.Name) + "_tooltip")'>?</span>
+</div>
+
+<script>
+    $(function() {
+        var span = $('#' + '@(Model.HtmlHelper.Id(Model.Name) + "_tooltip")');
+        span.tooltip({
+            container: 'body',
+            html: true,
+            placement: 'auto right',
+            title: 'Например, 1д 2ч 30м 10с <BR/> d, д - дни <BR/> h, ч - часы <BR/> m, м - минуты <BR/> s, с - секунды'
+        });
+    });
+</script>

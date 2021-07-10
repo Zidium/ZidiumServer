@@ -1,0 +1,23 @@
+﻿@model Zidium.UserAccount.Models.Controls.FormGroupModel
+<div class="smart-row @Model.CssClass" id="smart-row-for-@Model.Name">
+    <div class="smart-col-labels">
+        <label class="control-label" for="@Model.Name">
+            @Model.Label
+            @if (Model.Tooltip != null)
+            {
+                <span class="ziTooltipContent">
+                    @Model.Tooltip
+                </span>
+            }
+        </label>
+    </div>
+    <div class="smart-col-fields">
+        <div class="smart-subcol" style="width: @(Model.ControlWidth)">@Model.Control</div>
+        <div>
+            @if (!string.IsNullOrEmpty(Model.Name))
+            {
+                @Html.ValidationMessage(Model.Name, null, null, "p")
+            }
+        </div>
+    </div>
+</div>

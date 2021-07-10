@@ -1,0 +1,57 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.ComponentTree.ComponentsTreeItemModel
+
+@if (Model != null)
+{
+    if (Model.IsRoot)
+    {
+        @Html.Raw("<ul>")
+    }
+
+    <li style="white-space: nowrap;" data-id="@Model.Id">
+
+        <input type="checkbox" class="components-tree-item-checkbox components-tree-item-checkbox-component" id='@Model.Id' @(Model.Expanded ? "checked" : string.Empty) />
+
+        <label for='@Model.Id'></label>
+
+        <div class="highlight-container">
+            @{ var linkClass = GuiHelper.GetComponentStatusTextCssClass(Model.Status); }
+
+            <span style="padding-left: 7px; padding-right: 7px; display: table-cell;">
+                @Html.MonitoringStatusIcon(Model.Status)
+            </span>
+
+            <div style="display: table-cell;">
+                @Html.ActionLink(Model.DisplayName, "Show", "Components", new { id = Model.Id }, new { @class = linkClass + " component-name-link" })
+
+                @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                {
+                    <a href="#" class="text-muted tree-item-menu-button tree-item-component-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>
+                }
+
+                <div class="component-tree-status-duration">@GuiHelper.TimeSpanAs2UnitString(Model.StatusDuration)</div>
+            </div>
+        
+        </div>
+
+        <div class="components-tree-item-content">
+            @if (Model.Content != null)
+            {
+                @Html.Partial("ComponentsTreeElementContent", Model.Content)
+            }
+            else
+            {
+                <div class="components-tree-item-content-loading">
+                    <img src="~/Content/Icons/ajax-loader-white.gif" />
+                    <span>Загрузка...</span>
+                </div>
+            }
+        </div>
+    </li>
+
+    if (Model.IsRoot)
+    {
+        @Html.Raw("</ul>")
+    }
+}

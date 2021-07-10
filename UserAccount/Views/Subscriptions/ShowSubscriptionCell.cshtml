@@ -1,0 +1,64 @@
+﻿@using Zidium.Core.AccountsDb
+@using Zidium.Core.Common.Helpers
+@using Zidium.Storage
+@using Zidium.UserAccount.Helpers
+@model Zidium.UserAccount.Models.Subscriptions.ShowSubscriptionCellModel
+
+@if (Model.Subscription == null)
+{
+    // подписка по умолчанию
+    var url = Url.Action("Add", "Subscriptions", new
+    {
+        channel = Model.Channel,
+        @object = SubscriptionObject.Default,
+        userId = Model.Row.Table.UserId
+    });
+    if (Model.Object == SubscriptionObject.ComponentType)
+    {
+        url = Url.Action("Add", "Subscriptions", new
+        {
+            channel = Model.Channel,
+            @object = SubscriptionObject.ComponentType,
+            componentTypeId = Model.ObjectId,
+            userId = Model.Row.Table.UserId
+        });
+    }
+    else if (Model.Object == SubscriptionObject.Component)
+    {
+        url = Url.Action("Add", "Subscriptions", new
+        {
+            channel = Model.Channel,
+            @object = SubscriptionObject.Component,
+            componentId = Model.ObjectId,
+            userId = Model.Row.Table.UserId
+        });
+    }
+    <a href="#" data-url="@url" class="_showDialogBtn" data-title="@SubscriptionObjectHelper.GetAddTitle(Model.Object)">
+        <span class="glyphicon glyphicon-minus" style="color: gray"></span>
+    </a>
+}
+else
+{
+    var subscription = Model.Subscription;
+    <a href="#" 
+       data-url="@Url.Action("Edit","Subscriptions",new{id=subscription.Id})" 
+       class="_showDialogBtn"
+       data-title="@SubscriptionObjectHelper.GetEditTitle(subscription.Object)">
+        @if (subscription.IsEnabled)
+        {
+            var bgColor = GuiHelper.GetStrongBgColor(subscription.Importance);
+            <span class="subscription-badge" style="background-color: @bgColor">
+                @*@if (subscription.DurationMinimumInSeconds > 0)
+                {
+                    var duration = TimeSpan.FromSeconds(subscription.DurationMinimumInSeconds.Value);
+                    var oneUnit = TimeSpanHelper.Get2UnitsString(duration);
+                    <span>@oneUnit</span>
+                }*@
+            </span>
+        }
+        else
+        {
+            <img src="/Content/Icons/forbiddance-20px.png" title="Запрещено отправлять уведомления"/>
+        }
+    </a>
+}

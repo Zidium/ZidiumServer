@@ -1,0 +1,10 @@
+﻿@model string
+
+<input type="button" value="Найти" class="btn btn-primary" id='@(Model + "Button")' />
+
+<script>
+    $(function () {
+        var control = $('#@(Model + "Button")');
+        var filterButton = new FilterButton(control, '@Model');
+    });
+</script>

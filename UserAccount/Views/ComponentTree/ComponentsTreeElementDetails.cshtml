@@ -1,0 +1,127 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.ComponentTree.ComponentsTreeItemDetailsModel
+
+<div class="components-tree-item-details-loaded">
+    @if (Model.Events.HasEvents)
+    {
+        <div class="components-tree-item-details-events">
+            <div class="highlight-container">
+                <a href="@Url.Action("Index", "Events", new {ComponentId = Model.Id, FromDate = GuiHelper.GetUrlDateTimeString(Model.Events.FromDate)})"
+                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Events.Status) events-link"
+                   data-id="@Model.Id">
+                    События
+                </a>
+                <div class="component-tree-status-duration">@GuiHelper.TimeSpanAs2UnitString(Model.Events.StatusDuration)</div>
+            </div>
+        </div>
+    }
+
+    @{
+        var hasExpandableItems = Model.Unittests.Items.Length > 0 || Model.Metrics.Items.Length > 0;
+    }
+
+    @if (hasExpandableItems)
+    {
+        @Html.Raw("<ul>")
+    }
+
+    @if (Model.Unittests.Items.Length > 0)
+    {
+        <li style="white-space: nowrap;">
+            <input type="checkbox" class="components-tree-item-checkbox" id='@Model.Unittests.HtmlId' @(Model.Unittests.Expanded ? "checked" : string.Empty) />
+
+            <label for='@Model.Unittests.HtmlId'></label>
+
+            <div style="display: table-cell; padding-left: 15px;" class="highlight-container">
+                <a href='@Url.Action("Index", "UnitTests", new {componentId = Model.Id})'
+                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Unittests.Status) unittests-link"
+                   data-id="@Model.Id">
+                    Проверки
+                </a>
+                
+                @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                {
+                    <a href="#" class="text-muted tree-item-menu-button tree-item-unittests-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>
+                }
+
+                <div class="component-tree-status-duration">@GuiHelper.TimeSpanAs2UnitString(Model.Unittests.StatusDuration)</div>
+            </div>
+
+            <ul>
+                @foreach (var unittest in Model.Unittests.Items)
+                {
+                    <li style="white-space: nowrap;" data-id="@unittest.Id">
+                        <div class="highlight-container">
+                            <a href='@Url.Action("ResultDetails", "UnitTests", new { id = unittest.Id })'
+                               class="@GuiHelper.GetComponentStatusTextCssClass(unittest.Status) unittest-name-link">
+                                @unittest.DisplayName
+                            </a>
+                            @if (!string.IsNullOrEmpty(unittest.Message))
+                            {
+                                <span style="color:#999">: @unittest.Message</span>
+                            }
+
+                            @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                            {
+                                <a href="#" class="text-muted tree-item-menu-button tree-item-unittest-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>
+                            }
+
+                            <div class="component-tree-status-duration">@GuiHelper.TimeSpanAs2UnitString(unittest.StatusDuration)</div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </li>
+    }
+
+    @if (Model.Metrics.Items.Length > 0)
+    {
+        <li style="white-space: nowrap;">
+            <input type="checkbox" class="components-tree-item-checkbox" id='@Model.Metrics.HtmlId' @(Model.Metrics.Expanded ? "checked" : string.Empty) />
+
+            <label for='@Model.Metrics.HtmlId'></label>
+
+            <div style="display: table-cell; padding-left: 15px;" class="highlight-container">
+                <a href='@Url.Action("Values", "Metrics", new { componentId = Model.Id })'
+                   class="@GuiHelper.GetComponentStatusTextCssClass(Model.Metrics.Status) metrics-link" 
+                   data-id="@Model.Id">
+                    Метрики
+                </a> 
+                
+                @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                {
+                    <a href="#" class="text-muted tree-item-menu-button tree-item-metrics-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>
+                }
+
+                <div class="component-tree-status-duration">@GuiHelper.TimeSpanAs2UnitString(Model.Metrics.StatusDuration)</div>
+            </div>
+
+            <ul>
+                @foreach (var metric in Model.Metrics.Items)
+                {
+                    <li style="white-space: nowrap;" data-id="@metric.Id">
+                        <div class="highlight-container">
+                            <a href='@Url.Action("Show", "Metrics", new { id = metric.Id })'
+                               class="@GuiHelper.GetComponentStatusTextCssClass(metric.Status) metric-name-link">
+                                @(metric.DisplayName): @(metric.Value.HasValue ? metric.Value.ToString() : "нет сигнала")
+                            </a>
+
+                            @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                            {
+                                <a href="#" class="text-muted tree-item-menu-button tree-item-metric-menu-button"><span class="glyphicon glyphicon-triangle-bottom"></span></a>
+                            }
+
+                            <div class="component-tree-status-duration">@GuiHelper.TimeSpanAs2UnitString(metric.StatusDuration)</div>
+                        </div>
+                    </li>
+                }
+            </ul>
+        </li>
+    }
+
+    @if (hasExpandableItems)
+    {
+        @Html.Raw("</ul>")
+    }
+</div>
