@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks;
 using Xunit;
 using Zidium.Core.AccountsDb;
@@ -9,6 +8,7 @@ using Zidium.Core.Common.TimeService;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Zidium.Agent.Tests
 {
@@ -158,7 +158,7 @@ namespace Zidium.Agent.Tests
 
             // выполним проверку
             account.SaveAllCaches();
-            var processor = new DomainNamePaymentPeriodCheckProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new DomainNamePaymentPeriodCheckProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             account.SaveAllCaches();

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.NetworkInformation;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
@@ -95,7 +95,7 @@ namespace Zidium.Agent.AgentTasks
                 exception.Data.Add("UnitTestId", rule.UnitTestId);
                 exception.Data.Add("UnitTestName", unitTest.DisplayName);
                 exception.Data.Add("Address", rule.Host);
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 // ошибка агента, не обновляем данные проверки
                 return null;

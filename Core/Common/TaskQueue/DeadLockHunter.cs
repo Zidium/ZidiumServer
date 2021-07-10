@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Core.Common.TaskQueue
 {
@@ -21,15 +21,15 @@ namespace Zidium.Core.Common.TaskQueue
             public DateTime StartDate { get; set; }
         }
 
-        private static ConcurrentDictionary<Guid, ThreadInfo> _threads = new ConcurrentDictionary<Guid, ThreadInfo>();
+        private static readonly ConcurrentDictionary<Guid, ThreadInfo> _threads = new ConcurrentDictionary<Guid, ThreadInfo>();
+        private readonly Timer _timer;
+        private readonly Zidium.Api.IComponentControl _control;
+        private readonly ILogger _logger;
 
-        private Timer _timer;
-
-        private Zidium.Api.IComponentControl _control;
-
-        public DeadLockHunter(Zidium.Api.IComponentControl control)
+        public DeadLockHunter(Zidium.Api.IComponentControl control, ILogger logger)
         {
             _control = control;
+            _logger = logger;
             _timer = new Timer(SearchDeadLock, _timer, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
         }
 
@@ -60,13 +60,12 @@ namespace Zidium.Core.Common.TaskQueue
                 if (maxDuration > TimeSpan.FromSeconds(30))
                 {
                     var exception = new Exception("Long request");
-                    var properties = new Dictionary<string, object>();
-                    _control.Log.Warning(exception.Message, exception, properties);
+                    _logger.LogWarning(exception, exception.Message);
                 }
             }
             catch (Exception exception)
             {
-                _control.Log.Error(exception);
+                _logger.LogError(exception, exception.Message);
             }
         }
 

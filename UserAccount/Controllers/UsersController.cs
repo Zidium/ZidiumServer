@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
@@ -15,6 +16,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class UsersController : BaseController
     {
+        public UsersController(ILogger<UsersController> logger) : base(logger)
+        {
+        }
+
         /// <summary>
         /// Вывод списка пользователей
         /// </summary>

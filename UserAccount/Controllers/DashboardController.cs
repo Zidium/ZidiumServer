@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.UserAccount.Models;
@@ -10,6 +11,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class DashboardController : BaseController
     {
+        public DashboardController(ILogger<DashboardController> logger) : base(logger)
+        {
+        }
+
         public ActionResult Index()
         {
             var model = new DashboardModel();

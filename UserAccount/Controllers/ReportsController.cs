@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 using Zidium.UserAccount.Models;
@@ -131,9 +132,6 @@ namespace Zidium.UserAccount.Controllers
             return View(model);
         }
 
-
-
-
         /// <summary>
         /// Для unit-тестов
         /// </summary>
@@ -141,7 +139,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal ReportsController(Guid userId) : base(userId) { }
 
-        public ReportsController() { }
-
+        public ReportsController(ILogger<ReportsController> logger) : base(logger)
+        {
+        }
     }
 }

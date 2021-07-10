@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Web;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
@@ -282,13 +282,9 @@ namespace Zidium.Agent.AgentTasks
 
             if (resultInfo.Code == DomainNamePaymentPeriodErrorCode.UnknownError)
             {
-                var logEvent = new LogEventInfo()
-                {
-                    Level = NLog.LogLevel.Warn,
-                    Message = "Произошла неизвестная ошибка"
-                };
-                logEvent.Properties["Html"] = resultInfo.Html;
-                Logger.Log(logEvent);
+                var exception = new Exception("Произошла неизвестная ошибка");
+                exception.Data.Add("Html", resultInfo.Html);
+                Logger.LogWarning(exception, exception.Message);
 
                 LastError = resultInfo.ErrorMessage;
             }

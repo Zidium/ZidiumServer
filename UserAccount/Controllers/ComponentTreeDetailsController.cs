@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.UserAccount.Helpers;
@@ -225,9 +226,9 @@ namespace Zidium.UserAccount.Controllers
         /// <summary>
         /// Детализация по компоненту - лог
         /// </summary>
-        public ActionResult ComponentDetailsLog(Guid id, LogLevel? level, int? count)
+        public ActionResult ComponentDetailsLog(Guid id, Api.Dto.LogLevel? level, int? count)
         {
-            level = level ?? LogLevel.Trace;
+            level = level ?? Api.Dto.LogLevel.Trace;
             count = count ?? 10;
             const int maxCount = 500;
             if (count > maxCount)
@@ -243,12 +244,12 @@ namespace Zidium.UserAccount.Controllers
             };
             var levels = new[]
             {
-                LogLevel.Trace,
-                LogLevel.Debug,
-                LogLevel.Info,
-                LogLevel.Warning,
-                LogLevel.Error,
-                LogLevel.Fatal
+                Api.Dto.LogLevel.Trace,
+                Api.Dto.LogLevel.Debug,
+                Api.Dto.LogLevel.Info,
+                Api.Dto.LogLevel.Warning,
+                Api.Dto.LogLevel.Error,
+                Api.Dto.LogLevel.Fatal
             };
             var levelFilter = levels.Where(x => x >= level.Value).ToArray();
 
@@ -656,8 +657,9 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         internal ComponentTreeDetailsController(Guid userId) : base(userId) { }
 
-        public ComponentTreeDetailsController() { }
-
+        public ComponentTreeDetailsController(ILogger<ComponentTreeDetailsController> logger) : base(logger)
+        {
+        }
     }
 
 }

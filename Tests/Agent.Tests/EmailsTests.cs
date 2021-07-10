@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks.SendEMails;
 using Xunit;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Zidium.Agent.Tests
 {
@@ -47,7 +47,7 @@ namespace Zidium.Agent.Tests
             string login = "robot";
             string from = "robor@mail.server.ru";
             string password = "12345";
-            var processor = new SendEmailsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), server, port, login, from, password, useMailKit, useSsl);
+            var processor = new SendEmailsProcessor(NullLogger.Instance, new CancellationToken(), server, port, login, from, password, useMailKit, useSsl);
             processor.FakeMode = true;
             processor.Process(emailId);
 
@@ -127,7 +127,7 @@ namespace Zidium.Agent.Tests
             string login = "robot";
             string from = "robor@mail.server.ru";
             string password = "12345";
-            var processor = new SendEmailsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), server, port, login, from, password, useMailKit, useSsl);
+            var processor = new SendEmailsProcessor(NullLogger.Instance, new CancellationToken(), server, port, login, from, password, useMailKit, useSsl);
             processor.FakeMode = true;
             processor.Process(emailId);
 

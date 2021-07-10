@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.UserAccount.Controllers;
@@ -15,18 +16,20 @@ namespace Zidium.UserAccount
 {
     public class GlobalExceptionFilterAttribute : Attribute, IExceptionFilter
     {
-        public GlobalExceptionFilterAttribute(ITempDataDictionaryFactory tempDataDictionaryFactory)
+        public GlobalExceptionFilterAttribute(ITempDataDictionaryFactory tempDataDictionaryFactory, ILogger<GlobalExceptionFilterAttribute> logger)
         {
             _tempDataDictionaryFactory = tempDataDictionaryFactory;
+            _logger = logger;
         }
 
         private readonly ITempDataDictionaryFactory _tempDataDictionaryFactory;
+        private readonly ILogger _logger;
 
         public void OnException(ExceptionContext context)
         {
             if (context.HttpContext.Request.IsAjaxRequest() && context.HttpContext.Request.IsSmartBlocksRequest())
             {
-                ExceptionHelper.HandleException(context.Exception);
+                ExceptionHelper.HandleException(context.Exception, _logger);
                 context.ExceptionHandled = true;
                 context.Result = new JsonResult(MyJsonHelper.GetErrorResponse(context.Exception));
                 return;
@@ -49,7 +52,7 @@ namespace Zidium.UserAccount
             else
             {
                 viewName = "~/Views/Errors/CommonError.cshtml";
-                ExceptionHelper.HandleException(context.Exception);
+                ExceptionHelper.HandleException(context.Exception, _logger);
             }
 
             context.ExceptionHandled = true;

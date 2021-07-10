@@ -10,12 +10,13 @@ using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Web.ModelBindings;
 using Zidium.Api;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.InternalLogger;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.UserAccount.Helpers;
@@ -30,7 +31,6 @@ namespace Zidium.UserAccount
         }
 
         private readonly IConfiguration _appConfiguration;
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -45,8 +45,6 @@ namespace Zidium.UserAccount
             services.AddHttpContextAccessor();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<HtmlHelperGenerator>();
-
-            InitMonitoring(services);
 
             EnumHelper.RegisterNaming(new ObjectColorNaming());
             EnumHelper.RegisterNaming(new EventImportanceNaming());
@@ -70,12 +68,21 @@ namespace Zidium.UserAccount
             services.AddAuthorization();
 
             services.AddTransient<GlobalExceptionFilterAttribute>();
+
+            InitMonitoring(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, IComponentControl componentControl)
         {
+            logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
+            logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
+
+            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            DependencyInjection.SetLoggerFactory(loggerFactory);
+            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
+
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            _logger.Info("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
+            logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
@@ -183,13 +190,9 @@ namespace Zidium.UserAccount
                     Version = VersionHelper.GetProductVersion()
                 });
 
-            // Присвоим Id компонента по умолчанию, чтобы адаптер NLog мог его использовать
+            // Присвоим Id компонента по умолчанию, чтобы адаптер логирования мог его использовать
             Client.Instance = client;
             Client.Instance.Config.DefaultComponent.Id = componentControl.Info?.Id;
-
-            _logger.Info("Start, IsFake={0}", componentControl.IsFake());
-            _logger.Info("Version {0}", VersionHelper.GetProductVersion());
-
             services.AddSingleton(componentControl);
         }
 

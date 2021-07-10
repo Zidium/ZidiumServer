@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
@@ -183,6 +184,8 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         internal HttpRequestCheckController(Guid userId) : base(userId) { }
 
-        public HttpRequestCheckController() { }
+        public HttpRequestCheckController(ILogger<HttpRequestCheckController> logger) : base(logger)
+        {
+        }
     }
 }

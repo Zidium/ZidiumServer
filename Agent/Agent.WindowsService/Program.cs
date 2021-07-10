@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Agent
 {
@@ -54,10 +55,16 @@ namespace Zidium.Agent
                 {
                     services.AddHostedService<Worker>();
                 })
+                .ConfigureAppConfiguration(app =>
+                {
+                    app.ConfigureAppSettingsFile();
+                })
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
+                    logging.AddConsole();
                     logging.AddDebug();
+                    logging.AddInternalLog();
                     logging.AddNLog();
                 });
         }

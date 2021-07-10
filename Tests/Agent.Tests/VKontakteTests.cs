@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.SendMessages;
 using Zidium.Api.Dto;
@@ -38,7 +38,7 @@ namespace Zidium.Agent.Tests
 
             // обработаем очередь
             var authToken = "1234567890";
-            var processor = new SendToVKontakteProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), authToken);
+            var processor = new SendToVKontakteProcessor(NullLogger.Instance, new CancellationToken(), authToken);
             processor.FakeMode = true;
             processor.Process(commandId);
 
@@ -110,7 +110,7 @@ namespace Zidium.Agent.Tests
 
             // обработаем очередь
             var authToken = "1234567890";
-            var processor = new SendToVKontakteProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), authToken);
+            var processor = new SendToVKontakteProcessor(NullLogger.Instance, new CancellationToken(), authToken);
             processor.FakeMode = true;
             processor.Process(commandId);
 

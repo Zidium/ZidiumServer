@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Core;
@@ -17,7 +17,7 @@ namespace Zidium.Dispatcher
 {
     public class DispatcherWebHandlerMiddleware : WebHandlerMiddlewareBase
     {
-        public DispatcherWebHandlerMiddleware(RequestDelegate next)
+        public DispatcherWebHandlerMiddleware(RequestDelegate next, ILogger<DispatcherWebHandlerMiddleware> logger) : base(logger)
         {
         }
 
@@ -38,7 +38,6 @@ namespace Zidium.Dispatcher
         }
 
         private static IComponentControl ComponentControl { get; set; }
-
 
         public static void Init(IComponentControl componentControl)
         {
@@ -77,8 +76,6 @@ namespace Zidium.Dispatcher
         }
 
         #region Метрики
-
-        protected static Stopwatch CounterTimer = new Stopwatch();
 
         protected static long RequestsCount = 0;
 
@@ -244,7 +241,8 @@ namespace Zidium.Dispatcher
             }
             catch (Exception exception)
             {
-                LogManager.GetCurrentClassLogger().Fatal(exception);
+                var logger = DependencyInjection.GetLogger<DispatcherWebHandlerMiddleware>();
+                logger.LogCritical(exception, exception.Message);
             }
             finally
             {
@@ -266,11 +264,6 @@ namespace Zidium.Dispatcher
         protected override object GetRealHandler()
         {
             return DispatcherService.Wrapper;
-        }
-
-        static DispatcherWebHandlerMiddleware()
-        {
-            CounterTimer.Start();
         }
     }
 }

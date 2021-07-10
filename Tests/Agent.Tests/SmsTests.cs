@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.SendSms;
 using Zidium.Storage;
@@ -36,7 +36,7 @@ namespace Zidium.Agent.Tests
             // обработаем очередь
             var apiId = "00000000-1111-2222-3333-444444444444";
             var from = "";
-            var processor = new SendSmsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), apiId, from);
+            var processor = new SendSmsProcessor(NullLogger.Instance, new CancellationToken(), apiId, from);
             processor.FakeMode = true;
             processor.Process(smsId);
 

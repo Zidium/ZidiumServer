@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
@@ -231,7 +232,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -259,7 +260,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -283,7 +284,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -341,7 +342,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -425,6 +426,10 @@ namespace Zidium.UserAccount.Controllers
             var client = GetDispatcherClient();
             client.SetMetricEnable(id).Check();
             return GetSuccessJsonResponse();
+        }
+
+        public MetricsController(ILogger<MetricsController> logger) : base(logger)
+        {
         }
 
     }

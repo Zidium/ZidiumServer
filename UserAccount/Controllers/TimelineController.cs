@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.UserAccount.Models;
@@ -136,7 +137,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal TimelineController(Guid userId) : base(userId) { }
 
-        public TimelineController() { }
-
+        public TimelineController(ILogger<TimelineController> logger) : base(logger)
+        {
+        }
     }
 }

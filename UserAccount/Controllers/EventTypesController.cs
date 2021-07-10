@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core;
@@ -259,10 +260,11 @@ namespace Zidium.UserAccount.Controllers
         }
 
         // Для unit-тестов
-       
-        public EventTypesController() { }
-
+        
         internal EventTypesController(Guid userId) : base(userId) { }
 
+        public EventTypesController(ILogger<EventTypesController> logger) : base(logger)
+        {
+        }
     }
 }

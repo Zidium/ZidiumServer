@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core;
 
@@ -13,6 +15,8 @@ namespace Zidium.DatabaseUpdater
     {
         public static void Main(string[] args)
         {
+            var services = new ServiceCollection();
+
             var appConfiguration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, false)
                 .AddJsonFile("appsettings.prod.json", true, false)
@@ -20,6 +24,19 @@ namespace Zidium.DatabaseUpdater
                 .Build();
 
             LogManager.Configuration = new NLogLoggingConfiguration(appConfiguration.GetSection("NLog"));
+
+            services.AddSingleton<IConfiguration>(appConfiguration);
+            services.AddLogging(o =>
+            {
+                o.AddConfiguration(appConfiguration.GetSection("Logging"));
+                o.AddConsole();
+                o.AddDebug();
+                o.AddNLog();
+            });
+
+            var serviceProvider = services.BuildServiceProvider();
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            DependencyInjection.SetLoggerFactory(loggerFactory);
 
             var configuration = new Configuration(appConfiguration);
             DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);
@@ -55,7 +72,7 @@ namespace Zidium.DatabaseUpdater
             }
 
             DependencyInjection.SetServicePersistent<IDatabaseConfiguration>(databaseConfiguration);
-            DatabaseUpdater.UpdateAll(isTestEnviroment);
+            new DatabaseUpdater().UpdateAll(isTestEnviroment);
 
             LogManager.Shutdown();
         }

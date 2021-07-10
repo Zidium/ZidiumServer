@@ -32,60 +32,26 @@ namespace Zidium.Api
         protected void SendLogMessage(LogLevel level, string message, IDictionary<string, object> properties)
         {
             var client = ComponentControl.Client;
-            AddLogMessage(client.WebLogManager, WebLogConfig, level, message, properties);
+            AddLogMessage(client.WebLogManager, level, message, properties);
         }
 
         protected void AddLogMessage(
             ILogManager manager,
-            LogConfig config,
             LogLevel level,
             string message,
             IDictionary<string, object> properties)
         {
             try
             {
-                if (manager == null)
-                {
+                if (!IsEnabled(level))
                     return;
-                }
-                if (manager.Disabled)
-                {
-                    return;
-                }
-                if (config.Enabled == false)
-                {
-                    return;
-                }
-                if (level == LogLevel.Debug && config.IsDebugEnabled == false)
-                {
-                    return;
-                }
-                if (level == LogLevel.Trace && config.IsTraceEnabled == false)
-                {
-                    return;
-                }
-                if (level == LogLevel.Info && config.IsInfoEnabled == false)
-                {
-                    return;
-                }
-                if (level == LogLevel.Warning && config.IsWarningEnabled == false)
-                {
-                    return;
-                }
-                if (level == LogLevel.Error && config.IsErrorEnabled == false)
-                {
-                    return;
-                }
-                if (level == LogLevel.Fatal && config.IsFatalEnabled == false)
-                {
-                    return;
-                }
+
                 var mes = new LogMessage()
                 {
                     Level = level,
                     Message = message
                 };
-                if (string.IsNullOrEmpty(Context) == false)
+                if (!string.IsNullOrEmpty(Context))
                 {
                     mes.Context = Context;
                 }
@@ -587,6 +553,24 @@ namespace Zidium.Api
                 return WebLogConfig.IsFatalEnabled;
             }
             return false;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            var manager = ComponentControl.Client.WebLogManager;
+            if (manager == null)
+            {
+                return false;
+            }
+            if (manager.Disabled)
+            {
+                return false;
+            }
+            if (!ComponentControl.WebLogConfig.Enabled)
+            {
+                return false;
+            }
+            return IsLevelEnabled(logLevel);
         }
 
         public bool IsTraceEnabled

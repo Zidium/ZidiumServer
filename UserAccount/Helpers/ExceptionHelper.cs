@@ -1,5 +1,5 @@
 ﻿using System;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Common;
 
@@ -7,7 +7,7 @@ namespace Zidium.UserAccount
 {
     public static class ExceptionHelper
     {
-        public static void HandleException(Exception exception)
+        public static void HandleException(Exception exception, ILogger logger)
         {
             if (exception == null)
                 return;
@@ -16,7 +16,7 @@ namespace Zidium.UserAccount
                 return;
 
             Tools.HandleOutOfMemoryException(exception);
-            LogManager.GetCurrentClassLogger().Error(exception);
+            logger.LogError(exception, exception.Message);
 
             exception.HelpLink = new ExceptionRender().GetExceptionTypeCode(exception);
         }

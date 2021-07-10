@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Common;
@@ -19,6 +19,8 @@ namespace Zidium.Core.Api
 
         public IComponentControl Control { get; protected set; }
 
+        public ILogger Logger { get; protected set; }
+
         public static Stopwatch UptimeTimer { get; set; }
 
         public DeadLockHunter DeadLockHunter;
@@ -31,7 +33,8 @@ namespace Zidium.Core.Api
 
         public DispatcherWrapper(
             IDispatcherService service,
-            IComponentControl componentControl)
+            IComponentControl componentControl,
+            ILogger logger)
         {
             if (service == null)
             {
@@ -43,7 +46,8 @@ namespace Zidium.Core.Api
             }
             InternalService = service;
             Control = componentControl;
-            DeadLockHunter = new DeadLockHunter(componentControl);
+            Logger = logger;
+            DeadLockHunter = new DeadLockHunter(componentControl, Logger);
         }
 
         protected TResponse Execute<TResponse>(Func<TResponse> action, [CallerMemberName] string method = "unknown")
@@ -81,7 +85,7 @@ namespace Zidium.Core.Api
             }
             catch (Exception exception)
             {
-                LogManager.GetCurrentClassLogger().Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 return new TResponse()
                 {

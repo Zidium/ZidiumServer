@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Core.Api;
 using Zidium.Core.Common.Helpers;
 using Zidium.UserAccount.Models;
@@ -171,9 +172,14 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
+
+        public MetricTypesController(ILogger<MetricTypesController> logger) : base(logger)
+        {
+        }
+
     }
 }

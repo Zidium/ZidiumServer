@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8,12 +9,13 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.InternalLogger;
 using Zidium.Core.Limits;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
@@ -28,7 +30,6 @@ namespace Zidium.Dispatcher
         }
 
         private readonly IConfiguration _appConfiguration;
-        private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -42,28 +43,33 @@ namespace Zidium.Dispatcher
             DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(defaultStorageFactory);
 
             services.AddHttpContextAccessor();
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        {
+            Client.Instance.Disable = true;
+            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            DependencyInjection.SetLoggerFactory(loggerFactory);
+            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
 
             // Для упрощения пусть диспетчер отвечает за актуальность базы
-            Client.Instance.Disable = true;
-            Mirgate(defaultStorageFactory);
+            var defaultStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+            Mirgate(defaultStorageFactory, logger);
+
+            Client.Instance.Disable = false;
 
             DispatcherService.Version = DispatcherWebHandlerMiddleware.GetVersion();
             var componentControl = DispatcherService.Wrapper.Control;
-            Client.Instance.Disable = false;
-
-            _logger.Info("Start, IsFake={0}", componentControl.IsFake());
-            _logger.Info("Version {0}", VersionHelper.GetProductVersion());
+            logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
+            logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
 
             DispatcherWebHandlerMiddleware.Init(DispatcherService.Wrapper.Control);
             DebugInfoMiddleware.Init(DispatcherService.Wrapper.Control);
             TestInfoMiddleware.Init(DispatcherService.Wrapper.Control);
             InitLimitsSaving();
-        }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            _logger.Info("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
+            logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
@@ -161,11 +167,11 @@ namespace Zidium.Dispatcher
             LimitsSavingTimer = new Timer(DoSaveLimits, null, AccountLimitsChecker.LimitDataTimeStep * 60 * 1000, Timeout.Infinite);
         }
 
-        protected void Mirgate(DefaultStorageFactory defaultStorageFactory)
+        protected void Mirgate(IDefaultStorageFactory defaultStorageFactory, ILogger logger)
         {
             // Выполняем миграции
             var storage = defaultStorageFactory.GetStorage();
-            storage.Migrate(_logger);
+            storage.Migrate();
 
             // обновляем справочники
             var registrator = new AccountDbDataRegistator(storage);

@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
@@ -218,7 +219,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -488,7 +489,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -524,7 +525,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -563,7 +564,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -665,6 +666,8 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         internal UnitTestsController(Guid userId) : base(userId) { }
 
-        public UnitTestsController() { }
+        public UnitTestsController(ILogger<UnitTestsController> logger) : base(logger)
+        {
+        }
     }
 }

@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Web;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Storage;
 
@@ -58,7 +58,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
             }
             catch (WebException exception)
             {
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 // Отменяем обработку до следующего запуска
                 throw new OperationCanceledException();
@@ -92,7 +92,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
             }
             catch (WebException exception)
             {
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 // Отменяем обработку до следующего запуска
                 throw new OperationCanceledException();

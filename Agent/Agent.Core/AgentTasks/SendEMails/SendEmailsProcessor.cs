@@ -4,8 +4,8 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading;
 using MailKit.Security;
+using Microsoft.Extensions.Logging;
 using MimeKit;
-using NLog;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
@@ -73,13 +73,11 @@ namespace Zidium.Agent.AgentTasks.SendEMails
             var count = emails.Length;
             if (count > 0)
             {
-                if (Logger.IsDebugEnabled)
-                    Logger.Debug("Всего писем для отправки: " + count);
+                Logger.LogDebug("Всего писем для отправки: " + count);
             }
             else
             {
-                if (Logger.IsTraceEnabled)
-                    Logger.Trace("Нет писем для отправки");
+                Logger.LogTrace("Нет писем для отправки");
                 return null;
             }
 
@@ -92,8 +90,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                 {
                     CancellationToken.ThrowIfCancellationRequested();
 
-                    if (Logger.IsDebugEnabled)
-                        Logger.Debug("Отправляем: {0} Тема: {1}", email.To, email.Subject);
+                    Logger.LogDebug("Отправляем: {0} Тема: {1}", email.To, email.Subject);
 
                     try
                     {
@@ -132,7 +129,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             }
                         }
 
-                        Logger.Info("Отправлено письмо на адрес '{0}' с темой '{1}'", email.To, email.Subject);
+                        Logger.LogInformation("Отправлено письмо на адрес '{0}' с темой '{1}'", email.To, email.Subject);
                     }
                     catch (OperationCanceledException)
                     {
@@ -145,7 +142,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             error = exception.Message;
 
                             exception.Data.Add("EMailId", email.Id);
-                            Logger.Error(exception);
+                            Logger.LogError(exception, exception.Message);
 
                             storage.SendEmailCommands.MarkAsSendFail(email.Id, DateTime.Now, exception.Message);
 
@@ -167,7 +164,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             // Особый случай - превышение лимита нашего ящика
                             // За ошибку не считаем, в следующий раз отправится
 
-                            Logger.Error(exception, "Превышен лимит отправки ящика Zidium");
+                            Logger.LogError(exception, "Превышен лимит отправки ящика Zidium");
 
                             // Отправлять дальше нет смысла
                             break;

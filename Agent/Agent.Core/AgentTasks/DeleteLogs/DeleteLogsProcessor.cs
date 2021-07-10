@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
@@ -60,7 +60,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
                 innerStopWatch.Stop();
                 if (result > 0)
-                    Logger.Debug("Удален пакет из {0} записей лога за {1}", result, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
+                    Logger.LogDebug("Удален пакет из {0} записей лога за {1}", result, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
 
                 count += result;
 
@@ -72,7 +72,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
             stopWatch.Stop();
 
             if (count > 0)
-                Logger.Debug($"Удалено логов: {count} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
+                Logger.LogDebug($"Удалено логов: {count} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
 
         }
 
@@ -82,7 +82,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
             {
                 CancellationToken.ThrowIfCancellationRequested();
                 var count = repository.DeleteLogProperties(maxCount, date);
-                logger.Trace("Удалено строк свойств лога: {0}", count);
+                logger.LogTrace("Удалено строк свойств лога: {0}", count);
                 DeletedPropertiesCount += count;
                 if (count == 0)
                     break;
@@ -92,7 +92,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
         protected int DeleteLogs(ILogger logger, ILogRepository repository, DateTime date, int maxCount)
         {
             var count = repository.DeleteLogs(maxCount, date);
-            logger.Trace("Удалено строк лога: {0}", count);
+            logger.LogTrace("Удалено строк лога: {0}", count);
             Interlocked.Add(ref DeletedLogsCount, count);
 
             return count;

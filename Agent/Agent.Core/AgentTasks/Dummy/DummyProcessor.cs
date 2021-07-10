@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Agent.AgentTasks.Dummy
 {
@@ -14,7 +14,7 @@ namespace Zidium.Agent.AgentTasks.Dummy
 
         public void Process()
         {
-            Logger.Info("Обработка");
+            Logger.LogInformation("Обработка");
         }
 
     }

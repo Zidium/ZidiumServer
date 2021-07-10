@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Common;
 using Zidium.Core;
@@ -17,7 +18,7 @@ namespace Zidium.UserAccount.Controllers
 {
     public class AccountController : BaseController
     {
-        public AccountController(IComponentControl componentControl)
+        public AccountController(IComponentControl componentControl, ILogger<AccountController> logger) : base(logger)
         {
             _componentControl = componentControl;
         }

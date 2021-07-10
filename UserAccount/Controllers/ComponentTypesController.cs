@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Storage;
@@ -168,7 +169,8 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         internal ComponentTypesController(Guid userId) : base(userId) { }
 
-        public ComponentTypesController() { }
-
+        public ComponentTypesController(ILogger<ComponentTypesController> logger) : base(logger)
+        {
+        }
     }
 }

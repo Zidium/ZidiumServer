@@ -2,11 +2,13 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.UserAccount.Models.Limits;
 
 namespace Zidium.UserAccount.Controllers
 {
+    // TODO rename to statistics
     [Authorize]
     public class LimitsController : BaseController
     {
@@ -57,7 +59,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal LimitsController(Guid userId) : base(userId) { }
 
-        public LimitsController() { }
-
+        public LimitsController(ILogger<LimitsController> logger) : base(logger)
+        {
+        }
     }
 }

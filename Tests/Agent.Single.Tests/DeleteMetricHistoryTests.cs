@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.DeleteMetricHistory;
 using Zidium.Api;
@@ -19,7 +20,7 @@ namespace Zidium.Agent.Single.Tests
             var metric = TestHelper.CreateTestMetric(component.Info.Id);
 
             // Выполним предварительную очистку истории метрик
-            var processor = new DeleteMetricHistoryProcessor(NLog.LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteMetricHistoryProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process();
 
             // Создадим одно старое значение метрики и одно новое

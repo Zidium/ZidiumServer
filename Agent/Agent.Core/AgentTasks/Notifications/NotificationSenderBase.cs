@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Core;
 using Zidium.Storage;
 
@@ -49,9 +49,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
             if (notifications.Length > 0)
             {
-                // TODO Нужно ли проверять IsDebugEnabled?
-                if (Logger.IsDebugEnabled)
-                    Logger.Debug("Найдено уведомлений: " + notifications.Length);
+                Logger.LogDebug("Найдено уведомлений: " + notifications.Length);
 
                 foreach (var notification in notifications)
                 {
@@ -59,8 +57,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
                     try
                     {
-                        if (Logger.IsDebugEnabled)
-                            Logger.Debug("Обработка уведомления " + notification.Id);
+                        Logger.LogDebug("Обработка уведомления " + notification.Id);
 
                         var notificationForUpdate = notification.GetForUpdate();
 
@@ -72,13 +69,13 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         notificationForUpdate.SendDate.Set(DateTime.Now);
                         notificationRepository.Update(notificationForUpdate);
 
-                        Logger.Info("Уведомление " + notification.Id + " отправлено на " + notification.Address);
+                        Logger.LogInformation("Уведомление " + notification.Id + " отправлено на " + notification.Address);
                         Interlocked.Increment(ref CreatedNotificationsCount);
                     }
                     catch (NotificationNonImportantException exception)
                     {
                         // ошибка при отправке, которая не считается важной
-                        Logger.Info(exception);
+                        Logger.LogInformation(exception, exception.Message);
 
                         // обновим статус
                         var notificationForUpdate = notification.GetForUpdate();
@@ -93,7 +90,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                     {
                         // залогируем ошибку
                         error = exception.Message;
-                        Logger.Error(exception);
+                        Logger.LogError(exception, exception.Message);
 
                         // обновим статус
                         var notificationForUpdate = notification.GetForUpdate();
@@ -106,12 +103,11 @@ namespace Zidium.Agent.AgentTasks.Notifications
             }
             else
             {
-                if (Logger.IsTraceEnabled)
-                    Logger.Trace("Новых уведомлений нет");
+                Logger.LogTrace("Новых уведомлений нет");
             }
 
             if (CreatedNotificationsCount > 0)
-                Logger.Info("Обработано уведомлений: " + CreatedNotificationsCount);
+                Logger.LogInformation("Обработано уведомлений: " + CreatedNotificationsCount);
 
             return error;
         }

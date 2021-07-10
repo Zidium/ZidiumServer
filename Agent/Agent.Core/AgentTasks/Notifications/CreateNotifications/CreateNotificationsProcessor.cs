@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
@@ -69,7 +69,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 componentId);
 
             if (CreatedNotificationsCount > 0)
-                Logger.Info("Создано уведомлений: {0}", CreatedNotificationsCount);
+                Logger.LogInformation("Создано уведомлений: {0}", CreatedNotificationsCount);
         }
 
         protected void ProcessAccountArchivedStatuses(
@@ -150,16 +150,14 @@ namespace Zidium.Agent.AgentTasks.Notifications
             // Обработаем каждый статус
             foreach (var status in statuses)
             {
-                if (Logger.IsDebugEnabled)
-                    Logger.Debug("Обрабатываем событие: " + status.EventId);
+                Logger.LogDebug("Обрабатываем событие: " + status.EventId);
 
                 CancellationToken.ThrowIfCancellationRequested();
 
                 // Пропускаем корневой (причина?)
                 if (status.ComponentTypeId == SystemComponentType.Root.Id)
                 {
-                    if (Logger.IsTraceEnabled)
-                        Logger.Trace("component.IsRoot");
+                    Logger.LogTrace("component.IsRoot");
                     continue;
                 }
 
@@ -206,29 +204,25 @@ namespace Zidium.Agent.AgentTasks.Notifications
                             // проверим подписку
                             if (subscription != null)
                             {
-                                if (Logger.IsTraceEnabled)
-                                    Logger.Trace("Проверяем подписку " + subscription.Id + ", событие " + status.EventId + " и компонент " + status.ComponentId);
+                                Logger.LogTrace("Проверяем подписку " + subscription.Id + ", событие " + status.EventId + " и компонент " + status.ComponentId);
 
                                 // если отправка запрещена
                                 if (subscription.IsEnabled == false)
                                 {
-                                    if (Logger.IsTraceEnabled)
-                                        Logger.Trace("False by IsEnabled");
+                                    Logger.LogTrace("False by IsEnabled");
                                     continue;
                                 }
 
                                 // подписка шлет уведомления только по событиям, которые создались после создания подписки
                                 if (status.CreateDate < subscription.LastUpdated)
                                 {
-                                    if (Logger.IsTraceEnabled)
-                                        Logger.Trace("False by LastUpdated");
+                                    Logger.LogTrace("False by LastUpdated");
                                     continue;
                                 }
 
                                 if (status.Category != EventCategory.ComponentExternalStatus)
                                 {
-                                    if (Logger.IsTraceEnabled)
-                                        Logger.Trace("False by Category");
+                                    Logger.LogTrace("False by Category");
                                     continue;
                                 }
 
@@ -238,8 +232,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                     var eventDuration = (int)status.Duration.TotalSeconds;
                                     if (eventDuration < subscription.DurationMinimumInSeconds.Value)
                                     {
-                                        if (Logger.IsTraceEnabled)
-                                            Logger.Trace("False by DurationMinimumInSeconds");
+                                        Logger.LogTrace("False by DurationMinimumInSeconds");
                                         continue;
                                     }
                                 }
@@ -256,14 +249,12 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                     var toTime = TimeSpan.FromMinutes(subscription.SendIntervalToHour.Value * 60 + subscription.SendIntervalToMinute.Value);
                                     if (nowForUserTime < fromTime || nowForUserTime > toTime)
                                     {
-                                        if (Logger.IsTraceEnabled)
-                                            Logger.Trace("False by SendInterval");
+                                        Logger.LogTrace("False by SendInterval");
                                         continue;
                                     }
                                 }
 
-                                if (Logger.IsDebugEnabled)
-                                    Logger.Debug("Создаем уведомления для подписки: " + subscription.Id);
+                                Logger.LogDebug("Создаем уведомления для подписки: " + subscription.Id);
 
                                 CancellationToken.ThrowIfCancellationRequested();
 
@@ -282,8 +273,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                 else
                                     contacts = new UserContactForRead[0];
 
-                                if (Logger.IsDebugEnabled)
-                                    Logger.Debug("Адресов для уведомлений " + contacts.Length);
+                                Logger.LogDebug("Адресов для уведомлений " + contacts.Length);
 
                                 foreach (var contact in contacts)
                                 {
@@ -293,8 +283,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
                                     var address = contact.Value;
 
-                                    if (Logger.IsDebugEnabled)
-                                        Logger.Debug("Создаём уведомление на адрес: " + address);
+                                    Logger.LogDebug("Создаём уведомление на адрес: " + address);
 
                                     var lastComponentNotification = status.LastComponentNotifications
                                         .FirstOrDefault(x => x.Address == address && x.Type == subscription.Channel);
@@ -307,7 +296,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                         // первое уведомление о важном статусе
                                         if (lastComponentNotification == null)
                                         {
-                                            Logger.Info("Первое уведомление на адрес " + address + " для компонента " + status.ComponentId);
+                                            Logger.LogInformation("Первое уведомление на адрес " + address + " для компонента " + status.ComponentId);
                                             lastComponentNotification = new ComponentGetForNotificationsInfo.LastComponentNotificationInfo()
                                             {
                                                 Id = Guid.Empty,
@@ -338,7 +327,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
                                                 if (notifyDuration >= subscription.ResendTimeInSeconds)
                                                 {
-                                                    Logger.Info("Напоминание о статусе " + status.EventId + " на адрес " + address);
+                                                    Logger.LogInformation("Напоминание о статусе " + status.EventId + " на адрес " + address);
 
                                                     AddNotification(
                                                         lastComponentNotification,
@@ -351,12 +340,11 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                                 }
                                             }
 
-                                            if (Logger.IsDebugEnabled)
-                                                Logger.Debug("Уже есть уведомление о событии " + status.EventId + " на адрес " + address);
+                                            Logger.LogDebug("Уже есть уведомление о событии " + status.EventId + " на адрес " + address);
                                         }
                                         else // новый важный статус
                                         {
-                                            Logger.Info("Новый важный статус " + status.EventId + " на адрес " + address);
+                                            Logger.LogInformation("Новый важный статус " + status.EventId + " на адрес " + address);
 
                                             AddNotification(
                                                 lastComponentNotification,
@@ -372,7 +360,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                                             && subscription.NotifyBetterStatus
                                             && lastComponentNotification.EventImportance >= subscription.Importance)
                                         {
-                                            Logger.Info("Уведомление о том, что стало лучше " + status.EventId + " на адрес " + address);
+                                            Logger.LogInformation("Уведомление о том, что стало лучше " + status.EventId + " на адрес " + address);
 
                                             AddNotification(
                                                 lastComponentNotification,

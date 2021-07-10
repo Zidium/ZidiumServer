@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Core;
 
@@ -9,7 +10,7 @@ namespace Zidium.UserAccount.Controllers
 {
     public class SelfTestController : BaseController
     {
-        public SelfTestController(IComponentControl componentControl)
+        public SelfTestController(IComponentControl componentControl, ILogger<SelfTestController> logger) : base(logger)
         {
             _componentControl = componentControl;
         }

@@ -1,4 +1,4 @@
-﻿using NLog;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Zidium.Storage
 {
@@ -98,7 +98,7 @@ namespace Zidium.Storage
 
         ITransaction BeginTransaction();
 
-        int Migrate(Logger logger);
+        int Migrate();
 
     }
 }

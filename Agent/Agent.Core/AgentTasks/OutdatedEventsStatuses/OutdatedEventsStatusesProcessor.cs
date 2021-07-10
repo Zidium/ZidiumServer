@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Agent.AgentTasks.OutdatedEventsStatuses
 {
@@ -35,16 +35,15 @@ namespace Zidium.Agent.AgentTasks.OutdatedEventsStatuses
 
                     if (updateCount < maxCount)
                     {
-                        Logger.Info("Обновлено {0} статусов событий", Count);
+                        Logger.LogInformation("Обновлено {0} статусов событий", Count);
                         return;
                     }
 
-                    if (Logger.IsDebugEnabled)
-                        Logger.Debug("Обновлено статусов событий: " + updateCount);
+                    Logger.LogDebug("Обновлено статусов событий: " + updateCount);
                 }
                 else
                 {
-                    Logger.Error("Ошибка: " + response.ErrorMessage);
+                    Logger.LogError("Ошибка: " + response.ErrorMessage);
                     return;
                 }
             }

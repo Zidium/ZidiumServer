@@ -26,6 +26,8 @@ namespace Zidium.Api
 
         bool IsFatalEnabled { get; }
 
+        bool IsEnabled(LogLevel logLevel);
+
         /// <summary>
         /// Если тег указан, то все отправляемые сообщения будут помечены данным тегом
         /// </summary>

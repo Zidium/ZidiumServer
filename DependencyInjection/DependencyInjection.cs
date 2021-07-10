@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 // TODO Refactor to Net Core DI
 namespace Zidium
@@ -44,5 +46,30 @@ namespace Zidium
         }
 
         private static readonly Dictionary<Type, object> _servicesPersistent = new Dictionary<Type, object>();
+
+        // Logging
+
+        public static ILogger<T> GetLogger<T>()
+        {
+            if (_loggerFactory == null)
+                return NullLogger<T>.Instance;
+
+            return _loggerFactory.CreateLogger<T>();
+        }
+
+        public static ILogger GetLogger(string name)
+        {
+            if (_loggerFactory == null)
+                return NullLogger.Instance;
+
+            return _loggerFactory.CreateLogger(name);
+        }
+
+        public static void SetLoggerFactory(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+        }
+
+        private static ILoggerFactory _loggerFactory;
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core;
@@ -509,7 +510,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -578,6 +579,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal SubscriptionsController(Guid userId) : base(userId) { }
 
-        public SubscriptionsController() { }
+        public SubscriptionsController(ILogger<SubscriptionsController> logger) : base(logger)
+        {
+        }
     }
 }

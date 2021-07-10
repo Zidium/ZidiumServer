@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 
 namespace Zidium.Agent.AgentTasks.Dummy
@@ -16,7 +17,7 @@ namespace Zidium.Agent.AgentTasks.Dummy
 
         protected override AgentTaskResult Do()
         {
-            Logger.Info("Dummy task action");
+            Logger.LogInformation("Dummy task action");
             var processor = new DummyProcessor(Logger, CancellationToken);
             processor.Process();
             return new AgentTaskResult(UnitTestResult.Success, "OK");

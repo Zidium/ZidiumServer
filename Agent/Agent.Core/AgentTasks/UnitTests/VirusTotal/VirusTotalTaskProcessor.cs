@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
@@ -77,7 +77,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             }
             catch (Exception exception)
             {
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 return new UnitTestExecutionInfo()
                 {

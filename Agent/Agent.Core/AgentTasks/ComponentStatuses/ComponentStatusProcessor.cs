@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Core;
 
 namespace Zidium.Agent.AgentTasks.ComponentStatuses
@@ -28,7 +28,7 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
             var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
             var componentIds = storage.Components.GetAllIds();
 
-            Logger.Debug("Найдено компонентов: " + componentIds.Length);
+            Logger.LogDebug("Найдено компонентов: " + componentIds.Length);
             int index = 0;
             foreach (var componentId in componentIds)
             {
@@ -45,17 +45,17 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
                 if (response.Success)
                 {
                     Interlocked.Increment(ref UpdateStatesCount);
-                    Logger.Debug("Компонент {0} обновлён успешно.", componentId);
+                    Logger.LogDebug("Компонент {0} обновлён успешно.", componentId);
                 }
                 else
                 {
                     error = response.ErrorMessage;
-                    Logger.Error("Компонент {0} обновлён с ошибкой: {1}", componentId, response.ErrorMessage);
+                    Logger.LogError("Компонент {0} обновлён с ошибкой: {1}", componentId, response.ErrorMessage);
                 }
             }
 
             if (UpdateStatesCount > 0)
-                Logger.Info("Обновлено статусов: {0}", UpdateStatesCount);
+                Logger.LogInformation("Обновлено статусов: {0}", UpdateStatesCount);
 
             return error;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
@@ -211,7 +212,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -262,7 +263,7 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (Exception exception)
             {
-                ExceptionHelper.HandleException(exception);
+                ExceptionHelper.HandleException(exception, Logger);
                 return GetErrorJsonResponse(exception);
             }
         }
@@ -387,9 +388,10 @@ namespace Zidium.UserAccount.Controllers
 
         // Для unit-тестов
 
-        public EventsController() { }
-
         internal EventsController(Guid userId) : base(userId) { }
 
+        protected EventsController(ILogger<EventsController> logger) : base(logger)
+        {
+        }
     }
 }

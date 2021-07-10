@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
@@ -14,6 +15,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class DefectsController : BaseController
     {
+        public DefectsController(ILogger<DefectsController> logger) : base(logger)
+        {
+        }
+
         public ActionResult Index(
             DefectsIndexModel.ShowModeEnum? showMode,
             Guid? userId,

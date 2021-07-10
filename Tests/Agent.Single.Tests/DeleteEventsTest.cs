@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.DeleteEvents;
 using Zidium.Api.Dto;
@@ -19,7 +19,7 @@ namespace Zidium.Agent.Single.Tests
             var eventType = TestHelper.GetTestEventType();
 
             // Выполним предварительную очистку событий
-            var processor = new DeleteCustomerEventsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteCustomerEventsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process();
 
             // Добавим одно старое и одно новое событие каждой категории
@@ -54,7 +54,7 @@ namespace Zidium.Agent.Single.Tests
             var eventType = TestHelper.GetTestEventType();
 
             // Выполним предварительную очистку событий
-            var processor = new DeleteUnittestEventsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteUnittestEventsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process();
 
             // Добавим одно старое и одно новое событие каждой категории
@@ -89,7 +89,7 @@ namespace Zidium.Agent.Single.Tests
             var eventType = TestHelper.GetTestEventType();
 
             // Выполним предварительную очистку событий
-            var processor = new DeleteMetricEventsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteMetricEventsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process();
 
             // Добавим одно старое и одно новое событие каждой категории
@@ -120,7 +120,7 @@ namespace Zidium.Agent.Single.Tests
             var eventType = TestHelper.GetTestEventType();
 
             // Выполним предварительную очистку событий
-            var processor = new DeleteComponentEventsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteComponentEventsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process();
 
             // Добавим одно старое и одно новое событие каждой категории

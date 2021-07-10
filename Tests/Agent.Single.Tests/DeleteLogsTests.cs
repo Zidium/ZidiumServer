@@ -5,6 +5,7 @@ using Xunit;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Zidium.Agent.Single.Tests
 {
@@ -17,7 +18,7 @@ namespace Zidium.Agent.Single.Tests
             var component = account.CreateRandomComponentControl();
 
             // Выполним предварительную очистку лога
-            var processor = new DeleteLogsProcessor(NLog.LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new DeleteLogsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process();
 
             // Добавим одну старую и одну новую запись лога

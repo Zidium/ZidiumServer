@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.ExtentionProperties;
@@ -12,6 +13,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class ExtentionPropertiesController : BaseController
     {
+        public ExtentionPropertiesController(ILogger<ExtentionPropertiesController> logger) : base(logger)
+        {
+        }
+
         public ActionResult ShowTable(Guid? logId, Guid? eventId, Guid? componentId)
         {
             var storage = GetStorage();

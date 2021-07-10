@@ -1,8 +1,8 @@
-﻿using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Logging;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Client;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
 using Zidium.Api.Dto;
@@ -94,7 +94,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 
         private VirusTotalProcessorOutputData ProcessScanStep(VirusTotalProcessorInputData inputData)
         {
-            logger.Info("Выполняем Scan для " + inputData.Url);
+            logger.LogInformation("Выполняем Scan для " + inputData.Url);
             // проверка входных данных
             if (inputData == null)
             {
@@ -187,7 +187,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
 
         private VirusTotalProcessorOutputData ProcessReportStep(VirusTotalProcessorInputData inputData)
         {
-            logger.Info("Выполняем Report для " + inputData.Url);
+            logger.LogInformation("Выполняем Report для " + inputData.Url);
 
             // проверка входных данных
             if (inputData == null)
@@ -222,7 +222,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             // неизвестный ресурс (например, изменился url проверки после шага scan)
             if (reportResponse.response_code == 0)
             {
-                logger.Warn("Неизвестный ресурс " + inputData.Url);
+                logger.LogWarning("Неизвестный ресурс " + inputData.Url);
                 return new VirusTotalProcessorOutputData()
                 {
                     NextStep = VirusTotalStep.Scan,
@@ -236,14 +236,14 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             // если отчет старый
             if (scanTime < inputData.ScanTime)
             {
-                logger.Warn("Отчет старый, scanTime: " + inputData.ScanTime);
+                logger.LogWarning("Отчет старый, scanTime: " + inputData.ScanTime);
 
                 // если прошло 2 дня, а нового отчета нет, выполним новое сканирование
                 if (inputData.AttempCount > 2
                     && inputData.ScanTime.HasValue &&
                     inputData.ScanTime.Value.AddDays(2) < DateTime.Now)
                 {
-                    logger.Warn("Выполним Scan еще раз");
+                    logger.LogWarning("Выполним Scan еще раз");
                     return new VirusTotalProcessorOutputData()
                     {
                         NextStep = VirusTotalStep.Scan,
@@ -264,7 +264,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
             }
 
             // актуальный отчет
-            logger.Info("Получили актуальный отчет");
+            logger.LogInformation("Получили актуальный отчет");
             var report = ConvertReport(reportResponse);
             var unitTestResult = CreateUnitTestResult(report);
             VirusTotalErrorCode errorCode = VirusTotalErrorCode.CleanSite;
@@ -306,7 +306,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 {
                     if (response.StatusCode == HttpStatusCode.Forbidden)
                     {
-                        logger.Error("Нет доступа (проверьте ключ api)");
+                        logger.LogError("Нет доступа (проверьте ключ api)");
                         return new VirusTotalProcessorOutputData()
                         {
                             Result = new SendUnitTestResultRequestDataDto()

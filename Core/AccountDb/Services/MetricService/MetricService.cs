@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.Api;
@@ -18,9 +18,11 @@ namespace Zidium.Core.AccountsDb
         public MetricService(IStorage storage)
         {
             _storage = storage;
+            _logger = DependencyInjection.GetLogger<MetricService>();
         }
 
         private readonly IStorage _storage;
+        private readonly ILogger _logger;
 
         private IMetricCacheReadObject GetActualMetricInternal(IMetricCacheReadObject metric, DateTime processDate)
         {
@@ -401,7 +403,7 @@ namespace Zidium.Core.AccountsDb
                 }
                 catch (Exception exception)
                 {
-                    LogManager.GetCurrentClassLogger().Error(exception);
+                    _logger.LogError(exception, exception.Message);
                 }
             }
             return metricIds.Length;

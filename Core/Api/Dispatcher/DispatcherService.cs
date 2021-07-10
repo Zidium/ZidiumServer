@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Zidium.Api;
+using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Core.InternalLogger;
 using Zidium.Core.Limits;
 using Zidium.Storage;
-using Zidium.Api.Dto;
-using Zidium.Core.Common;
 
 namespace Zidium.Core
 {
@@ -19,21 +23,23 @@ namespace Zidium.Core
     {
         #region Служебные
 
-        public Zidium.Api.IComponentControl Control { get; private set; }
+        public IComponentControl Control { get; private set; }
 
         private static DispatcherWrapper _wrapper;
 
-        private DispatcherService(Zidium.Api.IComponentControl control)
+        private DispatcherService(IComponentControl control, ILogger logger)
         {
             _accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
             Control = control;
             StaticControl = control;
-            //AllCaches.Init();
+            _logger = logger;
         }
+
+        private readonly ILogger _logger;
 
         private readonly IDefaultStorageFactory _accountStorageFactory;
 
-        public static Zidium.Api.IComponentControl StaticControl = new Zidium.Api.FakeComponentControl();
+        public static IComponentControl StaticControl = new FakeComponentControl();
 
         private static readonly object _lockObject = new object();
 
@@ -48,8 +54,13 @@ namespace Zidium.Core
                         if (_wrapper == null)
                         {
                             var realControl = GetRealControl();
-                            var realService = new DispatcherService(realControl);
-                            var wrapper = new DispatcherWrapper(realService, realControl);
+
+                            var realLogger = DependencyInjection.GetLogger("Dispatcher");
+                            var mapping = DependencyInjection.GetServicePersistent<InternalLoggerComponentMapping>();
+                            mapping.MapLoggerToComponent("Dispatcher", realControl.Info.Id);
+
+                            var realService = new DispatcherService(realControl, realLogger);
+                            var wrapper = new DispatcherWrapper(realService, realControl, realLogger);
                             AllCaches.SetControl(realControl);
                             _wrapper = wrapper;
                         }
@@ -61,18 +72,20 @@ namespace Zidium.Core
 
         public static string Version { get; set; }
 
-        private static Zidium.Api.IComponentControl GetRealControl()
+        private static IComponentControl GetRealControl()
         {
             try
             {
                 // делаем цепочку вызовов:
-                // контрол => адаптер => внутренний диспетчер => фейковый контрол
+                // контрол => внутренний диспетчер => фейковый контрол
                 var fakeControl = GetFakeControl();
-                IDispatcherService internalDispatcher = new DispatcherService(fakeControl); // обслуживает только запросы самого диспетчера (через контрол АПИ)
-                internalDispatcher = new DispatcherWrapper(internalDispatcher, fakeControl);
+                IDispatcherService internalDispatcher = new DispatcherService(fakeControl, NullLogger.Instance); // обслуживает только запросы самого диспетчера (через контрол АПИ)
+                internalDispatcher = new DispatcherWrapper(internalDispatcher, fakeControl, NullLogger.Instance);
+                var apiService = new ApiService(internalDispatcher);
+                var client = Client.Instance;
                 var token = SystemAccountHelper.GetApiToken();
-                var apiService = new Zidium.Api.ApiService(internalDispatcher, token);
-                var client = SystemAccountHelper.GetApiClient(apiService);
+                client.AccessToken.SecretKey = token.SecretKey;
+                client.SetApiService(apiService);
 
                 // Создадим компонент
                 // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
@@ -82,9 +95,8 @@ namespace Zidium.Core
                 var version = Version ?? typeof(DispatcherService).Assembly.GetName().Version.ToString();
                 var componentControl = folder.GetOrCreateChildComponentControl(componentType, "Dispatcher", version);
 
-                // Присвоим Id компонента по умолчанию, чтобы адаптер NLog мог его использовать
-                Zidium.Api.Client.Instance = client;
-                Zidium.Api.Client.Instance.Config.DefaultComponent.Id = componentControl.Info?.Id;
+                // Присвоим Id компонента по умолчанию, чтобы адаптер логирования мог его использовать
+                client.Config.DefaultComponent.Id = componentControl.Info?.Id;
 
                 return componentControl;
             }
@@ -94,9 +106,9 @@ namespace Zidium.Core
             }
         }
 
-        private static Zidium.Api.IComponentControl GetFakeControl()
+        private static IComponentControl GetFakeControl()
         {
-            return new Zidium.Api.FakeComponentControl("FakeDispatcher");
+            return new FakeComponentControl("FakeDispatcher");
         }
 
         protected delegate T ExecuteMethodDelegate<T>();

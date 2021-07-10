@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.Notifications;
 using Zidium.Api.Dto;
@@ -57,7 +57,7 @@ namespace Zidium.Agent.Tests
             }
 
             // Запустим обработку
-            var processor = new MessangerNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new MessangerNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id);
 
             using (var context = account.GetDbContext())

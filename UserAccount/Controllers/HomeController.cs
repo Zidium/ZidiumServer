@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
@@ -212,7 +213,8 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         internal HomeController(Guid? userId) : base(userId) { }
 
-        public HomeController() { }
-
+        public HomeController(ILogger<HomeController> logger) : base(logger)
+        {
+        }
     }
 }

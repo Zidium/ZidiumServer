@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Core.AccountsDb;
 using Zidium.UserAccount.Models.CheckModels;
 
@@ -9,6 +10,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class ChecksController : BaseController
     {
+        public ChecksController(ILogger<ChecksController> logger) : base(logger)
+        {
+        }
+
         public ActionResult Results()
         {
             var unitTests = GetStorage().Gui.GetChecksResults();

@@ -2,16 +2,19 @@
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
-using NLog;
 
 namespace Zidium.Dispatcher
 {
     public class TestErrorMiddleware
     {
-        public TestErrorMiddleware(RequestDelegate next)
+        public TestErrorMiddleware(RequestDelegate next, ILogger<TestErrorMiddleware> logger)
         {
+            _logger = logger;
         }
+
+        private readonly ILogger _logger;
 
         public async Task Invoke(HttpContext httpContext)
         {
@@ -21,7 +24,7 @@ namespace Zidium.Dispatcher
             }
             catch (Exception exception)
             {
-                LogManager.GetCurrentClassLogger().Error(exception);
+                _logger.LogError(exception, exception.Message);
             }
 
             var responseHeaders = httpContext.Response.GetTypedHeaders();

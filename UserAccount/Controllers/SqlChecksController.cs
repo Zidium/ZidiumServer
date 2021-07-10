@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
@@ -176,7 +177,9 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal SqlChecksController(Guid userId) : base(userId) { }
 
-        public SqlChecksController() { }
+        public SqlChecksController(ILogger<SqlChecksController> logger) : base(logger)
+        {
+        }
 
         protected override string GetComponentSystemName(EditSimpleModel model)
         {

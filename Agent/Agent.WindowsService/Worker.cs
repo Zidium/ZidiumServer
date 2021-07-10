@@ -1,40 +1,40 @@
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NLog;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Agent
 {
     public class Worker : BackgroundService
     {
-        private readonly ILogger<Worker> _logger;
-
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
+
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            DependencyInjection.SetLoggerFactory(loggerFactory);
+            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(serviceProvider.GetRequiredService<InternalLoggerComponentMapping>());
         }
+
+        private readonly ILogger<Worker> _logger;
+        private readonly IConfiguration _configuration;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var appConfiguration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.prod.json", true, false)
-                .AddUserSecrets(Assembly.GetEntryAssembly(), true)
-                .Build();
-
             var application = new AgentService();
 
             try
             {
-                application.Start(appConfiguration);
+                application.Start(_configuration);
             }
             catch (Exception exception)
             {
-                LogManager.GetCurrentClassLogger().Error(exception);
+                _logger.LogError(exception, exception.Message);
                 throw;
             }
 

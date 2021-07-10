@@ -1,5 +1,5 @@
 ﻿using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Agent.AgentTasks.OutdatedUnitTests
 {
@@ -35,16 +35,15 @@ namespace Zidium.Agent.AgentTasks.OutdatedUnitTests
                     Interlocked.Add(ref Count, updateCount);
                     if (updateCount < maxCount)
                     {
-                        Logger.Info("Обновлено {0} статусов проверок", Count);
+                        Logger.LogInformation("Обновлено {0} статусов проверок", Count);
                         return;
                     }
 
-                    if (Logger.IsDebugEnabled)
-                        Logger.Debug("Обновлено статусов проверок: " + updateCount);
+                    Logger.LogDebug("Обновлено статусов проверок: " + updateCount);
                 }
                 else
                 {
-                    Logger.Error("Ошибка: " + response.ErrorMessage);
+                    Logger.LogError("Ошибка: " + response.ErrorMessage);
                     return;
                 }
             }

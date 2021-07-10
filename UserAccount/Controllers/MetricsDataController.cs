@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Storage;
 using Zidium.UserAccount.Models;
@@ -13,6 +14,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class MetricsDataController : BaseController
     {
+        public MetricsDataController(ILogger<MetricsDataController> logger) : base(logger)
+        {
+        }
+
         public ActionResult Index(Guid? componentId, Guid? metricTypeId, DateTime? from, DateTime? to)
         {
             var eDate = to ?? DateTime.Now;

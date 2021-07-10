@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Core;
 using Zidium.Storage;
 
@@ -46,13 +46,11 @@ namespace Zidium.Agent.AgentTasks.SendMessages
             var count = commands.Length;
             if (count > 0)
             {
-                if (Logger.IsDebugEnabled)
-                    Logger.Debug("Всего сообщений для отправки: " + count);
+                Logger.LogDebug("Всего сообщений для отправки: " + count);
             }
             else
             {
-                if (Logger.IsTraceEnabled)
-                    Logger.Trace("Нет сообщений для отправки");
+                Logger.LogTrace("Нет сообщений для отправки");
             }
 
             string error = null;
@@ -61,8 +59,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
             {
                 CancellationToken.ThrowIfCancellationRequested();
 
-                if (Logger.IsDebugEnabled)
-                    Logger.Debug("Отправляем сообщение получателю {0}", command.To);
+                Logger.LogDebug("Отправляем сообщение получателю {0}", command.To);
 
                 try
                 {
@@ -85,7 +82,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                         }
                     }
 
-                    Logger.Info("Отправлено сообщение получателю {0}", command.To);
+                    Logger.LogInformation("Отправлено сообщение получателю {0}", command.To);
                 }
                 catch (OperationCanceledException)
                 {
@@ -111,14 +108,14 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                         }
                     }
 
-                    Logger.Info("Получатель {0} не разрешал отправку сообщений", command.To);
+                    Logger.LogInformation("Получатель {0} не разрешал отправку сообщений", command.To);
                 }
                 catch (SendMessagesOverlimitException exception)
                 {
                     // Особый случай - превышение лимита мессенджера
                     // За ошибку не считаем, в следующий раз отправится
 
-                    Logger.Error(exception, exception.Message);
+                    Logger.LogError(exception, exception.Message);
 
                     // Отправлять дальше нет смысла
                     break;
@@ -128,7 +125,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                     error = exception.Message;
 
                     exception.Data.Add("CommandId", command.Id);
-                    Logger.Error(exception);
+                    Logger.LogError(exception, exception.Message);
 
                     messageCommandRepository.MarkAsSendFail(command.Id, DateTime.Now, exception.Message);
 

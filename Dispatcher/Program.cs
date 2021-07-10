@@ -1,14 +1,17 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using Zidium.Api;
 using Zidium.Core;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Dispatcher
 {
@@ -22,29 +25,28 @@ namespace Zidium.Dispatcher
                 .Build();
 
             var nLogConfiguration = new NLogLoggingConfiguration(configuration.GetSection("NLog"));
-
-            var logger = NLogBuilder.ConfigureNLog(nLogConfiguration).GetCurrentClassLogger();
+            var nLogLogger = NLogBuilder.ConfigureNLog(nLogConfiguration).GetCurrentClassLogger();
 
             try
             {
-                CreateHostBuilder(args).Build().Run();
+                var host = CreateHostBuilder(args).Build();
+                var logger = host.Services.GetRequiredService<ILogger<Startup>>();
+                host.Run();
+                logger.LogInformation("Stop");
             }
             catch (Exception exception)
             {
                 Tools.HandleOutOfMemoryException(exception);
-                logger.Error(exception);
+                nLogLogger.Fatal(exception);
                 throw;
             }
             finally
             {
-                // Залогируем остановку
-                logger.Info("Stop");
-                Client.Instance.Flush();
-
                 // Остановим обработку запросов
                 WebHandlerMiddlewareBase.Stop();
 
                 // Сохраним кеш
+                Client.Instance.Flush();
                 DispatcherService.Wrapper.SaveCaches();
                 NLog.LogManager.Shutdown();
             }
@@ -63,7 +65,9 @@ namespace Zidium.Dispatcher
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
+                    logging.AddConsole();
                     logging.AddDebug();
+                    logging.AddInternalLog();
                 })
                 .UseNLog();
 

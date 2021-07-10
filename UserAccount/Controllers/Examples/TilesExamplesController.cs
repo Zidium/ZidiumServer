@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.UserAccount.Models.Examples.Tiles;
 
 namespace Zidium.UserAccount.Controllers
@@ -8,6 +9,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class TilesExamplesController : BaseController
     {
+        public TilesExamplesController(ILogger<TilesExamplesController> logger) : base(logger)
+        {
+        }
+
         private static Random _random = new Random();
 
         public ActionResult Index()
@@ -37,7 +42,7 @@ namespace Zidium.UserAccount.Controllers
             if (value > 90)
             {
                 model.Value = value;
-            }            
+            }
             return PartialView(model);
         }
     }

@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.UserAccount.Models.Examples.Smart;
 
 namespace Zidium.UserAccount.Controllers
@@ -9,6 +10,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class SmartExamplesController : BaseController
     {
+        public SmartExamplesController(ILogger<SmartExamplesController> logger) : base(logger)
+        {
+        }
+
         public ActionResult Example1()
         {
             return View();

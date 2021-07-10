@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks.HttpRequests;
 using Zidium.Core.AccountsDb;
 using Xunit;
@@ -15,6 +14,7 @@ using Zidium.TestTools;
 using Zidium.Api.Dto;
 using Zidium.Core.Common;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Zidium.Agent.Tests
 {
@@ -33,7 +33,7 @@ namespace Zidium.Agent.Tests
             {
                 Url = "http://zidium-fake-777.com"
             };
-            HttpTestProcessor processor = new HttpTestProcessor();
+            HttpTestProcessor processor = new HttpTestProcessor(NullLogger.Instance);
             var outputData = processor.Process(inputData);
             Assert.Equal(HttpRequestErrorCode.UnknownDomain, outputData.ErrorCode);
         }
@@ -45,7 +45,7 @@ namespace Zidium.Agent.Tests
             {
                 Url = "https://www.eridon.ua/"
             };
-            HttpTestProcessor processor = new HttpTestProcessor();
+            HttpTestProcessor processor = new HttpTestProcessor(NullLogger.Instance);
             var outputData = processor.Process(inputData);
             Assert.Equal(HttpRequestErrorCode.Success, outputData.ErrorCode);
         }
@@ -58,7 +58,7 @@ namespace Zidium.Agent.Tests
                 Url = "http://compalex.asmo-lenavto.infometeos.com/video.ashx",
                 TimeoutSeconds = 5
             };
-            HttpTestProcessor processor = new HttpTestProcessor();
+            HttpTestProcessor processor = new HttpTestProcessor(NullLogger.Instance);
             var outputData = processor.Process(inputData);
             Assert.Equal(HttpRequestErrorCode.Success, outputData.ErrorCode);
         }
@@ -105,7 +105,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -150,7 +150,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -196,7 +196,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -243,7 +243,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -289,7 +289,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -335,7 +335,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -382,7 +382,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -428,7 +428,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -474,7 +474,7 @@ namespace Zidium.Agent.Tests
                 accountDbContext.SaveChanges();
             }
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), new TimeService());
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), new TimeService());
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -528,7 +528,7 @@ namespace Zidium.Agent.Tests
             var timeService = new Mock<ITimeService>();
             timeService.Setup(t => t.Now()).Returns(DateTime.Now);
 
-            var processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), timeService.Object);
+            var processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), timeService.Object);
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -543,7 +543,7 @@ namespace Zidium.Agent.Tests
 
             // Вторая попытка
             timeService.Setup(t => t.Now()).Returns(DateTime.Now.AddMinutes(1));
-            processor = new HttpRequestsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), timeService.Object);
+            processor = new HttpRequestsProcessor(NullLogger.Instance, new CancellationToken(), timeService.Object);
             processor.Process(unitTestId);
             Assert.Equal(1, processor.SuccessCount);
             Assert.Equal(0, processor.ErrorCount);
@@ -569,7 +569,7 @@ namespace Zidium.Agent.Tests
                     new Cookie("sessionid", "12345")
                 }
             };
-            HttpTestProcessor processor = new HttpTestProcessor();
+            HttpTestProcessor processor = new HttpTestProcessor(NullLogger.Instance);
             var outputData = processor.Process(inputData);
             Assert.Equal(HttpRequestErrorCode.Success, outputData.ErrorCode);
         }

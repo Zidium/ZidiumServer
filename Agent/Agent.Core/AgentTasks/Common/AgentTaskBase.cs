@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.Common;
 using Zidium.Core.Common.TimeService;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Agent.AgentTasks
 {
@@ -59,12 +59,11 @@ namespace Zidium.Agent.AgentTasks
             var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
             var typeControl = Client.Instance.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? "AgentTask" : DebugHelper.DebugComponentType);
             _componentControl = Client.Instance.GetDefaultComponentControl().GetOrCreateChildComponentControl(typeControl, Name);
-            var rule = LogManager.Configuration.LoggingRules.FirstOrDefault(t => t.LoggerNamePattern == "Agent");
-            var minLevel = rule != null ? rule.Levels.Min() : NLog.LogLevel.Info;
-            var targetName = "AgentTask." + Name;
-            LogManager.Configuration.AddTarget(targetName, new Core.InternalNLogAdapter.NLogTarget(_componentControl.Info.Id));
-            LogManager.Configuration.AddRule(minLevel, NLog.LogLevel.Fatal, targetName, Name + "*");
-            Logger = LogManager.GetLogger(Name);
+
+            var mapping = DependencyInjection.GetServicePersistent<InternalLoggerComponentMapping>();
+            mapping.MapLoggerToComponent(Name, _componentControl.Info.Id);
+
+            Logger = DependencyInjection.GetLogger(Name);
         }
 
         protected IUnitTestControl MainUnitTest;
@@ -83,8 +82,8 @@ namespace Zidium.Agent.AgentTasks
         protected void DoWrapper()
         {
             MainUnitTest = _componentControl.GetOrCreateUnitTestControl("Main");
-            Logger.Debug("Запуск рабочего потока задачи");
-            Logger.Info($"Period: {ExecutionPeriod}");
+            Logger.LogDebug("Запуск рабочего потока задачи");
+            Logger.LogInformation($"Period: {ExecutionPeriod}");
             try
             {
                 while (true)
@@ -111,7 +110,7 @@ namespace Zidium.Agent.AgentTasks
                     }
                     catch (Exception exception)
                     {
-                        Logger.Error(exception);
+                        Logger.LogError(exception, exception.Message);
 
                         // Выполнено с проблемами - до следующего запуска задача агента будет жёлтой
                         var result = new AgentTaskResult(UnitTestResult.Warning, exception.Message);
@@ -129,7 +128,7 @@ namespace Zidium.Agent.AgentTasks
             catch (OperationCanceledException) { }
             catch (ThreadAbortException) { }
 
-            Logger.Debug("Рабочий поток задачи остановлен");
+            Logger.LogDebug("Рабочий поток задачи остановлен");
         }
 
         protected void ExecuteTask()

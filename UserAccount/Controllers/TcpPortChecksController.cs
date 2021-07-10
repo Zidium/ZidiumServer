@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
@@ -180,7 +181,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal TcpPortChecksController(Guid userId) : base(userId) { }
 
-        public TcpPortChecksController() { }
-
+        public TcpPortChecksController(ILogger<TcpPortChecksController> logger) : base(logger)
+        {
+        }
     }
 }

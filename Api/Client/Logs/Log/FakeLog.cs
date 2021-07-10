@@ -320,6 +320,11 @@ namespace Zidium.Api
         {
         }
 
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return false;
+        }
+
         public bool IsTraceEnabled
         {
             get { return false; }

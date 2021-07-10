@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.Api;
@@ -68,12 +68,10 @@ namespace Zidium.Agent.AgentTasks
 
             if (tests.Length == 0)
             {
-                if (Logger.IsTraceEnabled)
-                    Logger.Trace("Нет проверок для выполнения");
+                Logger.LogTrace("Нет проверок для выполнения");
                 return;
             }
-            if (Logger.IsDebugEnabled)
-                Logger.Debug("Начинаем выполнять {1} проверок", tests.Length);
+            Logger.LogDebug("Начинаем выполнять {1} проверок", tests.Length);
 
             // будет задействовано максимум 20 потоков на все проверки
             var tasks = new ThreadTaskQueue(MaxParallelTasks);
@@ -92,7 +90,7 @@ namespace Zidium.Agent.AgentTasks
             stopwatch.Stop();
 
             if (successCount > 0 || errorCount > 0)
-                Logger.Info("Выполнено проверок успешно: {0}, с ошибкой: {1}, за {2}", successCount, errorCount, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+                Logger.LogInformation("Выполнено проверок успешно: {0}, с ошибкой: {1}, за {2}", successCount, errorCount, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
 
             Interlocked.Add(ref SuccessCount, successCount);
             Interlocked.Add(ref ErrorCount, errorCount);
@@ -124,14 +122,11 @@ namespace Zidium.Agent.AgentTasks
 
             try
             {
-                if (Logger.IsInfoEnabled)
-                {
-                    Logger.Info($"Выполняем проверку {unitTest.Id}; попытка {unitTest.AttempCount}");
-                }
+                Logger.LogInformation($"Выполняем проверку {unitTest.Id}; попытка {unitTest.AttempCount}");
 
                 var dispatcher = GetDispatcherClient();
-                if (Logger.IsDebugEnabled)
-                    Logger.Debug("Имя проверки: " + unitTest.SystemName);
+
+                Logger.LogDebug("Имя проверки: " + unitTest.SystemName);
                 try
                 {
                     // Получаем отдельный экземпляр storage, потому что проверки выполняются параллельно
@@ -141,7 +136,7 @@ namespace Zidium.Agent.AgentTasks
 
                     if (result == null)
                     {
-                        Logger.Warn("Отмена выполнения проверки {0} из-за внутренней проблемы", unitTest.Id);
+                        Logger.LogWarning("Отмена выполнения проверки {0} из-за внутренней проблемы", unitTest.Id);
                         return;
                     }
 
@@ -200,7 +195,7 @@ namespace Zidium.Agent.AgentTasks
                         var response = dispatcher.SendUnitTestResult(result.ResultRequest);
                         response.Check();
 
-                        Logger.Info(unitTest.Id + " => " + (result.ResultRequest.Result ?? UnitTestResult.Unknown));
+                        Logger.LogInformation(unitTest.Id + " => " + (result.ResultRequest.Result ?? UnitTestResult.Unknown));
                         Interlocked.Increment(ref successCount);
                     }
                     else
@@ -208,7 +203,7 @@ namespace Zidium.Agent.AgentTasks
                         // нет результата выполнения
                         if (result.NextStepProcessTime == null)
                         {
-                            Logger.Warn("Отмена выполнения проверки {0} из-за внутренней проблемы", unitTest.Id);
+                            Logger.LogWarning("Отмена выполнения проверки {0} из-за внутренней проблемы", unitTest.Id);
                             return;
                         }
 
@@ -231,7 +226,7 @@ namespace Zidium.Agent.AgentTasks
 
                     exception.Data.Add("UnitTestId", unitTest.Id);
                     exception.Data.Add("UnitTestName", unitTest.DisplayName);
-                    Logger.Error(exception);
+                    Logger.LogError(exception, exception.Message);
                 }
 
             }
@@ -244,7 +239,7 @@ namespace Zidium.Agent.AgentTasks
                 Interlocked.Increment(ref errorCount);
 
                 exception.Data.Add("UnitTestId", unitTest.Id);
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
             }
         }
     }

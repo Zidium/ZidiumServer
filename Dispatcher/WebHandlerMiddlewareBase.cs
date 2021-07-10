@@ -8,8 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
-using NLog;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Core;
@@ -18,6 +18,13 @@ namespace Zidium.Dispatcher
 {
     public abstract class WebHandlerMiddlewareBase
     {
+        protected WebHandlerMiddlewareBase(ILogger logger)
+        {
+            Logger = logger;
+        }
+
+        protected readonly ILogger Logger;
+
         protected class ProcessRequestData
         {
             public HttpContext HttpContext { get; set; }
@@ -232,7 +239,7 @@ namespace Zidium.Dispatcher
             exception.Data.Add("ContentType", data.ContentType);
             exception.Data.Add("ContentLength", data.HttpContext.Request.ContentLength);
             Tools.HandleOutOfMemoryException(exception);
-            LogManager.GetCurrentClassLogger().Error(exception);
+            Logger.LogError(exception, exception.Message);
 
             var errorCode = GetErrorCode();
 

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Zidium.Api;
 using Zidium.Core.Common;
 
@@ -32,6 +34,8 @@ namespace Zidium.Core.Caching
         public long Generation { get { return _generation; } }
 
         public IComponentControl ComponentControl { get; set; }
+
+        public ILogger Logger { get; set; }
 
         private long _updateCacheCount;
 
@@ -71,6 +75,7 @@ namespace Zidium.Core.Caching
             BeginUnloadCount = 10 * 1000;
             StopUnloadCount = 5 * 1000;
             ComponentControl = new FakeComponentControl("FakeCacheControl");
+            Logger = NullLogger.Instance;
             _saveChangesLoopWorker = new SingleThreadWorker(SaveChangesLoop);
             _unloadDataLoopWorker = new SingleThreadWorker(UnloadDataLoop);
         }
@@ -277,8 +282,7 @@ namespace Zidium.Core.Caching
             }
             catch (Exception exception)
             {
-                ComponentControl.Log.Error("Ошибка UnloadDataLoop", exception);
-                ComponentControl.AddApplicationError("Ошибка UnloadDataLoop", exception);
+                Logger.LogError(exception, "Ошибка UnloadDataLoop");
             }
         }
 
@@ -571,7 +575,7 @@ namespace Zidium.Core.Caching
                 {
                     var timer = new Stopwatch();
                     timer.Start();
-                    ComponentControl.Log.Debug("Начинаем обновлять: " + oldUpdateChangesObjects.Count);
+                    Logger.LogDebug("Начинаем обновлять: " + oldUpdateChangesObjects.Count);
 
                     // выгруженные объекты сохранять НЕ нужно,
                     // потому что их могли изменить синхронно
@@ -584,7 +588,7 @@ namespace Zidium.Core.Caching
                     var count = oldUpdateChangesObjects.Count;
                     var sec = Math.Round(timer.Elapsed.TotalSeconds, 1);
                     var speed = (int)(count / timer.Elapsed.TotalSeconds);
-                    ComponentControl.Log.Info("Завершили обновлять " + count + " за " + sec + " сек, скорость = " + speed + " в сек");
+                    Logger.LogInformation("Завершили обновлять " + count + " за " + sec + " сек, скорость = " + speed + " в сек");
 
                     // сохраняем статистику по максимальному времени и количеству в очереди
                     lock (_updateStats)
@@ -635,8 +639,7 @@ namespace Zidium.Core.Caching
             catch (Exception exception)
             {
                 _lastSaveException = new ExceptionTempInfo(exception);
-                ComponentControl.Log.Error("Ошибка SaveChangesLoop", exception);
-                ComponentControl.AddApplicationError(exception);
+                Logger.LogError(exception, "Ошибка SaveChangesLoop");
             }
         }
 

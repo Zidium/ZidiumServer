@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Threading;
-using NLog;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
@@ -9,6 +8,7 @@ using Zidium.Storage;
 using Npgsql;
 using Zidium.Api.Dto;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Agent.AgentTasks
 {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Common;
@@ -128,7 +129,12 @@ namespace Zidium.UserAccount.Controllers
             }
         }
 
-        public BaseController() { }
+        protected BaseController(ILogger logger)
+        {
+            Logger = logger;
+        }
+
+        protected ILogger Logger;
 
         public JsonResult GetSuccessJsonResponse(object data = null)
         {

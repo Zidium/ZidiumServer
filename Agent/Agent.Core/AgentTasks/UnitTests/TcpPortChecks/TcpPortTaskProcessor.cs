@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Agent.AgentTasks.UnitTests.TcpPortChecks;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
@@ -55,7 +55,7 @@ namespace Zidium.Agent.AgentTasks
                 exception.Data.Add("UnitTestName", unitTest.DisplayName);
                 exception.Data.Add("Address", rule.Host);
                 exception.Data.Add("Port", rule.Port);
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 // ошибка агента, не обновляем данные проверки
                 return null;

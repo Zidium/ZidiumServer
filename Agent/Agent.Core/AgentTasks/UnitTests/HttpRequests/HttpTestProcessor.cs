@@ -1,5 +1,4 @@
-﻿using NLog;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -7,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Logging;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -15,11 +15,6 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
     public class HttpTestProcessor
     {
         private readonly ILogger _logger;
-
-        public HttpTestProcessor()
-        {
-            _logger = LogManager.GetCurrentClassLogger();
-        }
 
         public HttpTestProcessor(ILogger logger)
         {
@@ -107,14 +102,12 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
                                                        | SecurityProtocolType.Tls11
                                                        | SecurityProtocolType.Tls12;
-                                                       // | SecurityProtocolType.Ssl3; Ssl3 не поддерживается в net core
+                // | SecurityProtocolType.Ssl3; Ssl3 не поддерживается в net core
 
                 // создадим запрос
                 var request = (HttpWebRequest)WebRequest.Create(uri);
-                if (_logger.IsDebugEnabled)
-                {
-                    _logger.Debug($"begin {inputData.Method} {request.RequestUri.AbsoluteUri}");
-                }
+                _logger.LogDebug($"begin {inputData.Method} {request.RequestUri.AbsoluteUri}");
+
                 request.MaximumAutomaticRedirections = 4;
                 request.MaximumResponseHeadersLength = 500;
                 request.Timeout = timeOutSeconds * 1000;
@@ -205,7 +198,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     outputData.ErrorMessage = exception.Message;
                     outputData.ErrorCode = HttpRequestErrorCode.TcpError;
                     outputData.IsNetworkProblem = true;
-                    _logger.Error(exception);
+                    _logger.LogError(exception, exception.Message);
                 }
                 catch (IOException exception)
                 {
@@ -214,7 +207,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     outputData.ErrorMessage = exception.Message;
                     outputData.ErrorCode = HttpRequestErrorCode.TcpError;
                     outputData.IsNetworkProblem = true;
-                    _logger.Error(exception);
+                    _logger.LogError(exception, exception.Message);
                 }
                 catch (WebException exception)
                 {
@@ -250,7 +243,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     {
                         outputData.ErrorCode = HttpRequestErrorCode.TcpError;
                         outputData.IsNetworkProblem = true;
-                        _logger.Error(exception);
+                        _logger.LogError(exception, exception.Message);
                     }
                 }
             }
@@ -261,13 +254,13 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 outputData.ErrorCode = HttpRequestErrorCode.TcpError;
                 outputData.ErrorMessage = exception.Message;
                 outputData.IsNetworkProblem = true;
-                _logger.Error(exception);
+                _logger.LogError(exception, exception.Message);
             }
             catch (Exception exception)
             {
                 exception.Data.Add("UnitTestId", inputData.UnitTestId);
                 outputData.Exceptions.Add(exception);
-                _logger.Error(exception);
+                _logger.LogError(exception, exception.Message);
                 outputData.ErrorCode = HttpRequestErrorCode.UnknownError;
                 outputData.ErrorMessage = exception.Message;
             }
@@ -277,7 +270,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                 {
                     outputData.EndDate = DateTime.Now;
                 }
-                _logger.Info(inputData.Url + " => " + outputData.ErrorCode);
+                _logger.LogInformation(inputData.Url + " => " + outputData.ErrorCode);
             }
             return outputData;
         }
@@ -326,11 +319,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     validResponseCode);
 
                 outputData.ErrorMessage = message;
-                _logger.Info(message);
-                if (_logger.IsDebugEnabled)
-                {
-                    _logger.Debug("ReponseHtml: " + html);
-                }
+                _logger.LogInformation(message);
+                _logger.LogDebug("ReponseHtml: " + html);
                 return HttpRequestErrorCode.InvalidResponseCode;
             }
 
@@ -344,7 +334,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     inputData.MaxResponseSize);
 
                 outputData.ErrorMessage = message;
-                _logger.Info(message);
+                _logger.LogInformation(message);
                 return HttpRequestErrorCode.TooLargeResponse;
             }
 
@@ -359,7 +349,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     timeOutSeconds);
 
                 outputData.ErrorMessage = message;
-                _logger.Info(message);
+                _logger.LogInformation(message);
                 outputData.IsNetworkProblem = true;
                 return HttpRequestErrorCode.Timeout;
             }
@@ -373,7 +363,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     message = message.Substring(90) + "...";
                 }
                 outputData.ErrorMessage = message;
-                _logger.Info(message);
+                _logger.LogInformation(message);
                 return HttpRequestErrorCode.SuccessHtmlNotFound;
             }
 
@@ -387,7 +377,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
                     message = message.Substring(90) + "...";
                 }
                 outputData.ErrorMessage = message;
-                _logger.Info(message);
+                _logger.LogInformation(message);
                 return HttpRequestErrorCode.ErrorHtmlFound;
             }
 

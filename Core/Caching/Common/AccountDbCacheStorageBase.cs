@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Zidium.Api.Dto;
+using Microsoft.Extensions.Logging;
 using Zidium.Storage;
 
 namespace Zidium.Core.Caching
@@ -138,17 +138,14 @@ namespace Zidium.Core.Caching
                     }
                     catch (Exception exception)
                     {
-                        // отправим событие
-                        var errorEvent = ComponentControl.CreateApplicationError("UpdateBatchError", exception);
-                        errorEvent.SetImportance(EventImportance.Warning);
-                        errorEvent.Add();
+                        Logger.LogWarning(exception, "Ошибка UpdateBatch. Попытка " + attemps);
 
                         useCheck = true;
                         if (attemps >= 50)
                         {
                             throw;
                         }
-                        ComponentControl.Log.Warning("Ошибка UpdateBatch. Попытка " + attemps, exception);
+
                         Thread.Sleep(TimeSpan.FromSeconds(10));
                     }
                 }

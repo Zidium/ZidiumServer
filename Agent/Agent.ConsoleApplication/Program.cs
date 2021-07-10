@@ -3,8 +3,11 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Agent
 {
@@ -12,6 +15,8 @@ namespace Zidium.Agent
     {
         public static void Main(string[] args)
         {
+            var services = new ServiceCollection();
+
             var appConfiguration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, false)
                 .AddJsonFile("appsettings.prod.json", true, false)
@@ -19,6 +24,21 @@ namespace Zidium.Agent
                 .Build();
 
             LogManager.Configuration = new NLogLoggingConfiguration(appConfiguration.GetSection("NLog"));
+
+            services.AddSingleton<IConfiguration>(appConfiguration);
+            services.AddLogging(o =>
+            {
+                o.AddConfiguration(appConfiguration.GetSection("Logging"));
+                o.AddConsole();
+                o.AddDebug();
+                o.AddInternalLog();
+                o.AddNLog();
+            });
+
+            var serviceProvider = services.BuildServiceProvider();
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            DependencyInjection.SetLoggerFactory(loggerFactory);
+            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(serviceProvider.GetRequiredService<InternalLoggerComponentMapping>());
 
             var application = new AgentService();
             application.Start(appConfiguration);

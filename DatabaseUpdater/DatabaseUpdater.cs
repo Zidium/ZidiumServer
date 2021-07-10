@@ -1,5 +1,5 @@
 ﻿using System;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
@@ -11,12 +11,11 @@ namespace Zidium.DatabaseUpdater
     /// <summary>
     /// Класс обновляет базу до последней версии
     /// </summary>
-    public static class DatabaseUpdater
+    public class DatabaseUpdater
     {
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
-
-        public static bool UpdateAll(bool isTestEnviroment)
+        public bool UpdateAll(bool isTestEnviroment)
         {
+            var logger = DependencyInjection.GetLogger<DatabaseUpdater>();
             try
             {
                 DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
@@ -26,12 +25,12 @@ namespace Zidium.DatabaseUpdater
 
                 var connectionString = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ConnectionString;
                 var storage = storageFactory.GetStorage(connectionString);
-                var count = storage.Migrate(_logger);
+                var count = storage.Migrate();
 
                 if (count == 0)
-                    _logger.Info("База не изменилась");
+                    logger.LogInformation("База не изменилась");
                 else
-                    _logger.Info("База обновлена, установлено миграций: " + count);
+                    logger.LogInformation("База обновлена, установлено миграций: " + count);
 
                 // обновляем справочники
                 var registrator = new AccountDbDataRegistator(storage);
@@ -42,7 +41,7 @@ namespace Zidium.DatabaseUpdater
                 var adminCreated = userService.GetAccountAdmins().Length > 0;
 
                 if (adminCreated)
-                    _logger.Info("Администратор аккаунта уже создан");
+                    logger.LogInformation("Администратор аккаунта уже создан");
                 else
                 {
                     // создаем root компонент
@@ -80,16 +79,16 @@ namespace Zidium.DatabaseUpdater
                     var passwordToken = userService.StartResetPassword(adminUserId, false);
                     userService.EndResetPassword(passwordToken, adminPassword);
 
-                    _logger.Info($"Создан пользователь {adminEMail} с паролем {adminPassword}");
+                    logger.LogInformation($"Создан пользователь {adminEMail} с паролем {adminPassword}");
                 }
 
-                _logger.Info("База успешно обновлена");
+                logger.LogInformation("База успешно обновлена");
 
                 return true;
             }
             catch (Exception exception)
             {
-                _logger.Fatal(exception);
+                logger.LogCritical(exception, exception.Message);
                 return false;
             }
         }

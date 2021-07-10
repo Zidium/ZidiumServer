@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Agent.AgentTasks.UnitTests.HttpRequests;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountDb;
@@ -35,8 +35,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 .OrderBy(x => x.SortNumber)
                 .ToArray();
 
-            if (Logger.IsDebugEnabled)
-                Logger.Debug("Найдено правил " + rules.Length);
+            Logger.LogDebug("Найдено правил " + rules.Length);
 
             if (rules.Length > 0)
             {
@@ -56,8 +55,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                     if (ruleResult.ErrorCode == HttpRequestErrorCode.UnknownError)
                     {
                         // если произошла неизвестная ошибка, то не обновляем статус проверки
-                        if (Logger.IsDebugEnabled)
-                            Logger.Debug("Выход из-за неизвестной ошибки");
+                        Logger.LogDebug("Выход из-за неизвестной ошибки");
 
                         return new UnitTestExecutionInfo()
                         {
@@ -225,7 +223,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
                 exception.Data.Add("RuleId", rule.Id);
                 exception.Data.Add("RuleName", rule.DisplayName);
                 exception.Data.Add("UnitTestName", unitTest.DisplayName);
-                Logger.Error(exception);
+                Logger.LogError(exception, exception.Message);
 
                 result.ErrorCode = HttpRequestErrorCode.UnknownError;
                 result.ErrorMessage = exception.Message;

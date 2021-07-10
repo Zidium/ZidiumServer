@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api;
 using Zidium.Api.Dto;
 
@@ -8,7 +9,7 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class DebugController : BaseController
     {
-        public DebugController(IComponentControl componentControl)
+        public DebugController(IComponentControl componentControl, ILogger<DebugController> logger) : base(logger)
         {
             _componentControl = componentControl;
         }

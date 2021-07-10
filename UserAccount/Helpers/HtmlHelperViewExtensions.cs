@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.UserAccount.Helpers
 {
@@ -81,7 +81,8 @@ namespace Zidium.UserAccount.Helpers
             }
             catch (Exception ex)
             {
-                LogManager.GetCurrentClassLogger().Error(ex);
+                var logger = DependencyInjection.GetLogger("HtmlHelperViewExtensions");
+                logger.LogError(ex, ex.Message);
                 return new HtmlString(ex.Message);
             }
         }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.UserAccount.Models.ComponentTree;
@@ -482,9 +483,8 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         internal ComponentTreeController(Guid userId) : base(userId) { }
 
-        public ComponentTreeController()
+        public ComponentTreeController(ILogger<ComponentTreeController> logger) : base(logger)
         {
         }
-
     }
 }

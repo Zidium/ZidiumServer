@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.Api;
@@ -198,6 +199,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         internal UnitTestTypesController(Guid userId) : base(userId) { }
 
-        public UnitTestTypesController() { }
+        public UnitTestTypesController(ILogger<UnitTestTypesController> logger) : base(logger)
+        {
+        }
     }
 }

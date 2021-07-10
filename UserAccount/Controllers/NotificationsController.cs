@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
@@ -187,8 +188,10 @@ namespace Zidium.UserAccount.Controllers
 
         // Для unit-тестов
 
-        public NotificationsController() { }
-
         internal NotificationsController(Guid userId, bool isSmartBlocksRequest = false) : base(userId, isSmartBlocksRequest) { }
+
+        public NotificationsController(ILogger<NotificationsController> logger) : base(logger)
+        {
+        }
     }
 }

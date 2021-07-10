@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 
@@ -49,7 +49,7 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
                     break;
 
                 innerStopWatch.Stop();
-                Logger.Debug("Удален пакет из {0} значений метрик за {1}", count, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
+                Logger.LogDebug("Удален пакет из {0} значений метрик за {1}", count, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
 
                 deletedCount += count;
 
@@ -60,7 +60,7 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             stopWatch.Stop();
 
             if (deletedCount > 0)
-                Logger.Debug($"Удалено значений метрик: {deletedCount} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
+                Logger.LogDebug($"Удалено значений метрик: {deletedCount} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
 
         }
 

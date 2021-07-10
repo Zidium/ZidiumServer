@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
-using NLog;
 using Zidium.Core.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 using Zidium.Api.Dto;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {

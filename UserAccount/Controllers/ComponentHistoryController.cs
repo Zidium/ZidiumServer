@@ -3,6 +3,7 @@ using System.Linq;
 using System.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
@@ -14,6 +15,10 @@ namespace Zidium.UserAccount.Controllers
     [Authorize]
     public class ComponentHistoryController : BaseController
     {
+        public ComponentHistoryController(ILogger<ComponentHistoryController> logger) : base(logger)
+        {
+        }
+
         public ActionResult Index(TimelineInterval? interval)
         {
             var storage = GetStorage();

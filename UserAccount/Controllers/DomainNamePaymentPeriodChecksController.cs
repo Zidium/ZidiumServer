@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
@@ -122,12 +123,13 @@ namespace Zidium.UserAccount.Controllers
             return SystemUnitTestType.DomainNameTestType.Id;
         }
 
-
         // Для unit-тестов
 
-        public DomainNamePaymentPeriodChecksController() { }
-
         internal DomainNamePaymentPeriodChecksController(Guid userId) : base(userId) { }
+
+        public DomainNamePaymentPeriodChecksController(ILogger<DomainNamePaymentPeriodChecksController> logger) : base(logger)
+        {
+        }
 
         protected override string GetComponentSystemName(EditSimpleModel model)
         {

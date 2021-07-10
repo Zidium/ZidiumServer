@@ -537,13 +537,14 @@ namespace Zidium.UserAccount.Controllers
 
         // Для unit-тестов
 
-        public LogsController() { }
-
         internal LogsController(Guid userId, int outputRecordCount, int searchIterationRecordCount) : base(userId)
         {
             OutputRecordCount = outputRecordCount;
             SearchIterationRecordCount = searchIterationRecordCount;
         }
 
+        public LogsController(Microsoft.Extensions.Logging.ILogger<LogsController> logger) : base(logger)
+        {
+        }
     }
 }

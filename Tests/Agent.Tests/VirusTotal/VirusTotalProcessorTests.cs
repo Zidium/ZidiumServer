@@ -1,5 +1,5 @@
 ﻿using System;
-using NLog;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
@@ -15,14 +15,13 @@ namespace Zidium.Agent.Tests
 
         // используем общий для всех тестов процессор, чтобы не превысить лимиты АПИ
         public static VirusTotalLimitManager limitManager = new VirusTotalLimitManager();
-        private ILogger logger = LogManager.GetCurrentClassLogger();
         private VirusTotalProcessor processor;
 
         public VirusTotalProcessorTests()
         {
             var agentTestsConfiguration = DependencyInjection.GetServicePersistent<IAgentTestsConfiguration>();
             _apiKey = agentTestsConfiguration.VirusTotalKey;
-            processor = new VirusTotalProcessor(limitManager, new TimeService(), logger);
+            processor = new VirusTotalProcessor(limitManager, new TimeService(), NullLogger.Instance);
         }
 
         [Fact(Skip = "Integration")]

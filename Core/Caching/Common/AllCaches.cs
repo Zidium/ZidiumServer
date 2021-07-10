@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Api;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Core.Caching
 {
@@ -32,10 +33,24 @@ namespace Zidium.Core.Caching
             {
                 throw new ArgumentNullException("control");
             }
+
+            var mapping = DependencyInjection.GetServicePersistent<InternalLoggerComponentMapping>();
+
             Events.ComponentControl = GetCacheControl(control, "EventsCache");
+            mapping.MapLoggerToComponent("EventsCache", Events.ComponentControl.Info.Id);
+            Events.Logger = DependencyInjection.GetLogger("EventsCache");
+
             StatusDatas.ComponentControl = GetCacheControl(control, "StatusDatasCache");
+            mapping.MapLoggerToComponent("StatusDatasCache", StatusDatas.ComponentControl.Info.Id);
+            StatusDatas.Logger = DependencyInjection.GetLogger("StatusDatasCache");
+
             UnitTests.ComponentControl = GetCacheControl(control, "UnitTestsCache");
+            mapping.MapLoggerToComponent("UnitTestsCache", UnitTests.ComponentControl.Info.Id);
+            UnitTests.Logger = DependencyInjection.GetLogger("UnitTestsCache");
+
             Components.ComponentControl = GetCacheControl(control, "ComponentsCache");
+            mapping.MapLoggerToComponent("ComponentsCache", Components.ComponentControl.Info.Id);
+            Components.Logger = DependencyInjection.GetLogger("ComponentsCache");
         }
 
         public static void Init()

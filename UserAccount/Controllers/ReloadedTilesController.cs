@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.ReloadedTileModels;
 
@@ -9,7 +10,7 @@ namespace Zidium.UserAccount.Controllers
 {
     public class ReloadedTilesController : BaseController
     {
-        public ReloadedTilesController(HtmlHelperGenerator htmlHelperGenerator)
+        public ReloadedTilesController(HtmlHelperGenerator htmlHelperGenerator, ILogger<ReloadedTilesController> logger) : base(logger)
         {
             _htmlHelperGenerator = htmlHelperGenerator;
         }

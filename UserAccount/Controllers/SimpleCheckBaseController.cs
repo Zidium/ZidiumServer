@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
@@ -204,6 +205,8 @@ namespace Zidium.UserAccount.Controllers
         /// <param name="userId"></param>
         protected SimpleCheckBaseController(Guid userId) : base(userId) { }
 
-        protected SimpleCheckBaseController() { }
+        protected SimpleCheckBaseController(ILogger logger) : base(logger)
+        {
+        }
     }
 }

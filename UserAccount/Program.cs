@@ -3,11 +3,13 @@ using System.IO;
 using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using Zidium.Api;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.UserAccount
 {
@@ -21,26 +23,25 @@ namespace Zidium.UserAccount
                 .Build();
 
             var nLogConfiguration = new NLogLoggingConfiguration(configuration.GetSection("NLog"));
-
-            var logger = NLogBuilder.ConfigureNLog(nLogConfiguration).GetCurrentClassLogger();
+            var nLogLogger = NLogBuilder.ConfigureNLog(nLogConfiguration).GetCurrentClassLogger();
 
             try
             {
-                CreateHostBuilder(args).Build().Run();
+                var host = CreateHostBuilder(args).Build();
+                var logger = host.Services.GetRequiredService<ILogger<Startup>>();
+                host.Run();
+                logger.LogInformation("Stop");
             }
             catch (Exception exception)
             {
                 Tools.HandleOutOfMemoryException(exception);
-                logger.Error(exception);
+                nLogLogger.Fatal(exception);
                 throw;
             }
             finally
             {
-                // Залогируем остановку
-                logger.Info("Stop");
-                Client.Instance.Flush();
-
                 // Сохраним кеш
+                Client.Instance.Flush();
                 NLog.LogManager.Shutdown();
             }
         }
@@ -58,7 +59,9 @@ namespace Zidium.UserAccount
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
+                    logging.AddConsole();
                     logging.AddDebug();
+                    logging.AddInternalLog();
                 })
                 .UseNLog();
 

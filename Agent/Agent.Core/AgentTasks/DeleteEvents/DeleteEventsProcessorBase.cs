@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
@@ -46,7 +46,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             var categories = GetCategories();
 
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-GetMaxDays()));
-            Logger.Trace("Максимальная дата актуальности: {0}", date);
+            Logger.LogTrace("Максимальная дата актуальности: {0}", date);
 
             var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
             var eventRepository = storage.Events;
@@ -63,7 +63,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
                 innerStopWatch.Start();
 
                 if (remaining > 0)
-                    Logger.Debug("Осталось удалить событий: " + remaining);
+                    Logger.LogDebug("Осталось удалить событий: " + remaining);
 
                 DeleteParameters(
                     Logger,
@@ -112,7 +112,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
                 innerStopWatch.Stop();
                 if (result > 0)
-                    Logger.Debug("Удален пакет из {0} событий за {1}", result, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
+                    Logger.LogDebug("Удален пакет из {0} событий за {1}", result, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
 
                 if (result == 0)
                     break;
@@ -123,14 +123,14 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
             if (count > 0)
             {
-                Logger.Debug($"Удалено событий: {count} за {TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed)}");
+                Logger.LogDebug($"Удалено событий: {count} за {TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed)}");
                 AddToReport(string.Format("Удалено {0} событий за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed)));
             }
 
 
             if (DeletedEventsCount > 0)
             {
-                Logger.Info("Удалено событий, всего: " + DeletedEventsCount);
+                Logger.LogInformation("Удалено событий, всего: " + DeletedEventsCount);
                 lock (ReportLockObject)
                 {
                     var reportChunks = Report
@@ -146,7 +146,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
                     foreach (var chunk in reportChunks)
                     {
-                        Logger.Info(string.Join(Environment.NewLine, chunk));
+                        Logger.LogInformation(string.Join(Environment.NewLine, chunk));
                     }
                 }
             }
@@ -159,7 +159,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Start();
             var count = repository.DeleteEventParameters(categories, maxCount, date);
             stopwatch.Stop();
-            logger.Trace("Удалено строк свойств событий: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+            logger.LogTrace("Удалено строк свойств событий: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
             Interlocked.Add(ref DeletedPropertiesCount, count);
         }
 
@@ -170,7 +170,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Start();
             var count = repository.DeleteEventStatuses(categories, maxCount, date);
             stopwatch.Stop();
-            logger.Trace("Удалено статусов событий: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+            logger.LogTrace("Удалено статусов событий: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
         }
 
         protected void UpdateMetricsHistory(ILogger logger, IEventRepository repository, EventCategory[] categories, DateTime date, int maxCount)
@@ -180,7 +180,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Start();
             var count = repository.UpdateMetricsHistory(categories, maxCount, date);
             stopwatch.Stop();
-            logger.Trace("Обновлено строк истории метрик: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+            logger.LogTrace("Обновлено строк истории метрик: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
         }
 
         protected void DeleteNotifications(ILogger logger, IEventRepository repository, EventCategory[] categories, DateTime date, int maxCount)
@@ -190,7 +190,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Start();
             var count = repository.DeleteNotifications(categories, maxCount, date);
             stopwatch.Stop();
-            logger.Trace("Удалено строк уведомлений: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+            logger.LogTrace("Удалено строк уведомлений: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
         }
 
         protected void DeleteArchivedStatuses(ILogger logger, IEventRepository repository, EventCategory[] categories, DateTime date, int maxCount)
@@ -200,7 +200,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Start();
             var count = repository.DeleteEventArchivedStatuses(categories, maxCount, date);
             stopwatch.Stop();
-            logger.Trace("Удалено архивных статусов: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+            logger.LogTrace("Удалено архивных статусов: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
         }
 
         protected int DeleteEvents(ILogger logger, IEventRepository repository, EventCategory[] categories, DateTime date, int maxCount)
@@ -209,7 +209,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Start();
             var count = repository.DeleteEvents(categories, maxCount, date);
             stopwatch.Stop();
-            logger.Trace("Удалено строк событий: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
+            logger.LogTrace("Удалено строк событий: {0} за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed));
             Interlocked.Add(ref DeletedEventsCount, count);
             return count;
         }

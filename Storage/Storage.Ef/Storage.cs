@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using Microsoft.EntityFrameworkCore;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace Zidium.Storage.Ef
 {
@@ -289,23 +289,25 @@ namespace Zidium.Storage.Ef
             return new Transaction(GetContextWrapper());
         }
 
-        public int Migrate(Logger logger)
+        public int Migrate()
         {
-            logger.Info("Checking database...");
+            var logger = DependencyInjection.GetLogger<Storage>();
+            logger.LogInformation("Checking database...");
             using (var context = CreateContext())
             {
                 var count = context.Database.GetPendingMigrations().Count();
 
                 if (count == 0)
                 {
-                    logger.Info("No pending migrations, database is up to date");
-                } else
-                {
-                    logger.Info($"Installing {count} pending migrations...");
-                    context.Database.Migrate();
-                    logger.Info("Migrations intalled, database is up to date");
+                    logger.LogInformation("No pending migrations, database is up to date");
                 }
-                
+                else
+                {
+                    logger.LogInformation($"Installing {count} pending migrations...");
+                    context.Database.Migrate();
+                    logger.LogInformation("Migrations intalled, database is up to date");
+                }
+
                 return count;
             }
         }

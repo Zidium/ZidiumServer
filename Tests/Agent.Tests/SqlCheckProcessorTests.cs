@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks;
 using Xunit;
 using Zidium.Storage;
 using Zidium.Api.Dto;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Zidium.Agent.Tests
 {
@@ -21,7 +21,7 @@ namespace Zidium.Agent.Tests
                 60000,
                 "SELECT 'warning', 'test message'"
                 );
-            var processor = new SqlCheckProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), null);
+            var processor = new SqlCheckProcessor(NullLogger.Instance, new CancellationToken(), null);
             var result = processor.CheckSql(rule);
             Assert.Equal(UnitTestResult.Warning, result.ResultRequest.Result);
             Assert.Equal("test message", result.ResultRequest.Message);
@@ -38,7 +38,7 @@ namespace Zidium.Agent.Tests
                 60000,
                 "SELECT 'warning', 'test message'"
             );
-            var processor = new SqlCheckProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken(), null);
+            var processor = new SqlCheckProcessor(NullLogger.Instance, new CancellationToken(), null);
             var result = processor.CheckSql(rule);
             Assert.Equal(UnitTestResult.Warning, result.ResultRequest.Result);
             Assert.Equal("test message", result.ResultRequest.Message);

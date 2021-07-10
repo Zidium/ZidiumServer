@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using NLog;
 using Zidium.Agent.AgentTasks.Notifications;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
@@ -10,6 +9,7 @@ using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Zidium.Agent.Tests
 {
@@ -107,7 +107,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Info.Id, user1.Id);
             processor.Process(component.Info.Id, user2.Id);
             processor.Process(component.Info.Id, user3.Id);
@@ -207,7 +207,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Проверим, что появилось уведомление с правильными параметрами
@@ -286,7 +286,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Уведомление не должно появиться
@@ -346,7 +346,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Нового уведомления не должно появиться
@@ -385,7 +385,7 @@ namespace Zidium.Agent.Tests
             var now = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.SetNow(now);
             processor.Process(component.Id, user.Id);
 
@@ -471,7 +471,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Должно появиться 1 уведомление
@@ -549,7 +549,7 @@ namespace Zidium.Agent.Tests
             var sendTime = dispatcher.GetServerTime().Data.Date;
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.SetNow(sendTime);
             processor.Process(component.Info.Id, user.Id);
 
@@ -683,7 +683,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Проверим, что появилось уведомление с типом http
@@ -726,7 +726,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Info.Id, user.Id);
 
             // Проверим, что создалось уведомление
@@ -825,7 +825,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Проверим, что появилось уведомление
@@ -897,7 +897,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Проверим, что появилось уведомление
@@ -917,7 +917,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Проверим, что уведомлений нет
@@ -935,7 +935,7 @@ namespace Zidium.Agent.Tests
             account.SaveAllCaches();
 
             // Запустим обработку
-            processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.Process(component.Id, user.Id);
 
             // Проверим, что ещё раз появилось уведомление
@@ -993,7 +993,7 @@ namespace Zidium.Agent.Tests
 
             // Запустим обработку в 11:00 UTC +04:00
             var now = new DateTimeOffset(2020, 01, 01, 11, 00, 00, TimeSpan.FromHours(4)).UtcDateTime.ToLocalTime();
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.SetNow(now);
             account.SaveAllCaches();
             processor.Process(component.Id, user.Id);
@@ -1055,7 +1055,7 @@ namespace Zidium.Agent.Tests
 
             // Запустим обработку в 10:29 UTC +04:00
             var now = new DateTimeOffset(2020, 01, 01, 10, 29, 00, TimeSpan.FromHours(4)).UtcDateTime.ToLocalTime();
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.SetNow(now);
             account.SaveAllCaches();
             processor.Process(component.Id, user.Id);
@@ -1115,7 +1115,7 @@ namespace Zidium.Agent.Tests
 
             // Запустим обработку в 11:31 UTC +04:00
             var now = new DateTimeOffset(2020, 01, 01, 11, 31, 00, TimeSpan.FromHours(4)).UtcDateTime.ToLocalTime();
-            var processor = new CreateNotificationsProcessor(LogManager.GetCurrentClassLogger(), new CancellationToken());
+            var processor = new CreateNotificationsProcessor(NullLogger.Instance, new CancellationToken());
             processor.SetNow(now);
             account.SaveAllCaches();
             processor.Process(component.Id, user.Id);

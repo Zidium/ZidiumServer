@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 
@@ -47,9 +47,9 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
             var count = smss.Length;
             if (count > 0)
-                Logger.Debug("Всего sms для отправки: " + count);
+                Logger.LogDebug("Всего sms для отправки: " + count);
             else
-                Logger.Trace("Нет sms для отправки");
+                Logger.LogTrace("Нет sms для отправки");
 
             string error = null;
 
@@ -57,7 +57,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
             {
                 CancellationToken.ThrowIfCancellationRequested();
 
-                Logger.Debug("Отправка sms на номер {0}", sms.Phone);
+                Logger.LogDebug("Отправка sms на номер {0}", sms.Phone);
                 try
                 {
                     // отправим сообщение
@@ -78,7 +78,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
                     storage.SendSmsCommands.MarkAsSendSuccessed(sms.Id, DateTime.Now, externalId);
                     Interlocked.Increment(ref SuccessSendCount);
 
-                    Logger.Info("Отправлено sms на номер {0}", sms.Phone);
+                    Logger.LogInformation("Отправлено sms на номер {0}", sms.Phone);
                 }
                 catch (OperationCanceledException)
                 {
@@ -89,7 +89,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
                     // О неправильном номере телефона запишем в лог
                     // Это не ошибка отправщика
 
-                    Logger.Info(exception.Message, new { SmsId = sms.Id.ToString() });
+                    Logger.LogInformation(exception.Message, new { SmsId = sms.Id.ToString() });
 
                     storage.SendSmsCommands.MarkAsSendFail(sms.Id, DateTime.Now, exception.Message);
                 }
@@ -98,7 +98,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
                     error = exception.Message;
 
                     exception.Data.Add("SmsId", sms.Id);
-                    Logger.Error(exception);
+                    Logger.LogError(exception, exception.Message);
 
                     storage.SendSmsCommands.MarkAsSendFail(sms.Id, DateTime.Now, exception.Message);
                 }
