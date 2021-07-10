@@ -1,1 +1,0 @@
-﻿POST api.zidium.net/1.0/GetComponentInfo.json

@@ -1,7 +1,0 @@
-﻿@using Zidium.UserAccount.Helpers;
-@model Zidium.UserAccount.Models.ReloadedTileModels.RenderModel
-@{
-    var tile = ReloadedTileHelper.GetRenderdHtmlData(Model.Url, Html);
-}
-<div data-url="@tile.Url" data-hash="@tile.Hash" class="reloaded-tile" style="display:none; position:absolute;"></div>
-@tile.Html
