@@ -218,7 +218,8 @@ namespace Zidium.Core
                     EventsMaxDays = logicSettingsService.EventsMaxDays(),
                     UnitTestsMaxDays = logicSettingsService.UnitTestsMaxDays(),
                     MetricsMaxDays = logicSettingsService.MetricsMaxDays(),
-                    LogMaxDays = logicSettingsService.LogMaxDays()
+                    LogMaxDays = logicSettingsService.LogMaxDays(),
+                    MasterPassword = logicSettingsService.MasterPassword()
                 }
             };
         }

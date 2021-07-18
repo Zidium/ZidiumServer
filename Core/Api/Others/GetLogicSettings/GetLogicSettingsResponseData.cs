@@ -11,5 +11,7 @@
         public int MetricsMaxDays { get; set; }
 
         public int UnitTestsMaxDays { get; set; }
+
+        public string MasterPassword { get; set; }
     }
 }
