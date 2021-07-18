@@ -21,7 +21,7 @@ namespace Zidium.Dispatcher
 
         public string SecretKey => Get().SecretKey;
 
-        public string MasterPassword => null;
+        public string MasterPassword => Get().MasterPassword;
 
         public int? EventsMaxDays => Get().EventsMaxDays;
 

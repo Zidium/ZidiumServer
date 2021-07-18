@@ -10,6 +10,8 @@
 
         public string SecretKey { get; set; }
 
+        public string MasterPassword { get; set; }
+
         public int EventsMaxDays { get; set; }
 
         public int LogMaxDays { get; set; }
