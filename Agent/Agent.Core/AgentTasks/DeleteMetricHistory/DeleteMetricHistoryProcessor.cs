@@ -52,16 +52,14 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
                 Logger.LogDebug("Удален пакет из {0} значений метрик за {1}", count, TimeSpanHelper.Get2UnitsString(innerStopWatch.Elapsed));
 
                 deletedCount += count;
-
-                // чтобы не сильно нагружать SQL
-                Thread.Sleep(1000);
             }
 
             stopWatch.Stop();
 
             if (deletedCount > 0)
-                Logger.LogDebug($"Удалено значений метрик: {deletedCount} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
-
+                Logger.LogInformation($"Удалено {deletedCount} значений метрик за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
+            else
+                Logger.LogDebug("Нет значений метрик для удаления");
         }
 
     }

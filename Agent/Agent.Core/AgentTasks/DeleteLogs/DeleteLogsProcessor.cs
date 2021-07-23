@@ -66,14 +66,14 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
                 if (result == 0)
                     break;
-
             }
 
             stopWatch.Stop();
 
             if (count > 0)
-                Logger.LogDebug($"Удалено логов: {count} за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
-
+                Logger.LogInformation($"Удалено {count} логов за {TimeSpanHelper.Get2UnitsString(stopWatch.Elapsed)}");
+            else
+                Logger.LogDebug("Нет логов для удаления");
         }
 
         protected void DeleteProperties(ILogger logger, ILogRepository repository, DateTime date, int maxCount)

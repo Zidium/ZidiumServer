@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 
 namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
@@ -9,6 +10,9 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
         {
             ExecutionPeriod = TimeSpan.FromHours(1);
             WaitOnErrorTime = TimeSpan.FromHours(1);
+
+            var logicSettings = LogicSettingsCache.LogicSettings;
+            Logger.LogInformation($"Удаляются метрики старше {logicSettings.MetricsMaxDays} дней");
         }
 
         protected override AgentTaskResult Do()

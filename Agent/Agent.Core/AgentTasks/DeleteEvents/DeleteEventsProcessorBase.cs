@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
@@ -23,25 +21,18 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         public int DeletedPropertiesCount;
 
-        protected object ReportLockObject = new object();
-
-        protected List<string> Report = new List<string>();
-
         protected DeleteEventsProcessorBase(ILogger logger, CancellationToken cancellationToken)
         {
             Logger = logger;
             CancellationToken = cancellationToken;
+
+            Logger.LogInformation($"Удаляются события старше {GetMaxDays()} дней");
         }
 
         public void Process()
         {
             DeletedEventsCount = 0;
             DeletedPropertiesCount = 0;
-
-            lock (ReportLockObject)
-            {
-                Report.Clear();
-            }
 
             var categories = GetCategories();
 
@@ -122,34 +113,9 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             stopwatch.Stop();
 
             if (count > 0)
-            {
-                Logger.LogDebug($"Удалено событий: {count} за {TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed)}");
-                AddToReport(string.Format("Удалено {0} событий за {1}", count, TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed)));
-            }
-
-
-            if (DeletedEventsCount > 0)
-            {
-                Logger.LogInformation("Удалено событий, всего: " + DeletedEventsCount);
-                lock (ReportLockObject)
-                {
-                    var reportChunks = Report
-                        .Select((t, i) =>
-                            new
-                            {
-                                Value = t,
-                                Index = i
-                            })
-                        .GroupBy(t => t.Index / 20)
-                        .Select(grp => grp.Select(x => x.Value).ToArray())
-                        .ToArray();
-
-                    foreach (var chunk in reportChunks)
-                    {
-                        Logger.LogInformation(string.Join(Environment.NewLine, chunk));
-                    }
-                }
-            }
+                Logger.LogInformation($"Удалено {count} событий за {TimeSpanHelper.Get2UnitsString(stopwatch.Elapsed)}");
+            else
+                Logger.LogDebug("Нет событий для удаления");
         }
 
         protected void DeleteParameters(ILogger logger, IEventRepository repository, EventCategory[] categories, DateTime date, int maxCount)
@@ -217,13 +183,5 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
         public abstract int GetMaxDays();
 
         public abstract EventCategory[] GetCategories();
-
-        protected void AddToReport(string s)
-        {
-            lock (ReportLockObject)
-            {
-                Report.Add(s);
-            }
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
 
 namespace Zidium.Agent.AgentTasks.DeleteLogs
@@ -9,6 +10,9 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
         {
             ExecutionPeriod = TimeSpan.FromHours(1);
             WaitOnErrorTime = TimeSpan.FromHours(1);
+
+            var logicSettings = LogicSettingsCache.LogicSettings;
+            Logger.LogInformation($"Удаляются логи старше {logicSettings.LogMaxDays} дней");
         }
 
         protected override AgentTaskResult Do()
