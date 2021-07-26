@@ -11,8 +11,7 @@ Api/1.0/ApiHttpService/Logs/
 *.suo
 *.user
 *.sln.docstates
-# *.pubxml
-local.pubxml
+*.pubxml
 
 # Build results
 

@@ -39,6 +39,11 @@ namespace Zidium.Api.Dto
             return JsonClasses.JSON.ToObject(json, type);
         }
 
+        public object GetObject(Type type, string json)
+        {
+            return JsonClasses.JSON.ToObject(json, type);
+        }
+
         public object GetObject(string json)
         {
             return JsonClasses.JSON.ToObject(json);

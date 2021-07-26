@@ -98,7 +98,7 @@ namespace Zidium.Dispatcher
                         processData.ContentType = httpContext.Request.ContentType;
 
                         // получим пакет запроса
-                        var requestPackage = GetRequestPackage(method, body);
+                        var requestPackage = GetRequestPackage(method, processData.Body);
 
                         // получим обработчик
                         var handler = GetRealHandler();
@@ -184,7 +184,7 @@ namespace Zidium.Dispatcher
 
         private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
-        protected object GetRequestPackage(MethodInfo method, byte[] body)
+        protected object GetRequestPackage(MethodInfo method, string body)
         {
             if (method.GetParameters().Length == 0)
             {
