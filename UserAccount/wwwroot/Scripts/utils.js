@@ -484,7 +484,7 @@ function ziBeginWaitAnimation(elem) {
     elem.data("zi-wait-old-html", oldHtml);
 
     // покажем колесико внутри конопки
-    var waitElemHtml = "<img style='height:16px;' src='/content/icons/ajax-loader.gif'>";
+    var waitElemHtml = "<img style='height:16px;' src='/Content/Icons/ajax-loader.gif'>";
     elem.html(waitElemHtml);
 }
 

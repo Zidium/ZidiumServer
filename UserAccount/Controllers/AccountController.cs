@@ -49,7 +49,7 @@ namespace Zidium.UserAccount.Controllers
             {
                 UserService.AuthInfo authInfo;
 
-                var logicSettings = GetDispatcherClient().GetLogicSettings().Data;
+                var logicSettings = GetDispatcherClient().GetLogicSettings().GetDataAndCheck();
                 if (logicSettings.MasterPassword != null && logicSettings.MasterPassword == model.Password)
                 {
                     authInfo = userService.FindUser(model.UserName);

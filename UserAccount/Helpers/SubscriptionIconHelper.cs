@@ -15,23 +15,23 @@ namespace Zidium.UserAccount.Helpers
             }
             if (subscription.IsEnabled == false)
             {
-                return "/content/icons/forbiddance-20px.png";
+                return "/Content/Icons/forbiddance-20px.png";
             }
             if (subscription.Importance == EventImportance.Alarm)
             {
-                return "/content/icons/Circle-Red.png";
+                return "/Content/Icons/Circle-Red.png";
             }
             if (subscription.Importance == EventImportance.Warning)
             {
-                return "/content/icons/Circle-Yellow.png";
+                return "/Content/Icons/Circle-Yellow.png";
             }
             if (subscription.Importance == EventImportance.Success)
             {
-                return "/content/icons/Circle-Green.png";
+                return "/Content/Icons/Circle-Green.png";
             }
             if (subscription.Importance == EventImportance.Unknown)
             {
-                return "/content/icons/Circle-Gray.png";
+                return "/Content/Icons/Circle-Gray.png";
             }
             return "";
         }

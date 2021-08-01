@@ -16,7 +16,7 @@
     z-index: 100;
     position: absolute;
     opacity: 0.5;
-    background-image: url('/content/icons/ajax-loader.gif');
+    background-image: url('/Content/Icons/ajax-loader.gif');
     background-repeat: no-repeat;
     background-position: center center;
 }

@@ -390,7 +390,7 @@ namespace Zidium.UserAccount.Controllers
 
         internal EventsController(Guid userId) : base(userId) { }
 
-        protected EventsController(ILogger<EventsController> logger) : base(logger)
+        public EventsController(ILogger<EventsController> logger) : base(logger)
         {
         }
     }

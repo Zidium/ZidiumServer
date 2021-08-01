@@ -52,7 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserAccount", "UserAccount\UserAccount.csproj", "{C6157E28-CF22-4D78-B262-AB271F4C1884}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserAccount", "UserAccount\UserAccount.csproj", "{C6157E28-CF22-4D78-B262-AB271F4C1884}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

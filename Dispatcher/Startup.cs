@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -47,71 +46,79 @@ namespace Zidium.Dispatcher
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            Client.Instance.Disable = true;
-            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            DependencyInjection.SetLoggerFactory(loggerFactory);
-            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
-
-            // Для упрощения пусть диспетчер отвечает за актуальность базы
-            var defaultStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            Mirgate(defaultStorageFactory, logger);
-
-            Client.Instance.Disable = false;
-
-            DispatcherService.Version = DispatcherWebHandlerMiddleware.GetVersion();
-            var componentControl = DispatcherService.Wrapper.Control;
-            logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
-            logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
-
-            DispatcherWebHandlerMiddleware.Init(DispatcherService.Wrapper.Control);
-            DebugInfoMiddleware.Init(DispatcherService.Wrapper.Control);
-            TestInfoMiddleware.Init(DispatcherService.Wrapper.Control);
-            InitLimitsSaving();
-
-            var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
-
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            try
             {
-                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
+                Client.Instance.Disable = true;
+                var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
+                DependencyInjection.SetLoggerFactory(loggerFactory);
+                DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
+                // Для упрощения пусть диспетчер отвечает за актуальность базы
+                var defaultStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+                Mirgate(defaultStorageFactory, logger);
+
+                Client.Instance.Disable = false;
+
+                DispatcherService.Version = DispatcherWebHandlerMiddleware.GetVersion();
+                var componentControl = DispatcherService.Wrapper.Control;
+                logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
+                logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
+
+                DispatcherWebHandlerMiddleware.Init(DispatcherService.Wrapper.Control);
+                DebugInfoMiddleware.Init(DispatcherService.Wrapper.Control);
+                TestInfoMiddleware.Init(DispatcherService.Wrapper.Control);
+                InitLimitsSaving();
+
+                var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
+                logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
+
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
+                {
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+                });
+
+                if (env.IsDevelopment())
+                {
+                    app.UseDeveloperExceptionPage();
+                }
+
+                HttpServiceEventPreparer.Configure(app.ApplicationServices.GetRequiredService<IHttpContextAccessor>());
+                Client.Instance.EventPreparer = new HttpServiceEventPreparer();
+
+                app.Map("/debug", c =>
+                {
+                    c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
+                        x => x.UseMiddleware<DebugInfoMiddleware>());
+                });
+
+                app.Map("/test", c =>
+                {
+                    c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
+                        x => x.UseMiddleware<TestInfoMiddleware>());
+                });
+
+                app.Map("/error", c =>
+                {
+                    c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
+                        x => x.UseMiddleware<TestErrorMiddleware>());
+                });
+
+                app.Map("", c =>
+                {
+                    c.UseWhen(t => "POST".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
+                        x => x.UseMiddleware<DispatcherWebHandlerMiddleware>());
+                    c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase) &&
+                                   "/GetServerTime".Equals(t.Request.Path),
+                        x => x.UseMiddleware<DispatcherWebHandlerMiddleware>());
+                    c.UseWhen(t => "/".Equals(t.Request.Path),
+                        x => x.UseMiddleware<TestInfoMiddleware>());
+                });
             }
-
-            HttpServiceEventPreparer.Configure(app.ApplicationServices.GetRequiredService<IHttpContextAccessor>());
-            Client.Instance.EventPreparer = new HttpServiceEventPreparer();
-
-            app.Map("/debug", c =>
+            catch (Exception exception)
             {
-                c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
-                    x => x.UseMiddleware<DebugInfoMiddleware>());
-            });
-
-            app.Map("/test", c =>
-            {
-                c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
-                    x => x.UseMiddleware<TestInfoMiddleware>());
-            });
-
-            app.Map("/error", c =>
-            {
-                c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
-                    x => x.UseMiddleware<TestErrorMiddleware>());
-            });
-
-            app.Map("", c =>
-            {
-                c.UseWhen(t => "POST".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase),
-                    x => x.UseMiddleware<DispatcherWebHandlerMiddleware>());
-                c.UseWhen(t => "GET".Equals(t.Request.Method, StringComparison.OrdinalIgnoreCase) &&
-                               "/GetServerTime".Equals(t.Request.Path),
-                    x => x.UseMiddleware<DispatcherWebHandlerMiddleware>());
-                c.UseWhen(t => "/".Equals(t.Request.Path),
-                    x => x.UseMiddleware<TestInfoMiddleware>());
-            });
+                logger.LogCritical(exception, exception.Message);
+                throw;
+            }
         }
 
         protected void InitLimitsSaving()

@@ -74,104 +74,112 @@ namespace Zidium.UserAccount
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, IComponentControl componentControl)
         {
-            logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
-            logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
-
-            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            DependencyInjection.SetLoggerFactory(loggerFactory);
-            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
-
-            var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-            logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
-
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            try
             {
-                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
+                logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
+                logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
 
-            app.UseDeveloperExceptionPage();
+                var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
+                DependencyInjection.SetLoggerFactory(loggerFactory);
+                DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+                var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
+                logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
 
-            var httpContextAccessor = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
-            WebApplicationEventPreparer.Configure(httpContextAccessor);
-            Client.Instance.EventPreparer = new WebApplicationEventPreparer();
-
-            app.Use(async (ctx, next) =>
-            {
-                await next();
-
-                if (ctx.Response.StatusCode == 404 && !ctx.Response.HasStarted)
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
                 {
-                    if (!ctx.Request.IsAjaxRequest() && !ctx.Request.IsSmartBlocksRequest())
-                    {
-                        ctx.Request.Path = "/Home/Error404";
-                        await next();
-                    }
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+                });
+
+                app.UseDeveloperExceptionPage();
+
+                if (env.IsDevelopment())
+                {
+                    app.UseDeveloperExceptionPage();
                 }
-            });
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseRouting();
-            app.UseSession();
-            app.UseAuthentication();
-            app.UseAuthorization();
+                var httpContextAccessor = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
+                WebApplicationEventPreparer.Configure(httpContextAccessor);
+                Client.Instance.EventPreparer = new WebApplicationEventPreparer();
 
-            app.UseEndpoints(endpoints =>
+                app.Use(async (ctx, next) =>
+                {
+                    await next();
+
+                    if (ctx.Response.StatusCode == 404 && !ctx.Response.HasStarted)
+                    {
+                        if (!ctx.Request.IsAjaxRequest() && !ctx.Request.IsSmartBlocksRequest())
+                        {
+                            ctx.Request.Path = "/Home/Error404";
+                            await next();
+                        }
+                    }
+                });
+
+                app.UseHttpsRedirection();
+                app.UseStaticFiles();
+                app.UseRouting();
+                app.UseSession();
+                app.UseAuthentication();
+                app.UseAuthorization();
+
+                app.UseEndpoints(endpoints =>
+                {
+                    // Компоненты
+
+                    endpoints.MapControllerRoute(
+                            name: "ShowComponent",
+                            pattern: "Components/{id}",
+                            defaults: new { controller = "Components", action = "Show" },
+                            constraints: new { id = new GuidRouteConstraint() });
+
+                    // Типы компонентов
+
+                    endpoints.MapControllerRoute(
+                            name: "ShowComponentType",
+                            pattern: "ComponentTypes/{id}",
+                            defaults: new { controller = "ComponentTypes", action = "Show" },
+                            constraints: new { id = new GuidRouteConstraint() }
+                        );
+
+                    // События
+
+                    endpoints.MapControllerRoute(
+                            name: "ShowEvent",
+                            pattern: "Events/{id}",
+                            defaults: new { controller = "Events", action = "Show" },
+                            constraints: new { id = new GuidRouteConstraint() }
+                        );
+
+                    // Пользователи
+
+                    endpoints.MapControllerRoute(
+                            name: "ShowUser",
+                            pattern: "Users/{id}",
+                            defaults: new { controller = "Users", action = "Show" },
+                            constraints: new { id = new GuidRouteConstraint() }
+                        );
+
+                    // Заглавная страница
+
+                    endpoints.MapControllerRoute(
+                            name: "StartPage",
+                            pattern: "",
+                            defaults: new { controller = "Home", action = "Start" }
+                        );
+
+                    // Общий
+
+                    endpoints.MapControllerRoute(
+                            name: "default",
+                            pattern: "{controller=Home}/{action=Index}/{id?}");
+                });
+            }
+            catch (Exception exception)
             {
-                // Компоненты
-
-                endpoints.MapControllerRoute(
-                    name: "ShowComponent",
-                    pattern: "Components/{id}",
-                    defaults: new { controller = "Components", action = "Show" },
-                    constraints: new { id = new GuidRouteConstraint() });
-
-                // Типы компонентов
-
-                endpoints.MapControllerRoute(
-                    name: "ShowComponentType",
-                    pattern: "ComponentTypes/{id}",
-                    defaults: new { controller = "ComponentTypes", action = "Show" },
-                    constraints: new { id = new GuidRouteConstraint() }
-                );
-
-                // События
-
-                endpoints.MapControllerRoute(
-                    name: "ShowEvent",
-                    pattern: "Events/{id}",
-                    defaults: new { controller = "Events", action = "Show" },
-                    constraints: new { id = new GuidRouteConstraint() }
-                );
-
-                // Пользователи
-
-                endpoints.MapControllerRoute(
-                    name: "ShowUser",
-                    pattern: "Users/{id}",
-                    defaults: new { controller = "Users", action = "Show" },
-                    constraints: new { id = new GuidRouteConstraint() }
-                );
-
-                // Заглавная страница
-
-                endpoints.MapControllerRoute(
-                    name: "StartPage",
-                    pattern: "",
-                    defaults: new { controller = "Home", action = "Start" }
-                );
-
-                // Общий
-
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
-            });
+                logger.LogCritical(exception, exception.Message);
+                throw;
+            }
         }
 
         protected void InitMonitoring(IServiceCollection services)

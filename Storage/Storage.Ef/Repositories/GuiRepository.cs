@@ -144,10 +144,14 @@ namespace Zidium.Storage.Ef
             using (var contextWrapper = _storage.GetContextWrapper())
             {
                 var component = contextWrapper.Context.Components.First(t => t.Id == id);
+                var componentEntry = contextWrapper.Context.Entry(component);
 
                 var result = new GetGuiComponentShowInfo()
                 {
-                    UnitTests = component.UnitTests.Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.UnitTestInfo()
+                    UnitTests = componentEntry.Collection(t => t.UnitTests).Query()
+                    .Include(t => t.Bulb)
+                    .Include(t => t.Type)
+                    .Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.UnitTestInfo()
                     {
                         Id = t.Id,
                         DisplayName = t.DisplayName,
@@ -161,7 +165,10 @@ namespace Zidium.Storage.Ef
                             IsSystem = t.Type.IsSystem
                         }
                     }).ToArray(),
-                    Metrics = component.Metrics.Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.MetricInfo()
+                    Metrics = componentEntry.Collection(t => t.Metrics).Query()
+                    .Include(t => t.Bulb)
+                    .Include(t => t.MetricType)
+                    .Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.MetricInfo()
                     {
                         Id = t.Id,
                         DisplayName = t.MetricType.DisplayName,
@@ -174,7 +181,10 @@ namespace Zidium.Storage.Ef
                             DisplayName = t.MetricType.DisplayName
                         }
                     }).ToArray(),
-                    Childs = component.Childs.Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.ChildInfo()
+                    Childs = componentEntry.Collection(t => t.Childs).Query()
+                    .Include(t => t.ExternalStatus)
+                    .Include(t => t.ComponentType)
+                    .Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.ChildInfo()
                     {
                         Id = t.Id,
                         ComponentType = new GetGuiComponentShowInfo.ComponentTypeInfo()
@@ -186,17 +196,23 @@ namespace Zidium.Storage.Ef
                         Enable = t.Enable,
                         ExternalStatus = BulbRepository.DbToEntity(t.ExternalStatus)
                     }).ToArray(),
-                    UnitTestsMiniInfo = component.UnitTests.Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.UnitTestMiniInfo()
+                    UnitTestsMiniInfo = componentEntry.Collection(t => t.UnitTests).Query()
+                    .Include(t => t.Bulb)
+                    .Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.UnitTestMiniInfo()
                     {
                         Id = t.Id,
                         Status = t.Bulb.Status
                     }).ToArray(),
-                    ChildsMiniInfo = component.Childs.Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.ChildMiniInfo()
+                    ChildsMiniInfo = componentEntry.Collection(t => t.Childs).Query()
+                    .Include(t => t.ExternalStatus)
+                    .Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.ChildMiniInfo()
                     {
                         Id = t.Id,
                         Status = t.ExternalStatus.Status
                     }).ToArray(),
-                    MetricsMiniInfo = component.Metrics.Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.MetricMiniInfo()
+                    MetricsMiniInfo = componentEntry.Collection(t => t.Metrics).Query()
+                    .Include(t => t.Bulb)
+                    .Where(t => !t.IsDeleted).Select(t => new GetGuiComponentShowInfo.MetricMiniInfo()
                     {
                         Id = t.Id,
                         Status = t.Bulb.Status
