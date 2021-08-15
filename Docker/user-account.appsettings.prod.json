@@ -1,0 +1,17 @@
+{
+  "dispatcherUrl": "http://localhost:10000/",
+
+  "NLog": {
+    "variables": {
+      "logPath": "/zidium/log/user-account"
+    }
+  },
+
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://*:80"
+      }
+    }
+  }
+}

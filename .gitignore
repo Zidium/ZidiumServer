@@ -17,6 +17,7 @@ Api/1.0/ApiHttpService/Logs/
 
 [Dd]ebug/
 [Rr]elease/
+DockerRelease/
 x64/
 build/
 [Bb]in/

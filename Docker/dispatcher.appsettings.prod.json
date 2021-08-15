@@ -1,0 +1,15 @@
+{
+  "NLog": {
+    "variables": {
+      "logPath": "/zidium/log/dispatcher"
+    }
+  },
+
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://*:10000"
+      }
+    }
+  }
+}

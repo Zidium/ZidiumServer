@@ -185,6 +185,7 @@ namespace Zidium.UserAccount
         protected void InitMonitoring(IServiceCollection services)
         {
             var client = SystemAccountHelper.GetInternalSystemClient();
+            client.WaitUntilAvailable(TimeSpan.FromSeconds(60));
 
             // Создадим компонент
             // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG

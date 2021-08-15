@@ -36,7 +36,7 @@ namespace Zidium.Agent
         protected void InitMonitoring()
         {
             var client = SystemAccountHelper.GetInternalSystemClient();
-            client.ApiService.GetEcho("123").Check();
+            client.WaitUntilAvailable(TimeSpan.FromSeconds(60));
 
             // Создадим компонент
             // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG

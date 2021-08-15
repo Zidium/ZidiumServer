@@ -201,6 +201,7 @@ namespace Zidium.Storage.Ef
         // For migrations
         protected AccountDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions) { }
 
+        // Main
         public static AccountDbContext CreateFromConnectionString(string connectionString)
         {
             var provider = Provider.Current();

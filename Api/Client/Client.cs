@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Diagnostics;
+using System.Threading;
 using Zidium.Api.Dto;
 using Zidium.Api.Logs;
 using Zidium.Api.Others;
@@ -280,8 +281,20 @@ namespace Zidium.Api
         public bool CheckConnection()
         {
             var echo = Guid.NewGuid().ToString();
-            var responce = ApiService.GetEcho(echo);
-            return responce.Success && responce.GetDataAndCheck() == echo;
+            var response = ApiService.GetEcho(echo);
+            return response.Success && response.GetDataAndCheck() == echo;
+        }
+
+        public void WaitUntilAvailable(TimeSpan timeout)
+        {
+            var stopWatch = Stopwatch.StartNew();
+            while (stopWatch.Elapsed < timeout)
+            {
+                if (CheckConnection())
+                    return;
+                Thread.Sleep(1000);
+            }
+            throw new TimeoutException($"Zidium API server is still unavailable after {timeout}");
         }
 
         public void Flush()

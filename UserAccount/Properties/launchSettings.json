@@ -22,7 +22,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": "true",
-      "applicationUrl": "https://localhost:44301;http://localhost:60101"
+      "applicationUrl": "http://localhost:60101"
     }
   }
 }

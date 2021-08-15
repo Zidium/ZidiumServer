@@ -104,6 +104,8 @@ namespace Zidium.Agent
         {
             appConfiguration.AddJsonFile("appsettings.json", false, false);
             appConfiguration.AddJsonFile("appsettings.prod.json", true, false);
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG")))
+                appConfiguration.AddJsonFile(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG"), true, false);
             appConfiguration.AddUserSecrets(Assembly.GetEntryAssembly(), true);
             return appConfiguration;
         }

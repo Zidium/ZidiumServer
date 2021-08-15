@@ -17,11 +17,16 @@ namespace Zidium.Agent
         {
             var services = new ServiceCollection();
 
-            var appConfiguration = new ConfigurationBuilder()
+            var appConfigurationBuilder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.prod.json", true, false)
-                .AddUserSecrets(Assembly.GetEntryAssembly(), true)
-                .Build();
+                .AddJsonFile("appsettings.prod.json", true, false);
+
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG")))
+                appConfigurationBuilder.AddJsonFile(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG"), true, false);
+
+            appConfigurationBuilder.AddUserSecrets(Assembly.GetEntryAssembly(), true);
+
+            var appConfiguration = appConfigurationBuilder.Build();
 
             LogManager.Configuration = new NLogLoggingConfiguration(appConfiguration.GetSection("NLog"));
 

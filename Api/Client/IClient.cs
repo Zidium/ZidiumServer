@@ -35,6 +35,12 @@ namespace Zidium.Api
 
         void Flush();
 
+        /// <summary>
+        /// Ожидание с таймаутом, когда сервер станет доступен
+        /// </summary>
+        /// <param name="timeout">Таймаут</param>
+        void WaitUntilAvailable(TimeSpan timeout);
+
         #endregion
 
         #region Время

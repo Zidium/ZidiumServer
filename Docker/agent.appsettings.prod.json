@@ -1,0 +1,9 @@
+{
+  "dispatcherUrl": "http://localhost:10000/",
+
+  "NLog": {
+    "variables": {
+      "logPath": "/zidium/log/agent"
+    }
+  }
+}
