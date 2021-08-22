@@ -24,7 +24,7 @@ namespace Zidium.Api.Tests.Events
             };
             var component = root.GetOrCreateChildComponentControl(createData);
 
-            var eventData = component.CreateComponentEvent("Запуск ракеты");
+            var eventData = component.CreateComponentEvent("Rocket launch");
             var response = eventData.Send();
             Assert.True(response.Success);
             var eventInfo = client.ApiService.GetEventById(response.Data.EventId).GetDataAndCheck();
@@ -33,7 +33,7 @@ namespace Zidium.Api.Tests.Events
             // установим компоненту версию 1.0
             createData.Version = "1.0";
             component = root.GetOrCreateChildComponentControl(createData);
-            eventData = component.CreateComponentEvent("Запуск ракеты");
+            eventData = component.CreateComponentEvent("Rocket launch");
             //component.Info.Version = "1.0";
             response = eventData.Send();
             Assert.True(response.Success);
@@ -66,20 +66,25 @@ namespace Zidium.Api.Tests.Events
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
             var component = client.GetRootComponentControl().GetOrCreateChildComponentControl("type", "name");
-            var eventData = component.CreateComponentEvent("Запуск ракеты");
+            var eventData = component.CreateComponentEvent("Rocket launch");
             eventData.JoinInterval = TimeSpan.FromHours(1);
 
             // отправим 1-ое событие
             eventData.Version = "1.0";
             var response = eventData.Send();
-            Assert.True(response.Success);
+            response.Check();
+            account.SaveAllCaches();
+
             var eventInfo = component.Client.ApiService.GetEventById(response.Data.EventId).GetDataAndCheck();
             long joinKey = eventInfo.JoinKeyHash;
             Guid eventId = eventInfo.Id;
             Assert.Equal("1.0", eventInfo.Version);
 
-            // 2-ое событие должно склеится (интервал склейки = 1 час)
+            // 2-ое событие должно склеиться (интервал склейки = 1 час)
             response = eventData.Send();
+            response.Check();
+            account.SaveAllCaches();
+
             eventInfo = component.Client.ApiService.GetEventById(response.Data.EventId).GetDataAndCheck();
             Assert.Equal(eventId, eventInfo.Id);
             Assert.Equal(joinKey, eventInfo.JoinKeyHash);
@@ -88,6 +93,9 @@ namespace Zidium.Api.Tests.Events
             // 3-ое событие НЕ должно склеится (изменилась версия)
             eventData.Version = "2.0";
             response = eventData.Send();
+            response.Check();
+            account.SaveAllCaches();
+
             eventInfo = component.Client.ApiService.GetEventById(response.Data.EventId).GetDataAndCheck();
             Assert.NotEqual(eventId, eventInfo.Id);
             Assert.Equal(joinKey, eventInfo.JoinKeyHash); // ВНИМАНИЕ! Ключ склейки не изменился

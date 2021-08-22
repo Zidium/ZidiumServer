@@ -4,7 +4,6 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Zidium.Api;
-using Zidium.Core;
 
 namespace Zidium.UserAccount.Controllers
 {
@@ -19,9 +18,7 @@ namespace Zidium.UserAccount.Controllers
 
         private void StorageTest()
         {
-            var storageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = storageFactory.GetStorage();
-            storage.Check();
+            GetStorage().Check();
         }
 
         private void ComponentFakeTest()

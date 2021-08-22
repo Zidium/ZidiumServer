@@ -13,7 +13,12 @@
         /// <summary>
         /// PostgreSQL
         /// </summary>
-        PostgreSql = 2
+        PostgreSql = 2,
+
+        /// <summary>
+        /// Sqlite
+        /// </summary>
+        Sqlite = 3
 
     }
 }

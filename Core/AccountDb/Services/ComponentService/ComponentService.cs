@@ -970,7 +970,7 @@ namespace Zidium.Core.AccountsDb
                 componentWrite.IsDeleted = true;
                 componentWrite.BeginSave();
             }
-            componentWrite.WaitSaveChanges(TimeSpan.FromSeconds(30));
+            componentWrite.WaitSaveChanges();
             IComponentCacheReadObject component = componentWrite;
 
             // удаляем колбаски

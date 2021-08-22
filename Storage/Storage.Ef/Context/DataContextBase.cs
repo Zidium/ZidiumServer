@@ -30,7 +30,18 @@ namespace Zidium.Storage.Ef
 
         public abstract void Check();
 
-        public abstract DbConnection CreateConnection();
+        public virtual DbConnection CreateConnection()
+        {
+            if (Database.CurrentTransaction != null)
+                return Database.GetDbConnection();
+            return null;
+        }
+
+        public void ReleaseConnection(DbConnection connection)
+        {
+            if (connection != null && Database.CurrentTransaction == null)
+                connection.Dispose();
+        }
 
         public override int SaveChanges()
         {
@@ -53,12 +64,13 @@ namespace Zidium.Storage.Ef
 
         public string FormatTableName(string tableName)
         {
-            return Provider.Current().FormatSchemaName("dbo") + "." + Provider.Current().FormatTableName(tableName);
+            var schemaName = Provider.Instance().FormatSchemaName("dbo");
+            return (schemaName != null ? schemaName + "." : null) + Provider.Instance().FormatTableName(tableName);
         }
 
         public string FormatColumnName(string columnName)
         {
-            return Provider.Current().FormatColumnName(columnName);
+            return Provider.Instance().FormatColumnName(columnName);
         }
     }
 }

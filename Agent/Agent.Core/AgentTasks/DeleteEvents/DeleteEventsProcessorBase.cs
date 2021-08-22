@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
-using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -39,7 +38,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-GetMaxDays()));
             Logger.LogTrace("Максимальная дата актуальности: {0}", date);
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var eventRepository = storage.Events;
             var remaining = eventRepository.GetEventsCountForDeletion(categories, date);
 

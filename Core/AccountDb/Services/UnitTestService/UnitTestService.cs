@@ -481,7 +481,7 @@ namespace Zidium.Core.AccountsDb
                 unitTest.ErrorColor = data.ErrorColor;
                 unitTest.NextExecutionDate = DateTime.Now;
                 unitTest.BeginSave();
-                unitTest.WaitSaveChanges(TimeSpan.FromSeconds(30));
+                unitTest.WaitSaveChanges();
             }
 
             using (var transaction = _storage.BeginTransaction())
@@ -525,7 +525,7 @@ namespace Zidium.Core.AccountsDb
                 unitTest.ErrorColor = data.ErrorColor;
                 unitTest.NextExecutionDate = DateTime.Now;
                 unitTest.BeginSave();
-                unitTest.WaitSaveChanges(TimeSpan.FromSeconds(30));
+                unitTest.WaitSaveChanges();
                 id = unitTest.Id;
             }
 

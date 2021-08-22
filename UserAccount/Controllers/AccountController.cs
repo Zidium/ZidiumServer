@@ -43,7 +43,7 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var userService = new UserService(null);
+            var userService = new UserService(GetStorage());
 
             try
             {

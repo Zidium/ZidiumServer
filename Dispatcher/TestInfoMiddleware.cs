@@ -8,6 +8,7 @@ using Zidium.Core;
 using Zidium.Core.Caching;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Dispatcher
 {
@@ -83,8 +84,8 @@ namespace Zidium.Dispatcher
 
         private static void CheckDbContext()
         {
-            var defaultStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            defaultStorageFactory.GetStorage().Check();
+            var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
+            storageFactory.GetStorage().Check();
         }
 
         private static void CheckException(ExceptionTempInfo exception)

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Zidium.Api.Dto;
 using Zidium.Common;
 
@@ -150,12 +153,18 @@ namespace Zidium.Storage.Ef
             {
                 var context = contextWrapper.Context;
 
-                using (var connection = context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
 
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
+
                         var stringBuilder = new StringBuilder();
                         var index = 0;
 
@@ -279,6 +288,10 @@ namespace Zidium.Storage.Ef
 
                         SqlCommandHelper.ExecuteNonQuery(command);
                     }
+                }
+                finally
+                {
+                    context.ReleaseConnection(connection);
                 }
             }
         }
@@ -517,11 +530,17 @@ namespace Zidium.Storage.Ef
             {
                 var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("EventParameters")} WHERE {contextWrapper.Context.FormatColumnName("EventId")} IN ({objectQuery.Sql})";
@@ -539,6 +558,10 @@ namespace Zidium.Storage.Ef
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
                 }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
+                }
             }
         }
 
@@ -548,11 +571,17 @@ namespace Zidium.Storage.Ef
             {
                 var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"UPDATE {contextWrapper.Context.FormatTableName("Events")} SET {contextWrapper.Context.FormatColumnName("LastStatusEventId")} = NULL WHERE {contextWrapper.Context.FormatColumnName("LastStatusEventId")} IN({objectQuery.Sql})";
@@ -572,6 +601,7 @@ namespace Zidium.Storage.Ef
 
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("Events")} WHERE {contextWrapper.Context.FormatColumnName("Id")} IN({objectQuery.Sql})";
@@ -589,6 +619,10 @@ namespace Zidium.Storage.Ef
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
                 }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
+                }
             }
         }
 
@@ -599,11 +633,17 @@ namespace Zidium.Storage.Ef
                 var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
 
                 var count = 0;
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("EventStatuses")} WHERE {contextWrapper.Context.FormatColumnName("EventId")} IN ({objectQuery.Sql})";
@@ -623,6 +663,7 @@ namespace Zidium.Storage.Ef
 
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("EventStatuses")} WHERE {contextWrapper.Context.FormatColumnName("StatusId")} IN ({objectQuery.Sql})";
@@ -640,6 +681,10 @@ namespace Zidium.Storage.Ef
                         count += SqlCommandHelper.ExecuteNonQuery(command);
                     }
                 }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
+                }
 
                 return count;
             }
@@ -651,11 +696,17 @@ namespace Zidium.Storage.Ef
             {
                 var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"UPDATE {contextWrapper.Context.FormatTableName("MetricHistory")} SET {contextWrapper.Context.FormatColumnName("StatusEventId")} = NULL WHERE {contextWrapper.Context.FormatColumnName("StatusEventId")} IN ({objectQuery.Sql})";
@@ -673,6 +724,10 @@ namespace Zidium.Storage.Ef
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
                 }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
+                }
             }
         }
 
@@ -682,9 +737,14 @@ namespace Zidium.Storage.Ef
             {
                 var subQuery = GetEventsSubQuery(categories, toDate, maxCount);
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
                         var objectQuery = contextWrapper.Context.Notifications
@@ -709,10 +769,11 @@ namespace Zidium.Storage.Ef
 
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
+                        command.CommandTimeout = 0;
+
                         var objectQuery = contextWrapper.Context.Notifications
                             .Where(t => subQuery.Contains(t.EventId)).Select(t => t.Id).ToParametrizedSql();
-
-                        command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("LastComponentNotifications")} WHERE {contextWrapper.Context.FormatColumnName("NotificationId")} IN ({objectQuery.Sql})";
 
@@ -731,9 +792,10 @@ namespace Zidium.Storage.Ef
 
                     using (var command = connection.CreateCommand())
                     {
-                        var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
-
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
+
+                        var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("Notifications")} WHERE {contextWrapper.Context.FormatColumnName("EventId")} IN ({objectQuery.Sql})";
 
@@ -750,6 +812,10 @@ namespace Zidium.Storage.Ef
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
                 }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
+                }
             }
         }
 
@@ -759,11 +825,17 @@ namespace Zidium.Storage.Ef
             {
                 var objectQuery = GetEventsSubQuery(categories, toDate, maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("ArchivedStatuses")} WHERE {contextWrapper.Context.FormatColumnName("EventId")} IN ({objectQuery.Sql})";
@@ -779,6 +851,10 @@ namespace Zidium.Storage.Ef
 
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
+                }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
                 }
             }
         }

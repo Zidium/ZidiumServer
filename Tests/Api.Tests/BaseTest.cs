@@ -3,6 +3,7 @@ using Zidium.Core;
 using Zidium.Storage.Ef;
 using Zidium.Storage;
 using Microsoft.Extensions.Configuration;
+using Zidium.Core.InternalLogger;
 
 namespace Zidium.Api.Tests
 {
@@ -22,7 +23,7 @@ namespace Zidium.Api.Tests
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<ILogicConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
-            DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(new DefaultStorageFactory());
+            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(new InternalLoggerComponentMapping(null));
         }
     }
 }

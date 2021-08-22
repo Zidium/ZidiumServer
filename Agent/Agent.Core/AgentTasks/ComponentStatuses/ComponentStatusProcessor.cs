@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using Microsoft.Extensions.Logging;
-using Zidium.Core;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.ComponentStatuses
 {
@@ -25,7 +25,7 @@ namespace Zidium.Agent.AgentTasks.ComponentStatuses
 
             var dispatcher = AgentHelper.GetDispatcherClient();
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var componentIds = storage.Components.GetAllIds();
 
             Logger.LogDebug("Найдено компонентов: " + componentIds.Length);

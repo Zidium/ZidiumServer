@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Storage;
 
 namespace Zidium.Core.Limits
 {
@@ -24,7 +25,7 @@ namespace Zidium.Core.Limits
 
         public static int Save()
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+            var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
             LastSaveException = null;
             int count = 0;
 
@@ -38,7 +39,7 @@ namespace Zidium.Core.Limits
             {
                 try
                 {
-                    var storage = accountStorageFactory.GetStorage();
+                    var storage = storageFactory.GetStorage();
                     count += checker.SaveData(storage);
                 }
                 catch (Exception exception)

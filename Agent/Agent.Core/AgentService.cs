@@ -76,7 +76,6 @@ namespace Zidium.Agent
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IAgentConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
-            DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(new DefaultStorageFactory());
 
             InitMonitoring();
 

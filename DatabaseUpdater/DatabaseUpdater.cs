@@ -1,7 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Zidium.Common;
-using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
@@ -18,13 +16,10 @@ namespace Zidium.DatabaseUpdater
             var logger = DependencyInjection.GetLogger<DatabaseUpdater>();
             try
             {
-                DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
-                DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(new DefaultStorageFactory());
+                var storageFactory = new StorageFactory();
+                DependencyInjection.SetServicePersistent<IStorageFactory>(storageFactory);
 
-                var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
-
-                var connectionString = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ConnectionString;
-                var storage = storageFactory.GetStorage(connectionString);
+                var storage = storageFactory.GetStorage();
                 var count = storage.Migrate();
 
                 if (count == 0)

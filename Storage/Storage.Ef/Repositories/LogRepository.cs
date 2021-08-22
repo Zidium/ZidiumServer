@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Zidium.Api.Dto;
 using Zidium.Common;
 
@@ -126,11 +129,17 @@ namespace Zidium.Storage.Ef
                 var objectQuery = contextWrapper.Context.LogProperties
                     .Where(t => subQuery.Contains(t.LogId)).OrderBy(t => t.Id).Select(t => t.Id).Take(maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("LogParameters")} WHERE {contextWrapper.Context.FormatColumnName("Id")} IN ({objectQuery.Sql})";
@@ -148,6 +157,10 @@ namespace Zidium.Storage.Ef
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
                 }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
+                }
             }
         }
 
@@ -158,11 +171,17 @@ namespace Zidium.Storage.Ef
                 var objectQuery = contextWrapper.Context.Logs
                     .Where(t => t.Date < toDate).OrderBy(t => t.Date).Select(t => t.Id).Take(maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("Logs")} WHERE {contextWrapper.Context.FormatColumnName("Id")} IN ({objectQuery.Sql})";
@@ -179,6 +198,10 @@ namespace Zidium.Storage.Ef
 
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
+                }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
                 }
             }
         }
@@ -382,7 +405,7 @@ namespace Zidium.Storage.Ef
                     .OrderBy(t => t.Date).ThenBy(t => t.Order)
                     .Take(maxCount)
                     .Include("Parameters")
-                    .Where(t => t.Message.ToLower().Contains(text) || t.Parameters.Any(x => x.Name.ToLower().Contains(text) || x.Value.ToLower().Contains(text)))
+                    .Where(t => t.Message.Contains(text) || t.Parameters.Any(x => x.Name.Contains(text) || x.Value.Contains(text)))
                     .OrderBy(t => t.Date).ThenBy(t => t.Order)
                     .FirstOrDefault();
 

@@ -56,6 +56,8 @@ namespace Zidium.Core.Tests.Statuses
             var dispatcher = TestHelper.GetDispatcherClient();
             dispatcher.CalculateMetrics(10000);
 
+            account.SaveAllCaches();
+
             // проверим, что в БД статус протух
             using (var accountDbContext = account.GetDbContext())
             {

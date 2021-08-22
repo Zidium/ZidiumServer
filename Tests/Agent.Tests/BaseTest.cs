@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System.Reflection;
 using Zidium.Common;
 using Zidium.Core;
+using Zidium.Core.InternalLogger;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 
@@ -24,7 +24,7 @@ namespace Zidium.Agent.Tests
             DependencyInjection.SetServicePersistent<ILogicConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IAgentTestsConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
-            DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(new DefaultStorageFactory());
+            DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(new InternalLoggerComponentMapping(null));
         }
     }
 }

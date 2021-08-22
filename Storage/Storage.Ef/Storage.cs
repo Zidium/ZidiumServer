@@ -7,16 +7,16 @@ namespace Zidium.Storage.Ef
 {
     internal class Storage : IStorage
     {
-        public Storage(string connectionString)
+        public Storage()
         {
-            _connectionString = connectionString;
+            _provider = Provider.Instance();
         }
 
-        private readonly string _connectionString;
+        private readonly Provider _provider;
 
         private AccountDbContext CreateContext()
         {
-            return AccountDbContext.CreateFromConnectionString(_connectionString);
+            return _provider.DbContext();
         }
 
         private AccountDbContext Context

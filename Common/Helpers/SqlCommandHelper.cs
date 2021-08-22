@@ -18,14 +18,16 @@ namespace Zidium.Common
                 {
                     tryCount--;
                     if (!CanRerun(exception.Message) || tryCount == 0)
-                      throw new SqlExtendedException(exception, command);
+                        throw new SqlExtendedException(exception, command);
                 }
             }
         }
 
         public static bool CanRerun(string message)
         {
-            return message.IndexOf("Rerun the transaction.", StringComparison.InvariantCultureIgnoreCase) >= 0;
+            return
+                message.IndexOf("Rerun the transaction.", StringComparison.InvariantCultureIgnoreCase) >= 0 ||
+                message.StartsWith("SQLite Error 5: 'database is locked'", StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

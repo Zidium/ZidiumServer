@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Zidium.Core;
 using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.SendMessages
@@ -34,7 +33,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
 
         public string Process(Guid? commandId = null)
         {
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var messageCommandRepository = storage.SendMessageCommands;
             var notificationRepository = storage.Notifications;
 

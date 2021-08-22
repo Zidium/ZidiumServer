@@ -33,7 +33,7 @@ namespace Zidium.Agent.Tests
             var rule = new UnitTestSqlRuleForRead(
                 Guid.Empty,
                 SqlRuleDatabaseProviderType.PostgreSql,
-                @"Host=localhost;Port=5432;Database=Zidium.Test.Config;Username=postgres;Password=12345;",
+                @"Host=localhost;Port=5432;Database=Zidium.Test;Username=postgres;Password=12345;",
                 5000,
                 60000,
                 "SELECT 'warning', 'test message'"

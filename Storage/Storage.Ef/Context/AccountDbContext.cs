@@ -188,9 +188,13 @@ namespace Zidium.Storage.Ef
         /// </summary>
         public DbSet<DbTimeZone> TimeZones { get; set; }
 
-        protected AccountDbContext(DbConnection connection) : base(connection, true)
+        protected AccountDbContext(
+            DbConnection connection,
+            Action<DbContextOptionsBuilder> optionsBuilderAction = null
+            ) : base(connection, true)
         {
             IncActiveCount();
+            _optionsBuilderAction = optionsBuilderAction;
         }
 
         protected AccountDbContext(string connectionString) : base(connectionString)
@@ -200,21 +204,6 @@ namespace Zidium.Storage.Ef
 
         // For migrations
         protected AccountDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions) { }
-
-        // Main
-        public static AccountDbContext CreateFromConnectionString(string connectionString)
-        {
-            var provider = Provider.Current();
-            return provider.DbContext(connectionString);
-        }
-
-        // For unittests
-        internal static AccountDbContext CreateFromConnectionString(string connectionString, Action<DbContextOptionsBuilder> optionsBuilderAction)
-        {
-            var result = CreateFromConnectionString(connectionString);
-            result._optionsBuilderAction = optionsBuilderAction;
-            return result;
-        }
 
         private Action<DbContextOptionsBuilder> _optionsBuilderAction;
 
@@ -232,8 +221,6 @@ namespace Zidium.Storage.Ef
         {
             Database.ExecuteSqlRaw("SELECT NULL;");
         }
-
-        public abstract AccountDbContext Clone();
 
         #region Статистика использования
 
@@ -253,13 +240,18 @@ namespace Zidium.Storage.Ef
             }
         }
 
-        public override void Dispose()
+        protected void DecActiveCount()
         {
-            base.Dispose();
             lock (LockObject)
             {
                 ActiveCount--;
             }
+        }
+
+        public override void Dispose()
+        {
+            DecActiveCount();
+            base.Dispose();
         }
 
         #endregion

@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics;
 using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using Zidium.Common;
+using Zidium.Storage.Ef.Sqlite;
 
 namespace Zidium.Storage.Ef
 {
@@ -11,32 +16,39 @@ namespace Zidium.Storage.Ef
     /// </summary>
     internal class Provider
     {
-        protected static Provider FCurrent;
-
-        public static Provider Current()
+        // TODO Refactor to service? Not sure it is nesessary for internal class
+        public static Provider Instance()
         {
-            if (FCurrent == null)
+            if (_instance == null)
             {
-                var providerName = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>().ProviderName;
-                FCurrent = new Provider(providerName);
+                var databaseConfiguration = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>();
+                _instance = new Provider(databaseConfiguration);
             }
-            return FCurrent;
+            return _instance;
         }
 
-        protected Provider(DatabaseProviderType databaseProviderType)
-        {
-            Type = databaseProviderType;
-        }
+        private static Provider _instance;
 
-        protected Provider(string providerName)
+        public Provider(IDatabaseConfiguration databaseConfiguration)
         {
+            var providerName = databaseConfiguration.ProviderName;
+
             if (providerName.Equals("System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
                 Type = DatabaseProviderType.MsSql;
             else if (providerName.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
                 Type = DatabaseProviderType.PostgreSql;
+            else if (providerName.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
+                Type = DatabaseProviderType.Sqlite;
             else
                 throw new Exception("Unsupported provider " + providerName);
+
+            _connectionString = databaseConfiguration.ConnectionString;
+
+            if (Type == DatabaseProviderType.Sqlite)
+                _connectionString = SqliteConnectionStringHelper.SubstituteEnvVariables(_connectionString);
         }
+
+        private readonly string _connectionString;
 
         /// <summary>
         /// Тип провайдера
@@ -54,6 +66,8 @@ namespace Zidium.Storage.Ef
                     return "System.Data.SqlClient";
                 if (Type == DatabaseProviderType.PostgreSql)
                     return "Npgsql";
+                if (Type == DatabaseProviderType.Sqlite)
+                    return "Sqlite";
                 return null;
             }
         }
@@ -61,21 +75,33 @@ namespace Zidium.Storage.Ef
         /// <summary>
         /// Объект соединения
         /// </summary>
-        public DbConnection Connection(string connectionString)
+        public DbConnection Connection()
         {
             if (Type == DatabaseProviderType.MsSql)
-                return new SqlConnection(connectionString);
+                return new SqlConnection(_connectionString);
             if (Type == DatabaseProviderType.PostgreSql)
-                return new NpgsqlConnection(connectionString);
+                return new NpgsqlConnection(_connectionString);
+            if (Type == DatabaseProviderType.Sqlite)
+                return new SqliteConnection(_connectionString).AddUnicodeSupport();
+
             return null;
         }
 
-        public AccountDbContext DbContext(string connectionString)
+        public AccountDbContext DbContext(Action<DbContextOptionsBuilder> optionsBuilderAction = null)
         {
+            // TODO Turn on for unittests only
+            //optionsBuilderAction = optionsBuilderAction ??
+            //    (optionsBuilder =>
+            //    {
+            //        optionsBuilder.LogTo(message => Debug.WriteLine(message), new[] { DbLoggerCategory.Database.Command.Name });
+            //        optionsBuilder.EnableSensitiveDataLogging();
+            //    });
             if (Type == DatabaseProviderType.MsSql)
-                return new MsSqlAccountDbContext(Connection(connectionString));
+                return new MsSqlAccountDbContext(Connection(), optionsBuilderAction);
             if (Type == DatabaseProviderType.PostgreSql)
-                return new PostgreSqlAccountDbContext(Connection(connectionString));
+                return new PostgreSqlAccountDbContext(Connection(), optionsBuilderAction);
+            if (Type == DatabaseProviderType.Sqlite)
+                return new SqliteAccountDbContext(Connection(), optionsBuilderAction);
             return null;
         }
 
@@ -85,6 +111,8 @@ namespace Zidium.Storage.Ef
                 return "[" + schemaName + "]";
             if (Type == DatabaseProviderType.PostgreSql)
                 return "\"" + schemaName + "\"";
+            if (Type == DatabaseProviderType.Sqlite)
+                return null;
             return schemaName;
         }
 

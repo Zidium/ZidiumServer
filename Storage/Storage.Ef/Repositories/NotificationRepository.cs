@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Zidium.Api.Dto;
 using Zidium.Common;
 
@@ -68,11 +71,17 @@ namespace Zidium.Storage.Ef
         {
             using (var contextWrapper = _storage.GetContextWrapper())
             {
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $@"
@@ -100,6 +109,10 @@ namespace Zidium.Storage.Ef
 
                         SqlCommandHelper.ExecuteNonQuery(command);
                     }
+                }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
                 }
             }
         }

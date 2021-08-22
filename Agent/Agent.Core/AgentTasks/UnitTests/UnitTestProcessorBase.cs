@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
-using Zidium.Core;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
@@ -56,7 +55,7 @@ namespace Zidium.Agent.AgentTasks
 
             var unitTestTypeId = GetUnitTestTypeId();
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var tests = storage.UnitTests.GetForProcessing(unitTestTypeId, TimeService.Now());
 
             if (unitTestId.HasValue)
@@ -130,7 +129,7 @@ namespace Zidium.Agent.AgentTasks
                 try
                 {
                     // Получаем отдельный экземпляр storage, потому что проверки выполняются параллельно
-                    var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+                    var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
                     var result = GetResult(storage, unitTest);
 

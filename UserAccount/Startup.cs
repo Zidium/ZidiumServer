@@ -40,7 +40,6 @@ namespace Zidium.UserAccount
             DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
-            DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(new DefaultStorageFactory());
 
             services.AddHttpContextAccessor();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();

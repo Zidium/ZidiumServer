@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Zidium.Common;
 
 namespace Zidium.Storage.Ef
@@ -74,12 +77,17 @@ namespace Zidium.Storage.Ef
         {
             using (var contextWrapper = _storage.GetContextWrapper())
             {
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
 
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
                         command.CommandText = $"DELETE FROM {contextWrapper.Context.FormatTableName("LimitDatasForUnitTests")} WHERE {contextWrapper.Context.FormatColumnName("LimitDataId")} IN (SELECT {contextWrapper.Context.FormatColumnName("Id")} FROM {contextWrapper.Context.FormatTableName("LimitDatas")} WHERE {contextWrapper.Context.FormatColumnName("BeginDate")} < @BeginDate AND {contextWrapper.Context.FormatColumnName("Type")} = @Type)";
 
@@ -98,6 +106,7 @@ namespace Zidium.Storage.Ef
 
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
                         command.CommandText = $"DELETE FROM {contextWrapper.Context.FormatTableName("LimitDatas")} WHERE {contextWrapper.Context.FormatColumnName("BeginDate")} < @BeginDate AND {contextWrapper.Context.FormatColumnName("Type")} = @Type";
 
@@ -113,6 +122,10 @@ namespace Zidium.Storage.Ef
 
                         command.ExecuteNonQuery();
                     }
+                }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
                 }
             }
         }

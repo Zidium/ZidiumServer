@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Zidium.Core;
 using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
@@ -42,7 +41,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
         {
             string error = null;
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var notificationRepository = storage.Notifications;
 
             var notifications = notificationRepository.GetForSend(Channels, componentId, MaxNotificationCount);

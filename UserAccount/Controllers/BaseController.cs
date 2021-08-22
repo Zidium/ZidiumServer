@@ -179,7 +179,7 @@ namespace Zidium.UserAccount.Controllers
 
         private readonly bool _isSmartBlocksRequestOverride;
 
-        private readonly IDefaultStorageFactory _storageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+        private readonly IStorageFactory _storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
 
         private IStorage _storage;
 

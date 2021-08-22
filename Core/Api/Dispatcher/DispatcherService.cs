@@ -29,7 +29,7 @@ namespace Zidium.Core
 
         private DispatcherService(IComponentControl control, ILogger logger)
         {
-            _accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+            _accountStorageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
             Control = control;
             StaticControl = control;
             _logger = logger;
@@ -37,7 +37,7 @@ namespace Zidium.Core
 
         private readonly ILogger _logger;
 
-        private readonly IDefaultStorageFactory _accountStorageFactory;
+        private readonly IStorageFactory _accountStorageFactory;
 
         public static IComponentControl StaticControl = new FakeComponentControl();
 

@@ -2,7 +2,6 @@
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 
@@ -60,7 +59,7 @@ namespace Zidium.UserAccount.Helpers
                 if (!Guid.TryParse(userIdString, out userId))
                     return null;
 
-                var storageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+                var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
                 var storage = storageFactory.GetStorage();
                 var user = storage.Users.GetOneOrNullById(userId);
 

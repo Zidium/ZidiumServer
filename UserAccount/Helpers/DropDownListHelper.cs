@@ -13,7 +13,7 @@ namespace Zidium.UserAccount.Helpers
     {
         private static IStorage GetStorage()
         {
-            return DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            return DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
         }
 
         public static List<SelectListItem> GetIntegers(int? selected, int[] values, bool allowEmpty = false)

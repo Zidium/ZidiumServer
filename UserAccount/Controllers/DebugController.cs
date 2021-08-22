@@ -17,7 +17,7 @@ namespace Zidium.UserAccount.Controllers
         private readonly IComponentControl _componentControl;
 
         [HttpPost]
-        public ActionResult LogJsError(
+        public IActionResult LogJsError(
             string pageUrl,
             string message,
             string scriptUrl,
@@ -26,10 +26,11 @@ namespace Zidium.UserAccount.Controllers
             string error,
             string stack)
         {
+            // Log by logger
             var control = _componentControl;
             if (control == null || control.IsFake())
             {
-                return null;
+                return new JsonResult(null);
             }
 
             var type = string.Format(
@@ -48,7 +49,7 @@ namespace Zidium.UserAccount.Controllers
                 .SetImportance(EventImportance.Warning)
                 .Add();
 
-            return null;
+            return new JsonResult(null);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
         public void Process(Guid? componentId = null, Guid? userId = null)
         {
             // Получим все подписки
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var subscriptions = storage.Subscriptions.GetAll();
             var userToSubscriptions = subscriptions.GroupBy(x => x.UserId).ToDictionary(x => x.Key, y => y.ToArray());
 

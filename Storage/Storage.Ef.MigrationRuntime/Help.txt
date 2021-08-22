@@ -13,3 +13,11 @@ Add-Migration <Migrations-Name> -Context "MsSqlAccountDbContext" -Project "Stora
 
 Обновление
 Update-Database -Context "MsSqlAccountDbContext" -Project "Storage.Ef" -StartupProject "Storage.Ef.MigrationRuntime" -Verbose
+
+--- Для Sqlite ---
+
+Создание миграции
+Add-Migration <Migrations-Name> -Context "SqliteAccountDbContext" -Project "Storage.Ef" -StartupProject "Storage.Ef.MigrationRuntime" -OutputDir Sqlite\Migrations -Verbose
+
+Обновление
+Update-Database -Context "SqliteAccountDbContext" -Project "Storage.Ef" -StartupProject "Storage.Ef.MigrationRuntime" -Verbose

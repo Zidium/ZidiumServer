@@ -85,16 +85,16 @@ namespace Zidium.Core.Single.Tests
             // Проверим, что запросы успешно выполняются
 
             var apiCheckResultResponse = dispatcher.SendUnitTestResult(unitTestResultRequest);
-            Assert.True(apiCheckResultResponse.Success);
+            apiCheckResultResponse.Check();
 
             var eventResponse = dispatcher.SendEvent(eventRequest);
-            Assert.True(eventResponse.Success);
+            eventResponse.Check();
 
             var logResponse = dispatcher.SendLog(logRequest);
-            Assert.True(logResponse.Success);
+            logResponse.Check();
 
             var metricResponse = dispatcher.SendMetric(metricRequest);
-            Assert.True(metricResponse.Success);
+            metricResponse.Check();
 
             // Получим лимиты аккаунта
             limitsResponse = dispatcher.GetAccountLimits(new GetAccountLimitsRequest()
@@ -110,7 +110,6 @@ namespace Zidium.Core.Single.Tests
                 logRequest.Data.GetSize() +
                 metricRequest.Data.GetSize();
             Assert.Equal(prevStorageSize + totalSize, usedLimits.UsedToday.StorageSize);
-
         }
 
         [Fact]

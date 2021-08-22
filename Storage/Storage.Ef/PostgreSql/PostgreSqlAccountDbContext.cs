@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -6,7 +7,10 @@ namespace Zidium.Storage.Ef
 {
     internal class PostgreSqlAccountDbContext : AccountDbContext
     {
-        public PostgreSqlAccountDbContext(DbConnection connection) : base(connection)
+        public PostgreSqlAccountDbContext(
+            DbConnection connection,
+            Action<DbContextOptionsBuilder> optionsBuilderAction = null
+            ) : base(connection, optionsBuilderAction)
         {
         }
 
@@ -22,15 +26,9 @@ namespace Zidium.Storage.Ef
                 optionsBuilder.UseNpgsql(ConnectionString, t => t.CommandTimeout(60));
         }
 
-        public override AccountDbContext Clone()
-        {
-            var context = Provider.Current().DbContext(ConnectionString);
-            return context;
-        }
-
         public override DbConnection CreateConnection()
         {
-            return new NpgsqlConnection(ConnectionString);
+            return base.CreateConnection() ?? new NpgsqlConnection(ConnectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

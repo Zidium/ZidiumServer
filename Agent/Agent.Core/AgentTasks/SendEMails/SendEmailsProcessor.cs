@@ -6,7 +6,6 @@ using System.Threading;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using MimeKit;
-using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -62,7 +61,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
 
         public string Process(Guid? emailId = null)
         {
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var notificationRepository = storage.Notifications;
 
             var emails = storage.SendEmailCommands.GetForSend(SendMaxCount);

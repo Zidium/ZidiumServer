@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Data.Common;
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Zidium.Storage.Ef.Sqlite;
 
 namespace Zidium.Storage.Ef
 {
-    internal class MsSqlAccountDbContext : AccountDbContext
+    internal class SqliteAccountDbContext : AccountDbContext
     {
-        public MsSqlAccountDbContext(
+        public SqliteAccountDbContext(
             DbConnection connection,
             Action<DbContextOptionsBuilder> optionsBuilderAction = null
             ) : base(connection, optionsBuilderAction)
@@ -15,25 +16,29 @@ namespace Zidium.Storage.Ef
         }
 
         // For migrations
-        public MsSqlAccountDbContext(DbContextOptions<MsSqlAccountDbContext> dbContextOptions) : base(dbContextOptions) { }
+        public SqliteAccountDbContext(DbContextOptions<SqliteAccountDbContext> dbContextOptions) : base(dbContextOptions) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
             if (Connection != null)
-                optionsBuilder.UseSqlServer(Connection, t => t.CommandTimeout(60));
+                optionsBuilder.UseSqlite(Connection, t => t.CommandTimeout(60));
             else if (ConnectionString != null)
-                optionsBuilder.UseSqlServer(ConnectionString, t => t.CommandTimeout(60));
+                optionsBuilder.UseSqlite(ConnectionString, t => t.CommandTimeout(60));
         }
 
         public override DbConnection CreateConnection()
         {
-            return base.CreateConnection() ?? new SqlConnection(ConnectionString);
+            return base.CreateConnection() ?? new SqliteConnection(ConnectionString).AddUnicodeSupport();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            if (OnModelCreatingOverride != null)
+                OnModelCreatingOverride.Invoke(modelBuilder);
         }
+
+        public static Action<ModelBuilder> OnModelCreatingOverride = null;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Zidium.Core;
+using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
 {
@@ -32,7 +32,7 @@ namespace Zidium.UserAccount.Models
                 string result = null;
                 if (EventTypeId.HasValue)
                 {
-                    var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+                    var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
                     var eventType = storage.EventTypes.GetOneById(EventTypeId.Value);
                     if (eventType != null)
                     {

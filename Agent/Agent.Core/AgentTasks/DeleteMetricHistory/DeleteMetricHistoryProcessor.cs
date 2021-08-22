@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Zidium.Core;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
 {
@@ -32,7 +32,7 @@ namespace Zidium.Agent.AgentTasks.DeleteMetricHistory
             var logicSettings = LogicSettingsCache.LogicSettings;
             var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-logicSettings.MetricsMaxDays));
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var metricHistoryRepository = storage.MetricHistory;
 
             long deletedCount = 0;

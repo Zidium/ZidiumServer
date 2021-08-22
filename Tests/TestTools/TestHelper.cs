@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
 using Zidium.Api;
 using Zidium.Api.Common;
 using Zidium.Api.Dto;
 using Zidium.Api.XmlConfig;
 using Zidium.Core;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Caching;
 using Zidium.Core.Common;
-using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
-using Xunit;
-using Zidium.Common;
-using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 
 namespace Zidium.TestTools
 {
@@ -817,15 +816,14 @@ namespace Zidium.TestTools
 
         public static IStorage GetStorage()
         {
-            return StorageFactory.GetStorage();
+            return _storageFactory.GetStorage();
         }
 
-        private static readonly IDefaultStorageFactory StorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+        private static readonly IStorageFactory _storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
 
         internal static AccountDbContext GetDbContext()
         {
-            var connectionString = DatabaseConfiguration.ConnectionString;
-            return AccountDbContext.CreateFromConnectionString(connectionString, optionsBuilder =>
+            return Provider.Instance().DbContext(optionsBuilder =>
             {
                 optionsBuilder.UseLazyLoadingProxies();
                 optionsBuilder.LogTo(message => Debug.WriteLine(message), new[] { DbLoggerCategory.Database.Command.Name });
@@ -847,21 +845,5 @@ namespace Zidium.TestTools
                 return _dispatcherConfiguration;
             }
         }
-
-        private static IDatabaseConfiguration _databaseConfiguration;
-
-        private static IDatabaseConfiguration DatabaseConfiguration
-        {
-            get
-            {
-                if (_databaseConfiguration == null)
-                {
-                    _databaseConfiguration = DependencyInjection.GetServicePersistent<IDatabaseConfiguration>();
-                }
-
-                return _databaseConfiguration;
-            }
-        }
-
     }
 }

@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using Zidium.Api.Dto;
-using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
@@ -1002,7 +1001,7 @@ namespace Zidium.UserAccount.Helpers
                 });
             }
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var types = storage.ComponentTypes.Filter(null, 100).Where(t => t.Id != SystemComponentType.Root.Id);
 
             items.AddRange(types.Select(componentType => new SelectListItem()
@@ -1027,7 +1026,7 @@ namespace Zidium.UserAccount.Helpers
             }
             // Отображаем только те типы, для которых есть хотя бы один компонент
             // Кроме папок и корня
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
             var componentTypeIds = storage.Gui.GetSimplifiedComponentList().Select(t => t.ComponentTypeId).Distinct().ToArray();
 
@@ -1057,7 +1056,7 @@ namespace Zidium.UserAccount.Helpers
                 });
             }
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var eventTypes = storage.EventTypes.Filter(null, null, null, 100);
 
             items.AddRange(eventTypes.Select(t => new SelectListItem()
@@ -1082,7 +1081,7 @@ namespace Zidium.UserAccount.Helpers
                 });
             }
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
             var users = storage.Users.GetAll()
                 .OrderBy(t => t.Login);
@@ -1118,7 +1117,7 @@ namespace Zidium.UserAccount.Helpers
                 });
             }
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
             var unitTestTypes = storage.UnitTestTypes.Filter(null, 100);
 
@@ -1300,7 +1299,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetRolesItems(Guid? selected)
         {
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var roles = storage.Roles.GetAll().OrderBy(t => t.DisplayName);
 
             var items = roles
@@ -1360,7 +1359,7 @@ namespace Zidium.UserAccount.Helpers
                 });
             }
 
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
             var metricTypeIds = storage.Metrics.GetByComponentId(componentId).Select(t => t.MetricTypeId).Distinct().ToArray();
 
@@ -1377,7 +1376,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetTimeZoneItems(int offsetMinutes)
         {
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
             var result = storage.TimeZones.GetAll()
                 .OrderBy(t => t.OffsetMinutes)

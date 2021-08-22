@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Zidium.Common;
 
 namespace Zidium.Storage.Ef
@@ -83,11 +86,17 @@ namespace Zidium.Storage.Ef
                 var objectQuery = contextWrapper.Context.MetricHistories
                     .Where(t => t.BeginDate < toDate).OrderBy(t => t.BeginDate).Select(t => t.Id).Take(maxCount).ToParametrizedSql();
 
-                using (var connection = contextWrapper.Context.CreateConnection())
+                DbConnection connection = null;
+                try
                 {
-                    connection.Open();
+                    connection = contextWrapper.Context.CreateConnection();
+
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     using (var command = connection.CreateCommand())
                     {
+                        command.Transaction = contextWrapper.Context.Database.CurrentTransaction?.GetDbTransaction();
                         command.CommandTimeout = 0;
 
                         var query = $"DELETE FROM {contextWrapper.Context.FormatTableName("MetricHistory")} WHERE {contextWrapper.Context.FormatColumnName("Id")} IN ({objectQuery.Sql})";
@@ -104,6 +113,10 @@ namespace Zidium.Storage.Ef
 
                         return SqlCommandHelper.ExecuteNonQuery(command);
                     }
+                }
+                finally
+                {
+                    contextWrapper.Context.ReleaseConnection(connection);
                 }
             }
         }

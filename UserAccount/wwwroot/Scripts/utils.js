@@ -603,7 +603,11 @@ function ziBeginHandleWindowErrors() {
         if (error && error.stack) {
             data.stack = error.stack;
         }
-        $.post('/debug/logJsError/', data);
+        $.ajax({
+            type: 'POST',
+            url: '/Debug/LogJsError/',
+            data: data
+        });
     }
 }
 

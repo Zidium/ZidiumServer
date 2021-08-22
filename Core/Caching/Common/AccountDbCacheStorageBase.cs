@@ -15,10 +15,10 @@ namespace Zidium.Core.Caching
     {
         protected AccountDbCacheStorageBase()
         {
-            AccountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
+            AccountStorageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
         }
 
-        protected readonly IDefaultStorageFactory AccountStorageFactory;
+        protected readonly IStorageFactory AccountStorageFactory;
 
         protected override AccountCacheRequest GetRequest(TReadObject cacheReadObject)
         {

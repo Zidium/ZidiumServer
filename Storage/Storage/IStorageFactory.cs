@@ -2,6 +2,6 @@
 {
     public interface IStorageFactory
     {
-        IStorage GetStorage(string connectionString);
+        IStorage GetStorage();
     }
 }

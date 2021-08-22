@@ -6,7 +6,7 @@ using Zidium.Storage;
 
 namespace Zidium.Core.AccountsDb
 {
-    // TODO Split to UserService and AuthService, move AuthService to UserAccount
+    // TODO Split to UserService and AuthService
     public class UserService : IUserService
     {
         public UserService(IStorage storage)
@@ -18,9 +18,7 @@ namespace Zidium.Core.AccountsDb
 
         public AuthInfo FindUser(string login)
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
-            var user = storage.Users.GetOneOrNullByLogin(login);
+            var user = _storage.Users.GetOneOrNullByLogin(login);
 
             if (user == null)
                 throw new WrongLoginException();
@@ -33,9 +31,7 @@ namespace Zidium.Core.AccountsDb
 
         public AuthInfo Auth(string login, string password)
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
-            var user = storage.Users.GetOneOrNullByLogin(login);
+            var user = _storage.Users.GetOneOrNullByLogin(login);
 
             if (user == null)
             {
@@ -121,10 +117,7 @@ namespace Zidium.Core.AccountsDb
                 throw new Exception("Не заполнено поле Login");
             }
 
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
-
-            var existingUser = storage.Users.GetOneOrNullByLogin(user.Login);
+            var existingUser = _storage.Users.GetOneOrNullByLogin(user.Login);
             if (existingUser != null)
                 throw new LoginAlreadyExistsException(user.Login);
 
@@ -167,9 +160,7 @@ namespace Zidium.Core.AccountsDb
 
         public Guid StartResetPassword(Guid userId, bool sendLetter = true)
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
-            var user = storage.Users.GetOneById(userId);
+            var user = _storage.Users.GetOneById(userId);
 
             var tokenService = new TokenService(_storage);
             var token = tokenService.GenerateToken(user.Id, TokenPurpose.ResetPassword, TimeSpan.FromDays(1));
@@ -203,9 +194,7 @@ namespace Zidium.Core.AccountsDb
 
         public void SendNewUserLetter(Guid userId, Guid token)
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
-            var user = storage.Users.GetOneById(userId);
+            var user = _storage.Users.GetOneById(userId);
 
             var url = UrlHelper.GetPasswordSetUrl(token);
             var emailCommand = EmailMessageHelper.NewUserLetter(user.Login, url);
@@ -216,9 +205,7 @@ namespace Zidium.Core.AccountsDb
 
         public void SendResetPasswordLetter(Guid userId, Guid token)
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
-            var user = storage.Users.GetOneById(userId);
+            var user = _storage.Users.GetOneById(userId);
 
             var url = UrlHelper.GetPasswordSetUrl(token);
             var emailCommand = EmailMessageHelper.ResetPasswordLetter(user.Login, url);

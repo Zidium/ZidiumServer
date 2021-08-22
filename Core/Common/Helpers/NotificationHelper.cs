@@ -5,6 +5,7 @@ using Zidium.Storage;
 
 namespace Zidium.Core.Common.Helpers
 {
+    // TODO Refactor to service
     public static class NotificationHelper
     {
         /// <summary>
@@ -12,8 +13,8 @@ namespace Zidium.Core.Common.Helpers
         /// </summary>
         public static void NotifyAccountAdmins(string subject, string body)
         {
-            var accountStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-            var storage = accountStorageFactory.GetStorage();
+            var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
+            var storage = storageFactory.GetStorage();
 
             var userService = new UserService(storage);
             var admins = userService.GetAccountAdmins();

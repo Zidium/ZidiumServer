@@ -2,9 +2,9 @@
 {
     public class StorageFactory : IStorageFactory
     {
-        public IStorage GetStorage(string connectionString)
+        public IStorage GetStorage()
         {
-            return new Storage(connectionString);
+            return new Storage();
         }
     }
 }

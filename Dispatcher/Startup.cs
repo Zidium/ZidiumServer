@@ -38,8 +38,6 @@ namespace Zidium.Dispatcher
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<ILogicConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
-            var defaultStorageFactory = new DefaultStorageFactory();
-            DependencyInjection.SetServicePersistent<IDefaultStorageFactory>(defaultStorageFactory);
 
             services.AddHttpContextAccessor();
         }
@@ -54,8 +52,8 @@ namespace Zidium.Dispatcher
                 DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
 
                 // Для упрощения пусть диспетчер отвечает за актуальность базы
-                var defaultStorageFactory = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>();
-                Mirgate(defaultStorageFactory, logger);
+                var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
+                Mirgate(storageFactory);
 
                 Client.Instance.Disable = false;
 
@@ -174,10 +172,10 @@ namespace Zidium.Dispatcher
             LimitsSavingTimer = new Timer(DoSaveLimits, null, AccountLimitsChecker.LimitDataTimeStep * 60 * 1000, Timeout.Infinite);
         }
 
-        protected void Mirgate(IDefaultStorageFactory defaultStorageFactory, ILogger logger)
+        protected void Mirgate(IStorageFactory storageFactory)
         {
             // Выполняем миграции
-            var storage = defaultStorageFactory.GetStorage();
+            var storage = storageFactory.GetStorage();
             storage.Migrate();
 
             // обновляем справочники

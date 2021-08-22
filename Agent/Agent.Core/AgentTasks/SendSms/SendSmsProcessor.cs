@@ -5,8 +5,8 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Zidium.Core;
 using Zidium.Core.Common.Helpers;
+using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.SendSms
 {
@@ -39,7 +39,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
         public string Process(Guid? smsId = null)
         {
-            var storage = DependencyInjection.GetServicePersistent<IDefaultStorageFactory>().GetStorage();
+            var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var smss = storage.SendSmsCommands.GetForSend(SendMaxCount);
 
             if (smsId.HasValue)

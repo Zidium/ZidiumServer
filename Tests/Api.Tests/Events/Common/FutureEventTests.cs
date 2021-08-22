@@ -32,6 +32,7 @@ namespace Zidium.Api.Tests.Events.Common
             var eventResponse = eventData.Send();
             Assert.False(eventResponse.Success); // ошибка
             Assert.Equal(ResponseCode.FutureEvent, eventResponse.Code);
+            account.SaveAllCaches();
 
             // проверим, что статус изменился (т.к. диспетчер сам отправил предупреждение о событии из будущего!)
             statusResponse = component.GetTotalState(false);
