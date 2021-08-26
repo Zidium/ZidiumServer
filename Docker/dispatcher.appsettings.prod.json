@@ -1,4 +1,9 @@
 {
+  "database": {
+    "providerName": "Sqlite",
+    "connectionString": "Data Source=/zidium/sqlite/zidium.db"
+  },
+
   "NLog": {
     "variables": {
       "logPath": "/zidium/log/dispatcher"

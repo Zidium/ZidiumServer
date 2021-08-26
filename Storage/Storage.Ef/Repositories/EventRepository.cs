@@ -284,9 +284,11 @@ namespace Zidium.Storage.Ef
                             index++;
                         }
 
-                        command.CommandText = stringBuilder.ToString();
-
-                        SqlCommandHelper.ExecuteNonQuery(command);
+                        if (stringBuilder.Length > 0)
+                        {
+                            command.CommandText = stringBuilder.ToString();
+                            SqlCommandHelper.ExecuteNonQuery(command);
+                        }
                     }
                 }
                 finally

@@ -79,6 +79,7 @@ namespace Zidium.Dispatcher
             {
                 appConfiguration.AddJsonFile(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG"), true, false);
             }
+            appConfiguration.AddEnvironmentVariables("ZIDIUM_");
             appConfiguration.AddUserSecrets(Assembly.GetEntryAssembly(), true);
             return appConfiguration;
         }

@@ -1,4 +1,9 @@
 {
+  "database": {
+    "providerName": "Sqlite",
+    "connectionString": "Data Source=/zidium/sqlite/zidium.db"
+  },
+
   "dispatcherUrl": "http://localhost:10000/",
 
   "NLog": {

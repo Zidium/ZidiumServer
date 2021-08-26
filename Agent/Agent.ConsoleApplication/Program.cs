@@ -24,6 +24,7 @@ namespace Zidium.Agent
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG")))
                 appConfigurationBuilder.AddJsonFile(Environment.GetEnvironmentVariable("ZIDIUM_CONFIG"), true, false);
 
+            appConfigurationBuilder.AddEnvironmentVariables("ZIDIUM_");
             appConfigurationBuilder.AddUserSecrets(Assembly.GetEntryAssembly(), true);
 
             var appConfiguration = appConfigurationBuilder.Build();
