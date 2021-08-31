@@ -27,6 +27,7 @@ namespace Zidium.Common
         {
             return
                 message.IndexOf("Rerun the transaction.", StringComparison.InvariantCultureIgnoreCase) >= 0 ||
+                message.IndexOf("Deadlock", StringComparison.InvariantCultureIgnoreCase) >= 0 ||
                 message.StartsWith("SQLite Error 5: 'database is locked'", StringComparison.InvariantCultureIgnoreCase);
         }
     }

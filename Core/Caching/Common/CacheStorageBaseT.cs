@@ -575,7 +575,6 @@ namespace Zidium.Core.Caching
                 {
                     var timer = new Stopwatch();
                     timer.Start();
-                    Logger.LogDebug("Начинаем обновлять: " + oldUpdateChangesObjects.Count);
 
                     // выгруженные объекты сохранять НЕ нужно,
                     // потому что их могли изменить синхронно
@@ -586,13 +585,17 @@ namespace Zidium.Core.Caching
                     UpdateList(responses);
                     timer.Stop();
                     var count = oldUpdateChangesObjects.Count;
-                    var sec = Math.Round(timer.Elapsed.TotalSeconds, 1);
-                    var speed = (int)(count / timer.Elapsed.TotalSeconds);
-                    Logger.LogInformation("Завершили обновлять " + count + " за " + sec + " сек, скорость = " + speed + " в сек");
+                    var sec = timer.Elapsed.TotalSeconds;
+                    var speed = count / timer.Elapsed.TotalSeconds;
 
-                    // сохраняем статистику по максимальному времени и количеству в очереди
+                    // сохраняем статистику
                     lock (_updateStats)
                     {
+                        _updateStats.Count += count;
+                        _updateStats.Duration += sec;
+                        _updateStats.Speed += speed;
+                        _updateStats.Iterations++;
+
                         if (count > _updateStats.MaxCount)
                             _updateStats.MaxCount = count;
 
@@ -684,6 +687,10 @@ namespace Zidium.Core.Caching
 
         public class UpdateStats
         {
+            public int Count;
+            public double Duration;
+            public double Speed;
+            public int Iterations;
             public int MaxCount;
             public double MaxDuration;
         }

@@ -47,7 +47,7 @@ namespace Zidium.Dispatcher
             }
             ComponentControl = componentControl;
 
-            _saveCountersTimer = new Timer(SaveCounters, _saveCountersTimer, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
+            _saveCountersTimer = new Timer(SaveCounters, _saveCountersTimer, saveCountersTimerInterval, Timeout.InfiniteTimeSpan);
         }
 
 
@@ -86,6 +86,9 @@ namespace Zidium.Dispatcher
         private static long _addCacheCountLast = 0;
         private static long _updateCacheCountLast = 0;
 
+        private static TimeSpan metricActualInterval = TimeSpan.FromDays(365);
+        private static TimeSpan saveCountersTimerInterval = TimeSpan.FromMinutes(5);
+
         private static void SendCacheMetrics()
         {
             var control = AllCaches.Events.ComponentControl;
@@ -103,40 +106,57 @@ namespace Zidium.Dispatcher
                 _updateCacheCountLast = AllCaches.Events.UpdateCacheCount;
                 var update = _updateCacheCountLast - oldUpdate;
 
-                // самый долгий цикл
+                // статистика
                 var updateStats = AllCaches.Events.GetUpdateStatsAndReset();
 
                 // отправляем метрики
-                var actualInterval = TimeSpan.FromMinutes(10);
                 control.SendMetrics(new List<SendMetricData>()
                 {
                     new SendMetricData()
                     {
-                        ActualInterval = actualInterval,
+                        ActualInterval = metricActualInterval,
                         Name = "ChangedCount",
                         Value = changed
                     },
                     new SendMetricData()
                     {
-                        ActualInterval = actualInterval,
+                        ActualInterval = metricActualInterval,
                         Name = "AddCacheByInterval",
                         Value = add
                     },
                     new SendMetricData()
                     {
-                        ActualInterval = actualInterval,
+                        ActualInterval = metricActualInterval,
                         Name = "UpdateCacheByInterval",
                         Value = update
                     },
                     new SendMetricData()
                     {
-                        ActualInterval = actualInterval,
+                        ActualInterval = metricActualInterval,
+                        Name = "Count",
+                        Value = updateStats.Count
+                    },
+                    new SendMetricData()
+                    {
+                        ActualInterval = metricActualInterval,
+                        Name = "AvgDurationSec",
+                        Value = updateStats.Iterations > 0 ? (int) updateStats.Duration / updateStats.Iterations : 0
+                    },
+                    new SendMetricData()
+                    {
+                        ActualInterval = metricActualInterval,
+                        Name = "AvgSpeedInSec",
+                        Value = updateStats.Iterations > 0 ? (int) updateStats.Speed / updateStats.Iterations : 0
+                    },
+                    new SendMetricData()
+                    {
+                        ActualInterval = metricActualInterval,
                         Name = "MaxUpdateCount",
                         Value = updateStats.MaxCount
                     },
                     new SendMetricData()
                     {
-                        ActualInterval = actualInterval,
+                        ActualInterval = metricActualInterval,
                         Name = "MaxUpdateDurationSec",
                         Value = updateStats.MaxDuration
                     }
@@ -146,13 +166,11 @@ namespace Zidium.Dispatcher
 
         private static void SendMemoryMetrics()
         {
-            var actualInterval = TimeSpan.FromDays(365);
-
             var workingSetSize = Environment.WorkingSet / 1024 / 1024;
-            ComponentControl.SendMetric("Memory Working Set, Mb", workingSetSize, actualInterval);
+            ComponentControl.SendMetric("Memory Working Set, Mb", workingSetSize, metricActualInterval);
 
             var managedSize = GC.GetTotalMemory(false) / 1024 / 1024;
-            ComponentControl.SendMetric("Memory Managed, Mb", managedSize, actualInterval);
+            ComponentControl.SendMetric("Memory Managed, Mb", managedSize, metricActualInterval);
         }
 
         protected static object CounterLockObject = new object();
@@ -247,7 +265,7 @@ namespace Zidium.Dispatcher
             finally
             {
                 DispatcherService.Wrapper.DeadLockHunter.Remove(threadId);
-                _saveCountersTimer = new Timer(SaveCounters, _saveCountersTimer, TimeSpan.FromMinutes(1), TimeSpan.FromMilliseconds(-1));
+                _saveCountersTimer = new Timer(SaveCounters, _saveCountersTimer, saveCountersTimerInterval, Timeout.InfiniteTimeSpan);
             }
         }
 
