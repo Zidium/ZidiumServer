@@ -124,7 +124,7 @@ namespace Zidium.UserAccount
 
                 app.UseEndpoints(endpoints =>
                 {
-                    // Компоненты
+                    // РљРѕРјРїРѕРЅРµРЅС‚С‹
 
                     endpoints.MapControllerRoute(
                             name: "ShowComponent",
@@ -132,7 +132,7 @@ namespace Zidium.UserAccount
                             defaults: new { controller = "Components", action = "Show" },
                             constraints: new { id = new GuidRouteConstraint() });
 
-                    // Типы компонентов
+                    // РўРёРїС‹ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ
 
                     endpoints.MapControllerRoute(
                             name: "ShowComponentType",
@@ -141,7 +141,7 @@ namespace Zidium.UserAccount
                             constraints: new { id = new GuidRouteConstraint() }
                         );
 
-                    // События
+                    // РЎРѕР±С‹С‚РёСЏ
 
                     endpoints.MapControllerRoute(
                             name: "ShowEvent",
@@ -150,7 +150,7 @@ namespace Zidium.UserAccount
                             constraints: new { id = new GuidRouteConstraint() }
                         );
 
-                    // Пользователи
+                    // РџРѕР»СЊР·РѕРІР°С‚РµР»Рё
 
                     endpoints.MapControllerRoute(
                             name: "ShowUser",
@@ -159,7 +159,7 @@ namespace Zidium.UserAccount
                             constraints: new { id = new GuidRouteConstraint() }
                         );
 
-                    // Заглавная страница
+                    // Р—Р°РіР»Р°РІРЅР°СЏ СЃС‚СЂР°РЅРёС†Р°
 
                     endpoints.MapControllerRoute(
                             name: "StartPage",
@@ -167,7 +167,7 @@ namespace Zidium.UserAccount
                             defaults: new { controller = "Home", action = "Start" }
                         );
 
-                    // Общий
+                    // РћР±С‰РёР№
 
                     endpoints.MapControllerRoute(
                             name: "default",
@@ -186,19 +186,19 @@ namespace Zidium.UserAccount
             var client = SystemAccountHelper.GetInternalSystemClient();
             client.WaitUntilAvailable(TimeSpan.FromSeconds(60));
 
-            // Создадим компонент
-            // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
+            // РЎРѕР·РґР°РґРёРј РєРѕРјРїРѕРЅРµРЅС‚
+            // Р•СЃР»Рё Р·Р°РїСѓСЃРєР°РµРјСЃСЏ РІ РѕС‚Р»Р°РґРєРµ, С‚Рѕ РєРѕРјРїРѕРЅРµРЅС‚ Р±СѓРґРµС‚ РЅРµ РІ РєРѕСЂРЅРµ, Р° РІ РїР°РїРєРµ DEBUG
             var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
             var folder = !debugConfiguration.DebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
             var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? SystemComponentType.WebSite.SystemName : DebugHelper.DebugComponentType);
             var componentControl = folder
                 .GetOrCreateChildComponentControl(new GetOrCreateComponentData("UserAccountWebSite", componentType)
                 {
-                    DisplayName = "Личный кабинет пользователя",
+                    DisplayName = "Р›РёС‡РЅС‹Р№ РєР°Р±РёРЅРµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ",
                     Version = VersionHelper.GetProductVersion()
                 });
 
-            // Присвоим Id компонента по умолчанию, чтобы адаптер логирования мог его использовать
+            // РџСЂРёСЃРІРѕРёРј Id РєРѕРјРїРѕРЅРµРЅС‚Р° РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ, С‡С‚РѕР±С‹ Р°РґР°РїС‚РµСЂ Р»РѕРіРёСЂРѕРІР°РЅРёСЏ РјРѕРі РµРіРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ
             Client.Instance = client;
             Client.Instance.Config.DefaultComponent.Id = componentControl.Info?.Id;
             services.AddSingleton(componentControl);

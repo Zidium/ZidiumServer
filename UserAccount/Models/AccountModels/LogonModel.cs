@@ -10,10 +10,10 @@ namespace Zidium.UserAccount.Models
 
         [Required]
         [DataType(DataType.Password)]
-        [Display(Name = "Пароль")]
+        [Display(Name = "РџР°СЂРѕР»СЊ")]
         public string Password { get; set; }
 
-        [Display(Name = "Запомнить меня")]
+        [Display(Name = "Р—Р°РїРѕРјРЅРёС‚СЊ РјРµРЅСЏ")]
         public bool RememberMe { get; set; }
 
         public string ReturnUrl { get; set; }

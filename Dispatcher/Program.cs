@@ -42,10 +42,10 @@ namespace Zidium.Dispatcher
             }
             finally
             {
-                // Остановим обработку запросов
+                // РћСЃС‚Р°РЅРѕРІРёРј РѕР±СЂР°Р±РѕС‚РєСѓ Р·Р°РїСЂРѕСЃРѕРІ
                 WebHandlerMiddlewareBase.Stop();
 
-                // Сохраним кеш
+                // РЎРѕС…СЂР°РЅРёРј РєРµС€
                 Client.Instance.Flush();
                 DispatcherService.Wrapper.SaveCaches();
                 NLog.LogManager.Shutdown();

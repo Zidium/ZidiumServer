@@ -40,7 +40,7 @@ namespace Zidium.UserAccount
             }
             finally
             {
-                // Сохраним кеш
+                // РЎРѕС…СЂР°РЅРёРј РєРµС€
                 Client.Instance.Flush();
                 NLog.LogManager.Shutdown();
             }

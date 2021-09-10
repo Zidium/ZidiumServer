@@ -51,7 +51,7 @@ namespace Zidium.Dispatcher
                 DependencyInjection.SetLoggerFactory(loggerFactory);
                 DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
 
-                // Для упрощения пусть диспетчер отвечает за актуальность базы
+                // Р”Р»СЏ СѓРїСЂРѕС‰РµРЅРёСЏ РїСѓСЃС‚СЊ РґРёСЃРїРµС‚С‡РµСЂ РѕС‚РІРµС‡Р°РµС‚ Р·Р° Р°РєС‚СѓР°Р»СЊРЅРѕСЃС‚СЊ Р±Р°Р·С‹
                 var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
                 Mirgate(storageFactory);
 
@@ -152,7 +152,7 @@ namespace Zidium.Dispatcher
             {
                 if (AccountLimitsCheckerManager.LastSaveException == null)
                 {
-                    UnitTestControl.SendResult(UnitTestResult.Success, TimeSpan.FromMinutes(10), "Сохранено записей: " + count + " за " + duration);
+                    UnitTestControl.SendResult(UnitTestResult.Success, TimeSpan.FromMinutes(10), "РЎРѕС…СЂР°РЅРµРЅРѕ Р·Р°РїРёСЃРµР№: " + count + " Р·Р° " + duration);
                 }
                 else
                 {
@@ -174,30 +174,30 @@ namespace Zidium.Dispatcher
 
         protected void Mirgate(IStorageFactory storageFactory)
         {
-            // Выполняем миграции
+            // Р’С‹РїРѕР»РЅСЏРµРј РјРёРіСЂР°С†РёРё
             var storage = storageFactory.GetStorage();
             storage.Migrate();
 
-            // обновляем справочники
+            // РѕР±РЅРѕРІР»СЏРµРј СЃРїСЂР°РІРѕС‡РЅРёРєРё
             var registrator = new AccountDbDataRegistator(storage);
             registrator.RegisterAll();
 
-            // Проверим, создан ли админ
+            // РџСЂРѕРІРµСЂРёРј, СЃРѕР·РґР°РЅ Р»Рё Р°РґРјРёРЅ
             var userService = new UserService(storage);
             var adminCreated = userService.GetAccountAdmins().Length > 0;
 
             if (!adminCreated)
             {
-                // создаем root компонент
+                // СЃРѕР·РґР°РµРј root РєРѕРјРїРѕРЅРµРЅС‚
                 var componentService = new ComponentService(storage);
                 componentService.CreateRoot(Core.AccountsDb.SystemComponentType.Root.Id);
 
-                // создаем админа
+                // СЃРѕР·РґР°РµРј Р°РґРјРёРЅР°
                 var adminUserId = userService.CreateAccountAdmin(
                     "Admin",
                     null, null, null, null, null);
 
-                // Установим пароль админа
+                // РЈСЃС‚Р°РЅРѕРІРёРј РїР°СЂРѕР»СЊ Р°РґРјРёРЅР°
                 var passwordToken = userService.StartResetPassword(adminUserId, false);
                 userService.EndResetPassword(passwordToken, "12345");
             }
