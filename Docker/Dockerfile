@@ -12,15 +12,15 @@ COPY ["Docker/zidium.sh", "/Release/"]
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
 RUN groupadd -r zidium && useradd --no-log-init -r -g zidium zidium
 WORKDIR /zidium
-RUN chown zidium $(pwd)
-USER zidium
+RUN chown zidium:zidium $(pwd)
+RUN mkdir /zidium/sqlite && chown zidium:zidium /zidium/sqlite
+RUN mkdir /zidium/log && chown zidium:zidium /zidium/log
+VOLUME /zidium/sqlite
+VOLUME /zidium/log
+# USER zidium
 COPY --chown=zidium --from=build /Release/ .
 EXPOSE 80
 EXPOSE 10000
 ENV ASPNETCORE_URLS=""
 ENV ZIDIUM_CONFIG="/zidium/zidium.appsettings.json"
-RUN mkdir /zidium/sqlite
-RUN mkdir /zidium/log
-VOLUME /zidium/sqlite
-VOLUME /zidium/log
 ENTRYPOINT ["/bin/bash", "./zidium.sh"]
