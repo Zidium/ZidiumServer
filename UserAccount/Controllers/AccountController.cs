@@ -47,17 +47,8 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                UserService.AuthInfo authInfo;
-
                 var logicSettings = GetDispatcherClient().GetLogicSettings().GetDataAndCheck();
-                if (logicSettings.MasterPassword != null && logicSettings.MasterPassword == model.Password)
-                {
-                    authInfo = userService.FindUser(model.UserName);
-                }
-                else
-                {
-                    authInfo = userService.Auth(model.UserName, model.Password);
-                }
+                var authInfo = userService.Auth(model.UserName, model.Password);
 
                 var storage = GetStorage();
                 var tokenService = new TokenService(storage);

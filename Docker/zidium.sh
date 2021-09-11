@@ -15,18 +15,24 @@ _term() {
 trap _term SIGTERM
 
 echo "Starting dispatcher...";
-chroot --userspec=zidium / sh -c 'cd zidium/Dispatcher && dotnet Zidium.Dispatcher.dll' &
+cd Dispatcher
+dotnet Zidium.Dispatcher.dll &
 child_dispatcher=$!
+cd ..
 echo "Dispatcher started, $child_dispatcher";
 
 echo "Starting user account...";
-chroot --userspec=zidium / sh -c 'cd zidium/UserAccount && dotnet Zidium.UserAccount.dll' &
+cd UserAccount
+dotnet Zidium.UserAccount.dll &
 child_user_account=$!
+cd ..
 echo "User account started, $child_user_account";
 
 echo "Starting agent...";
-chroot --userspec=zidium / sh -c 'cd zidium/Agent && dotnet Zidium.Agent.dll --service' &
+cd Agent
+dotnet Zidium.Agent.dll --service &
 child_agent=$!
+cd ..
 echo "Agent started, $child_agent";
 
 echo "Ready to work!";
@@ -41,5 +47,5 @@ wait "$child_agent"
 echo "Agent stopped"
 
 else
-chroot --userspec=zidium / "$@"
+"$@"
 fi

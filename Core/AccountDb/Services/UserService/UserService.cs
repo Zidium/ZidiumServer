@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
 using Zidium.Storage;
 
@@ -46,8 +47,7 @@ namespace Zidium.Core.AccountsDb
                 };
             }
 
-            var settingsService = new LogicSettingsService();
-            var masterPassword = settingsService.MasterPassword();
+            var masterPassword = new DispatcherClient("UserService").GetLogicSettings().GetDataAndCheck().MasterPassword;
             if (masterPassword != null && password == masterPassword)
             {
                 return new AuthInfo()
