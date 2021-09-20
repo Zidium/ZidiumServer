@@ -2,9 +2,6 @@
 
 if [ $# -eq 0 ]; then
 
-chown zidium /zidium/sqlite
-chown zidium /zidium/log
-
 _term() { 
   echo "Stopping all..." 
   kill -TERM "$child_dispatcher"
