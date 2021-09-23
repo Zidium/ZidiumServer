@@ -1,2 +1,2 @@
 @echo off
-docker build -t zidium/simple:latest .
+docker build -t local/zidium-simple:latest .

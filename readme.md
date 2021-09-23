@@ -17,7 +17,7 @@ Zidium - это open source мониторинг приложений и инф�
 
 docker cli:
 
-`docker run -d --name zidium-sqlite -p 8080:80 -p 10000:10000 -e "ZIDIUM_webSite=http://localhost:8080" -e "ZIDIUM_secretKey=XXX" -v /zidium/sqlite zidium/simple:latest`
+`docker run -d --name zidium-sqlite -p 8080:80 -p 10000:10000 -e "ZIDIUM_webSite=http://localhost:8080" -e "ZIDIUM_secretKey=XXX" -v /zidium/sqlite zidiumteam/zidium-simple:latest`
 
 или docker-compose:
 
@@ -25,7 +25,7 @@ docker cli:
 services:
   zidium:
     container_name: zidium-sqlite
-    image: zidium/simple:latest
+    image: zidiumteam/zidium-simple:latest
     restart: always
     ports:
       - 8080:80
@@ -76,7 +76,7 @@ services:
 
 docker cli:
 
-`docker run -d --name zidium -p 8080:80 -p 10000:10000 --mount type=bind,source=/path/zidium.appsettings.json,target=/zidium/zidium.appsettings.json zidium/simple:latest`
+`docker run -d --name zidium -p 8080:80 -p 10000:10000 --mount type=bind,source=/path/zidium.appsettings.json,target=/zidium/zidium.appsettings.json zidiumteam/zidium-simple:latest`
 
 или docker-compose:
 
@@ -84,7 +84,7 @@ docker cli:
 services:
   zidium:
     container_name: zidium
-    image: zidium/simple:latest
+    image: zidiumteam/zidium-simple:latest
     restart: always
     ports:
       - 8080:80
