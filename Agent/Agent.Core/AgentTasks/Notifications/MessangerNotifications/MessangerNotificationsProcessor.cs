@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
@@ -38,7 +39,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
             // сохраняем письмо в очередь
             var command = new SendMessageCommandForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Status = MessageStatus.InQueue,
                 CreateDate = DateTime.Now,
                 Body = body,

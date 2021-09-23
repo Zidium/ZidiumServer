@@ -5,6 +5,7 @@ using Zidium.Core.Common;
 using Xunit;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
+using Zidium.Common;
 
 namespace Zidium.Api.Tests.Logs
 {
@@ -44,7 +45,7 @@ namespace Zidium.Api.Tests.Logs
                     Date = logDate,
                     Message = "test message " + level,
                     Level = level,
-                    Context = Guid.NewGuid().ToString(),
+                    Context = Ulid.NewUlid().ToString(),
                     Properties = new List<ExtentionPropertyDto>()
                 };
                 messages.Add(message);

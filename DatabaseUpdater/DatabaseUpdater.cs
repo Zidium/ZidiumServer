@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
@@ -63,7 +64,7 @@ namespace Zidium.DatabaseUpdater
                     }
                     else
                     {
-                        adminPassword = Guid.NewGuid().ToString();
+                        adminPassword = Ulid.NewUlid().ToString();
                     }
 
                     var adminUserId = userService.CreateAccountAdmin(

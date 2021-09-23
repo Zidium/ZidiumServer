@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Xunit;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Storage;
@@ -99,7 +100,7 @@ namespace Zidium.Core.Tests.Services
 
             // Проверим, что нельзя поменять пароль по несуществующему токену
             var service = new UserService(storage);
-            Assert.ThrowsAny<TokenNotValidException>(() => service.EndResetPassword(Guid.NewGuid(), newPassword));
+            Assert.ThrowsAny<TokenNotValidException>(() => service.EndResetPassword(Ulid.NewUlid(), newPassword));
 
             // Проверим, что можно зайти со старым паролем
             var authInfo = service.Auth(user.Login, oldPassword);
@@ -130,11 +131,11 @@ namespace Zidium.Core.Tests.Services
         {
             // Проверим, что нельзя создать двух пользователей с одинаковым email в одном аккаунте             
             var storage = TestHelper.GetStorage();
-            var email = Guid.NewGuid() + "@test.com";
+            var email = Ulid.NewUlid() + "@test.com";
 
             var userForAdd = new UserForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 CreateDate = DateTime.Now,
                 Login = email,
                 FirstName = string.Empty,
@@ -146,7 +147,7 @@ namespace Zidium.Core.Tests.Services
 
             var userForAdd2 = new UserForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 CreateDate = DateTime.Now,
                 Login = email,
                 FirstName = string.Empty,

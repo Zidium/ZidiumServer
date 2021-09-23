@@ -43,7 +43,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     var componentTypeForAdd = new ComponentTypeForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         SystemName = data.SystemName,
                         DisplayName = data.DisplayName
                     };

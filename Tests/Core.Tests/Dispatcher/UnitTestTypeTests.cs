@@ -4,6 +4,7 @@ using Xunit;
 using Zidium.Core.Api;
 using Zidium.Api.Dto;
 using Zidium.TestTools;
+using Zidium.Common;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -17,7 +18,7 @@ namespace Zidium.Core.Tests.Dispatcher
 
             var data = new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid()
+                SystemName = "UnitTestType." + Ulid.NewUlid()
             };
 
             var response = dispatcher.GetOrCreateUnitTestType(data);
@@ -43,14 +44,14 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим новый тип проверки и новую проверку
             var unitTestType = dispatcher.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid()
+                SystemName = "UnitTestType." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             var unitTest = dispatcher.GetOrCreateUnitTest(new GetOrCreateUnitTestRequestDataDto()
             {
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid()
+                SystemName = "UnitTest." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             // Отправим зелёную проверку, актуальную 1 секунду

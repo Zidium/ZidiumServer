@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.AccountsDb
@@ -27,7 +28,7 @@ namespace Zidium.Core.AccountsDb
             {
                 _storage.AccountSettings.Add(new AccountSettingForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Name = name,
                     Value = value
                 });

@@ -5,6 +5,7 @@ using Zidium.Core.Caching;
 using Zidium.Core.Common;
 using Zidium.Storage;
 using Zidium.Api.Dto;
+using Zidium.Common;
 
 namespace Zidium.Core.AccountsDb
 {
@@ -41,7 +42,7 @@ namespace Zidium.Core.AccountsDb
 
                 var unitTestType = new UnitTestTypeForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     SystemName = data.SystemName,
                     DisplayName = data.DisplayName,
                     IsSystem = false,

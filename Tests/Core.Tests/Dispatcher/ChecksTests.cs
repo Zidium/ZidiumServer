@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.Api;
 using Zidium.Storage;
 using Zidium.TestTools;
@@ -22,10 +23,10 @@ namespace Zidium.Core.Tests.Dispatcher
             var data = new AddPingUnitTestRequestData()
             {
                 ComponentId = component.Id,
-                SystemName = "Ping_" + Guid.NewGuid(),
+                SystemName = "Ping_" + Ulid.NewUlid(),
                 PeriodSeconds = 600,
                 ErrorColor = UnitTestResult.Alarm,
-                Host = Guid.NewGuid() + ".ru",
+                Host = Ulid.NewUlid() + ".ru",
                 TimeoutMs = 1000,
                 AttempMax = 3
             };
@@ -55,7 +56,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var data = new AddHttpUnitTestRequestData()
             {
                 ComponentId = component.Id,
-                SystemName = "Http_" + Guid.NewGuid(),
+                SystemName = "Http_" + Ulid.NewUlid(),
                 PeriodSeconds = 600,
                 ErrorColor = UnitTestResult.Alarm,
                 AttempMax = 3,
@@ -65,7 +66,7 @@ namespace Zidium.Core.Tests.Dispatcher
                     {
                         SortNumber = 1,
                         DisplayName = "Rule1",
-                        Url = "http://" + Guid.NewGuid() + ".ru",
+                        Url = "http://" + Ulid.NewUlid() + ".ru",
                         Method = HttpRequestMethod.Get,
                         ResponseCode = 200,
                         MaxResponseSize = 1024,
@@ -127,7 +128,7 @@ namespace Zidium.Core.Tests.Dispatcher
             {
                 UnitTestTypeId = new Guid("00000000-1111-2222-3333-444444444444"),
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid()
+                SystemName = "UnitTest." + Ulid.NewUlid()
             };
 
             var response = dispatcher.GetOrCreateUnitTest(data);
@@ -144,14 +145,14 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим новый тип проверки и новую проверку
             var unitTestType = dispatcher.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid()
+                SystemName = "UnitTestType." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             var unitTest = dispatcher.GetOrCreateUnitTest(new GetOrCreateUnitTestRequestDataDto()
             {
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid()
+                SystemName = "UnitTest." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             // Отправим зелёную проверку, актуальную 1 секунду
@@ -184,7 +185,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим новый тип проверки
             var unitTestType = dispatcher.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid()
+                SystemName = "UnitTestType." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             // Создадим новую проверку с актуальностью 1 сек
@@ -192,7 +193,7 @@ namespace Zidium.Core.Tests.Dispatcher
             {
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid(),
+                SystemName = "UnitTest." + Ulid.NewUlid(),
                 ActualTimeSecs = 1
             }).GetDataAndCheck();
 
@@ -225,7 +226,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим новый тип проверки
             var unitTestType = dispatcher.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid()
+                SystemName = "UnitTestType." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             // Создадим новую проверку и установим жёлтый цвет, если нет сигнала
@@ -233,7 +234,7 @@ namespace Zidium.Core.Tests.Dispatcher
             {
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid(),
+                SystemName = "UnitTest." + Ulid.NewUlid(),
                 NoSignalColor = ObjectColor.Yellow
             }).GetDataAndCheck();
 
@@ -266,7 +267,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим новый тип проверки с актуальностью 1 сек
             var unitTestType = dispatcher.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid(),
+                SystemName = "UnitTestType." + Ulid.NewUlid(),
                 ActualTimeSecs = 1
             }).GetDataAndCheck();
 
@@ -275,7 +276,7 @@ namespace Zidium.Core.Tests.Dispatcher
             {
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid()
+                SystemName = "UnitTest." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             // Отправим зелёную проверку, актуальную 1 час
@@ -307,7 +308,7 @@ namespace Zidium.Core.Tests.Dispatcher
             // Создадим новый тип проверки и укажем жёлтый цвет, если нет сигнала
             var unitTestType = dispatcher.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                SystemName = "UnitTestType." + Guid.NewGuid(),
+                SystemName = "UnitTestType." + Ulid.NewUlid(),
                 NoSignalColor = ObjectColor.Yellow
             }).GetDataAndCheck();
 
@@ -316,7 +317,7 @@ namespace Zidium.Core.Tests.Dispatcher
             {
                 UnitTestTypeId = unitTestType.Id,
                 ComponentId = component.Id,
-                SystemName = "UnitTest." + Guid.NewGuid()
+                SystemName = "UnitTest." + Ulid.NewUlid()
             }).GetDataAndCheck();
 
             // Отправим зелёную проверку, актуальную 1 сек

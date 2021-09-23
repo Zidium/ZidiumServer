@@ -183,7 +183,7 @@ namespace Zidium.UserAccount.Controllers
 
         protected override string GetComponentSystemName(EditSimpleModel model)
         {
-            return ComponentHelper.GetDynamicSystemName(new Guid());
+            return ComponentHelper.GetDynamicSystemName(Ulid.NewUlid());
         }
     }
 }

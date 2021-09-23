@@ -66,7 +66,7 @@ namespace Zidium.Core.AccountsDb
         {
             var change = new DefectChangeForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Status = status,
                 Comment = comment,
                 Date = DateTime.Now,
@@ -131,7 +131,7 @@ namespace Zidium.Core.AccountsDb
                 int number = GetNextDefectNumber();
                 var defectForAdd = new DefectForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Number = number,
                     Title = title,
                     Notes = notes,

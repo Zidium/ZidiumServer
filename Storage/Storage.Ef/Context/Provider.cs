@@ -33,7 +33,7 @@ namespace Zidium.Storage.Ef
         {
             var providerName = databaseConfiguration.ProviderName;
 
-            if (providerName.Equals("System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
+            if (providerName.Equals("MsSql", StringComparison.OrdinalIgnoreCase))
                 Type = DatabaseProviderType.MsSql;
             else if (providerName.Equals("Npgsql", StringComparison.OrdinalIgnoreCase))
                 Type = DatabaseProviderType.PostgreSql;
@@ -63,7 +63,7 @@ namespace Zidium.Storage.Ef
             get
             {
                 if (Type == DatabaseProviderType.MsSql)
-                    return "System.Data.SqlClient";
+                    return "MsSql";
                 if (Type == DatabaseProviderType.PostgreSql)
                     return "Npgsql";
                 if (Type == DatabaseProviderType.Sqlite)

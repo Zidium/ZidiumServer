@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Components
@@ -31,7 +32,7 @@ namespace Zidium.Api.Tests.Components
         [Fact]
         public void CreateFolderAsTsdDo()
         {
-            var x = Guid.NewGuid().ToString();
+            var x = Ulid.NewUlid().ToString();
             
             //var config = ConfigHelper.LoadFromXmlOrGetDefault();
             //config.Access.AccountId = new Guid("8BA14E0D-CEE8-4FEC-B6A0-C7B765F2D6B1");

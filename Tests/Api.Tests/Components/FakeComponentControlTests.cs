@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Components
@@ -18,7 +19,7 @@ namespace Zidium.Api.Tests.Components
             var root = client.GetRootComponentControl();
             Assert.True(root.IsFake());
 
-            var eventObj = root.CreateComponentEvent(Guid.NewGuid().ToString());
+            var eventObj = root.CreateComponentEvent(Ulid.NewUlid().ToString());
             var response = eventObj.Send();
             Assert.False(response.Success);
         }
@@ -28,7 +29,7 @@ namespace Zidium.Api.Tests.Components
         {
             var control = new FakeComponentControl("Fake");
             Assert.True(control.IsFake());
-            var eventObj = control.CreateApplicationError(Guid.NewGuid().ToString());
+            var eventObj = control.CreateApplicationError(Ulid.NewUlid().ToString());
             var response = eventObj.Send();
             Assert.False(response.Success);
         }
@@ -38,7 +39,7 @@ namespace Zidium.Api.Tests.Components
         {
             var control = new FakeComponentControl("Fake");
             Assert.True(control.IsFake());
-            var eventObj = control.CreateApplicationError(Guid.NewGuid().ToString());
+            var eventObj = control.CreateApplicationError(Ulid.NewUlid().ToString());
             var result = eventObj.Add();
             Assert.NotNull(result);
         }
@@ -48,7 +49,7 @@ namespace Zidium.Api.Tests.Components
         {
             var control = new FakeComponentControl("Fake");
             Assert.True(control.IsFake());
-            var eventObj = control.CreateComponentEvent(Guid.NewGuid().ToString());
+            var eventObj = control.CreateComponentEvent(Ulid.NewUlid().ToString());
             var response = eventObj.Send();
             Assert.False(response.Success);
         }
@@ -58,7 +59,7 @@ namespace Zidium.Api.Tests.Components
         {
             var control = new FakeComponentControl("Fake");
             Assert.True(control.IsFake());
-            var eventObj = control.AddApplicationError(Guid.NewGuid().ToString(), string.Empty);
+            var eventObj = control.AddApplicationError(Ulid.NewUlid().ToString(), string.Empty);
             Assert.NotNull(eventObj);
         }
 
@@ -67,7 +68,7 @@ namespace Zidium.Api.Tests.Components
         {
             var control = new FakeComponentControl("Fake");
             Assert.True(control.IsFake());
-            var eventObj = control.AddComponentEvent(Guid.NewGuid().ToString(), string.Empty);
+            var eventObj = control.AddComponentEvent(Ulid.NewUlid().ToString(), string.Empty);
             Assert.NotNull(eventObj);
         }
 
@@ -75,7 +76,7 @@ namespace Zidium.Api.Tests.Components
         public void FakeGetOrCreateChildComponentControlTest()
         {
             var control = new FakeComponentControl("Fake");
-            var child = control.GetOrCreateChildComponentControl(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            var child = control.GetOrCreateChildComponentControl(Ulid.NewUlid().ToString(), Ulid.NewUlid().ToString());
             Assert.NotNull(child);
             Assert.True(child.IsFake());
         }
@@ -84,7 +85,7 @@ namespace Zidium.Api.Tests.Components
         public void FakeGetOrCreateUnitTestControlTest()
         {
             var control = new FakeComponentControl("Fake");
-            var unitTestControl = control.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+            var unitTestControl = control.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
             Assert.NotNull(unitTestControl);
             Assert.True(unitTestControl.IsFake());
         }

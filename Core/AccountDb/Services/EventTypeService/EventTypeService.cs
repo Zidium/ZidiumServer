@@ -42,7 +42,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     if (eventType.Id == Guid.Empty)
                     {
-                        eventType.Id = Guid.NewGuid();
+                        eventType.Id = Ulid.NewUlid();
                     }
                     eventType.CreateDate = DateTime.Now;
                     _storage.EventTypes.Add(eventType);

@@ -66,7 +66,7 @@ namespace Zidium.Core.Caching
                     // Проверим лимиты
                     var metricTypeForAdd = new MetricTypeForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         IsDeleted = false,
                         CreateDate = DateTime.Now,
                         SystemName = name,

@@ -746,7 +746,7 @@ namespace Zidium.Core.AccountsDb
                 data.ParentComponentId = _storage.Components.GetRoot().Id;
             }
 
-            var componentId = data.NewId ?? Guid.NewGuid();
+            var componentId = data.NewId ?? Ulid.NewUlid();
             var systemName = data.SystemName;
 
             var lockObj = LockObject.ForComponent(systemName);
@@ -831,7 +831,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     _storage.ComponentProperties.Add(new ComponentPropertyForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         ComponentId = componentId,
                         Name = property.Name,
                         Value = property.Value,

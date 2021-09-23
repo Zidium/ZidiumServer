@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.DeleteEvents;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
@@ -152,7 +153,7 @@ namespace Zidium.Agent.Single.Tests
             {
                 var _event = new DbEvent()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     OwnerId = ownerId,
                     Category = category,
                     StartDate = date,
@@ -165,7 +166,7 @@ namespace Zidium.Agent.Single.Tests
 
                 _event.Properties.Add(new DbEventProperty()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     EventId = _event.Id,
                     Event = _event,
                     DataType = DataType.String,

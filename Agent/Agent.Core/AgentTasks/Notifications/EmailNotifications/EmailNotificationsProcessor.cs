@@ -6,6 +6,7 @@ using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 using Zidium.Api.Dto;
 using Microsoft.Extensions.Logging;
+using Zidium.Common;
 
 namespace Zidium.Agent.AgentTasks.Notifications
 {
@@ -40,7 +41,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
             // сохраняем письмо в очередь
             var command = new SendEmailCommandForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Status = EmailStatus.InQueue,
                 CreateDate = DateTime.Now,
                 Body = htmlBody,

@@ -124,7 +124,7 @@ namespace Zidium.UserAccount.Models.CheckModels
                     new GetOrCreateUnitTestRequestDataDto()
                     {
                         ComponentId = ComponentId,
-                        SystemName = "GUID_" + Guid.NewGuid(),
+                        SystemName = "GUID_" + Ulid.NewUlid(),
                         DisplayName = CheckName,
                         UnitTestTypeId = UnitTestTypeId,
                         AttempMax = 2

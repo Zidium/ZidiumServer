@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.Helpers;
@@ -52,7 +53,7 @@ namespace Zidium.Core.AccountsDb
 
             var result = new EventForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Count = 1,
                 JoinKeyHash = joinKeyHash,
                 Importance = importance,
@@ -87,7 +88,7 @@ namespace Zidium.Core.AccountsDb
             var now = DateTime.Now;
             var component = _storage.Components.GetOneById(componentId);
 
-            var unitTestId = newId ?? Guid.NewGuid();
+            var unitTestId = newId ?? Ulid.NewUlid();
 
             var bulbService = new BulbService(_storage);
             var statusDataId = bulbService.CreateBulb(
@@ -535,7 +536,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     var rule = new HttpRequestUnitTestRuleForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         HttpRequestUnitTestId = id,
                         SortNumber = ruleData.SortNumber,
                         DisplayName = ruleData.DisplayName,
@@ -781,7 +782,7 @@ namespace Zidium.Core.AccountsDb
 
             return new EventForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Message = "Нет сигнала",
                 OwnerId = unitTest.Id,
                 ActualDate = DateTimeHelper.InfiniteActualDate,

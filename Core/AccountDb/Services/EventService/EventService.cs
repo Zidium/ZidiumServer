@@ -239,7 +239,7 @@ namespace Zidium.Core.AccountsDb
             var now = DateTime.Now;
             var result = new EventForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 EventTypeId = eventType.Id,
                 Importance = importance ?? EventImportance.Unknown,
                 CreateDate = now,

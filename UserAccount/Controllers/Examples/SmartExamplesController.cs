@@ -3,6 +3,7 @@ using System.Threading;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Zidium.Common;
 using Zidium.UserAccount.Models.Examples.Smart;
 
 namespace Zidium.UserAccount.Controllers
@@ -64,7 +65,7 @@ namespace Zidium.UserAccount.Controllers
 
             var model = new Example2PartialModel()
             {
-                Value = Guid.NewGuid()
+                Value = Ulid.NewUlid()
             };
 
             return PartialView(model);

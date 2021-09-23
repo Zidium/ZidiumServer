@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Web;
+using Zidium.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.Common
@@ -25,7 +26,7 @@ namespace Zidium.Core.Common
         {
             return new SendEmailCommandForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 To = to,
                 From = null,
                 IsHtml = true,

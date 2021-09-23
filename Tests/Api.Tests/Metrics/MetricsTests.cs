@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Metrics
@@ -12,7 +13,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var counterName = Guid.NewGuid().ToString();
+            var counterName = Ulid.NewUlid().ToString();
             var counterValue = new Random().Next();
             var counterBeginDate = DateTime.Now;
             //var counterActualDate = counterBeginDate.AddDays(1);
@@ -39,7 +40,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var counterName = Guid.NewGuid().ToString();
+            var counterName = Ulid.NewUlid().ToString();
 
             var getResponse = component.GetMetrics();
             Assert.True(getResponse.Success);
@@ -67,7 +68,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var metricName = Guid.NewGuid().ToString();
+            var metricName = Ulid.NewUlid().ToString();
             var metricValue = double.PositiveInfinity;
 
             var sendResponse = component.SendMetric(metricName, metricValue);
@@ -81,7 +82,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var metricName = Guid.NewGuid().ToString();
+            var metricName = Ulid.NewUlid().ToString();
             var metricValue = double.PositiveInfinity;
 
             var data = new SendMetricData[]
@@ -104,7 +105,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var metricName = Guid.NewGuid().ToString();
+            var metricName = Ulid.NewUlid().ToString();
             var metricValue = double.NaN;
 
             var sendResponse = component.SendMetric(metricName, metricValue);
@@ -118,7 +119,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var metricName = Guid.NewGuid().ToString();
+            var metricName = Ulid.NewUlid().ToString();
             var metricValue = double.NaN;
 
             var data = new SendMetricData[]
@@ -141,7 +142,7 @@ namespace Zidium.Api.Tests.Metrics
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var metricName = Guid.NewGuid().ToString();
+            var metricName = Ulid.NewUlid().ToString();
             var metricValue = 10;
 
             var sendResponse = component.SendMetric(metricName, metricValue, TimeSpan.MaxValue);

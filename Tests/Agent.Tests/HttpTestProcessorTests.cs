@@ -15,6 +15,7 @@ using Zidium.Api.Dto;
 using Zidium.Core.Common;
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
+using Zidium.Common;
 
 namespace Zidium.Agent.Tests
 {
@@ -81,7 +82,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -93,9 +94,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
                     TimeoutSeconds = 5
                 };
@@ -125,7 +126,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -137,9 +138,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
                     ErrorHtml = "Все хорошо",
                     TimeoutSeconds = 5
@@ -172,7 +173,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -184,9 +185,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite.zidium.net/ok-22222222",
                     TimeoutSeconds = 60
                 };
@@ -218,7 +219,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -230,9 +231,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
                     SuccessHtml = "Все хорошо 77777777",
                     TimeoutSeconds = 5
@@ -265,7 +266,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -277,9 +278,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://localhost:3451/",
                     TimeoutSeconds = 5
                 };
@@ -311,7 +312,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -323,9 +324,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite.zidium.net/ok?wait=5",
                     TimeoutSeconds = 4
                 };
@@ -357,7 +358,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -369,9 +370,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite.zidium.net/ok",
                     TimeoutSeconds = 5,
                     MaxResponseSize = 1
@@ -404,7 +405,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -416,9 +417,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http://fakesite2222.zidium.net/ok",
                     TimeoutSeconds = 5
                 };
@@ -450,7 +451,7 @@ namespace Zidium.Agent.Tests
             var client = account.GetClient();
             var component = account.CreateRandomComponentControl();
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -462,9 +463,9 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     HttpRequestUnitTest = httpUnitTest,
-                    DisplayName = Guid.NewGuid().ToString(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     Url = "http5://fakesite.zidium.net/ok",
                     TimeoutSeconds = 5
                 };
@@ -498,7 +499,7 @@ namespace Zidium.Agent.Tests
 
             // Создадим проверку, которая должна провалиться только после второй попытки
             var unitTestType = client.GetOrCreateUnitTestTypeControl(SystemUnitTestType.HttpUnitTestType.SystemName);
-            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl(unitTestType, "httpCheck." + Ulid.NewUlid());
             var unitTestId = unitTest.Info.Id;
 
             using (var accountDbContext = TestHelper.GetDbContext())
@@ -512,8 +513,8 @@ namespace Zidium.Agent.Tests
 
                 var rule = new DbHttpRequestUnitTestRule()
                 {
-                    Id = Guid.NewGuid(),
-                    DisplayName = Guid.NewGuid().ToString(),
+                    Id = Ulid.NewUlid(),
+                    DisplayName = Ulid.NewUlid().ToString(),
                     HttpRequestUnitTest = httpUnitTest,
                     Url = "http://fakesite.zidium.net/ok?wait=10",
                     TimeoutSeconds = 5

@@ -2,6 +2,7 @@
 using Zidium.Api.Dto;
 using Xunit;
 using Zidium.TestTools;
+using Zidium.Common;
 
 namespace Zidium.Api.Tests.Components
 {
@@ -52,7 +53,7 @@ namespace Zidium.Api.Tests.Components
             client = account.GetClient();
             root = client.GetRootComponentControl();
             message.Version = "2.0";
-            message.DisplayName = Guid.NewGuid().ToString();
+            message.DisplayName = Ulid.NewUlid().ToString();
             var component2 = root.GetOrCreateChildComponentControl(message);
 
             Assert.False(component2.IsFake());

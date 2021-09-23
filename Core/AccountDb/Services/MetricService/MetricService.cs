@@ -285,7 +285,7 @@ namespace Zidium.Core.AccountsDb
             var color = ObjectColorHelper.Get(status);
             var history = new MetricHistoryForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 ComponentId = metric.ComponentId,
                 MetricTypeId = metric.MetricTypeId,
                 Value = value,
@@ -336,7 +336,7 @@ namespace Zidium.Core.AccountsDb
             {
                 metricTypes = new[]
                 {
-                    Guid.NewGuid()
+                    Ulid.NewUlid()
                 };
                 var metricType = _storage.MetricTypes.GetOneOrNullBySystemName(filter.Name);
                 if (metricType != null)
@@ -602,7 +602,7 @@ namespace Zidium.Core.AccountsDb
                 }
 
                 var processDate = DateTime.Now;
-                var metricId = Guid.NewGuid();
+                var metricId = Ulid.NewUlid();
 
                 var bulbService = new BulbService(_storage);
                 var statusDataId = bulbService.CreateBulb(

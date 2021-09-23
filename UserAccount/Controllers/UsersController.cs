@@ -104,7 +104,7 @@ namespace Zidium.UserAccount.Controllers
             {
                 var user = new UserForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Login = model.Login,
                     DisplayName = model.DisplayName,
                     Post = model.Post
@@ -119,7 +119,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     roles.Add(new UserRoleForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         UserId = user.Id,
                         RoleId = model.RoleId.Value
                     });
@@ -218,7 +218,7 @@ namespace Zidium.UserAccount.Controllers
                         if (model.RoleId.HasValue)
                             userService.AddUserRole(user.Id, new UserRoleForAdd()
                             {
-                                Id = Guid.NewGuid(),
+                                Id = Ulid.NewUlid(),
                                 RoleId = model.RoleId.Value
                             });
                     }
@@ -360,7 +360,7 @@ namespace Zidium.UserAccount.Controllers
 
             var contactForAdd = new UserContactForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = user.Id,
                 Type = model.Type,
                 Value = model.Value,

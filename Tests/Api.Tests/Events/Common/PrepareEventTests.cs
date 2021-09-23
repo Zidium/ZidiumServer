@@ -4,6 +4,7 @@ using Zidium.Api.Others;
 using Xunit;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
+using Zidium.Common;
 
 namespace Zidium.Api.Tests.Events
 {
@@ -33,7 +34,7 @@ namespace Zidium.Api.Tests.Events
 
             for (int i = 0; i < 10; i++)
             {
-                eventData.Properties["text_" + Guid.NewGuid()] = new String('t', 1000 * 1000 + i);
+                eventData.Properties["text_" + Ulid.NewUlid()] = new String('t', 1000 * 1000 + i);
             }
             eventData.Properties["veryLongKey_" + new string('l', 1000)] = new DateTime(2015, 05, 09, 10, 00, 00);
             eventData.Properties["Stack"] = "stack value";
@@ -104,7 +105,7 @@ namespace Zidium.Api.Tests.Events
             eventData.Version = "1";
             for (int i = 0; i < 10; i++)
             {
-                eventData.Properties["text_" + Guid.NewGuid()] = new String('t', 1000 * 1000 + i);
+                eventData.Properties["text_" + Ulid.NewUlid()] = new String('t', 1000 * 1000 + i);
             }
             eventData.Properties["veryLongKey_" + new string('l', 1000)] = new DateTime(2015, 05, 09, 10, 00, 00);
             eventData.Properties["Stack"] = "stack value";

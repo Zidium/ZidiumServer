@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Events
@@ -34,8 +35,8 @@ namespace Zidium.Api.Tests.Events
             var component = account.CreateRandomComponentControl();
 
             // добавим событие в очередь
-            string eventType = "test event " + Guid.NewGuid();
-            string messageText = "test message " + Guid.NewGuid();
+            string eventType = "test event " + Ulid.NewUlid();
+            string messageText = "test message " + Ulid.NewUlid();
             var result = component.AddComponentEvent(eventType, messageText);
             Assert.Equal(AddEventStatus.WaitForSend, result.Status);
 
@@ -76,7 +77,7 @@ namespace Zidium.Api.Tests.Events
             // продлим с новым message
             // события с разным message теперь не склеиваются
             /*
-            string messageText2 = Guid.NewGuid().ToString();
+            string messageText2 = Ulid.NewUlid().ToString();
             result = component.AddComponentEvent(eventType, messageText2);
             component.Client.EventManager.Flush();
 
@@ -102,8 +103,8 @@ namespace Zidium.Api.Tests.Events
             var component = account.CreateRandomComponentControl();
             
             // добавим событие в очередь в цикле много раз
-            string eventType = "test event " + Guid.NewGuid();
-            string messageText = "test message " + Guid.NewGuid();
+            string eventType = "test event " + Ulid.NewUlid();
+            string messageText = "test message " + Ulid.NewUlid();
             var startTime = DateTime.Now;
             var endTime = startTime.AddSeconds(10);
             while (DateTime.Now < endTime)
@@ -131,7 +132,7 @@ namespace Zidium.Api.Tests.Events
             var component = account.CreateRandomComponentControl();
             
             // добавим событие в очередь
-            string errorType = "test error " + Guid.NewGuid();
+            string errorType = "test error " + Ulid.NewUlid();
           
             var addResult = component
                 .CreateApplicationError(errorType, "Сообщение")
@@ -188,7 +189,7 @@ namespace Zidium.Api.Tests.Events
             var component = account.CreateRandomComponentControl();
 
             // добавим событие в очередь 1-ый раз
-            string errorType = "test erro " + Guid.NewGuid();
+            string errorType = "test erro " + Ulid.NewUlid();
            
             var error = component
                 .CreateApplicationError(errorType)
@@ -223,7 +224,7 @@ namespace Zidium.Api.Tests.Events
             var component = account.CreateRandomComponentControl();
 
             // добавим событие в очередь 1-ый раз
-            string errorType = "test error " + Guid.NewGuid();
+            string errorType = "test error " + Ulid.NewUlid();
 
             var error = component
                 .CreateApplicationError(errorType)

@@ -2,6 +2,7 @@
 using System.Threading;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.UnitTests
@@ -34,7 +35,7 @@ namespace Zidium.Api.Tests.UnitTests
             var component = account.CreateRandomComponentControl();
 
             // 1 - запросим статус неизвестной проверки
-            Guid unitTestId = Guid.NewGuid();
+            Guid unitTestId = Ulid.NewUlid();
             var checkResponse = client.ApiService.GetUnitTestState(unitTestId);
             Assert.False(checkResponse.Success);
 
@@ -80,7 +81,7 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest = component.GetOrCreateUnitTestControl("UnitTest." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl("UnitTest." + Ulid.NewUlid());
             var tasks = new ThreadTaskQueue(10);
             var random = new Random();
             ResponseDto firstError = null;
@@ -138,7 +139,7 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest = component.GetOrCreateUnitTestControl("UnitTest." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl("UnitTest." + Ulid.NewUlid());
 
             // отправим 2 результата проверки подряд
 
@@ -172,7 +173,7 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest = component.GetOrCreateUnitTestControl("UnitTest." + Guid.NewGuid());
+            var unitTest = component.GetOrCreateUnitTestControl("UnitTest." + Ulid.NewUlid());
 
             // Отправим красный результат
             var response = unitTest.SendResult(new SendUnitTestResultData()
@@ -216,7 +217,7 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+            var unitTest = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
 
             // Отправим зелёный результат
             var response = unitTest.SendResult(new SendUnitTestResultData()
@@ -257,7 +258,7 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+            var unitTest = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
 
             // Отправим зелёный результат
             var response = unitTest.SendResult(new SendUnitTestResultData()
@@ -302,7 +303,7 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+            var unitTest = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
 
             var response = unitTest.SendResult(new SendUnitTestResultData()
             {
@@ -320,8 +321,8 @@ namespace Zidium.Api.Tests.UnitTests
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var unitTest1 = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
-            var unitTest2 = component.GetOrCreateUnitTestControl(Guid.NewGuid().ToString());
+            var unitTest1 = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
+            var unitTest2 = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
 
             var data = new []
             {

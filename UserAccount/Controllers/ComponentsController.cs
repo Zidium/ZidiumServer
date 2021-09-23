@@ -410,7 +410,7 @@ namespace Zidium.UserAccount.Controllers
             var component = GetStorage().Components.GetOneById(model.ComponentId);
             CheckEditingPermissions(component);
 
-            var id = Guid.NewGuid();
+            var id = Ulid.NewUlid();
             GetStorage().ComponentProperties.Add(new ComponentPropertyForAdd()
             {
                 Id = id,

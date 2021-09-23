@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
@@ -22,24 +23,24 @@ namespace Zidium.Core.Tests.Caching
                 accountDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
                 var child = new DbBulb()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     CreateDate = DateTime.Now
                 };
                 accountDbContext.Bulbs.Attach(child);
 
                 var parent1 = new DbBulb()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     CreateDate = DateTime.Now,
                     LastChildBulbId = child.Id
                 };
                 accountDbContext.Bulbs.Attach(parent1);
                
-                parent1.LastChildBulbId = Guid.NewGuid();
+                parent1.LastChildBulbId = Ulid.NewUlid();
 
                 var parent2 = new DbBulb()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     CreateDate = DateTime.Now,
                     LastChildBulbId = child.Id
                 };

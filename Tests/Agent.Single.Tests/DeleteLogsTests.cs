@@ -6,6 +6,7 @@ using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
 using Microsoft.Extensions.Logging.Abstractions;
+using Zidium.Common;
 
 namespace Zidium.Agent.Single.Tests
 {
@@ -27,12 +28,12 @@ namespace Zidium.Agent.Single.Tests
 
             using (var accountDbContext = account.GetDbContext())
             {
-                var message = "test log message " + Guid.NewGuid();
+                var message = "test log message " + Ulid.NewUlid();
 
                 var log = new DbLog()
                 {
                     ComponentId = component.Info.Id,
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Date = oldDate,
                     Level = LogLevel.Debug,
                     Message = message,
@@ -40,7 +41,7 @@ namespace Zidium.Agent.Single.Tests
                 };
                 log.Parameters.Add(new DbLogProperty()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     LogId = log.Id,
                     Log = log,
                     DataType = DataType.String,
@@ -52,7 +53,7 @@ namespace Zidium.Agent.Single.Tests
                 log = new DbLog()
                 {
                     ComponentId = component.Info.Id,
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Date = DateTime.Now,
                     Level = LogLevel.Debug,
                     Message = message,

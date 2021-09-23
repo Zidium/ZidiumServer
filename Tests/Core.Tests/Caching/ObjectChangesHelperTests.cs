@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.Caching;
 using Zidium.Storage.Ef;
 
@@ -17,9 +18,9 @@ namespace Zidium.Core.Tests.Caching
             Assert.False(ObjectChangesHelper.HasChanges(a, b));
 
             // GUID
-            a.Id = Guid.NewGuid();
+            a.Id = Ulid.NewUlid();
             Assert.True(ObjectChangesHelper.HasChanges(a, b));
-            b.Id = Guid.NewGuid();
+            b.Id = Ulid.NewUlid();
             Assert.True(ObjectChangesHelper.HasChanges(a, b));
             b.Id = a.Id;
             Assert.False(ObjectChangesHelper.HasChanges(a, b));

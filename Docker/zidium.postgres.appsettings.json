@@ -1,7 +1,7 @@
 {
   "database": {
     "providerName": "Npgsql",
-    "connectionString": "Host=host.docker.internal;Port=5432;Database=Zidium.Work;Username=postgres;Password=12345;ApplicationName=Zidium.Dispatcher"
+    "connectionString": "Host=host.docker.internal;Port=5432;Database=Zidium.Work;Username=postgres;Password=12345;ApplicationName=Zidium"
   },
   "webSite": "http://localhost:8080",
   "secretKey": "XXX"

@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Others
@@ -27,7 +28,7 @@ namespace Zidium.Core.Tests.Others
             int count = 100;
             for (int i = 0; i < count; i++)
             {
-                var g1 = Guid.NewGuid();
+                var g1 = Ulid.NewUlid();
                 var g2 = Guid.Parse(g1.ToString());
                 var g3 = g1;
 

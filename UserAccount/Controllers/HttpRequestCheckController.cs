@@ -134,7 +134,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     var ruleForAdd = new HttpRequestUnitTestRuleForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         HttpRequestUnitTestId = unitTestId,
                         Method = HttpRequestMethod.Get,
                         ResponseCode = 200,

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Zidium.Common;
 
 namespace Zidium.Core.Common.TaskQueue
 {
@@ -72,7 +73,7 @@ namespace Zidium.Core.Common.TaskQueue
         public Guid Add(string threadName)
         {
             var thread = Thread.CurrentThread;
-            var id = Guid.NewGuid();
+            var id = Ulid.NewUlid();
             var threadInfo = new ThreadInfo()
             {
                 Id = id,

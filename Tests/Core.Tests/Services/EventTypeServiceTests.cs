@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 
@@ -13,7 +14,7 @@ namespace Zidium.Core.Tests.Services
         {
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var service = new EventTypeService(storage);
-            var guid = Guid.NewGuid();
+            var guid = Ulid.NewUlid();
 
             EventTypeForAdd eventType1ForAdd = new EventTypeForAdd()
             {

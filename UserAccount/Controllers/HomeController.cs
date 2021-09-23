@@ -74,7 +74,7 @@ namespace Zidium.UserAccount.Controllers
 
             var userContact = new UserContactForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = CurrentUser.Id,
                 Type = UserContactType.MobilePhone,
                 Value = model.Phone,

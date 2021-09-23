@@ -5,6 +5,7 @@ using System.Text;
 using Zidium.Api.Dto;
 using Xunit;
 using Zidium.TestTools;
+using Zidium.Common;
 
 namespace Zidium.Api.Tests.Others
 {
@@ -16,12 +17,12 @@ namespace Zidium.Api.Tests.Others
             var request = new SendEventRequestDto();
             request.Token = new AccessTokenDto()
             {
-                Program = Guid.NewGuid().ToString(),
-                SecretKey = Guid.NewGuid().ToString()
+                Program = Ulid.NewUlid().ToString(),
+                SecretKey = Ulid.NewUlid().ToString()
             };
             request.Data = new SendEventRequestDataDto()
             {
-                ComponentId = Guid.NewGuid(),
+                ComponentId = Ulid.NewUlid(),
                 Category = SendEventCategory.ComponentEvent,
                 Count = 3,
                 Importance = EventImportance.Alarm,
@@ -31,7 +32,7 @@ namespace Zidium.Api.Tests.Others
                 JoinIntervalSeconds = 200,
                 JoinKey = 34324,
                 Properties = new List<Dto.ExtentionPropertyDto>(),
-                TypeSystemName = "type" + Guid.NewGuid(),
+                TypeSystemName = "type" + Ulid.NewUlid(),
                 Version = "1.0"
             };
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Zidium.Api;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
@@ -2006,7 +2007,7 @@ namespace Zidium.Core
 
             var entity = new SendSmsCommandForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 CreateDate = DateTime.Now,
                 Status = SmsStatus.InQueue,
                 ReferenceId = request.Data.ReferenceId,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Zidium.Common;
 
 namespace Zidium.Storage.Ef
 {
@@ -35,7 +36,7 @@ namespace Zidium.Storage.Ef
                 {
                     entity = new DbUserSetting()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         UserId = userId,
                         Name = name
                     };

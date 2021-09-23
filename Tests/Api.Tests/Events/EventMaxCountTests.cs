@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Events
@@ -11,7 +12,7 @@ namespace Zidium.Api.Tests.Events
         {
             var account = TestHelper.GetTestAccount();
             var component = account.GetClient().GetRootComponentControl();
-            var componentEvent = component.CreateComponentEvent("test event " + Guid.NewGuid());
+            var componentEvent = component.CreateComponentEvent("test event " + Ulid.NewUlid());
             componentEvent.Count = int.MaxValue - 100;
             componentEvent.JoinInterval = TimeSpan.FromMinutes(10);
 

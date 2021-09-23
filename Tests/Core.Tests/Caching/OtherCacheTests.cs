@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.TestTools;
 
@@ -17,8 +18,8 @@ namespace Zidium.Core.Tests.Caching
             var componentService = new ComponentService(TestHelper.GetStorage());
             var component = componentService.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
             {
-                DisplayName = Guid.NewGuid().ToString(),
-                SystemName = Guid.NewGuid().ToString(),
+                DisplayName = Ulid.NewUlid().ToString(),
+                SystemName = Ulid.NewUlid().ToString(),
                 TypeId = SystemComponentType.Others.Id
             });
             componentService.DisableComponent(component.Id, null, null);
@@ -34,8 +35,8 @@ namespace Zidium.Core.Tests.Caching
             var unitTestCache = unitTestService.GetOrCreateUnitTest(new GetOrCreateUnitTestRequestDataDto()
             {
                 ComponentId = component.Id,
-                SystemName = Guid.NewGuid().ToString(),
-                DisplayName = Guid.NewGuid().ToString(),
+                SystemName = Ulid.NewUlid().ToString(),
+                DisplayName = Ulid.NewUlid().ToString(),
                 UnitTestTypeId = unitTestType.Id
             });
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Zidium.Common;
 using Zidium.Core.Api.Dispatcher;
 using Zidium.Core.Common;
 using Zidium.Storage;
@@ -68,7 +69,7 @@ namespace Zidium.Core.AccountsDb
         {
             var user = new UserForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Login = email,
                 LastName = lastName,
                 FirstName = firstName,
@@ -83,7 +84,7 @@ namespace Zidium.Core.AccountsDb
             {
                 contacts.Add(new UserContactForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     Type = UserContactType.MobilePhone,
                     Value = mobilePhone,
@@ -94,7 +95,7 @@ namespace Zidium.Core.AccountsDb
             var roles = new List<UserRoleForAdd>();
             roles.Add(new UserRoleForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = user.Id,
                 RoleId = SystemRole.AccountAdministrators.Id
             });
@@ -121,12 +122,12 @@ namespace Zidium.Core.AccountsDb
             if (existingUser != null)
                 throw new LoginAlreadyExistsException(user.Login);
 
-            user.SecurityStamp = Guid.NewGuid().ToString();
+            user.SecurityStamp = Ulid.NewUlid().ToString();
             user.DisplayName = user.DisplayName ?? user.Login;
 
             contacts.Add(new UserContactForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = user.Id,
                 Type = UserContactType.Email,
                 Value = user.Login,
@@ -187,7 +188,7 @@ namespace Zidium.Core.AccountsDb
 
             // меняем пароль
             var userForUpdate = user.GetForUpdate();
-            userForUpdate.SecurityStamp.Set(Guid.NewGuid().ToString());
+            userForUpdate.SecurityStamp.Set(Ulid.NewUlid().ToString());
             userForUpdate.PasswordHash.Set(PasswordHelper.GetPasswordHashString(newPassword));
             _storage.Users.Update(userForUpdate);
         }
@@ -235,7 +236,7 @@ namespace Zidium.Core.AccountsDb
         {
             userRole.UserId = userId;
             if (userRole.Id == Guid.Empty)
-                userRole.Id = Guid.NewGuid();
+                userRole.Id = Ulid.NewUlid();
             _storage.UserRoles.Add(userRole);
             return userRole.Id;
         }

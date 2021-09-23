@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Zidium.Common;
 using Zidium.Core.Caching;
 
 namespace Zidium.Core.Tests.Caching
@@ -77,7 +78,7 @@ namespace Zidium.Core.Tests.Caching
             {
                 var user = new TestCacheUserWriteObject()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Name = "user " + i
                 };
                 _allUsers.TryAdd(user.Id, user);

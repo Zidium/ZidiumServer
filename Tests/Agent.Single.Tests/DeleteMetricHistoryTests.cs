@@ -5,6 +5,7 @@ using Xunit;
 using Zidium.Agent.AgentTasks.DeleteMetricHistory;
 using Zidium.Api;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 
@@ -29,7 +30,7 @@ namespace Zidium.Agent.Single.Tests
             {
                 context.MetricHistories.Add(new DbMetricHistory()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     ComponentId = component.Info.Id,
                     MetricTypeId = metric.MetricTypeId,
                     BeginDate = now.AddDays(-31),
@@ -40,7 +41,7 @@ namespace Zidium.Agent.Single.Tests
 
                 context.MetricHistories.Add(new DbMetricHistory()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     ComponentId = component.Info.Id,
                     MetricTypeId = metric.MetricTypeId,
                     BeginDate = now.AddDays(-29),

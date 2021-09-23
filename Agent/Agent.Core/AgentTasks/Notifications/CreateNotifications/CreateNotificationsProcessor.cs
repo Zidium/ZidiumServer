@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
@@ -406,7 +407,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
             {
                 var newNotification = new NotificationForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Address = lastComponentNotification.Address,
                     CreationDate = Now(),
                     EventId = statusInfo.EventId,
@@ -422,7 +423,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                 {
                     var lastComponentNotificationForAdd = new LastComponentNotificationForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         Address = lastComponentNotification.Address,
                         ComponentId = statusInfo.ComponentId,
                         CreateDate = lastComponentNotification.CreateDate,

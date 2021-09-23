@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Zidium.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -156,7 +157,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
             }
             else
             {
-                return Guid.NewGuid().ToString();
+                return Ulid.NewUlid().ToString();
             }
         }
     }

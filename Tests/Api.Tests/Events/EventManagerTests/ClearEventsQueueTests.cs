@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.EventManagerTests
@@ -19,7 +20,7 @@ namespace Zidium.Api.Tests.EventManagerTests
             client.Config.Events.EventManager.QueueBytes = 5000;
             for (int i = 0; i < count; i++)
             {
-                var eventData = component.CreateComponentEvent("test " + Guid.NewGuid());
+                var eventData = component.CreateComponentEvent("test " + Ulid.NewUlid());
                 eventData.Properties["key1"] = new String('x', 500);
                 eventData.Add();
             }

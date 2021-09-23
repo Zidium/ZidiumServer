@@ -4,6 +4,7 @@ using Zidium.Core.AccountsDb;
 using Zidium.Api.Dto;
 using Zidium.Storage;
 using Zidium.TestTools;
+using Zidium.Common;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -21,7 +22,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var storage = TestHelper.GetStorage();
 
             // Отправим ошибку
-            var eventTypeName = "TestEventType." + Guid.NewGuid();
+            var eventTypeName = "TestEventType." + Ulid.NewUlid();
             var eventResponse = dispatcher.SendEvent(new SendEventRequestDataDto()
             {
                 TypeSystemName = eventTypeName,
@@ -70,7 +71,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var storage = TestHelper.GetStorage();
 
             // Отправим ошибку
-            var eventTypeName = "TestEventType." + Guid.NewGuid();
+            var eventTypeName = "TestEventType." + Ulid.NewUlid();
             var eventResponse = dispatcher.SendEvent(new SendEventRequestDataDto()
             {
                 TypeSystemName = eventTypeName,
@@ -121,7 +122,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var storage = TestHelper.GetStorage();
 
             // Отправим ошибку
-            var eventTypeName = "TestEventType." + Guid.NewGuid();
+            var eventTypeName = "TestEventType." + Ulid.NewUlid();
             var eventResponse = dispatcher.SendEvent(new SendEventRequestDataDto()
             {
                 TypeSystemName = eventTypeName,

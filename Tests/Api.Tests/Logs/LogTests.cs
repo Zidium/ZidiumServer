@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.Common;
 using Zidium.TestTools;
 
@@ -317,7 +318,7 @@ namespace Zidium.Api.Tests.Logs
 
             exception.Properties.Set("bytes", new byte[] { 1, 2, 3 });
             exception.Properties.Set("string", "fff");
-            exception.Properties.Set("guid", Guid.NewGuid());
+            exception.Properties.Set("guid", Ulid.NewUlid());
 
             // отключим ненужные логи
             component.Log.WebLogConfig.Enabled = true;
@@ -378,7 +379,7 @@ namespace Zidium.Api.Tests.Logs
             var exrProperties = new Dictionary<string, object>();
             exrProperties.Add("bytes", new byte[] { 1, 2, 3 });
             exrProperties.Add("string", "fff");
-            exrProperties.Add("guid", Guid.NewGuid());
+            exrProperties.Add("guid", Ulid.NewUlid());
 
             foreach (var exrProperty in exrProperties)
             {

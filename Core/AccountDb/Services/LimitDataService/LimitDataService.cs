@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Common;
 using Zidium.Core.Common;
 using Zidium.Storage;
 
@@ -22,7 +23,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     var resultForAdd = new LimitDataForUnitTestForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         LimitDataId = limitDataId,
                         UnitTestId = unitTestId
                     };

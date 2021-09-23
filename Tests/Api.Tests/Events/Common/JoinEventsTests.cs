@@ -2,6 +2,7 @@
 using System.Linq;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Events
@@ -119,7 +120,7 @@ namespace Zidium.Api.Tests.Events
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var errorType = "test error type " + Guid.NewGuid();
+            var errorType = "test error type " + Ulid.NewUlid();
             var joinInterval = TimeSpan.FromMinutes(10);
 
             // отправим 2 события
@@ -156,7 +157,7 @@ namespace Zidium.Api.Tests.Events
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var errorType = "test error type " + Guid.NewGuid();
+            var errorType = "test error type " + Ulid.NewUlid();
             var joinInterval = TimeSpan.FromMinutes(10);
 
             // Отправим два события с разными сообщениями
@@ -188,7 +189,7 @@ namespace Zidium.Api.Tests.Events
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var errorType = "test error type " + Guid.NewGuid();
+            var errorType = "test error type " + Ulid.NewUlid();
             var joinInterval = TimeSpan.FromMinutes(10);
 
             // Отправим два события с разными доп. свойствами

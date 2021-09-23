@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
@@ -142,7 +143,7 @@ namespace Zidium.Core
             }
             var log = new LogForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 ComponentId = componentId,
                 Date = DateTimeHelper.TrimMs(message.Date.Value), // Важно - убираем мс из даты, иначе будет некорректно работать просмотр лога
                 Order = message.Order ?? 0,
@@ -245,7 +246,7 @@ namespace Zidium.Core
         {
             return new ComponentPropertyForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Name = property.Name,
                 Value = property.Value,
                 DataType = property.Type
@@ -256,7 +257,7 @@ namespace Zidium.Core
         {
             return new EventPropertyForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Name = property.Name,
                 Value = property.Value,
                 DataType = property.Type
@@ -271,7 +272,7 @@ namespace Zidium.Core
             }
             return new LogPropertyForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 DataType = property.Type,
                 Name = property.Name,
                 Value = property.Value

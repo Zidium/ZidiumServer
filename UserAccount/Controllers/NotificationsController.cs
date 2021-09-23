@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Storage;
 using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models;
@@ -144,7 +145,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     var notification = new NotificationForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         Address = contact.Value,
                         CreationDate = Now(),
                         EventId = status.StatusEventId,

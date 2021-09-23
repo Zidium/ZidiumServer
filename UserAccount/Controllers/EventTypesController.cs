@@ -60,7 +60,7 @@ namespace Zidium.UserAccount.Controllers
 
             var eventType = new EventTypeForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 DisplayName = model.DisplayName,
                 SystemName = model.SystemName,
                 Category = EventCategory.ComponentEvent,

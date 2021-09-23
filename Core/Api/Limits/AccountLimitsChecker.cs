@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Zidium.Common;
 using Zidium.Core.Api;
 using Zidium.Core.Common;
 using Zidium.Storage;
@@ -255,7 +256,7 @@ namespace Zidium.Core.Limits
             {
                 var limitData = new LimitDataForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     BeginDate = row.BeginDate,
                     EndDate = row.EndDate,
                     Type = LimitDataType.Per5Minutes,
@@ -270,7 +271,7 @@ namespace Zidium.Core.Limits
 
                 var limitUnitTestData = row.UnitTestData.Select(t => new LimitDataForUnitTestForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     LimitDataId = limitData.Id,
                     UnitTestId = t.Key,
                     ResultsCount = t.Value.ResultsCount
@@ -291,7 +292,7 @@ namespace Zidium.Core.Limits
                 // Если записи за вчера нет, создадим её
                 var totalForYesterdayForAdd = new LimitDataForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     BeginDate = yesterday,
                     EndDate = yesterday.AddDays(1),
                     Type = LimitDataType.Per1Day

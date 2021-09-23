@@ -92,7 +92,7 @@ namespace Zidium.Core.AccountsDb
 
                 var subscriptionForAdd = new SubscriptionForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     Object = requestData.Object,
                     ComponentId = requestData.ComponentId,
@@ -205,7 +205,7 @@ namespace Zidium.Core.AccountsDb
             {
                 var defaultForUser = new SubscriptionForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = userId,
                     ComponentTypeId = null,
                     Channel = SubscriptionChannel.Email,
@@ -222,7 +222,7 @@ namespace Zidium.Core.AccountsDb
 
                 var forRoot = new SubscriptionForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = userId,
                     Channel = SubscriptionChannel.Email,
                     Object = SubscriptionObject.ComponentType,
@@ -234,7 +234,7 @@ namespace Zidium.Core.AccountsDb
 
                 var forFolder = new SubscriptionForAdd()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = userId,
                     Channel = SubscriptionChannel.Email,
                     Object = SubscriptionObject.ComponentType,

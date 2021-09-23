@@ -9,6 +9,7 @@ using Zidium.TestTools;
 using Microsoft.EntityFrameworkCore;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
+using Zidium.Common;
 
 namespace Zidium.Core.Single.Tests
 {
@@ -44,7 +45,7 @@ namespace Zidium.Core.Single.Tests
                     ComponentId = component.Id,
                     Category = SendEventCategory.ApplicationError,
                     Importance = EventImportance.Alarm,
-                    TypeSystemName = Guid.NewGuid().ToString(),
+                    TypeSystemName = Ulid.NewUlid().ToString(),
                     Properties = new List<ExtentionPropertyDto>()
                 }
             };
@@ -68,7 +69,7 @@ namespace Zidium.Core.Single.Tests
                 Data = new SendMetricRequestDataDto()
                 {
                     ComponentId = component.Id,
-                    Name = Guid.NewGuid().ToString(),
+                    Name = Ulid.NewUlid().ToString(),
                     Value = new Random().NextDouble()
                 }
             };
@@ -531,7 +532,7 @@ namespace Zidium.Core.Single.Tests
                 Token = account.Token,
                 Data = new GetOrCreateComponentTypeRequestDataDto()
                 {
-                    SystemName = Guid.NewGuid().ToString()
+                    SystemName = Ulid.NewUlid().ToString()
                 }
             });
             Assert.True(componentTypeResponse.Success);
@@ -542,7 +543,7 @@ namespace Zidium.Core.Single.Tests
                 Data = new GetOrCreateComponentRequestDataDto()
                 {
                     TypeId = componentTypeResponse.GetDataAndCheck().Id,
-                    SystemName = Guid.NewGuid().ToString()
+                    SystemName = Ulid.NewUlid().ToString()
                 }
             });
             Assert.True(componentResponse.Success);
@@ -569,7 +570,7 @@ namespace Zidium.Core.Single.Tests
                     ComponentId = componentResponse.GetDataAndCheck().Component.Id,
                     Category = SendEventCategory.ApplicationError,
                     Importance = EventImportance.Alarm,
-                    TypeSystemName = Guid.NewGuid().ToString(),
+                    TypeSystemName = Ulid.NewUlid().ToString(),
                     Properties = new List<ExtentionPropertyDto>()
                 }
             };
@@ -582,7 +583,7 @@ namespace Zidium.Core.Single.Tests
                 Token = account.Token,
                 Data = new GetOrCreateUnitTestTypeRequestDataDto()
                 {
-                    SystemName = Guid.NewGuid().ToString()
+                    SystemName = Ulid.NewUlid().ToString()
                 }
             });
             Assert.True(unitTypeResponse.Success);
@@ -593,7 +594,7 @@ namespace Zidium.Core.Single.Tests
                 Data = new GetOrCreateUnitTestRequestDataDto()
                 {
                     ComponentId = componentResponse.GetDataAndCheck().Component.Id,
-                    SystemName = Guid.NewGuid().ToString(),
+                    SystemName = Ulid.NewUlid().ToString(),
                     UnitTestTypeId = unitTypeResponse.GetDataAndCheck().Id
                 }
             });
@@ -618,7 +619,7 @@ namespace Zidium.Core.Single.Tests
                 Data = new SendMetricRequestDataDto()
                 {
                     ComponentId = componentResponse.GetDataAndCheck().Component.Id,
-                    Name = Guid.NewGuid().ToString(),
+                    Name = Ulid.NewUlid().ToString(),
                     Value = new Random().NextDouble()
                 }
             };

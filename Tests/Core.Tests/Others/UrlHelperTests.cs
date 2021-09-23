@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Others
@@ -52,9 +53,9 @@ namespace Zidium.Core.Tests.Others
         [Fact]
         public void GetSubscriptionEditUrlTest()
         {
-            var userId = Guid.NewGuid();
+            var userId = Ulid.NewUlid();
 
-            var componentId = Guid.NewGuid();
+            var componentId = Ulid.NewUlid();
 
             var result = UrlHelper.GetSubscriptionEditUrl(componentId, userId, "http://lk.zidium.net");
             var url = $"http://lk.zidium.net/Subscriptions/EditComponentSubscriptions?componentId={componentId}&userId={userId}";

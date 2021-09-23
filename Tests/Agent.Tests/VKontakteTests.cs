@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.SendMessages;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
@@ -26,7 +27,7 @@ namespace Zidium.Agent.Tests
                     Channel = SubscriptionChannel.VKontakte,
                     Body = "test body",
                     CreateDate = DateTime.Now,
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Status = MessageStatus.InQueue,
                     To = "12345",
                     ReferenceId = null
@@ -79,7 +80,7 @@ namespace Zidium.Agent.Tests
                 // создадим уведомление
                 var notification = new DbNotification()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = SubscriptionChannel.VKontakte,
@@ -98,7 +99,7 @@ namespace Zidium.Agent.Tests
                     Channel = SubscriptionChannel.VKontakte,
                     Body = "test body",
                     CreateDate = DateTime.Now,
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Status = MessageStatus.InQueue,
                     To = "12345",
                     ReferenceId = notificationId

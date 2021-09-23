@@ -4,6 +4,7 @@ using Xunit;
 using Zidium.Core.AccountsDb;
 using Zidium.Api.Dto;
 using Zidium.TestTools;
+using Zidium.Common;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -16,7 +17,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var dispatcher = TestHelper.GetDispatcherClient();
             
             // Создадим компонент
-            var systemName = "Component." + Guid.NewGuid();
+            var systemName = "Component." + Ulid.NewUlid();
             var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
             {
                 TypeId = SystemComponentType.WebSite.Id,
@@ -163,7 +164,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var dispatcher = TestHelper.GetDispatcherClient();
 
             // Создадим компонент
-            var systemName = "Component." + Guid.NewGuid();
+            var systemName = "Component." + Ulid.NewUlid();
             var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
             {
                 TypeId = SystemComponentType.WebSite.Id,
@@ -174,7 +175,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = getOrCreateComponentResponse.GetDataAndCheck();
 
             // Создадим дочерний компонент
-            var childSystemName = "Component." + Guid.NewGuid();
+            var childSystemName = "Component." + Ulid.NewUlid();
             var getOrCreateChildComponentResponse = dispatcher.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
             {
                 TypeId = SystemComponentType.WebSite.Id,
@@ -205,7 +206,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var dispatcher = TestHelper.GetDispatcherClient();
 
             // Создадим компонент
-            var systemName = "Component." + Guid.NewGuid();
+            var systemName = "Component." + Ulid.NewUlid();
             var getOrCreateComponentResponse = dispatcher.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
             {
                 TypeId = SystemComponentType.WebSite.Id,

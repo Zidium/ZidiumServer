@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.Notifications;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
@@ -42,7 +43,7 @@ namespace Zidium.Agent.Tests
             {
                 var notification = new DbNotification()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = channel,

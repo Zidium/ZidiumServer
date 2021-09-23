@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Components
@@ -32,8 +33,8 @@ namespace Zidium.Api.Tests.Components
             // обновим свойства компонента
             var updateComponentData = new UpdateComponentData()
             {
-                SystemName = Guid.NewGuid().ToString(),
-                DisplayName = Guid.NewGuid().ToString(),
+                SystemName = Ulid.NewUlid().ToString(),
+                DisplayName = Ulid.NewUlid().ToString(),
                 ParentId = parentComponent.Info.Id,
                 TypeId = newComponentType.Info.Id,
                 Version = "1.2.3.4"

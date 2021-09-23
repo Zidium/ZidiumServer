@@ -171,7 +171,7 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
                 {
                     var ruleForAdd = new HttpRequestUnitTestRuleForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         HttpRequestUnitTestId = id,
                         DisplayName = CheckName,
                         Url = new Uri(Url).AbsoluteUri
@@ -241,7 +241,7 @@ namespace Zidium.UserAccount.Models.HttpRequestCheckModels
         {
             var data = new HttpRequestUnitTestRuleDataForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Key = row.Key,
                 Value = row.Value,
                 Type = type,

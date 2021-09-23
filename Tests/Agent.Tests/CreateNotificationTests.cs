@@ -10,6 +10,7 @@ using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
 using Microsoft.Extensions.Logging.Abstractions;
+using Zidium.Common;
 
 namespace Zidium.Agent.Tests
 {
@@ -647,7 +648,7 @@ namespace Zidium.Agent.Tests
             {
                 var contact = new DbUserContact()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     Type = UserContactType.Http,
                     CreateDate = componentControl.Client.ToServerTime(DateTime.Now),
@@ -833,12 +834,12 @@ namespace Zidium.Agent.Tests
             Assert.Equal(1, notifications.Count);
 
             // Добавим пользователю новый контакт
-            var newEmail = Guid.NewGuid() + "@test.com";
+            var newEmail = Ulid.NewUlid() + "@test.com";
             using (var context = account.GetDbContext())
             {
                 var contact = new DbUserContact()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     Type = UserContactType.Email,
                     CreateDate = componentControl.Client.ToServerTime(DateTime.Now),

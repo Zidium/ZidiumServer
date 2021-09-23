@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Events
@@ -18,7 +19,7 @@ namespace Zidium.Api.Tests.Events
             var root = client.GetRootComponentControl();
             var type = client.GetOrCreateComponentTypeControl("testType");
 
-            var createData = new GetOrCreateComponentData("TestComponent" + Guid.NewGuid(), type)
+            var createData = new GetOrCreateComponentData("TestComponent" + Ulid.NewUlid(), type)
             {
                 Version = null
             };

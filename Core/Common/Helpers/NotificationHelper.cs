@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Zidium.Common;
 using Zidium.Core.AccountsDb;
 using Zidium.Storage;
 
@@ -27,7 +28,7 @@ namespace Zidium.Core.Common.Helpers
                 {
                     var sendEmailCommand = new SendEmailCommandForAdd()
                     {
-                        Id = Guid.NewGuid(),
+                        Id = Ulid.NewUlid(),
                         To = email,
                         Subject = subject,
                         Body = letter,

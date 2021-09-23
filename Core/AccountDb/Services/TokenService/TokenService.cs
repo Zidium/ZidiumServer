@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.AccountsDb
@@ -18,7 +19,7 @@ namespace Zidium.Core.AccountsDb
 
             var token = new TokenForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 CreationDate = DateTime.Now,
                 Purpose = purpose,
                 UserId = user.Id,

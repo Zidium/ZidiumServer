@@ -7,6 +7,7 @@ using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Zidium.Api.Dto;
 using Microsoft.Extensions.Logging.Abstractions;
+using Zidium.Common;
 
 namespace Zidium.Agent.Tests
 {
@@ -27,7 +28,7 @@ namespace Zidium.Agent.Tests
                     Body = "test body",
                     CreateDate = DateTime.Now,
                     From = "zidium@yandex.ru",
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Status = EmailStatus.InQueue,
                     Subject = "app test subject",
                     IsHtml = false,
@@ -88,7 +89,7 @@ namespace Zidium.Agent.Tests
                 // создадим уведомление
                 var notification = new DbNotification()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = SubscriptionChannel.Email,
@@ -107,7 +108,7 @@ namespace Zidium.Agent.Tests
                     Body = "test body",
                     CreateDate = DateTime.Now,
                     From = "zidium@yandex.ru",
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     Status = EmailStatus.InQueue,
                     Subject = "app test subject",
                     IsHtml = false,

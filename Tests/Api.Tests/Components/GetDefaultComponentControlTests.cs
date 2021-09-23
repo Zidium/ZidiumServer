@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Components
@@ -42,7 +43,7 @@ namespace Zidium.Api.Tests.Components
             var client = account.GetClient();
 
             // получим по несуществующему Id
-            client.Config.DefaultComponent.Id = Guid.NewGuid();
+            client.Config.DefaultComponent.Id = Ulid.NewUlid();
             var defaultComponent = client.GetDefaultComponentControl();
             Assert.True(defaultComponent.IsFake());
 

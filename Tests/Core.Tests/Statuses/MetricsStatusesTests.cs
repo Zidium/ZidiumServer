@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Xunit;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Statuses
@@ -107,7 +108,7 @@ namespace Zidium.Core.Tests.Statuses
             // создадим метрику без правил
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var metricName = "Metric." + Guid.NewGuid();
+            var metricName = "Metric." + Ulid.NewUlid();
 
             component.SendMetric(metricName, 100, TimeSpan.FromHours(1));
 

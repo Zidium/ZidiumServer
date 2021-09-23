@@ -148,7 +148,7 @@ namespace Zidium.UserAccount.Controllers
                     var componentType = createComponentTypeResponse.Data;
 
                     // Создадим компонент
-                    var componentId = Guid.NewGuid();
+                    var componentId = Ulid.NewUlid();
                     var createComponentResponse = dispatcher.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
                     {
                         NewId = componentId,
@@ -169,7 +169,7 @@ namespace Zidium.UserAccount.Controllers
                 }
 
                 // Создадим проверку
-                var unitTestId = Guid.NewGuid();
+                var unitTestId = Ulid.NewUlid();
 
                 var createUnitTestData = new GetOrCreateUnitTestRequestDataDto()
                 {

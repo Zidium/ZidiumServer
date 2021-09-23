@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Events.ApplicationErrors
@@ -107,7 +108,7 @@ namespace Zidium.Api.Tests.Events.ApplicationErrors
         {
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
-            var result = component.CreateApplicationError("TestType." + Guid.NewGuid());
+            var result = component.CreateApplicationError("TestType." + Ulid.NewUlid());
             Assert.NotNull(result.TypeCode);
         }
     }

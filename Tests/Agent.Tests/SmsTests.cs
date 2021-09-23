@@ -3,6 +3,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Zidium.Agent.AgentTasks.SendSms;
+using Zidium.Common;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
@@ -21,10 +22,10 @@ namespace Zidium.Agent.Tests
             {
                 var sms = new DbSendSmsCommand()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     CreateDate = DateTime.Now,
                     Status = SmsStatus.InQueue,
-                    Body = "TEST SMS " + Guid.NewGuid(),
+                    Body = "TEST SMS " + Ulid.NewUlid(),
                     Phone = "+7 916 123-45-67"
                 };
 

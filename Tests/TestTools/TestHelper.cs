@@ -9,6 +9,7 @@ using Zidium.Api;
 using Zidium.Api.Common;
 using Zidium.Api.Dto;
 using Zidium.Api.XmlConfig;
+using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
@@ -284,7 +285,7 @@ namespace Zidium.TestTools
             properties.Set("datetime", DateTime.Now);
             properties.Set("string", "random string " + PasswordHelper.GetRandomPassword(300));
             properties.Set("binary", RandomHelper.GetRandomBytes(300));
-            properties.Set("guid", Guid.NewGuid());
+            properties.Set("guid", Ulid.NewUlid());
 
             // продублируем
             properties.Set("bool_2", RandomHelper.GetRandomBool());
@@ -295,7 +296,7 @@ namespace Zidium.TestTools
             properties.Set("datetime_2", DateTime.Now.AddMinutes(-5));
             properties.Set("string_2", "random string " + PasswordHelper.GetRandomPassword(300));
             properties.Set("binary_2", RandomHelper.GetRandomBytes(300));
-            properties.Set("guid_2", Guid.NewGuid());
+            properties.Set("guid_2", Ulid.NewUlid());
         }
 
         public static void InitRandomProperties(List<ExtentionPropertyDto> propertyDtos)
@@ -314,7 +315,7 @@ namespace Zidium.TestTools
 
         public static GetOrCreateComponentTypeRequestDataDto GetRandomGetOrCreateComponentTypeData()
         {
-            var guid = Guid.NewGuid().ToString();
+            var guid = Ulid.NewUlid().ToString();
             var data = new GetOrCreateComponentTypeRequestDataDto()
             {
                 SystemName = "systemName " + guid,
@@ -344,7 +345,7 @@ namespace Zidium.TestTools
         public static GetOrCreateComponentData GetRandomGetOrCreateComponentData(IClient client)
         {
             var type = GetRandomComponentTypeControl(client);
-            var systemName = "TestWebSite " + Guid.NewGuid();
+            var systemName = "TestWebSite " + Ulid.NewUlid();
             var data = new GetOrCreateComponentData(systemName, type)
             {
                 Version = GetRandomVersion(),
@@ -356,7 +357,7 @@ namespace Zidium.TestTools
 
         public static GetOrCreateFolderData GetRandomGetOrCreateFolderData()
         {
-            var systemName = "TestWebSite " + Guid.NewGuid();
+            var systemName = "TestWebSite " + Ulid.NewUlid();
             var data = new GetOrCreateFolderData(systemName)
             {
                 DisplayName = systemName + " display name"
@@ -450,12 +451,12 @@ namespace Zidium.TestTools
 
         public static string GetRandomSystemName()
         {
-            return "Random System Name " + Guid.NewGuid();
+            return "Random System Name " + Ulid.NewUlid();
         }
 
         public static string GetRandomDisplayName()
         {
-            return "Random Display Name " + Guid.NewGuid();
+            return "Random Display Name " + Ulid.NewUlid();
         }
 
         public static GetOrCreateUnitTestTypeRequestDataDto GetRandomGetOrCreateUnitTestTypeData()
@@ -502,7 +503,7 @@ namespace Zidium.TestTools
 
         public static IMetricTypeCacheReadObject CreateTestMetricType()
         {
-            var name = "MetricType." + Guid.NewGuid();
+            var name = "MetricType." + Ulid.NewUlid();
 
             var service = new MetricService(GetStorage());
             var type = service.GetOrCreateType(name);
@@ -523,7 +524,7 @@ namespace Zidium.TestTools
 
         public static ComponentTypeForRead CreateRandomComponentType()
         {
-            var guid = Guid.NewGuid().ToString();
+            var guid = Ulid.NewUlid().ToString();
 
             var data = new GetOrCreateComponentTypeRequestDataDto()
             {
@@ -603,10 +604,10 @@ namespace Zidium.TestTools
         {
             var storage = GetStorage();
             var userService = new UserService(storage);
-            var login = "Test.User." + Guid.NewGuid();
+            var login = "Test.User." + Ulid.NewUlid();
             var user = new UserForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 CreateDate = GetNow(),
                 Login = login,
                 DisplayName = displayName,
@@ -623,28 +624,28 @@ namespace Zidium.TestTools
             var contacts = new List<UserContactForAdd>();
             contacts.Add(new UserContactForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = user.Id,
                 Type = UserContactType.MobilePhone,
-                Value = Guid.NewGuid().ToString(),
+                Value = Ulid.NewUlid().ToString(),
                 CreateDate = GetNow()
             });
 
             contacts.Add(new UserContactForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = user.Id,
                 Type = UserContactType.Telegram,
-                Value = Guid.NewGuid().ToString(),
+                Value = Ulid.NewUlid().ToString(),
                 CreateDate = GetNow()
             });
 
             contacts.Add(new UserContactForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 UserId = user.Id,
                 Type = UserContactType.VKontakte,
-                Value = Guid.NewGuid().ToString(),
+                Value = Ulid.NewUlid().ToString(),
                 CreateDate = GetNow()
             });
 
@@ -663,10 +664,10 @@ namespace Zidium.TestTools
             var eventType = new EventTypeForAdd()
             {
                 Category = EventCategory.ComponentEvent,
-                DisplayName = "Тестовый тип события " + Guid.NewGuid(),
+                DisplayName = "Тестовый тип события " + Ulid.NewUlid(),
                 ImportanceForNew = EventImportance.Success,
                 JoinIntervalSeconds = 5,
-                SystemName = "EventType.Test " + Guid.NewGuid()
+                SystemName = "EventType.Test " + Ulid.NewUlid()
             };
             return new EventTypeService(GetStorage()).GetOrCreate(eventType);
         }
@@ -676,8 +677,8 @@ namespace Zidium.TestTools
             var service = new UnitTestTypeService(GetStorage());
             var unitTestType = service.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
-                DisplayName = "Тестовый тип проверки " + Guid.NewGuid(),
-                SystemName = "UnitTestType.Test " + Guid.NewGuid()
+                DisplayName = "Тестовый тип проверки " + Ulid.NewUlid(),
+                SystemName = "UnitTestType.Test " + Ulid.NewUlid()
             });
             return unitTestType;
         }
@@ -722,9 +723,9 @@ namespace Zidium.TestTools
             {
                 var metricType = new DbMetricType()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     IsDeleted = false,
-                    SystemName = "CPU" + Guid.NewGuid(),
+                    SystemName = "CPU" + Ulid.NewUlid(),
                     ConditionAlarm = "value == 100",
                     ConditionWarning = "value > 90",
                     ConditionElseColor = ObjectColor.Green,
@@ -742,9 +743,9 @@ namespace Zidium.TestTools
             {
                 var metricType = new DbMetricType()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Ulid.NewUlid(),
                     IsDeleted = false,
-                    SystemName = "HDD." + Guid.NewGuid(),
+                    SystemName = "HDD." + Ulid.NewUlid(),
                     ConditionAlarm = "value < 1",
                     ConditionWarning = "value < 10",
                     ConditionElseColor = ObjectColor.Green,
@@ -805,7 +806,7 @@ namespace Zidium.TestTools
 
         public static GetOrCreateComponentTypeRequestDataDto GetRamdomGetOrCreateComponentTypeData()
         {
-            string guid = Guid.NewGuid().ToString();
+            string guid = Ulid.NewUlid().ToString();
             var data = new GetOrCreateComponentTypeRequestDataDto()
             {
                 SystemName = "systemName " + guid,

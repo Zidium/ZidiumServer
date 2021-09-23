@@ -5,6 +5,7 @@ using Xunit;
 using Zidium.Core.Api;
 using Zidium.Api.Dto;
 using Zidium.TestTools;
+using Zidium.Common;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -90,7 +91,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var account = TestHelper.GetTestAccount();
             var component = account.CreateTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
-            var eventTypeSystemName = "EventType.Test." + Guid.NewGuid();
+            var eventTypeSystemName = "EventType.Test." + Ulid.NewUlid();
 
             // Отправим красное событие
             var firstEventResponse = dispatcher.SendEvent(new SendEventRequestDataDto()
@@ -137,7 +138,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var account = TestHelper.GetTestAccount();
             var component = account.CreateTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
-            var eventTypeSystemName = "EventType.Test." + Guid.NewGuid();
+            var eventTypeSystemName = "EventType.Test." + Ulid.NewUlid();
 
             // Отправим зелёное событие
             var firstEventResponse = dispatcher.SendEvent(new SendEventRequestDataDto()
@@ -168,7 +169,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var account = TestHelper.GetTestAccount();
             var component = account.CreateTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
-            var eventTypeSystemName = "EventType.Test." + Guid.NewGuid();
+            var eventTypeSystemName = "EventType.Test." + Ulid.NewUlid();
 
             // Отправим событие, в тексте которого присутствует символ с кодом 00
             var response = dispatcher.SendEvent(new SendEventRequestDataDto()

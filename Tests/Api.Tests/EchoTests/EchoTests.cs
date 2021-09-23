@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Zidium.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Others
@@ -11,7 +12,7 @@ namespace Zidium.Api.Tests.Others
         {
             var account = TestHelper.GetTestAccount();
             var client = account.GetClient();
-            var echoMessage = Guid.NewGuid().ToString();
+            var echoMessage = Ulid.NewUlid().ToString();
             var response = client.ApiService.GetEcho(echoMessage);
             response.Check();
             Assert.Equal(echoMessage, response.GetDataAndCheck());

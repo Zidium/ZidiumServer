@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zidium.Api.Dto;
+using Zidium.Common;
 using Zidium.Core.Caching;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
@@ -57,7 +58,7 @@ namespace Zidium.Core.AccountsDb
             // создаем новый статус
             var newStatus = new EventForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 Message = data.Message,
                 ActualDate = data.ActualDate,
                 Category = data.EventCategory,
@@ -695,7 +696,7 @@ namespace Zidium.Core.AccountsDb
         {
             var result = new BulbForAdd()
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid(),
                 StartDate = createDate,
                 EndDate = createDate,
                 ActualDate = DateTimeHelper.InfiniteActualDate,

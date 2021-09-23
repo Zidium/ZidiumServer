@@ -71,8 +71,8 @@ namespace Zidium.TestTools
             var componentTypeId = TestHelper.CreateRandomComponentTypeId();
             var data = new GetOrCreateComponentRequestDataDto()
             {
-                SystemName = "test component systemName " + Guid.NewGuid(),
-                DisplayName = "test component dispay name " + Guid.NewGuid(),
+                SystemName = "test component systemName " + Ulid.NewUlid(),
+                DisplayName = "test component dispay name " + Ulid.NewUlid(),
                 TypeId = componentTypeId,
                 ParentComponentId = root.Id
             };
