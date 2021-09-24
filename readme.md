@@ -17,7 +17,7 @@ Zidium - это open source мониторинг приложений и инф�
 
 docker cli:
 
-`docker run -d --name zidium-sqlite -p 8080:80 -p 10000:10000 -e "ZIDIUM_webSite=http://localhost:8080" -e "ZIDIUM_secretKey=XXX" -v /zidium/sqlite zidiumteam/zidium-simple:latest`
+`docker run -d --name zidium-sqlite -p 8080:80 -p 10000:10000 -e "ZIDIUM_webSite=http://localhost:8080" -e "ZIDIUM_secretKey=XXX" -v zidium-sqlite:/zidium/sqlite zidiumteam/zidium-simple:latest`
 
 или docker-compose:
 
@@ -34,14 +34,14 @@ services:
       - ZIDIUM_webSite=http://localhost:8080
       - ZIDIUM_secretKey=XXX
     volumes:
-      - /zidium/sqlite
+      - zidium-sqlite:/zidium/sqlite
 ```
 
 Команда сделает следующее:
 - Запустит личный кабинет на порту 8080
 - Запустит api на порту 10000
 - Установит секретный ключ XXX (обязательно поменяйте его в команде)
-- Данные Sqlite будут вынесены в том, усправляемый Docker
+- Данные Sqlite будут вынесены в том zidium-sqlite, усправляемый Docker
 - Создаст пользователя с логином Admin и паролем 12345. Обязательно смените пароль в личном кабинете!
 
 ### Проверьте, как всё работает

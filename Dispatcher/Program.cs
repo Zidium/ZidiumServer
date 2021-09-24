@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,24 +30,29 @@ namespace Zidium.Dispatcher
             {
                 var host = CreateHostBuilder(args).Build();
                 var logger = host.Services.GetRequiredService<ILogger<Startup>>();
+
+                var hostApplicationLifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                hostApplicationLifetime.ApplicationStopping.Register(() =>
+                {
+                    logger.LogInformation("Stop");
+
+                    // Остановим обработку запросов
+                    WebHandlerMiddlewareBase.Stop();
+
+                    // Сохраним кеш
+                    Client.Instance.Flush();
+                    DispatcherService.Wrapper.SaveCaches();
+                    NLog.LogManager.Shutdown();
+                });
+
                 host.Run();
-                logger.LogInformation("Stop");
+
             }
             catch (Exception exception)
             {
                 Tools.HandleOutOfMemoryException(exception);
                 nLogLogger.Fatal(exception);
                 throw;
-            }
-            finally
-            {
-                // Остановим обработку запросов
-                WebHandlerMiddlewareBase.Stop();
-
-                // Сохраним кеш
-                Client.Instance.Flush();
-                DispatcherService.Wrapper.SaveCaches();
-                NLog.LogManager.Shutdown();
             }
         }
 

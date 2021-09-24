@@ -1,12 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ $# -eq 0 ]; then
 
 _term() { 
-  echo "Stopping all..." 
-  kill -TERM "$child_dispatcher"
-  kill -TERM "$child_user_account"
-  kill -TERM "$child_agent"
+  echo "Stopping dispatcher, $child_dispatcher..."
+  kill -SIGTERM "$child_dispatcher"
+
+  echo "Stopping user account, $child_user_account..."
+  kill -SIGTERM "$child_user_account"
+
+  echo "Stopping agent, $child_agent..."
+  kill -SIGTERM "$child_agent"
 }
 
 trap _term SIGTERM

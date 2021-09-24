@@ -87,7 +87,6 @@ namespace Zidium.Api
             return wrapper;
         }
 
-
         protected ApiServiceWrapper CreateApiService(AccessTokenDto accessToken)
         {
             try

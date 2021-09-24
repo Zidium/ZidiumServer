@@ -256,7 +256,6 @@ namespace Zidium.Dispatcher
             typeof(InvalidOperationException), // Клиент может прислать в запросе что угодно
             typeof(ArgumentNullException), // Какой-то обязательный параметр не заполнен в тексте json
             typeof(InvalidDataException), // Клиент может прислать в запросе что угодно
-            typeof(WrongContentTypeException), //Неверный ContentType
             typeof(ArgumentException) // Бывает при неверном значении enum в json
         };
 

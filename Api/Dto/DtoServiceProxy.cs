@@ -4,7 +4,7 @@ namespace Zidium.Api.Dto
 {
     public class DtoServiceProxy : IDtoService
     {
-        public Uri Uri { get; protected set; }
+        public string Url { get; protected set; }
 
         private ISerializer _serializer = null;
 
@@ -27,7 +27,7 @@ namespace Zidium.Api.Dto
             {
                 throw new ArgumentNullException("uri");
             }
-            Uri = uri;
+            Url = uri.AbsoluteUri;
 
             _serializer = new JsonSerializer();
         }
@@ -57,8 +57,7 @@ namespace Zidium.Api.Dto
                         };
                     }
                 }
-                var handlerUrl = Uri.AbsoluteUri;
-                return WebServiceProxyHelper.ExecuteAction<TResponse>(handlerUrl, action, Serializer, requestObj);
+                return WebServiceProxyHelper.ExecuteAction<TResponse>(Url, action, Serializer, requestObj);
             }
             catch (Exception exception)
             {
@@ -93,7 +92,6 @@ namespace Zidium.Api.Dto
                 return response;
             }
         }
-
 
         #region Разное
 

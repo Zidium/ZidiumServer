@@ -29,20 +29,24 @@ namespace Zidium.UserAccount
             {
                 var host = CreateHostBuilder(args).Build();
                 var logger = host.Services.GetRequiredService<ILogger<Startup>>();
+
+                var hostApplicationLifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                hostApplicationLifetime.ApplicationStopping.Register(() =>
+                {
+                    logger.LogInformation("Stop");
+
+                    // Сохраним кеш
+                    Client.Instance.Flush();
+                    NLog.LogManager.Shutdown();
+                });
+
                 host.Run();
-                logger.LogInformation("Stop");
             }
             catch (Exception exception)
             {
                 Tools.HandleOutOfMemoryException(exception);
                 nLogLogger.Fatal(exception);
                 throw;
-            }
-            finally
-            {
-                // Сохраним кеш
-                Client.Instance.Flush();
-                NLog.LogManager.Shutdown();
             }
         }
 

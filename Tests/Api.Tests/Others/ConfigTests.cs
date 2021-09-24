@@ -17,10 +17,10 @@ namespace Zidium.Api.Tests.Others
         }
 
         /// <summary>
-        /// Проверяем какие настройки будут у клиента, если xml конфиг отсутствует
+        /// Проверяем какие настройки будут у клиента, если конфиг отсутствует
         /// </summary>
         [Fact]
-        public void NoXmlConfigTest()
+        public void NoConfigTest()
         {
             var config = new Config();
 

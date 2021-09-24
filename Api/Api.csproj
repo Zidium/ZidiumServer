@@ -1,37 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <AssemblyName>Zidium.Api</AssemblyName>
-        <RootNamespace>Zidium.Api</RootNamespace>
-        <Version>1.999</Version>
-        <Description>This is an official .Net Core Api library for Zidium monitoring system</Description>
-        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-        <PackageIconUrl>https://zidium.net/banners/nuget-icon.png</PackageIconUrl>
-        <PackageProjectUrl>https://zidium.net</PackageProjectUrl>
-        <PackageTags>Zidium monitoring events unittests metrics log core</PackageTags>
-        <Title>Zidium Api for .Net Core</Title>
-        <PackageReleaseNotes></PackageReleaseNotes>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Zidium.Api</AssemblyName>
+    <RootNamespace>Zidium.Api</RootNamespace>
+    <Version>2.0</Version>
+    <Description>This is an official .Net Core Api library for Zidium monitoring system</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageIconUrl>https://zidium.net/banners/nuget-icon.png</PackageIconUrl>
+    <PackageProjectUrl>https://zidium.net</PackageProjectUrl>
+    <PackageTags>Zidium monitoring events unittests metrics log core</PackageTags>
+    <Title>Zidium Api for .Net Core</Title>
+    <PackageReleaseNotes></PackageReleaseNotes>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <DefineConstants>DEBUG;TRACE</DefineConstants>
-      <DebugType>full</DebugType>
-      <DebugSymbols>true</DebugSymbols>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-      <DebugType>pdbonly</DebugType>
-      <DebugSymbols>true</DebugSymbols>
-    </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
-      <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Api.Dto\Api.Dto.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Api.Dto\Api.Dto.csproj" >
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(OutDir)\Zidium.Api.Dto.dll">
+      <PackagePath>lib\$(TargetFramework)\</PackagePath>
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+  </ItemGroup>
 
 </Project>
