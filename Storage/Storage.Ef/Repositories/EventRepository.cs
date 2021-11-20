@@ -411,7 +411,6 @@ namespace Zidium.Storage.Ef
             }
         }
 
-        // TODO Missing index
         public EventForRead GetLastEventByEndDate(Guid eventTypeId)
         {
             using (var contextWrapper = _storage.GetContextWrapper())
@@ -470,16 +469,16 @@ namespace Zidium.Storage.Ef
             {
                 var query = contextWrapper.Context.Events.AsNoTracking().Where(t => t.OwnerId == ownerId);
 
-                if (from.HasValue)
-                    query = query.Where(t => t.ActualDate >= from.Value);
-
-                if (to.HasValue)
-                    query = query.Where(t => t.StartDate < to.Value);
-
                 if (category.HasValue)
                 {
                     query = query.Where(t => t.Category == category);
                 }
+
+                if (to.HasValue)
+                    query = query.Where(t => t.StartDate < to.Value);
+
+                if (from.HasValue)
+                    query = query.Where(t => t.ActualDate >= from.Value);
 
                 if (importance != null && importance.Length > 0)
                     query = query.Where(t => importance.Contains(t.Importance));
@@ -513,7 +512,6 @@ namespace Zidium.Storage.Ef
             }
         }
 
-        // TODO Missing index
         public EventForRead[] GetActualByType(Guid eventTypeId, DateTime actualDate)
         {
             using (var contextWrapper = _storage.GetContextWrapper())
@@ -903,6 +901,7 @@ namespace Zidium.Storage.Ef
             }
         }
 
+        /*
         public EventForRead[] GetActualEventsWithWrongData(DateTime actualDate)
         {
             using (var contextWrapper = _storage.GetContextWrapper())
@@ -934,6 +933,7 @@ namespace Zidium.Storage.Ef
                     .ToArray();
             }
         }
+        */
 
         public EventForRead[] Filter(Guid ownerId, EventCategory category, DateTime from, DateTime to)
         {
@@ -1015,9 +1015,9 @@ namespace Zidium.Storage.Ef
             {
                 return contextWrapper.Context.Events.Count(t =>
                     t.OwnerId == componentId &&
+                    t.Category == EventCategory.ApplicationError &&
                     t.StartDate < to &&
-                    t.ActualDate >= from &&
-                    t.Category == EventCategory.ApplicationError
+                    t.ActualDate >= from
                     );
             }
         }
@@ -1032,9 +1032,10 @@ namespace Zidium.Storage.Ef
                     query = query.Where(t => t.OwnerId == componentId);
 
                 query = query.Where(x =>
+                    x.Category == EventCategory.ApplicationError &&
                     x.StartDate < to &&
-                    x.ActualDate >= from &&
-                    x.Category == EventCategory.ApplicationError);
+                    x.ActualDate >= from
+                    );
 
                 return query
                     .AsEnumerable()
@@ -1053,9 +1054,10 @@ namespace Zidium.Storage.Ef
                     query = query.Where(t => componentIds.Contains(t.OwnerId));
 
                 query = query.Where(x =>
+                    x.Category == EventCategory.ApplicationError &&
                     x.StartDate < to &&
-                    x.ActualDate >= from &&
-                    x.Category == EventCategory.ApplicationError);
+                    x.ActualDate >= from
+                    );
 
                 return query
                     .AsEnumerable()
@@ -1091,7 +1093,6 @@ namespace Zidium.Storage.Ef
             }
         }
 
-        // TODO Missing index
         public EventForRead[] GetByEventTypeId(Guid eventTypeId)
         {
             using (var contextWrapper = _storage.GetContextWrapper())
@@ -1123,6 +1124,9 @@ namespace Zidium.Storage.Ef
                 if (ownerId.HasValue)
                     query = query.Where(t => t.OwnerId == ownerId.Value);
 
+                if (categories != null && categories.Length > 0)
+                    query = query.Where(t => categories.Contains(t.Category));
+
                 if (componentTypeId.HasValue)
                 {
                     var componentIds = contextWrapper.Context.Components.AsNoTracking()
@@ -1136,9 +1140,6 @@ namespace Zidium.Storage.Ef
                 {
                     query = query.Where(t => t.EventTypeId == eventTypeId.Value);
                 }
-
-                if (categories != null && categories.Length > 0)
-                    query = query.Where(t => categories.Contains(t.Category));
 
                 if (importances != null && importances.Length > 0)
                     query = query.Where(t => importances.Contains(t.Importance));
@@ -1172,8 +1173,7 @@ namespace Zidium.Storage.Ef
             using (var contextWrapper = _storage.GetContextWrapper())
             {
                 return DbToEntity(contextWrapper.Context.Events.AsNoTracking()
-                    .Where(x => x.OwnerId == ownerId &&
-                                x.LastStatusEventId == lastStatusEventId)
+                    .Where(x => x.LastStatusEventId == lastStatusEventId && x.OwnerId == ownerId)
                     .OrderByDescending(x => x.StartDate)
                     .FirstOrDefault());
             }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Zidium.Storage.Ef;
@@ -9,9 +10,10 @@ using Zidium.Storage.Ef;
 namespace Zidium.Storage.Ef.PostgreSql.Migrations
 {
     [DbContext(typeof(PostgreSqlAccountDbContext))]
-    partial class PostgreSqlAccountDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210928093132_EventIndexesOptimization")]
+    partial class EventIndexesOptimization
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

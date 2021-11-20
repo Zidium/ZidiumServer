@@ -61,9 +61,11 @@ namespace Zidium.Storage
 
         EventForRead[] GetEventReasons(Guid eventId);
 
+        /*
         EventForRead[] GetActualEventsWithWrongData(DateTime actualDate);
 
         EventForRead[] GetEventsWithWrongData(EventForRead actualEvent, DateTime actualDate);
+        */
 
         EventForRead[] Filter(Guid ownerId, EventCategory category, DateTime from, DateTime to);
 

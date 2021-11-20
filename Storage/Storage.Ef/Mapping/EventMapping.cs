@@ -26,16 +26,13 @@ namespace Zidium.Storage.Ef.Mapping
 
             builder.HasOne(t => t.EventType).WithMany().HasForeignKey(t => t.EventTypeId).IsRequired();
 
-            // IX_AccountBased - Индекс для общего поиска - Category, ActualDate, StartDate, Id
-            // IX_OwnerBased - Индекс для поиска по владельцу - OwnerId, Category, ActualDate, StartDate
-            // IX_ForJoin - Индекс для склейки - OwnerId, EventTypeId, Importance, ActualDate 
-            // IX_ForProcessing - Индекс для игнорирования и обработки - IsUserHandled, EventTypeId, VersionLong
+            // IX_ForDeletion - Индекс для удаления старых событий - Category, ActualDate
+            // IX_OwnerBased - Индекс для поиска - OwnerId, Category, StartDate
+            // IX_ForJoin - Индекс для склейки - OwnerId, EventTypeId, Importance
 
-            // TODO Rename index
-            builder.HasIndex(t => new { t.Category, t.ActualDate, t.StartDate, t.Id }, "IX_AccountBased");
-            builder.HasIndex(t => new { t.OwnerId, t.Category, t.ActualDate, t.StartDate }, "IX_OwnerBased");
-            builder.HasIndex(t => new { t.OwnerId, t.EventTypeId, t.Importance, t.ActualDate }, "IX_ForJoin");
-            builder.HasIndex(t => new { t.IsUserHandled, t.EventTypeId, t.VersionLong }, "IX_ForProcessing");
+            builder.HasIndex(t => new { t.Category, t.ActualDate }, "IX_ForDeletion");
+            builder.HasIndex(t => new { t.OwnerId, t.Category, t.StartDate }, "IX_OwnerBased");
+            builder.HasIndex(t => new { t.OwnerId, t.EventTypeId, t.Importance }, "IX_ForJoin");
         }
     }
 }
