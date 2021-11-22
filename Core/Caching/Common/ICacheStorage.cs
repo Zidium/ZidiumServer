@@ -41,5 +41,7 @@ namespace Zidium.Core.Caching
         /// Количество при котором заканчивается выгрузка данных
         /// </summary>
         int StopUnloadCount { get; set; }
+
+        void Stop();
     }
 }

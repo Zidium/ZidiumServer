@@ -301,7 +301,7 @@ namespace Zidium.Core.Caching
                 throw new ArgumentNullException("request");
             }
 
-            if (_unloadDataLoopWorker.IsWorking == false && Count >= BeginUnloadCount)
+            if (Count >= BeginUnloadCount)
             {
                 TryBeginUnloadDataLoop();
             }
@@ -683,6 +683,12 @@ namespace Zidium.Core.Caching
                 _updateStats = new UpdateStats();
                 return result;
             }
+        }
+
+        public void Stop()
+        {
+            _saveChangesLoopWorker.Stop();
+            _unloadDataLoopWorker.Stop();
         }
 
         public class UpdateStats

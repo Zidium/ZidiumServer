@@ -42,6 +42,7 @@ namespace Zidium.Dispatcher
                     // Сохраним кеш
                     Client.Instance.Flush();
                     DispatcherService.Wrapper.SaveCaches();
+                    DispatcherService.Wrapper.Stop();
                     NLog.LogManager.Shutdown();
                 });
 

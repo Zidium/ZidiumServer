@@ -478,5 +478,10 @@ namespace Zidium.Core.Api
         {
             return Execute(() => InternalService.GetLogicSettings(request));
         }
+
+        public void Stop()
+        {
+            AllCaches.Stop();
+        }
     }
 }

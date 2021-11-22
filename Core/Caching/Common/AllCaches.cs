@@ -119,6 +119,14 @@ namespace Zidium.Core.Caching
             }
         }
 
+        public static void Stop()
+        {
+            foreach (var cache in All)
+            {
+                cache.Stop();
+            }
+        }
+
         static AllCaches()
         {
             Init();
