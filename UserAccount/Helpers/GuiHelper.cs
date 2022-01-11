@@ -1002,7 +1002,7 @@ namespace Zidium.UserAccount.Helpers
             }
 
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
-            var types = storage.ComponentTypes.Filter(null, 100).Where(t => t.Id != SystemComponentType.Root.Id);
+            var types = storage.ComponentTypes.Filter(null, int.MaxValue).Where(t => t.Id != SystemComponentType.Root.Id);
 
             items.AddRange(types.Select(componentType => new SelectListItem()
             {
@@ -1057,7 +1057,7 @@ namespace Zidium.UserAccount.Helpers
             }
 
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
-            var eventTypes = storage.EventTypes.Filter(null, null, null, 100);
+            var eventTypes = storage.EventTypes.Filter(null, null, null, int.MaxValue);
 
             items.AddRange(eventTypes.Select(t => new SelectListItem()
             {
@@ -1119,7 +1119,7 @@ namespace Zidium.UserAccount.Helpers
 
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
 
-            var unitTestTypes = storage.UnitTestTypes.Filter(null, 100);
+            var unitTestTypes = storage.UnitTestTypes.Filter(null, int.MaxValue);
 
             if (!userOnly)
             {

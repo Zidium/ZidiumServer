@@ -40,7 +40,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetMetricTypes(Guid? selected, bool allowEmpty)
         {
-            var metricTypes = GetStorage().MetricTypes.Filter(null, 100);
+            var metricTypes = GetStorage().MetricTypes.Filter(null, int.MaxValue);
             var items = metricTypes
                 .Select(x => new SelectListItem()
                 {
@@ -118,7 +118,7 @@ namespace Zidium.UserAccount.Helpers
 
         public static List<SelectListItem> GetComponentTypes(Guid? selected, bool allowEmpty)
         {
-            var types = GetStorage().ComponentTypes.Filter(null, 100);
+            var types = GetStorage().ComponentTypes.Filter(null, int.MaxValue);
 
             var items = types.Select(x => new SelectListItem()
             {
