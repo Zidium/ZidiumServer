@@ -187,9 +187,10 @@ namespace Zidium.UserAccount
             client.WaitUntilAvailable(TimeSpan.FromSeconds(60));
 
             // Создадим компонент
-            // Если запускаемся в отладке, то компонент будет не в корне, а в папке DEBUG
             var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
-            var folder = !debugConfiguration.DebugMode ? client.GetRootComponentControl() : client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
+            var folder = !debugConfiguration.DebugMode ? 
+                client.GetRootComponentControl().GetOrCreateChildFolderControl("Zidium") : 
+                client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
             var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? SystemComponentType.WebSite.SystemName : DebugHelper.DebugComponentType);
             var componentControl = folder
                 .GetOrCreateChildComponentControl(new GetOrCreateComponentData("UserAccountWebSite", componentType)
