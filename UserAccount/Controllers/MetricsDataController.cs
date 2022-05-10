@@ -20,8 +20,8 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult Index(Guid? componentId, Guid? metricTypeId, DateTime? from, DateTime? to)
         {
-            var eDate = to ?? DateTime.UtcNow;
-            var sDate = from ?? eDate.AddDays(-1);
+            var eDate = to ?? DateTime.Now.Date.AddDays(1).AddSeconds(-1).ToUniversalTime();
+            var sDate = from ?? DateTime.Now.Date.ToUniversalTime();
 
             var model = new MetricDataListModel()
             {
@@ -52,7 +52,7 @@ namespace Zidium.UserAccount.Controllers
                     var rows = GetStorage().MetricHistory.GetByPeriod(componentId.Value, sDate, eDate, new[] { model.MetricTypeId.Value }, 1000);
 
                     model.Data = rows.Take(100).ToArray();
-                    model.Graph = GetCounterGraphDataModel(metricType, rows.OrderBy(t => t.BeginDate).ToArray());
+                    model.Graph = GetCounterGraphDataModel(metricType, rows.OrderBy(t => t.BeginDate).ToArray(), CurrentUser.TimeZoneOffsetMinutes);
                 }
             }
 
@@ -72,12 +72,12 @@ namespace Zidium.UserAccount.Controllers
                 .OrderBy(t => t.BeginDate)
                 .ToArray();
 
-            var model = GetCounterGraphDataModel(metricType, rows);
+            var model = GetCounterGraphDataModel(metricType, rows, CurrentUser.TimeZoneOffsetMinutes);
 
             return PartialView("GraphPartial", model);
         }
 
-        private MetricGraphDataModel GetCounterGraphDataModel(MetricTypeForRead metricType, MetricHistoryForRead[] rows)
+        private MetricGraphDataModel GetCounterGraphDataModel(MetricTypeForRead metricType, MetricHistoryForRead[] rows, int timeZoneOffset)
         {
             var model = new MetricGraphDataModel();
 
@@ -132,13 +132,13 @@ namespace Zidium.UserAccount.Controllers
                 {
                     result.Add(new MetricGraphDataItem()
                     {
-                        Date = prevDate.Value,
+                        Date = prevDate.Value.AddMinutes(timeZoneOffset),
                         Value = prevValue,
                         Color = ObjectColor.Gray
                     });
                     result.Add(new MetricGraphDataItem()
                     {
-                        Date = prevDate.Value,
+                        Date = prevDate.Value.AddMinutes(timeZoneOffset),
                         Value = null,
                         Color = ObjectColor.Gray
                     });
@@ -147,7 +147,7 @@ namespace Zidium.UserAccount.Controllers
                 // Добавим текущее значение
                 result.Add(new MetricGraphDataItem()
                 {
-                    Date = row.BeginDate,
+                    Date = row.BeginDate.AddMinutes(timeZoneOffset),
                     Value = row.Value,
                     Color = row.Color
                 });

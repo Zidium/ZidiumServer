@@ -84,7 +84,9 @@ else
 
     @Html.Grid(Model.Data).Columns(columns =>
         {
-            columns.Add(m => m.BeginDate).Titled("Дата начала").SortInitialDirection(GridSortDirection.Descending).Css("column-date");
+            columns.Add(m => m.BeginDate).Titled("Дата начала").RenderValueAs(m => DateTimeHelper.GetRussianDateTime(m.BeginDate, currentUser.TimeZoneOffsetMinutes))
+                .SortInitialDirection(GridSortDirection.Descending).Css("column-date");
+
             columns.Add(m => m.Value).Titled("Значение").Css("text-center").RenderValueAs(m => Html.HtmlBlock(@<text>
                     <span title="Актуально до @DateTimeHelper.GetRussianDateTime(m.ActualDate, currentUser.TimeZoneOffsetMinutes)">
                         @GuiHelper.GetMetricValueHtml(m.Value, m.Color, m.HasSignal)
