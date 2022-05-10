@@ -13,12 +13,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class ComponentService : IComponentService
     {
-        public ComponentService(IStorage storage)
+        public ComponentService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public IBulbCacheReadObject GetComponentExternalState(Guid componentId, bool recalc = false)
         {
@@ -71,9 +73,10 @@ namespace Zidium.Core.AccountsDb
 
         protected void CalculateComponentEventsStatus(Guid eventsStatusId)
         {
-            var processDate = DateTime.Now;
-            var eventService = new EventService(_storage);
-            var statusService = new BulbService(_storage);
+            var processDate = _timeService.Now();
+            // TODO Do not create new service every time
+            var eventService = new EventService(_storage, _timeService);
+            var statusService = new BulbService(_storage, _timeService);
             var request = new AccountCacheRequest()
             {
                 ObjectId = eventsStatusId
@@ -155,7 +158,8 @@ namespace Zidium.Core.AccountsDb
                 return;
             }
             var statusId = component.EventsStatusId;
-            var statusService = new BulbService(_storage);
+            // TODO Do not create new service every time
+            var statusService = new BulbService(_storage, _timeService);
             var noSignalImportance = EventImportance.Unknown;
 
             // получаем или создаем статус (колбаску)
@@ -165,7 +169,7 @@ namespace Zidium.Core.AccountsDb
             };
             using (var data = AllCaches.StatusDatas.Write(request))
             {
-                DateTime processDate = DateTime.Now;
+                DateTime processDate = _timeService.Now();
 
                 // событие из будущего (завершается через 5 минут)
                 if (eventObj.EndDate > processDate + TimeSpan.FromMinutes(5))
@@ -316,7 +320,7 @@ namespace Zidium.Core.AccountsDb
                     "Максимальная длина комментария 1000 символов, а указано " + comment.Length);
             }
 
-            if (toDate.HasValue && toDate < DateTime.Now)
+            if (toDate.HasValue && toDate < _timeService.Now())
             {
                 throw new ResponseCodeException(
                     ResponseCode.ParameterError,
@@ -374,7 +378,7 @@ namespace Zidium.Core.AccountsDb
             // если время выключения истекло, то включим компонент
             if (!component.Enable
                 && component.DisableToDate.HasValue
-                && component.DisableToDate < DateTime.Now)
+                && component.DisableToDate < _timeService.Now())
             {
                 using (var componentWrite = cache.Components.Write(component))
                 {
@@ -386,7 +390,8 @@ namespace Zidium.Core.AccountsDb
                 UpdateParentEnableFlags(component, true);
             }
 
-            var statusService = new BulbService(_storage);
+            // TODO Do not create new service every time
+            var statusService = new BulbService(_storage, _timeService);
             var allStatusesIds = component.GetAllStatusesIds();
             var allStatuses = allStatusesIds.Select(cache.StatusDatas.Read).ToList();
 
@@ -395,7 +400,7 @@ namespace Zidium.Core.AccountsDb
             {
                 // выключим все колбаски
                 // выжно выключить их в этом порядке, чтобы не создать лишних событий колбасок-родителей
-                var disableSignal = BulbSignal.CreateDisable(DateTime.Now);
+                var disableSignal = BulbSignal.CreateDisable(_timeService.Now());
                 statusService.SetSignal(component.ExternalStatusId, disableSignal);
                 statusService.SetSignal(component.ChildComponentsStatusId, disableSignal);
                 statusService.SetSignal(component.InternalStatusId, disableSignal);
@@ -405,7 +410,7 @@ namespace Zidium.Core.AccountsDb
             }
 
             // обновим тесты
-            var unitTestService = new UnitTestService(_storage);
+            var unitTestService = new UnitTestService(_storage, _timeService);
             var allUnitTestsStatusDataIds = new List<Guid>();
             foreach (var unitTestRef in component.UnitTests.GetAll())
             {
@@ -426,7 +431,7 @@ namespace Zidium.Core.AccountsDb
             }
 
             // обновим метрики
-            var metricService = new MetricService(_storage);
+            var metricService = new MetricService(_storage, _timeService);
             var allMetricsStatusDataIds = new List<Guid>();
             Guid metricTypeId;
             foreach (var metricRef in component.Metrics.GetAll())
@@ -602,7 +607,7 @@ namespace Zidium.Core.AccountsDb
                 DisplayName = "Root",
                 SystemName = "Root",
                 ComponentTypeId = SystemComponentType.Root.Id,
-                CreatedDate = DateTime.Now,
+                CreatedDate = _timeService.Now(),
                 Enable = true,
                 ParentEnable = true
             };
@@ -628,7 +633,7 @@ namespace Zidium.Core.AccountsDb
 
         private Guid CreateStatusData(ComponentForAdd component, EventCategory eventCategory)
         {
-            var bulbService = new BulbService(_storage);
+            var bulbService = new BulbService(_storage, _timeService);
             return bulbService.CreateBulb(
                 component.CreatedDate,
                 eventCategory,
@@ -643,7 +648,7 @@ namespace Zidium.Core.AccountsDb
                 throw new ArgumentNullException("componentForAdd");
             }
 
-            componentForAdd.CreatedDate = DateTime.Now;
+            componentForAdd.CreatedDate = _timeService.Now();
 
             if (componentForAdd.ParentId != null)
             {
@@ -1030,7 +1035,7 @@ namespace Zidium.Core.AccountsDb
 
         public int UpdateEventsStatuses(int maxCount)
         {
-            var statusIds = _storage.Components.GetNotActualEventsStatusIds(DateTime.Now, maxCount);
+            var statusIds = _storage.Components.GetNotActualEventsStatusIds(_timeService.Now(), maxCount);
             foreach (var statusId in statusIds)
             {
                 CalculateComponentEventsStatus(statusId);

@@ -1,7 +1,13 @@
 ﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers
 @model Zidium.UserAccount.Models.Defects.DefectLastErrorModel
+
 @{
     var lastEvent = Model.Event;
+}
+
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @if (lastEvent == null)
@@ -13,7 +19,7 @@
 else
 {
     <div>
-        случилась <a href="@Url.Action("Show", "Events", new {id=lastEvent.Id})">@GuiHelper.GetDateTimeString(lastEvent.EndDate)</a>
+        случилась <a href="@Url.Action("Show", "Events", new { id = lastEvent.Id })">@DateTimeHelper.GetRussianDateTime(lastEvent.EndDate, currentUser.TimeZoneOffsetMinutes)</a>
         в компоненте
         <div style="display: inline-block">
             <div class="zi-bread-crumbs" style="font-size: 14px;">

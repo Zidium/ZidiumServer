@@ -61,15 +61,14 @@ namespace Zidium.Api.Tests.ClientTests
             client.EventManager.Flush();
             Assert.True(addResult.EventId.HasValue);
 
-
             ///////////////////
             // ВРЕМЯ УКАЗАНО
             ///////////////////
-            errorData.StartDate = DateTime.Now;
+            errorData.StartDate = DateTime.UtcNow;
 
             // отправим синхронно
             response = errorData.Send();
-            Assert.True(response.Success);
+            response.Check();
 
             // отправим асинхронно
             addResult = errorData.Add();
@@ -106,7 +105,7 @@ namespace Zidium.Api.Tests.ClientTests
 
             var diff = TimeSpan.FromHours(12);
             client.TimeDifference = -diff;
-            var startDate = DateTime.Now + diff;
+            var startDate = DateTime.UtcNow + diff;
             var endDate = startDate.AddSeconds(1);
 
             var errorData = root
@@ -118,7 +117,7 @@ namespace Zidium.Api.Tests.ClientTests
 
             // отправим синхронно
             var response = errorData.Send();
-            Assert.True(response.Success);
+            response.Check();
 
             // отправим асинхронно
             errorData = root

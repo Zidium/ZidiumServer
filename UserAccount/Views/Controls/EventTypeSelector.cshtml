@@ -63,7 +63,7 @@
             if (value.length == 0)
                 value = null;
             var allowEmpty = '@Model.AllowEmpty.ToString()' == 'True';
-            var selector = new EventTypeSelector(hidden, textBox, div, value, '@Model.EventTypeName', function () {
+            var selector = new EventTypeSelector(hidden, textBox, div, value, '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(Model.EventTypeName))', function () {
                 if ('@Model.AutoRefreshPage.ToString()' == 'True') {
                     document.location.href = SetQueryParamFromControl(document.location.href, hidden);
                 }

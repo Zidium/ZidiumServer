@@ -20,7 +20,7 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult Index(Guid? componentId, Guid? metricTypeId, DateTime? from, DateTime? to)
         {
-            var eDate = to ?? DateTime.Now;
+            var eDate = to ?? DateTime.UtcNow;
             var sDate = from ?? eDate.AddDays(-1);
 
             var model = new MetricDataListModel()

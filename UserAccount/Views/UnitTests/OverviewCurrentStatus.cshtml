@@ -7,6 +7,7 @@
 
 @{
     var durationText = TimeSpanHelper.Get2UnitsString(Model.StatusDuration);
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 <div class="tiles-box" style="display: flex; flex-direction:column;">
@@ -37,7 +38,7 @@
                 else
                 {
                     <p>
-                        <span class="simple-text-header">Выключена до @GuiHelper.GetDateTimeString(Model.DisableEndTime)</span>
+                        <span class="simple-text-header">Выключена до @DateTimeHelper.GetRussianDateTime(Model.DisableEndTime, currentUser.TimeZoneOffsetMinutes)</span>
                     </p>
                 }
                 if (string.IsNullOrEmpty(Model.DisableComment) == false)

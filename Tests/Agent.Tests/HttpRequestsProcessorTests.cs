@@ -5,7 +5,6 @@ using Zidium.Agent.AgentTasks.HttpRequests;
 using Zidium.Core.AccountsDb;
 using Xunit;
 using Zidium.Core.Common.Helpers;
-using Zidium.Core.Common.TimeService;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;

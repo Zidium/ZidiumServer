@@ -3,14 +3,16 @@
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.MetricDetailsStateModel
 
-<p>   
+@{ var currentUser = UserHelper.CurrentUser(Context); }
+
+<p>
     <span id="metric-details-state-status">
         @Html.MonitoringStatusLabel(Model.Status, Model.StatusEventId, 20, Model.ValueText)
     </span>
     <span class="simple-text-value" id="metric-details-state-duration">
         @TimeSpanHelper.Get2UnitsString(Model.StatusDuration)
     </span>
-    
+
     @if (Model.CanEdit)
     {
         if (Model.IsEnabled)
@@ -27,9 +29,9 @@
 
 <p>
     <span class="simple-text-header">Последний результат получен</span><br />
-    <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.LastResultDate)</span>
+    <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.LastResultDate, currentUser.TimeZoneOffsetMinutes)</span>
 </p>
-    
+
 <script>
     $('#metric-details-enable-metric').click(function() {
         var me = $(this);

@@ -1,10 +1,12 @@
 ﻿@using Zidium.UserAccount.Controllers
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models
+@using Zidium.Core.Common.Helpers 
 @model DateSelectorModel
 
 @{
-    var dateValue = Model.Date.HasValue ? Model.Date.Value.ToString(GuiHelper.DateTimeDisplayFormat) : string.Empty;
+    var currentUser = UserHelper.CurrentUser(Context);
+    var dateValue = Model.Date.HasValue ? DateTimeHelper.GetRussianDateTime(Model.Date.Value, currentUser.TimeZoneOffsetMinutes) : string.Empty;
     var textboxId = "textbox_" + Model.Name;
 }
 
@@ -37,6 +39,6 @@ else
                 if ('@Model.AutoRefreshPage.ToString()' == 'True') {
                     document.location.href = SetQueryParamFromControlExact(document.location.href, control, '@Model.Name');
                 }
-            });
+            }, @currentUser.TimeZoneOffsetMinutes);
     });
 </script>

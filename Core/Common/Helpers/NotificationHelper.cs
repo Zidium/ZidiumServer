@@ -17,7 +17,9 @@ namespace Zidium.Core.Common.Helpers
             var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
             var storage = storageFactory.GetStorage();
 
-            var userService = new UserService(storage);
+            // TODO DI
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+            var userService = new UserService(storage, timeService);
             var admins = userService.GetAccountAdmins();
 
             foreach (var admin in admins)
@@ -33,7 +35,7 @@ namespace Zidium.Core.Common.Helpers
                         Subject = subject,
                         Body = letter,
                         Status = EmailStatus.InQueue,
-                        CreateDate = DateTime.Now,
+                        CreateDate = DateTime.UtcNow,
                         IsHtml = true
                     };
                     storage.SendEmailCommands.Add(sendEmailCommand);

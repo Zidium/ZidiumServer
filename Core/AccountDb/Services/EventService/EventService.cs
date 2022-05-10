@@ -16,12 +16,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class EventService : IEventService
     {
-        public EventService(IStorage storage)
+        public EventService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         private int AddCount(int value, int add)
         {
@@ -43,7 +45,7 @@ namespace Zidium.Core.AccountsDb
             {
                 oldEvent.EndDate = newEvent.EndDate;
             }
-            oldEvent.LastUpdateDate = DateTime.Now;
+            oldEvent.LastUpdateDate = _timeService.Now();
         }
 
         private IEventCacheReadObject CreateOrJoinSimpleEvent(
@@ -200,7 +202,7 @@ namespace Zidium.Core.AccountsDb
                 DisplayName = displayName,
                 Code = typeCode
             };
-            var eventTypeService = new EventTypeService(_storage);
+            var eventTypeService = new EventTypeService(_storage, _timeService);
             var eventType = eventTypeService.GetOrCreate(eventTypeForAdd);
             return eventType;
         }
@@ -219,7 +221,7 @@ namespace Zidium.Core.AccountsDb
             long joinKeyHash)
         {
             // вычисляем значения по умолчанию, если они не указаны явно
-            startDate = startDate ?? DateTime.Now;
+            startDate = startDate ?? _timeService.Now();
             endDate = endDate ?? startDate;
             count = count ?? 1;
             if (count < 1)
@@ -236,7 +238,7 @@ namespace Zidium.Core.AccountsDb
                 importance = eventType.ImportanceForNew ?? importance;
             }
 
-            var now = DateTime.Now;
+            var now = _timeService.Now();
             var result = new EventForAdd()
             {
                 Id = Ulid.NewUlid(),
@@ -276,9 +278,9 @@ namespace Zidium.Core.AccountsDb
 
         protected void CheckEventStartDate(SendEventRequestDataDto message, Guid eventTypeId, Guid eventId)
         {
-            if (message.StartDate > DateTime.Now.AddMinutes(5))
+            if (message.StartDate > _timeService.Now().AddMinutes(5))
             {
-                var now = DateTime.Now;
+                var now = _timeService.Now();
                 try
                 {
                     var eventData = new SendEventRequestDataDto()
@@ -360,7 +362,7 @@ namespace Zidium.Core.AccountsDb
 
                 if (message.StartDate == null)
                 {
-                    message.StartDate = DateTime.Now;
+                    message.StartDate = _timeService.Now();
                 }
 
                 var size = message.GetSize();
@@ -400,7 +402,8 @@ namespace Zidium.Core.AccountsDb
                     // если есть закрытый или тестируемый дефект и событие - новая ошибка, то переоткроем дефект
                     if (eventType.DefectId != null)
                     {
-                        var defectService = new DefectService(_storage);
+                        // TODO DI
+                        var defectService = new DefectService(_storage, _timeService);
                         var defectStatus = defectService.GetStatus(eventType.DefectId.Value);
                         if ((defectStatus == DefectStatus.Closed || defectStatus == DefectStatus.Testing) && !EventIsOld(eventType.OldVersion, result.Version))
                         {
@@ -441,7 +444,8 @@ namespace Zidium.Core.AccountsDb
                 // обновим статус компонента
                 if (rEvent != null)
                 {
-                    var componentService = new ComponentService(_storage);
+                    // TODO DI
+                    var componentService = new ComponentService(_storage, _timeService);
                     componentService.ProcessEvent(componentId, rEvent);
                 }
                 return rEvent;
@@ -470,7 +474,7 @@ namespace Zidium.Core.AccountsDb
 
             try
             {
-                var eventTypeService = new EventTypeService(_storage);
+                var eventTypeService = new EventTypeService(_storage, _timeService);
                 var eventType = eventTypeService.GetOneById(joinEventData.TypeId ?? Guid.Empty);
 
                 // расчитаем важность
@@ -518,7 +522,7 @@ namespace Zidium.Core.AccountsDb
             Guid? eventTypeId = null;
             if (string.IsNullOrEmpty(filter.TypeSystemName) == false)
             {
-                var eventTypeService = new EventTypeService(_storage);
+                var eventTypeService = new EventTypeService(_storage, _timeService);
                 var eventType = eventTypeService.GetOneBySystemName(filter.TypeSystemName);
                 eventTypeId = eventType.Id;
             }
@@ -556,7 +560,7 @@ namespace Zidium.Core.AccountsDb
 
         public void Update(EventForUpdate eventObj)
         {
-            eventObj.LastUpdateDate.Set(DateTime.Now);
+            eventObj.LastUpdateDate.Set(_timeService.Now());
             _storage.Events.Update(eventObj);
         }
 
@@ -632,7 +636,7 @@ namespace Zidium.Core.AccountsDb
             foreach (var timelineState in states)
             {
                 timelineState.StartDate = timelineState.EventStartDate >= from ? timelineState.EventStartDate : from;
-                var realEndDate = timelineState.EventStartDate + EventHelper.GetDuration(timelineState.EventStartDate, timelineState.EventActualDate, DateTime.Now);
+                var realEndDate = timelineState.EventStartDate + EventHelper.GetDuration(timelineState.EventStartDate, timelineState.EventActualDate, _timeService.Now());
                 timelineState.EndDate = realEndDate <= to ? realEndDate : to;
             }
 

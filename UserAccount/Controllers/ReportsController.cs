@@ -18,8 +18,8 @@ namespace Zidium.UserAccount.Controllers
         /// </summary>
         public ActionResult Starts(Guid? componentTypeId = null, Guid? componentId = null, string fromDate = null, string toDate = null)
         {
-            var sDate = !string.IsNullOrEmpty(fromDate) ? DecodeDateTimeParameter(fromDate) : DateTime.Now.Date;
-            var eDate = !string.IsNullOrEmpty(toDate) ? DecodeDateTimeParameter(toDate) : DateTime.Now;
+            var sDate = !string.IsNullOrEmpty(fromDate) ? DecodeDateTimeParameter(fromDate) : DateTime.Now.Date.ToUniversalTime();
+            var eDate = !string.IsNullOrEmpty(toDate) ? DecodeDateTimeParameter(toDate) : DateTime.UtcNow;
 
             ComponentForRead component = null;
             if (componentId.HasValue)

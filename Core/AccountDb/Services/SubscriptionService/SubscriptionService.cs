@@ -9,12 +9,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class SubscriptionService : ISubscriptionService
     {
-        public SubscriptionService(IStorage storage)
+        public SubscriptionService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public SubscriptionForRead CreateSubscription(CreateSubscriptionRequestData requestData)
         {
@@ -102,7 +104,7 @@ namespace Zidium.Core.AccountsDb
                     Importance = requestData.Importance,
                     DurationMinimumInSeconds = requestData.DurationMinimumInSeconds,
                     ResendTimeInSeconds = requestData.ResendTimeInSeconds,
-                    LastUpdated = DateTime.Now,
+                    LastUpdated = _timeService.Now(),
                     NotifyBetterStatus = requestData.NotifyBetterStatus,
                     SendOnlyInInterval = requestData.SendOnlyInInterval,
                     SendIntervalFromHour = requestData.SendIntervalFromHour,
@@ -139,7 +141,7 @@ namespace Zidium.Core.AccountsDb
                 subscription.SendIntervalFromMinute.Set(requestData.SendIntervalFromMinute);
                 subscription.SendIntervalToHour.Set(requestData.SendIntervalToHour);
                 subscription.SendIntervalToMinute.Set(requestData.SendIntervalToMinute);
-                subscription.LastUpdated.Set(DateTime.Now);
+                subscription.LastUpdated.Set(_timeService.Now());
 
                 _storage.Subscriptions.Update(subscription);
             }
@@ -152,7 +154,7 @@ namespace Zidium.Core.AccountsDb
             {
                 var subscription = new SubscriptionForUpdate(subscriptionId);
                 subscription.IsEnabled.Set(enable);
-                subscription.LastUpdated.Set(DateTime.Now);
+                subscription.LastUpdated.Set(_timeService.Now());
                 _storage.Subscriptions.Update(subscription);
             }
         }
@@ -216,7 +218,7 @@ namespace Zidium.Core.AccountsDb
                     ResendTimeInSeconds = 24 * 60 * 60,
                     NotifyBetterStatus = false,
                     SendOnlyInInterval = false,
-                    LastUpdated = DateTime.Now
+                    LastUpdated = _timeService.Now()
                 };
                 _storage.Subscriptions.Add(defaultForUser);
 
@@ -228,7 +230,7 @@ namespace Zidium.Core.AccountsDb
                     Object = SubscriptionObject.ComponentType,
                     ComponentTypeId = SystemComponentType.Root.Id,
                     IsEnabled = false,
-                    LastUpdated = DateTime.Now
+                    LastUpdated = _timeService.Now()
                 };
                 _storage.Subscriptions.Add(forRoot);
 
@@ -240,7 +242,7 @@ namespace Zidium.Core.AccountsDb
                     Object = SubscriptionObject.ComponentType,
                     ComponentTypeId = SystemComponentType.Folder.Id,
                     IsEnabled = false,
-                    LastUpdated = DateTime.Now
+                    LastUpdated = _timeService.Now()
                 };
                 _storage.Subscriptions.Add(forFolder);
 

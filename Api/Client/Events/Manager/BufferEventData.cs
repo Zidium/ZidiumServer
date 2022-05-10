@@ -29,7 +29,7 @@ namespace Zidium.Api
 
         protected void Init()
         {
-            CreateDate = DateTime.Now;
+            CreateDate = DateTime.UtcNow;
             LastAddDate = CreateDate;
             Status = AddEventStatus.WaitForSend;
         }

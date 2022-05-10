@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 
@@ -19,6 +20,7 @@ namespace Zidium.DatabaseUpdater
             {
                 var storageFactory = new StorageFactory();
                 DependencyInjection.SetServicePersistent<IStorageFactory>(storageFactory);
+                var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
                 var storage = storageFactory.GetStorage();
                 var count = storage.Migrate();
@@ -33,7 +35,7 @@ namespace Zidium.DatabaseUpdater
                 registrator.RegisterAll();
 
                 // Проверим, создан ли админ
-                var userService = new UserService(storage);
+                var userService = new UserService(storage, timeService);
                 var adminCreated = userService.GetAccountAdmins().Length > 0;
 
                 if (adminCreated)
@@ -41,7 +43,7 @@ namespace Zidium.DatabaseUpdater
                 else
                 {
                     // создаем root компонент
-                    var componentService = new ComponentService(storage);
+                    var componentService = new ComponentService(storage, timeService);
                     componentService.CreateRoot(SystemComponentType.Root.Id);
 
                     // создаем админа

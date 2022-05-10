@@ -14,6 +14,7 @@ using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common;
 using Zidium.Core.InternalLogger;
 using Zidium.Core.Limits;
 using Zidium.Storage;
@@ -38,6 +39,7 @@ namespace Zidium.Dispatcher
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<ILogicConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+            DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
 
             services.AddHttpContextAccessor();
         }
@@ -138,6 +140,7 @@ namespace Zidium.Dispatcher
             var startTime = DateTime.Now;
             var count = AccountLimitsCheckerManager.Save();
             var endTime = DateTime.Now;
+            // TODO Refactor to StopWatch
             var duration = endTime - startTime;
             var control = DispatcherService.Wrapper.Control;
             if (AccountLimitsCheckerManager.LastSaveException != null)
@@ -183,13 +186,14 @@ namespace Zidium.Dispatcher
             registrator.RegisterAll();
 
             // Проверим, создан ли админ
-            var userService = new UserService(storage);
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+            var userService = new UserService(storage, timeService);
             var adminCreated = userService.GetAccountAdmins().Length > 0;
 
             if (!adminCreated)
             {
                 // создаем root компонент
-                var componentService = new ComponentService(storage);
+                var componentService = new ComponentService(storage, timeService);
                 componentService.CreateRoot(Core.AccountsDb.SystemComponentType.Root.Id);
 
                 // создаем админа

@@ -13,15 +13,13 @@ namespace Zidium.Core.Limits
     {
         #region Other
 
-        public AccountLimitsChecker(DateTime? nowOverride = null)
+        public AccountLimitsChecker(ITimeService timeService)
         {
-            NowOverride = nowOverride;
+            _timeService = timeService;
             DataCurrent = GetNewCurrentDataRow();
         }
 
-        // Текущее время - для юнит-тестов
-        // TODO Refactor to TimeService
-        public DateTime? NowOverride;
+        private readonly ITimeService _timeService;
 
         #endregion
 
@@ -116,7 +114,7 @@ namespace Zidium.Core.Limits
             if (_dataArchive == null)
             {
                 // Загрузим историю за сегодня и вчера из базы
-                var date = Now.Date.AddDays(-1);
+                var date = _timeService.Now().Date.AddDays(-1);
                 _dataArchive = storage.LimitData.Find(date, LimitDataType.Per5Minutes)
                     .Select(t => new LimitDataArchiveItem()
                     {
@@ -153,7 +151,7 @@ namespace Zidium.Core.Limits
                     RecalcDataTotal(context);
 
                 // Проверим, не пора ли переместить текущую запись в архив и создать новую
-                if (Now >= DataCurrent.EndDate)
+                if (_timeService.Now() >= DataCurrent.EndDate)
                 {
                     var dataArchive = GetDataArchive(context);
                     var newArchiveItem = new LimitDataArchiveItem()
@@ -183,7 +181,7 @@ namespace Zidium.Core.Limits
 
         internal LimitDataArchiveItem GetNewCurrentDataRow()
         {
-            var now = Now;
+            var now = _timeService.Now();
 
             // Выравниваем дату по 5 минутам
             var beginDate = new DateTime(now.Year, now.Month, now.Day, now.Hour, (now.Minute / LimitDataTimeStep) * LimitDataTimeStep, 0);
@@ -202,7 +200,7 @@ namespace Zidium.Core.Limits
             lock (DataArchiveLockObject)
             {
                 var dataArchive = GetDataArchive(storage);
-                rows = dataArchive.Where(t => t.BeginDate >= Now.Date).ToArray();
+                rows = dataArchive.Where(t => t.BeginDate >= _timeService.Now().Date).ToArray();
             }
 
             // Рассчитаем суммарные значения по истории за сегодня
@@ -226,7 +224,7 @@ namespace Zidium.Core.Limits
                 }
 
             // И добавляем к ним сохранённые данные из архива в базе
-            var archiveFromDb = storage.LimitDataForUnitTest.GetGroupedByUnitTest(Now.Date, LimitDataType.Per5Minutes);
+            var archiveFromDb = storage.LimitDataForUnitTest.GetGroupedByUnitTest(_timeService.Now().Date, LimitDataType.Per5Minutes);
             foreach (var row in archiveFromDb)
             {
                 var totalData = newDataTotal.GetUnitTestData(row.Item1);
@@ -285,7 +283,7 @@ namespace Zidium.Core.Limits
             }
 
             // Проверим, есть ли запись за вчера с данными за целый день
-            var yesterday = Now.Date.AddDays(-1);
+            var yesterday = _timeService.Now().Date.AddDays(-1);
             var totalForYesterday = storage.LimitData.GetOneOrNullByDateAndType(yesterday, LimitDataType.Per1Day);
             if (totalForYesterday == null)
             {
@@ -316,18 +314,13 @@ namespace Zidium.Core.Limits
             lock (DataArchiveLockObject)
             {
                 var dataArchive = GetDataArchive(storage);
-                dataArchive.RemoveAll(t => t.BeginDate < Now.AddHours(-48));
+                dataArchive.RemoveAll(t => t.BeginDate < _timeService.Now().AddHours(-48));
             }
 
             // Удалим из базы те, которые старше старше 48 часов (сегодня + вчера)
-            storage.LimitData.RemoveOld(Now.AddHours(-48), LimitDataType.Per5Minutes);
+            storage.LimitData.RemoveOld(_timeService.Now().AddHours(-48), LimitDataType.Per5Minutes);
 
             return rows.Length;
-        }
-
-        protected DateTime Now
-        {
-            get { return NowOverride ?? DateTime.Now; }
         }
 
         #endregion
@@ -375,7 +368,7 @@ namespace Zidium.Core.Limits
 
             var history = GetPerDayHistory(context);
             var total = GetUsedLimitsTotalData(context, history);
-            var today = Now.Date;
+            var today = _timeService.Now().Date;
             var archive = history.Where(t => t.BeginDate >= today.AddDays(-archiveDays)).ToList();
 
             var result = new AccountUsedLimitsOverallDataInfo()
@@ -419,7 +412,7 @@ namespace Zidium.Core.Limits
         protected AccountUsedLimitsPerDayDataInfo GetUsedLimitsTotalData(IStorage context, LimitDataForRead[] history = null)
         {
             // Для каждого лимита посчитаем сумму за время хранения архива из тарифа
-            var today = Now.Date;
+            var today = _timeService.Now().Date;
 
             if (history == null)
                 history = GetPerDayHistory(context);

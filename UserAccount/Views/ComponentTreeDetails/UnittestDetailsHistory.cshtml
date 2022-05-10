@@ -5,6 +5,8 @@
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsHistoryModel
 
+@{ var currentUser = UserHelper.CurrentUser(Context); }
+
 <p>
     История за
     <span class="btn-group space-right" data-toggle="buttons" id="unittest-details-history-buttons">
@@ -37,44 +39,41 @@
 
 @if (Model.Statuses.Length > 0)
 {
-    <table id="unittest-details-history-table" class="table simpleTableClear table-condensed table-fixed">
-        <thead>
-            <tr>
-                <th class="column-date">Начало</th>
-                <th class="column-date">Окончание</th>
-                <th class="th-result">Статус</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var status in Model.Statuses)
-            {
-                var color = GuiHelper.GetStrongFgColor(status.Importance);
-                <tr style="color: @color">
-                    <td>
-                        @DateTimeHelper.GetRussianDateTime(status.StartDate)
-                        <br />
-                        <span class="status-duration">@GuiHelper.TimeSpanAs2UnitString(status.Duration)</span>
-                    </td>
-                    <td>
-                        @DateTimeHelper.GetRussianDateTime(status.EndDate)
-                        <br />
-                        <span class="status-count">
-                            @status.Count раз
-                        </span>
-                    </td>
-                    <td>
-                        <a title="@status.Message" href="@Url.Action("Show", "Events", new { id = status.EventId})" target="_blank">@status.Message</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
+<table id="unittest-details-history-table" class="table simpleTableClear table-condensed table-fixed">
+    <thead>
+        <tr>
+            <th class="column-date">Начало</th>
+            <th class="column-date">Окончание</th>
+            <th class="th-result">Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var status in Model.Statuses)
+        {
+            var color = GuiHelper.GetStrongFgColor(status.Importance);
+<tr style="color: @color">
+    <td>
+        @DateTimeHelper.GetRussianDateTime(status.StartDate, currentUser.TimeZoneOffsetMinutes)
+        <br />
+        <span class="status-duration">@GuiHelper.TimeSpanAs2UnitString(status.Duration)</span>
+    </td>
+    <td>
+        @DateTimeHelper.GetRussianDateTime(status.EndDate, currentUser.TimeZoneOffsetMinutes)
+        <br />
+        <span class="status-count">
+            @status.Count раз
+        </span>
+    </td>
+    <td>
+        <a title="@status.Message" href="@Url.Action("Show", "Events", new { id = status.EventId})" target="_blank">@status.Message</a>
+    </td>
+</tr>
 }
+    </tbody>
+</table> }
 else
 {
-    <p>Нет истории выполнения</p>
-}
+<p>Нет истории выполнения</p>}
 
 <script>
     $('#unittest-details-history-buttons #btn-stats-hour').click(function () { unittestDetailsHistoryLoadStats('@TimelineInterval.Hour'); });

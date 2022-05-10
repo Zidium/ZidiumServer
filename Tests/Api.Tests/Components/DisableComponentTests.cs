@@ -13,11 +13,11 @@ namespace Zidium.Api.Tests.Components
             var account = TestHelper.GetTestAccount();
             var component = account.CreateRandomComponentControl();
 
-            var goodDate = DateTime.Now.AddDays(1);
+            var goodDate = DateTime.UtcNow.AddDays(1);
             var goodComment = "test comment 1";
 
             // неверная дата
-            var invalidDate = DateTime.Now.AddMinutes(-10);
+            var invalidDate = DateTime.UtcNow.AddMinutes(-10);
             var response = component.Disable(goodComment, invalidDate);
             Assert.False(response.Success);
 

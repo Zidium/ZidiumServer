@@ -4,6 +4,7 @@ using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.Limits;
 using Zidium.Storage;
@@ -12,12 +13,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class UnitTestService : IUnitTestService
     {
-        public UnitTestService(IStorage storage)
+        public UnitTestService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         private EventForAdd CreateUnitTestResultEvent(
             IUnitTestCacheReadObject unitTest,
@@ -59,7 +62,7 @@ namespace Zidium.Core.AccountsDb
                 Importance = importance,
                 OwnerId = unitTest.Id,
                 ActualDate = actualDate,
-                CreateDate = DateTime.Now,
+                CreateDate = _timeService.Now(),
                 LastUpdateDate = processDate,
                 StartDate = processDate,
                 EndDate = processDate,
@@ -85,12 +88,12 @@ namespace Zidium.Core.AccountsDb
             string displayName,
             Guid? newId)
         {
-            var now = DateTime.Now;
+            var now = _timeService.Now();
             var component = _storage.Components.GetOneById(componentId);
 
             var unitTestId = newId ?? Ulid.NewUlid();
 
-            var bulbService = new BulbService(_storage);
+            var bulbService = new BulbService(_storage, _timeService);
             var statusDataId = bulbService.CreateBulb(
                 now,
                 EventCategory.UnitTestStatus,
@@ -164,7 +167,7 @@ namespace Zidium.Core.AccountsDb
 
             if (!data.UnitTestTypeId.HasValue)
             {
-                var unittestTypeService = new UnitTestTypeService(_storage);
+                var unittestTypeService = new UnitTestTypeService(_storage, _timeService);
                 var unittestType = unittestTypeService.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
                 {
                     SystemName = "CustomUnitTestType",
@@ -273,7 +276,7 @@ namespace Zidium.Core.AccountsDb
             {
                 if (data.NextTime == null)
                 {
-                    unitTest.NextExecutionDate = DateTime.Now;
+                    unitTest.NextExecutionDate = _timeService.Now();
                 }
                 else
                 {
@@ -365,7 +368,7 @@ namespace Zidium.Core.AccountsDb
                     }
 
                     // чтобы выполнить проверку прямо сейчас с новыми параметрами и увидеть результат
-                    unitTest.NextExecutionDate = DateTime.Now;
+                    unitTest.NextExecutionDate = _timeService.Now();
                 }
 
                 noSignalColorChanged = data.NoSignalColor != unitTest.NoSignalColor;
@@ -393,11 +396,11 @@ namespace Zidium.Core.AccountsDb
 
         public void UpdateNoSignalColor(IUnitTestCacheReadObject unitTest)
         {
-            var statusService = new BulbService(_storage);
+            var statusService = new BulbService(_storage, _timeService);
             var statusData = statusService.GetRaw(unitTest.StatusDataId);
             if (!statusData.HasSignal)
             {
-                var now = DateTime.Now;
+                var now = _timeService.Now();
                 var noSignalEvent = GetNoSignalEvent(unitTest, now, now);
                 SaveResultEvent(now, unitTest, noSignalEvent, null);
             }
@@ -461,7 +464,7 @@ namespace Zidium.Core.AccountsDb
                     allUnitTestsStatusDataIds.Add(unitTest.StatusDataId);
                 }
             }
-            var statuservice = new BulbService(_storage);
+            var statuservice = new BulbService(_storage, _timeService);
             statuservice.CalculateByChilds(componentUnitTestsStatudDataId, allUnitTestsStatusDataIds.ToArray());
         }
 
@@ -480,7 +483,7 @@ namespace Zidium.Core.AccountsDb
             {
                 unitTest.PeriodSeconds = data.PeriodSeconds;
                 unitTest.ErrorColor = data.ErrorColor;
-                unitTest.NextExecutionDate = DateTime.Now;
+                unitTest.NextExecutionDate = _timeService.Now();
                 unitTest.BeginSave();
                 unitTest.WaitSaveChanges();
             }
@@ -524,7 +527,7 @@ namespace Zidium.Core.AccountsDb
             {
                 unitTest.PeriodSeconds = data.PeriodSeconds;
                 unitTest.ErrorColor = data.ErrorColor;
-                unitTest.NextExecutionDate = DateTime.Now;
+                unitTest.NextExecutionDate = _timeService.Now();
                 unitTest.BeginSave();
                 unitTest.WaitSaveChanges();
                 id = unitTest.Id;
@@ -571,7 +574,7 @@ namespace Zidium.Core.AccountsDb
             using (var statusData = AllCaches.StatusDatas.Write(request))
             {
                 // сохраним результаты
-                var eventService = new EventService(_storage);
+                var eventService = new EventService(_storage, _timeService);
                 IEventCacheReadObject lastEvent = null;
                 if (statusData.LastEventId.HasValue)
                 {
@@ -636,7 +639,7 @@ namespace Zidium.Core.AccountsDb
                 }
 
                 // обновим статус
-                var statusService = new BulbService(_storage);
+                var statusService = new BulbService(_storage, _timeService);
                 var newEventForRead = _storage.Events.GetOneById(newEvent.Id);
                 var signal = BulbSignal.Create(processDate, newEventForRead, noSignalImportance);
                 var newStatus = statusService.SetSignal(unitTest.StatusDataId, signal);
@@ -666,7 +669,7 @@ namespace Zidium.Core.AccountsDb
                 ObjectId = data.UnitTestId.Value
             }))
             {
-                var processDate = DateTime.Now;
+                var processDate = _timeService.Now();
 
                 // получим актуальную колбасу, чтобы не было пробелов между результатами
                 GetUnitTestResultInternal(unitTest, processDate);
@@ -731,7 +734,7 @@ namespace Zidium.Core.AccountsDb
             // обновим галочку "включено"
             if (unitTest.Enable == false
                 && unitTest.DisableToDate.HasValue
-                && unitTest.DisableToDate < DateTime.Now)
+                && unitTest.DisableToDate < _timeService.Now())
             {
                 using (var unitTestWrite = AllCaches.UnitTests.Write(unitTest))
                 {
@@ -741,7 +744,7 @@ namespace Zidium.Core.AccountsDb
                 }
             }
 
-            var statusService = new BulbService(_storage);
+            var statusService = new BulbService(_storage, _timeService);
             var data = statusService.GetRaw(unitTest.StatusDataId);
 
             // если надо выключить
@@ -802,15 +805,15 @@ namespace Zidium.Core.AccountsDb
         {
             var cache = new AccountCache();
             var unitTest = cache.UnitTests.Read(unitTestId);
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
             return GetUnitTestResultInternal(unitTest, processDate);
         }
 
         private IBulbCacheReadObject UpdateEnableOrDisableStatusData(IUnitTestCacheReadObject unitTest)
         {
-            var statusService = new BulbService(_storage);
+            var statusService = new BulbService(_storage, _timeService);
             IBulbCacheReadObject data = null;
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
             if (unitTest.CanProcess)
             {
                 var unknownSignal = BulbSignal.CreateUnknown(processDate);
@@ -822,7 +825,7 @@ namespace Zidium.Core.AccountsDb
                 data = statusService.SetSignal(unitTest.StatusDataId, disableSignal);
             }
 
-            var componentService = new ComponentService(_storage);
+            var componentService = new ComponentService(_storage, _timeService);
             componentService.CalculateAllStatuses(unitTest.ComponentId);
 
             return data;
@@ -862,12 +865,12 @@ namespace Zidium.Core.AccountsDb
             }
 
             // обновим колбаски
-            var statusService = new BulbService(_storage);
-            var processDate = DateTime.Now;
+            var statusService = new BulbService(_storage, _timeService);
+            var processDate = _timeService.Now();
             var unknownSignal = BulbSignal.CreateUnknown(processDate);
             var data = statusService.SetSignal(unitTestRead.StatusDataId, unknownSignal);
 
-            var componentService = new ComponentService(_storage);
+            var componentService = new ComponentService(_storage, _timeService);
             componentService.CalculateAllStatuses(unitTestRead.ComponentId);
 
             return data;
@@ -875,7 +878,7 @@ namespace Zidium.Core.AccountsDb
 
         public int RecalcUnitTestsResults(int maxCount)
         {
-            var unitTestsIds = _storage.UnitTests.GetNotActualIds(DateTime.Now, maxCount);
+            var unitTestsIds = _storage.UnitTests.GetNotActualIds(_timeService.Now(), maxCount);
             foreach (var unitTestId in unitTestsIds)
             {
                 GetUnitTestResult(unitTestId);
@@ -886,7 +889,7 @@ namespace Zidium.Core.AccountsDb
         public string GetFullDisplayName(UnitTestForRead unittest)
         {
             var component = _storage.Components.GetOneById(unittest.ComponentId);
-            var componentService = new ComponentService(_storage);
+            var componentService = new ComponentService(_storage, _timeService);
             return componentService.GetFullDisplayName(component) + " / " + unittest.DisplayName;
         }
 

@@ -21,6 +21,7 @@ using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
 using Zidium.Api;
 using Zidium.Common;
 using Zidium.Core;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
@@ -77,6 +78,7 @@ namespace Zidium.Agent
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IAgentConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+            DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
 
             InitMonitoring();
 

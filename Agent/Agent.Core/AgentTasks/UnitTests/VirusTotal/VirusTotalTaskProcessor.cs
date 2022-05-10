@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
-using Zidium.Core.Common.TimeService;
 using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
@@ -16,7 +15,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
         public VirusTotalTaskProcessor(ILogger logger, CancellationToken cancellationToken, ITimeService timeService)
             : base(logger, cancellationToken, timeService)
         {
-            _processor = new VirusTotalProcessor(new VirusTotalLimitManager(), new TimeService(), logger);
+            _processor = new VirusTotalProcessor(new VirusTotalLimitManager(), timeService, logger);
         }
 
         private void FixInputData(VirusTotalProcessorInputData inputData)

@@ -1,6 +1,5 @@
 ﻿using System;
 using Zidium.Common;
-using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 
 namespace Zidium.UserAccount.Models
@@ -24,7 +23,7 @@ namespace Zidium.UserAccount.Models
             if (Interval != "my")
             {
                 var duration = TimeSpanHelper.ParseHtml(Interval);
-                return DateTime.Now + duration;
+                return DateTime.UtcNow + duration;
             }
             if (Date == null)
             {

@@ -27,7 +27,7 @@ namespace Zidium.Api.Tests.Events
             // отправим событие
             var eventMessage = TestHelper.CreateRandomComponentEvent(component);
             var sendEventResponse = eventMessage.Send();
-            Assert.True(sendEventResponse.Success);
+            sendEventResponse.Check();
 
             // теперь фильтр должен найти 1 событие
             events = client.ApiService.GetEvents(filter);

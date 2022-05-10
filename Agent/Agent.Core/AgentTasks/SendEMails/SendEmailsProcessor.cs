@@ -6,6 +6,7 @@ using System.Threading;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using MimeKit;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -37,6 +38,8 @@ namespace Zidium.Agent.AgentTasks.SendEMails
 
         public int SendMaxCount = 100;
 
+        protected ITimeService TimeService;
+
         public SendEmailsProcessor(
             ILogger logger,
             CancellationToken cancellationToken,
@@ -57,6 +60,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
             SmtpPassword = smtpPassword;
             UseMailKit = useMailKit;
             UseSsl = useSsl;
+            TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
         }
 
         public string Process(Guid? emailId = null)
@@ -107,13 +111,13 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             .CreateComponentEvent("Отправка почты")
                             .SetJoinInterval(TimeSpan.FromDays(1))
                             .SetImportance(EventImportance.Unknown)
-                            .SetJoinKey(DateTime.Now.ToString("yyyy.MM.dd"))
+                            .SetJoinKey(_timeService.Now().ToString("yyyy.MM.dd"))
                             .Add();
                         */
                         // TODO Тут надо писать метрику
 
                         // обновим статус  и статистику
-                        storage.SendEmailCommands.MarkAsSendSuccessed(email.Id, DateTime.Now);
+                        storage.SendEmailCommands.MarkAsSendSuccessed(email.Id, TimeService.Now());
                         Interlocked.Increment(ref SuccessSendCount);
 
                         // если есть соответствующее уведомление, поменяем его статус
@@ -143,7 +147,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                             exception.Data.Add("EMailId", email.Id);
                             Logger.LogError(exception, exception.Message);
 
-                            storage.SendEmailCommands.MarkAsSendFail(email.Id, DateTime.Now, exception.Message);
+                            storage.SendEmailCommands.MarkAsSendFail(email.Id, TimeService.Now(), exception.Message);
 
                             // если есть соответствующее уведомление, поменяем его статус
                             if (email.ReferenceId != null)

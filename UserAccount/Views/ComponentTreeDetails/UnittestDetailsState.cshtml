@@ -4,14 +4,16 @@
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsStateModel
 
-<p>   
+@{ var currentUser = UserHelper.CurrentUser(Context); }
+
+<p>
     <span id="unittest-details-state-status">
         @Html.MonitoringStatusLabel(Model.Status, Model.StatusEventId, 14)
     </span>
     <span class="simple-text-value" id="unittest-details-state-duration">
         @TimeSpanHelper.Get2UnitsString(Model.StatusDuration)
     </span>
-    
+
     @if (Model.CanEdit)
     {
         if (Model.CanRun)
@@ -37,31 +39,31 @@
         if (Model.TypeId == SystemUnitTestType.HttpUnitTestType.Id)
         {
             <span class="simple-text-value">Выполняет Http-запрос</span>
-            <br/>
+            <br />
             <a target="_blank" href="@Model.RuleData">@Model.RuleData</a>
         }
         else if (Model.TypeId == SystemUnitTestType.PingTestType.Id)
         {
             <span class="simple-text-value">Выполняет Ping-запрос</span>
-            <br/>
+            <br />
             <span>@Model.RuleData</span>
         }
         else if (Model.TypeId == SystemUnitTestType.DomainNameTestType.Id)
         {
             <span class="simple-text-value">Проверяет дату окончания регистрации домена</span>
-            <br/>
+            <br />
             <a target="_blank" href="@Model.RuleData">@Model.RuleData</a>
         }
         else if (Model.TypeId == SystemUnitTestType.SslTestType.Id)
         {
             <span class="simple-text-value">Проверяет дату окончания Ssl-сертификата</span>
-            <br/>
+            <br />
             <a target="_blank" href="@Model.RuleData">@Model.RuleData</a>
         }
         else if (Model.TypeId == SystemUnitTestType.SqlTestType.Id)
         {
             <span class="simple-text-value">Выполняет Sql-запрос</span>
-            <br/>
+            <br />
             <span class="text-wordbreak">@Model.RuleData</span>
         }
     }
@@ -69,18 +71,18 @@
 
 <p>
     <span class="simple-text-header">Последнее выполнение</span><br />
-    <span class="simple-text-value">@(Model.LastExecutionDate != null ? DateTimeHelper.GetRussianDateTime(Model.LastExecutionDate) : "нет")</span>
+    <span class="simple-text-value">@(Model.LastExecutionDate != null ? DateTimeHelper.GetRussianDateTime(Model.LastExecutionDate, currentUser.TimeZoneOffsetMinutes) : "нет")</span>
 </p>
 
 <p>
     <span class="simple-text-header">Результат</span><br />
     <span class="simple-text-value">@Model.LastExecutionResult</span>
 </p>
-    
+
 @if (Model.LastExecutionResultProperties != null)
 {
     <p>
-        <span class="simple-text-header">Дополнительные данные</span><br/>
+        <span class="simple-text-header">Дополнительные данные</span><br />
         @Html.ExtentionPropertiesTable(Model.LastExecutionResultProperties)
     </p>
 }

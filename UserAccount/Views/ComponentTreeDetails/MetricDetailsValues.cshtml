@@ -3,6 +3,8 @@
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.MetricDetailsValuesModel
 
+@{ var currentUser = UserHelper.CurrentUser(Context); }
+
 @if (Model.Data.Length > 0)
 {
     <table class="table simpleTableClear table-condensed" id="metric-details-values-table">
@@ -17,7 +19,7 @@
             {
                 var color = GuiHelper.GetStrongFgColor(history.Color);
                 <tr style="color: @color">
-                    <td>@DateTimeHelper.GetRussianDateTime(history.Date)</td>
+                    <td>@DateTimeHelper.GetRussianDateTime(history.Date, currentUser.TimeZoneOffsetMinutes)</td>
                     <td>
                         @GuiHelper.GetMetricValueHtml(history.Value, history.Color, history.HasSignal)
                     </td>

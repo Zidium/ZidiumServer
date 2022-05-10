@@ -1,11 +1,13 @@
 ﻿@using GridMvc.Html
 @using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Controls
+@using Zidium.Core.Common.Helpers 
 @model Zidium.UserAccount.Models.StartsReportModel
 
 @{
     ViewBag.Title = "Запуски компонентов";
     ViewBag.ActiveMenuItems = "Analytics,ComponentsStarts";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @Html.Partial("_PageTitle")
@@ -109,13 +111,13 @@
 
                 columns.Add(m => m.FirstStart).RenderValueAs(m => Html.HtmlBlock(x =>
                     m.FirstStart.HasValue ?
-                        Html.ActionLink(m.FirstStart.Value.ToString(GuiHelper.DateTimeDisplayFormat), "Show", "Events", new { id = m.FirstStartId, componentId = m.ComponentId }, null)
+                        Html.ActionLink(DateTimeHelper.GetRussianDateTime(m.FirstStart.Value, currentUser.TimeZoneOffsetMinutes), "Show", "Events", new { id = m.FirstStartId, componentId = m.ComponentId }, null)
                         : null))
                     .Encoded(false).Sanitized(false);
 
                 columns.Add(m => m.LastStart).RenderValueAs(m => Html.HtmlBlock(x =>
                     m.LastStart.HasValue ?
-                        Html.ActionLink(m.LastStart.Value.ToString(GuiHelper.DateTimeDisplayFormat), "Show", "Events", new { id = m.LastStartId, componentId = m.ComponentId }, null)
+                        Html.ActionLink(DateTimeHelper.GetRussianDateTime(m.LastStart.Value, currentUser.TimeZoneOffsetMinutes), "Show", "Events", new { id = m.LastStartId, componentId = m.ComponentId }, null)
                         : null))
                     .Encoded(false).Sanitized(false);
 

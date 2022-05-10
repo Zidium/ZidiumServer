@@ -39,7 +39,7 @@ namespace Zidium.UserAccount.Models
 
         public string GetLogUrl(IUrlHelper urlHelper, TimeSpan period)
         {
-            var fromDate = DateTime.Now - period;
+            var fromDate = DateTime.UtcNow - period;
             return LinkHelper.GenerateUrl(urlHelper, "Index", "Logs", new { ComponentId = Component.Id, Date = GuiHelper.GetUrlDateTimeString(fromDate) });
         }
     }

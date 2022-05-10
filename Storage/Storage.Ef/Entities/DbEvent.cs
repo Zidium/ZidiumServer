@@ -66,12 +66,12 @@ namespace Zidium.Storage.Ef
         public DateTime CreateDate { get; set; }
 
         /// <summary>
-        /// Дата начала события (по местному времени аккаунта)
+        /// Дата начала события (UTC)
         /// </summary>
         public DateTime StartDate { get; set; }
 
         /// <summary>
-        /// Дата завершения события (по местному времени аккаунта)
+        /// Дата завершения события (UTC)
         /// </summary>
         public DateTime EndDate { get; set; }
 

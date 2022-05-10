@@ -1,4 +1,5 @@
 ﻿using System;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.Limits
@@ -16,7 +17,9 @@ namespace Zidium.Core.Limits
             {
                 if (_checker == null)
                 {
-                    _checker = new AccountLimitsChecker();
+                    // TODO DI
+                    var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+                    _checker = new AccountLimitsChecker(timeService);
                 }
 
                 return _checker;

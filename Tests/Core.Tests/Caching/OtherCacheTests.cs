@@ -3,6 +3,7 @@ using Xunit;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common;
 using Zidium.TestTools;
 
 namespace Zidium.Core.Tests.Caching
@@ -15,7 +16,8 @@ namespace Zidium.Core.Tests.Caching
             // Создадим отключенный компонент и проверку до создания диспетчера
             Guid unitTestId;
             var account = TestHelper.GetTestAccount();
-            var componentService = new ComponentService(TestHelper.GetStorage());
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+            var componentService = new ComponentService(TestHelper.GetStorage(), timeService);
             var component = componentService.GetOrCreateComponent(new GetOrCreateComponentRequestDataDto()
             {
                 DisplayName = Ulid.NewUlid().ToString(),
@@ -24,14 +26,14 @@ namespace Zidium.Core.Tests.Caching
             });
             componentService.DisableComponent(component.Id, null, null);
 
-            var unitTestTypeService = new UnitTestTypeService(TestHelper.GetStorage());
+            var unitTestTypeService = new UnitTestTypeService(TestHelper.GetStorage(), timeService);
             var unitTestType = unitTestTypeService.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
                 SystemName = "Main",
                 DisplayName = "Main"
             });
 
-            var unitTestService = new UnitTestService(TestHelper.GetStorage());
+            var unitTestService = new UnitTestService(TestHelper.GetStorage(), timeService);
             var unitTestCache = unitTestService.GetOrCreateUnitTest(new GetOrCreateUnitTestRequestDataDto()
             {
                 ComponentId = component.Id,

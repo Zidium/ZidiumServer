@@ -43,7 +43,7 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var userService = new UserService(GetStorage());
+            var userService = new UserService(GetStorage(), TimeService);
 
             try
             {
@@ -51,7 +51,7 @@ namespace Zidium.UserAccount.Controllers
                 var authInfo = userService.Auth(model.UserName, model.Password);
 
                 var storage = GetStorage();
-                var tokenService = new TokenService(storage);
+                var tokenService = new TokenService(storage, TimeService);
                 var token = tokenService.GenerateToken(authInfo.User.Id, TokenPurpose.Logon, TimeSpan.FromMinutes(1));
 
                 var currentUrl = Url.ToAbsolute(Request.GetDisplayUrl());
@@ -83,7 +83,7 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult LogonByToken(Guid id, string returnUrl = null, bool rememberMe = false, bool isSwitched = false)
         {
             var storage = GetStorage();
-            var tokenService = new TokenService(storage);
+            var tokenService = new TokenService(storage, TimeService);
             try
             {
                 var token = tokenService.UseToken(id, TokenPurpose.Logon);

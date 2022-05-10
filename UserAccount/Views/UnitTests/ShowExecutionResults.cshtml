@@ -5,6 +5,10 @@
 
 @model ShowExecutionResultsModel
 
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
 <div>
     <style>
         #last-results-caption {
@@ -35,7 +39,7 @@
             {
                 var color = GuiHelper.GetStrongFgColor(result.Importance);
                 <tr style="color: @color">
-                    <td>@DateTimeHelper.GetRussianDateTime(result.Date)</td>
+                    <td>@DateTimeHelper.GetRussianDateTime(result.Date, currentUser.TimeZoneOffsetMinutes)</td>
                     <td>
                         <a href="@Url.Action("Show", "Events", new {id = result.Id})" title="@result.Message" target="_blank">@result.Message</a>
                     </td>

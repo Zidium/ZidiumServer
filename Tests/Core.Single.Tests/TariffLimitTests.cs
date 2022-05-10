@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.Common;
+using Moq;
+using Zidium.Core.Common;
 
 namespace Zidium.Core.Single.Tests
 {
@@ -116,8 +118,11 @@ namespace Zidium.Core.Single.Tests
         [Fact]
         public void MaxArchiveDaysTest()
         {
-            var now = DateTime.Now.Date;
-            var checker = new AccountLimitsChecker(now);
+            var now = DateTime.UtcNow.Date;
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(now);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             var storage = TestHelper.GetStorage();
 
@@ -135,7 +140,7 @@ namespace Zidium.Core.Single.Tests
 
             // Прошёл один день
             now = now.AddDays(1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Сохраним данные
             checker.SaveData(storage);
@@ -146,25 +151,25 @@ namespace Zidium.Core.Single.Tests
 
             // Проверим размер хранилища через 4 дня
             now = now.AddDays(4);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
             usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
             Assert.Equal(111000, usedLimits.StorageSize);
 
             // Проверим размер хранилища через 5 дней
             now = now.AddDays(1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
             usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
             Assert.Equal(110000, usedLimits.StorageSize);
 
             // Проверим размер хранилища через 6 дней
             now = now.AddDays(1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
             usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
             Assert.Equal(100000, usedLimits.StorageSize);
 
             // Проверим размер хранилища через 7 дней
             now = now.AddDays(1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
             usedLimits = checker.GetUsedOverallTariffLimit(storage, 30).Total;
             Assert.Equal(0, usedLimits.StorageSize);
         }
@@ -173,27 +178,30 @@ namespace Zidium.Core.Single.Tests
         public void ArchiveDataTest()
         {
             var account = TestHelper.GetTestAccount();
-            var today = DateTime.Now.Date;
+            var today = DateTime.UtcNow.Date;
             var storage = TestHelper.GetStorage();
 
             // 30 дней назад
             var date30 = today.AddDays(-30);
-            var checker = new AccountLimitsChecker(date30);
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(date30);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             checker.AddLogSizePerDay(storage, 100);
-            checker.NowOverride = date30.AddDays(1);
+            timeService.Setup(t => t.Now()).Returns(date30.AddDays(1));
             checker.SaveData(storage);
 
             // 1 день назад
             var date1 = today.AddDays(-1);
-            checker.NowOverride = date1;
+            timeService.Setup(t => t.Now()).Returns(date1);
 
             checker.AddLogSizePerDay(storage, 200);
-            checker.NowOverride = date1.AddDays(1);
+            timeService.Setup(t => t.Now()).Returns(date1.AddDays(1));
             checker.SaveData(storage);
 
             // Проверим, что сегодня есть архив за 30 дней
-            checker.NowOverride = today;
+            timeService.Setup(t => t.Now()).Returns(today);
 
             var archive = checker.GetUsedOverallTariffLimit(storage, 30).Archive;
             Assert.Equal(2, archive.Length);
@@ -211,8 +219,11 @@ namespace Zidium.Core.Single.Tests
             var storage = TestHelper.GetStorage();
 
             // Выровняем сдвиг времени по границе N минут
-            var now = DateTime.Now.Date.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            var checker = new AccountLimitsChecker(now);
+            var now = DateTime.UtcNow.Date.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(now);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             // Отправим данные по первой проверке
             checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
@@ -222,21 +233,20 @@ namespace Zidium.Core.Single.Tests
 
             // Прошло N минут
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Отправим данные по второй проверке до лимита
             checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
 
             // Прошло N минут
-            checker.NowOverride = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
+            timeService.Setup(t => t.Now()).Returns(now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep));
 
             // Сохраним данные
             var count = checker.SaveData(storage);
             Assert.Equal(2, count);
 
             // Перечитаем данные из базы
-            var nowOverride = checker.NowOverride;
-            checker = new AccountLimitsChecker(nowOverride);
+            checker = new AccountLimitsChecker(timeService.Object);
 
             var usedLimits = checker.GetUsedTodayTariffLimit(storage);
 
@@ -268,8 +278,11 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Выровняем сдвиг времени по границе N минут
-            var now = DateTime.Now.Date.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            var checker = new AccountLimitsChecker(now);
+            var now = DateTime.UtcNow.Date.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(now);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             // Добавим данные
             checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
@@ -280,7 +293,7 @@ namespace Zidium.Core.Single.Tests
             // Прошло N минут
             var oldNow = now;
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Вызовем сохранение
             var count = checker.SaveData(storage);
@@ -316,7 +329,7 @@ namespace Zidium.Core.Single.Tests
             // Прошло N минут
             oldNow = now;
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Затребуем данные по лимитам
             checker.GetUsedTodayTariffLimit(storage);
@@ -347,18 +360,18 @@ namespace Zidium.Core.Single.Tests
             }
 
             // Перечитаем данные из базы
-            checker = new AccountLimitsChecker(now);
+            checker = new AccountLimitsChecker(timeService.Object);
 
             // Проверим сохранение пустой записи
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             count = checker.SaveData(storage);
             Assert.Equal(1, count);
 
             // Проверим сохранение сразу 2 записей
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
             checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
@@ -366,7 +379,7 @@ namespace Zidium.Core.Single.Tests
             checker.AddEventsSizePerDay(storage, 100);
 
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             checker.AddUnitTestResultsPerDay(storage, unitTest1.Id);
             checker.AddUnitTestResultsPerDay(storage, unitTest2.Id);
@@ -386,8 +399,11 @@ namespace Zidium.Core.Single.Tests
             var storage = TestHelper.GetStorage();
 
             // Установим время на конец дня (23:59)
-            var now = DateTime.Now.Date.AddMinutes(-1);
-            var checker = new AccountLimitsChecker(now);
+            var now = DateTime.UtcNow.Date.AddMinutes(-1);
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(now);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             // Отправим данные
             checker.AddLogSizePerDay(storage, 100);
@@ -398,7 +414,7 @@ namespace Zidium.Core.Single.Tests
 
             // Установим время на начало следующего дня (00:01)
             now = now.AddMinutes(2);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Проверим, что использованный лимит за сегодня пустой, так как начался новый день
             usedLimits = checker.GetUsedTodayTariffLimit(storage);
@@ -413,9 +429,12 @@ namespace Zidium.Core.Single.Tests
 
             // Подготовим данные за вчера и сохраним их
 
-            var today = DateTime.Now.Date;
+            var today = DateTime.UtcNow.Date;
             var now = today.AddMinutes(1);
-            var checker = new AccountLimitsChecker(now);
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(now);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             checker.AddLogSizePerDay(storage, 101);
             checker.AddEventsSizePerDay(storage, 102);
@@ -424,7 +443,7 @@ namespace Zidium.Core.Single.Tests
 
             var yesterday = today;
             now = today.AddDays(1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             checker.AddLogSizePerDay(storage, 10);
             checker.AddEventsSizePerDay(storage, 20);
@@ -432,12 +451,12 @@ namespace Zidium.Core.Single.Tests
             checker.AddMetricsSizePerDay(storage, 40);
 
             now = now.AddMinutes(AccountLimitsChecker.LimitDataTimeStep);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             checker.SaveData(storage);
 
             // Перечитаем данные из базы
-            checker = new AccountLimitsChecker(now);
+            checker = new AccountLimitsChecker(timeService.Object);
 
             // Получим использованные лимиты
             AccountUsedLimitsPerDayDataInfo usedOverallLimits;
@@ -468,16 +487,19 @@ namespace Zidium.Core.Single.Tests
             var storage = TestHelper.GetStorage();
 
             // Установим время на начало дня
-            var today = DateTime.Now.Date;
+            var today = DateTime.UtcNow.Date;
             var now = today.AddMinutes(1);
-            var checker = new AccountLimitsChecker(now);
+            var timeService = new Mock<ITimeService>();
+            timeService.Setup(t => t.Now()).Returns(now);
+
+            var checker = new AccountLimitsChecker(timeService.Object);
 
             // Отправим данные
             checker.AddLogSizePerDay(storage, 100);
 
             // Установим время на конец дня
             now = today.AddDays(1).AddMinutes(-1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Отправим данные
             checker.AddLogSizePerDay(storage, 200);
@@ -494,7 +516,7 @@ namespace Zidium.Core.Single.Tests
 
             // Начался новый день
             now = today.AddDays(1);
-            checker.NowOverride = now;
+            timeService.Setup(t => t.Now()).Returns(now);
 
             // Отправим данные
             checker.AddLogSizePerDay(storage, 50);

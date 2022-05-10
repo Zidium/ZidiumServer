@@ -19,6 +19,10 @@
 
 <script src="~/Scripts/Controls/DefectControl.js"></script>
 
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
 <p class="submenu-title">@ViewBag.Title</p>
 
 @if (Model.UnitTest != null)
@@ -50,7 +54,7 @@ if (Model.Component != null)
                         {
                             <p>
                                 <span class="simple-text-header">Случилось:</span>
-                                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.StartDate)</span>
+                                <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Event.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
                                 <span class="simple-text-header" style="margin-left: 30px;"> Количество:</span>
                                 <span class="simple-text-value">@Model.Event.Count</span>
                             </p>
@@ -59,7 +63,7 @@ if (Model.Component != null)
                         {
                             <p>
                                 <span class="simple-text-header">Началось:</span>
-                                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.StartDate)</span>
+                                <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Event.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
                                 <span class="simple-text-header">, длительность:</span>
                                 <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.Event.GetDuration(DateTime.Now))</span>.
                             </p>
@@ -173,25 +177,25 @@ if (Model.Component != null)
     <div class="col-sm-6 col-auto-width">
         <p>
             <span class="simple-text-header">Создано: </span>
-            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.CreateDate)</span>
+            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Event.CreateDate, currentUser.TimeZoneOffsetMinutes)</span>
         </p>
         <p>
             <span class="simple-text-header">Началось: </span>
-            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.StartDate)</span>
+            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Event.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
         </p>
         
         @if (Model.Event.ActualDate <= DateTime.Now)
         {
             <p>
                 <span class="simple-text-header">Закончилось: </span>
-                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.GetEndDate(DateTime.Now))</span>
+                <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Event.GetEndDate(DateTime.Now), currentUser.TimeZoneOffsetMinutes)</span>
             </p>
         }
         else
         {
             <p>
                 <span class="simple-text-header">Актуально до: </span>
-                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Event.ActualDate)</span>
+                <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Event.ActualDate, currentUser.TimeZoneOffsetMinutes)</span>
             </p>
         }
 
@@ -238,13 +242,13 @@ if (Model.Component != null)
                     @foreach (var reason in Model.UnitTestsReasons)
                     {
                         <tr>
-                            <td>@Html.EventLinkStartDate(reason.Event)</td>
+                            <td>@Html.EventLinkStartDate(reason.Event, currentUser.TimeZoneOffsetMinutes)</td>
                             <td>
                                 @{
-                                    var realEndDateString = Model.GetRealEndDateString(reason.Event);
-                                    if (realEndDateString != null)
+                                    var realEndDate = Model.GetRealEndDate(reason.Event);
+                                    if (realEndDate != null)
                                     {
-                                        <text>@realEndDateString</text>
+                                        <text>@DateTimeHelper.GetRussianDateTime(realEndDate, currentUser.TimeZoneOffsetMinutes)</text>
                                     }
                                     else
                                     {
@@ -278,13 +282,13 @@ if (Model.Component != null)
                     @foreach (var reason in Model.MetricsReasons)
                     {
                     <tr>
-                        <td>@Html.EventLinkStartDate(reason.Event)</td>
+                        <td>@Html.EventLinkStartDate(reason.Event, currentUser.TimeZoneOffsetMinutes)</td>
                         <td>
                             @{
-                                var realEndDateString = Model.GetRealEndDateString(reason.Event);
-                                if (realEndDateString != null)
+                                var realEndDate = Model.GetRealEndDate(reason.Event);
+                                if (realEndDate != null)
                                 {
-                                    <text>@realEndDateString</text>
+                                    <text>@DateTimeHelper.GetRussianDateTime(realEndDate, currentUser.TimeZoneOffsetMinutes)</text>
                                 }
                                 else
                                 {
@@ -317,13 +321,13 @@ if (Model.Component != null)
                     @foreach (var reason in Model.ChildsReasons)
                     {
                     <tr>
-                        <td>@Html.EventLinkStartDate(reason.Event)</td>
+                        <td>@Html.EventLinkStartDate(reason.Event, currentUser.TimeZoneOffsetMinutes)</td>
                         <td>
                             @{
-                                var realEndDateString = Model.GetRealEndDateString(reason.Event);
-                                if (realEndDateString != null)
+                                var realEndDate = Model.GetRealEndDate(reason.Event);
+                                if (realEndDate != null)
                                 {
-                                    <text>@realEndDateString</text>
+                                    <text>@DateTimeHelper.GetRussianDateTime(realEndDate, currentUser.TimeZoneOffsetMinutes)</text>
                                 }
                                 else
                                 {
@@ -355,13 +359,13 @@ if (Model.Component != null)
                     @foreach (var reason in Model.ErrorReasons)
                     {
                     <tr>
-                        <td>@Html.EventLinkStartDate(reason.Event)</td>
+                        <td>@Html.EventLinkStartDate(reason.Event, currentUser.TimeZoneOffsetMinutes)</td>
                         <td>
                             @{
-                                var realEndDateString = Model.GetRealEndDateString(reason.Event);
-                                if (realEndDateString != null)
+                                var realEndDate = Model.GetRealEndDate(reason.Event);
+                                if (realEndDate != null)
                                 {
-                                    <text>@realEndDateString</text>
+                                    <text>@DateTimeHelper.GetRussianDateTime(realEndDate, currentUser.TimeZoneOffsetMinutes)</text>
                                 }
                                 else
                                 {

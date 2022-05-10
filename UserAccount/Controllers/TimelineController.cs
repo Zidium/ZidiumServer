@@ -46,10 +46,10 @@ namespace Zidium.UserAccount.Controllers
         // Рисует диаграмму указанных статусов для владельца
         protected ActionResult ForOwner(Guid ownerId, EventCategory category, DateTime? fromDate, DateTime? toDate)
         {
-            var eDate = toDate ?? DateTime.Now;
+            var eDate = toDate ?? DateTime.UtcNow;
             var sDate = fromDate ?? eDate.AddHours(-24);
 
-            var service = new EventService(GetStorage());
+            var service = new EventService(GetStorage(), TimeService);
 
             var states = service.GetTimelineStates(ownerId, category, sDate, eDate);
             var items = this.GetTimelineItemsByStates(states, sDate, eDate);
@@ -71,11 +71,11 @@ namespace Zidium.UserAccount.Controllers
         // Рисует диаграмму указанных статусов для типа события по одному компоненту
         public ActionResult ForEventType(Guid id, Guid eventTypeId, DateTime? fromDate, DateTime? toDate, bool? hideUptime)
         {
-            var eDate = toDate ?? DateTime.Now;
+            var eDate = toDate ?? DateTime.UtcNow;
             var sDate = fromDate ?? eDate.AddHours(-24);
 
             var eventType = GetStorage().EventTypes.GetOneById(eventTypeId);
-            var service = new EventService(GetStorage());
+            var service = new EventService(GetStorage(), TimeService);
 
             var states = service.GetTimelineStates(id, eventTypeId, sDate, eDate);
             var items = this.GetTimelineItemsByStates(states, sDate, eDate);
@@ -99,10 +99,10 @@ namespace Zidium.UserAccount.Controllers
         // Рисует диаграмму указанных статусов для типа события независимо от компонента
         public ActionResult ForEventTypeAnyComponents(Guid eventTypeId, DateTime? fromDate, DateTime? toDate, bool? hideUptime)
         {
-            var eDate = toDate ?? DateTime.Now;
+            var eDate = toDate ?? DateTime.UtcNow;
             var sDate = fromDate ?? eDate.AddHours(-24);
 
-            var service = new EventService(GetStorage());
+            var service = new EventService(GetStorage(), TimeService);
 
             var states = service.GetTimelineStatesAnyComponents(eventTypeId, sDate, eDate);
             var items = this.GetTimelineItemsByStates(states, sDate, eDate);

@@ -22,10 +22,9 @@ namespace Zidium.Core.Tests.Dispatcher
             var error = TestHelper.CreateRandomApplicationError(component);
             error.JoinInterval = TimeSpan.Zero;
             error.Importance = EventImportance.Alarm;
-            error.StartDate = DateTime.Now;
+            error.StartDate = DateTime.UtcNow;
             error.Version = "2.5.0.0";
             var eventResponse = error.Send();
-            Assert.True(eventResponse.Success);
             var eventId = eventResponse.GetDataAndCheck().EventId;
 
             // Проверим, что ошибка не обработана и важность равна указанной
@@ -53,9 +52,8 @@ namespace Zidium.Core.Tests.Dispatcher
             //Assert.Equal(true, eventInfo.Data.IsUserHandled);
 
             // Отправим ещё старое событие
-            error.StartDate = DateTime.Now;
+            error.StartDate = DateTime.UtcNow;
             eventResponse = error.Send();
-            Assert.True(eventResponse.Success);
             eventId = eventResponse.GetDataAndCheck().EventId;
 
             // Проверим, что его параметры сразу поменялись
@@ -64,10 +62,9 @@ namespace Zidium.Core.Tests.Dispatcher
             //Assert.Equal(true, eventInfo.Data.IsUserHandled);
 
             // Отправим новое событие
-            error.StartDate = DateTime.Now;
+            error.StartDate = DateTime.UtcNow;
             error.Version = "3.0.0.1";
             eventResponse = error.Send();
-            Assert.True(eventResponse.Success);
             eventId = eventResponse.GetDataAndCheck().EventId;
 
             // Проверим, что его параметры не изменились
@@ -88,10 +85,9 @@ namespace Zidium.Core.Tests.Dispatcher
             }).Check();
 
             // Отправим новое событие
-            error.StartDate = DateTime.Now;
+            error.StartDate = DateTime.UtcNow;
             error.Version = "3.0.0.2";
             eventResponse = error.Send();
-            Assert.True(eventResponse.Success);
             eventId = eventResponse.GetDataAndCheck().EventId;
 
             // Проверим, что его параметры сразу поменялись
@@ -114,7 +110,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var error = TestHelper.CreateRandomApplicationError(component);
             error.JoinInterval = TimeSpan.Zero;
             error.Importance = EventImportance.Alarm;
-            error.StartDate = DateTime.Now;
+            error.StartDate = DateTime.UtcNow;
             error.Version = "2.0.0.0";
             var eventResponse = error.Send();
             eventResponse.Check();
@@ -153,7 +149,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var error = TestHelper.CreateRandomApplicationError(component);
             error.JoinInterval = TimeSpan.Zero;
             error.Importance = EventImportance.Alarm;
-            error.StartDate = DateTime.Now;
+            error.StartDate = DateTime.UtcNow;
             error.Version = "2.0.0.0";
             var eventResponse = error.Send();
             Assert.True(eventResponse.Success);

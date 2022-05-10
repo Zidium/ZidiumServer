@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Api.Dto;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -20,10 +21,13 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
         public int DeletedPropertiesCount;
 
+        protected readonly ITimeService TimeService;
+
         protected DeleteEventsProcessorBase(ILogger logger, CancellationToken cancellationToken)
         {
             Logger = logger;
             CancellationToken = cancellationToken;
+            TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             Logger.LogInformation($"Удаляются события старше {GetMaxDays()} дней");
         }
@@ -35,7 +39,7 @@ namespace Zidium.Agent.AgentTasks.DeleteEvents
 
             var categories = GetCategories();
 
-            var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-GetMaxDays()));
+            var date = DateTimeHelper.TrimMs(TimeService.Now().AddDays(-GetMaxDays()));
             Logger.LogTrace("Максимальная дата актуальности: {0}", date);
 
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();

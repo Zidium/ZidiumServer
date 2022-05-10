@@ -96,7 +96,7 @@ namespace Zidium.Agent.AgentTasks
                 };
             }
 
-            var days = (date.Date - DateTime.Now.Date).TotalDays;
+            var days = (date.Date - TimeService.Now().Date).TotalDays;
             ruleForUpdate.LastRunErrorCode.Set(SslCertificateExpirationDateErrorCode.Success);
             storage.UnitTestSslCertificateExpirationDateRules.Update(ruleForUpdate);
 

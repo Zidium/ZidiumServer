@@ -68,7 +68,7 @@ namespace Zidium.Core.Caching
                     {
                         Id = Ulid.NewUlid(),
                         IsDeleted = false,
-                        CreateDate = DateTime.Now,
+                        CreateDate = DateTime.UtcNow,
                         SystemName = name,
                         DisplayName = name
                     };

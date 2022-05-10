@@ -9,12 +9,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class ComponentTypeService : IComponentTypeService
     {
-        public ComponentTypeService(IStorage storage)
+        public ComponentTypeService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public ComponentTypeForRead GetOrCreateComponentType(GetOrCreateComponentTypeRequestDataDto data)
         {
@@ -84,7 +86,7 @@ namespace Zidium.Core.AccountsDb
             _storage.ComponentTypes.Update(componentTypeForUpdate);
 
             var components = _storage.Components.GetByComponentTypeId(typeId);
-            var componentService = new ComponentService(_storage);
+            var componentService = new ComponentService(_storage, _timeService);
             foreach (var component in components)
                 componentService.DeleteComponent(component.Id);
         }

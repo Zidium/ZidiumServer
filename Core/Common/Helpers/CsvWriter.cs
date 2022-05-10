@@ -57,10 +57,10 @@ namespace Zidium.Core.Common.Helpers
             }
         }
 
-        public void WriteCell(DateTime? value)
+        public void WriteCell(DateTime? value, int timeZoneOffset)
         {
             WriteCell();
-            _writer.Write(Quote(DateTimeHelper.GetRussianDateTime(value)));
+            _writer.Write(Quote(DateTimeHelper.GetRussianDateTime(value, timeZoneOffset)));
         }
 
         public void WriteNewLine()

@@ -276,9 +276,9 @@ namespace Zidium.UserAccount.Helpers
             return htmlHelper.Partial("~/Views/Controls/MonitoringStatus.cshtml", model);
         }
 
-        public static IHtmlContent EventLinkStartDate(this IHtmlHelper htmlHelper, EventForRead eventObj)
+        public static IHtmlContent EventLinkStartDate(this IHtmlHelper htmlHelper, EventForRead eventObj, int timeZoneOffset)
         {
-            return htmlHelper.ActionLink(GetDateTimeString(eventObj.StartDate), "Show", "Events", new { id = eventObj.Id }, null);
+            return htmlHelper.ActionLink(DateTimeHelper.GetRussianDateTime(eventObj.StartDate, timeZoneOffset), "Show", "Events", new { id = eventObj.Id }, null);
         }
 
         public static IHtmlContent ComponentLink(this IHtmlHelper htmlHelper, Guid componentId, string name)
@@ -1582,15 +1582,6 @@ namespace Zidium.UserAccount.Helpers
             return string.Join(" ", list);
         }
 
-        public static string GetDateTimeString(DateTime? date)
-        {
-            if (date == null)
-            {
-                return null;
-            }
-            return date.Value.ToString(DateTimeDisplayFormat);
-        }
-
         public static string GetUrlDateTimeString(DateTime? date)
         {
             if (date == null)
@@ -1599,8 +1590,6 @@ namespace Zidium.UserAccount.Helpers
             }
             return DateTimeHelper.ToUrlFormat(date.Value);
         }
-
-        public const string DateTimeDisplayFormat = "dd.MM.yyyy HH:mm:ss";
 
         public const string GridMvcDateTimeDisplayFormat = "{0:dd.MM.yyyy HH:mm:ss}";
 

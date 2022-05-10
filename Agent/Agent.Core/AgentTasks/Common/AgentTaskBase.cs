@@ -6,7 +6,6 @@ using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.Common;
-using Zidium.Core.Common.TimeService;
 using Zidium.Core.InternalLogger;
 
 namespace Zidium.Agent.AgentTasks
@@ -49,7 +48,7 @@ namespace Zidium.Agent.AgentTasks
 
         protected AgentTaskBase()
         {
-            TimeService = new TimeService();
+            TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
             ExecutionPeriod = TimeSpan.FromMinutes(10);
             WaitOnErrorTime = TimeSpan.FromMinutes(1);
 

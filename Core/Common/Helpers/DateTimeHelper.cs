@@ -8,7 +8,7 @@ namespace Zidium.Core.Common.Helpers
     public static class DateTimeHelper
     {
         /// <summary>
-        /// Округляем дату до целого количества минут, которые делеятся на 5.
+        /// Округляем дату до целого количества минут, которые делятся на 5.
         /// Округление идет в большую сторону (вправо).
         /// </summary>
         /// <param name="value"></param>
@@ -48,11 +48,11 @@ namespace Zidium.Core.Common.Helpers
         public static DateTime TrimMs(DateTime value)
         {
             return new DateTime(
-                value.Year, 
-                value.Month, 
-                value.Day, 
-                value.Hour, 
-                value.Minute, 
+                value.Year,
+                value.Month,
+                value.Day,
+                value.Hour,
+                value.Minute,
                 value.Second);
         }
 
@@ -90,18 +90,23 @@ namespace Zidium.Core.Common.Helpers
             return Convert.ToInt64((date - epoch).TotalSeconds);
         }
 
-        public static string GetRussianDate(DateTime? date)
+        public static string GetRussianDate(DateTime? date, int timeZoneOffset)
         {
             if (date == null)
-                return String.Empty;
-            return date.Value.ToString(DateTimeFormat.RUS_DDMMYYYY);
+                return string.Empty;
+            return AddTimezoneOffset(date.Value, timeZoneOffset).ToString(DateTimeFormat.RUS_DDMMYYYY);
         }
 
-        public static string GetRussianDateTime(DateTime? date)
+        public static string GetRussianDateTime(DateTime? date, int timeZoneOffset)
         {
             if (date == null)
-                return String.Empty;
-            return date.Value.ToString(DateTimeFormat.RUS_DDMMYYYY_HHMMSS);
+                return string.Empty;
+            return AddTimezoneOffset(date.Value, timeZoneOffset).ToString(DateTimeFormat.RUS_DDMMYYYY_HHMMSS);
+        }
+
+        private static DateTime AddTimezoneOffset(DateTime date, int timeZoneOffset)
+        {
+            return date.AddMinutes(timeZoneOffset);
         }
 
         public static string ToUrlFormat(DateTime? date)
@@ -169,7 +174,7 @@ namespace Zidium.Core.Common.Helpers
             {
                 return result;
             }
-            
+
             // если только дата (без времени)
             if (text.Length == 10)
             {
@@ -211,7 +216,7 @@ namespace Zidium.Core.Common.Helpers
                     throw new FormatException("Неверный URL-формат даты");
                 }
             }
-            return new DateTime(date.Year, date.Month, date.Day, hours, minutes, seconds);
+            return new DateTime(date.Year, date.Month, date.Day, hours, minutes, seconds, DateTimeKind.Utc);
         }
 
         /// <summary>

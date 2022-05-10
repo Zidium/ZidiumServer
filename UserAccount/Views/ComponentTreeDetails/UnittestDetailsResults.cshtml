@@ -3,6 +3,8 @@
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.UnittestDetailsResultsModel
 
+@{ var currentUser = UserHelper.CurrentUser(Context); }
+
 @if (Model.Results.Length > 0)
 {
     <table class="table simpleTableClear table-condensed table-fixed" id="unittest-details-results-table">
@@ -17,7 +19,7 @@
             {
                 var color = GuiHelper.GetStrongFgColor(result.Importance);
                 <tr style="color: @color">
-                    <td>@DateTimeHelper.GetRussianDateTime(result.Date)</td>
+                    <td>@DateTimeHelper.GetRussianDateTime(result.Date, currentUser.TimeZoneOffsetMinutes)</td>
                     <td>
                         <a href="@Url.Action("Show", "Events", new { id = result.EventId })" title="@result.Message" target="_blank">@result.Message</a>
                     </td>

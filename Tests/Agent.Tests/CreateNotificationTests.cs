@@ -204,7 +204,7 @@ namespace Zidium.Agent.Tests
                 Category = SendEventCategory.ApplicationError,
                 Importance = EventImportance.Alarm,
             });
-            Assert.True(eventResponse.Success);
+            eventResponse.Check();
             account.SaveAllCaches();
 
             // Запустим обработку

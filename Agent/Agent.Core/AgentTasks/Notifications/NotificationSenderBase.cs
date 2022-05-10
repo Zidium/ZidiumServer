@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.Notifications
@@ -18,10 +19,13 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         public int CreatedNotificationsCount;
 
+        protected readonly ITimeService TimeService;
+
         protected NotificationSenderBase(ILogger logger, CancellationToken cancellationToken)
         {
             Logger = logger;
             CancellationToken = cancellationToken;
+            TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
         }
 
         /// <summary>
@@ -65,7 +69,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                             notificationForUpdate);
 
                         notificationForUpdate.Status.Set(NotificationStatus.Processed);
-                        notificationForUpdate.SendDate.Set(DateTime.Now);
+                        notificationForUpdate.SendDate.Set(TimeService.Now());
                         notificationRepository.Update(notificationForUpdate);
 
                         Logger.LogInformation("Уведомление " + notification.Id + " отправлено на " + notification.Address);
@@ -80,7 +84,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         var notificationForUpdate = notification.GetForUpdate();
                         notificationForUpdate.SendError.Set((exception.InnerException ?? exception).ToString());
                         notificationForUpdate.Status.Set(NotificationStatus.Error);
-                        notificationForUpdate.SendDate.Set(DateTime.Now);
+                        notificationForUpdate.SendDate.Set(TimeService.Now());
                         notificationRepository.Update(notificationForUpdate);
 
                         // TODO отправить ошибку в компонент аккаунта, чтобы её увидел админ аккаунта (а не админ Зидиума)
@@ -95,7 +99,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
                         var notificationForUpdate = notification.GetForUpdate();
                         notificationForUpdate.SendError.Set(exception.ToString());
                         notificationForUpdate.Status.Set(NotificationStatus.Error);
-                        notificationForUpdate.SendDate.Set(DateTime.Now);
+                        notificationForUpdate.SendDate.Set(TimeService.Now());
                         notificationRepository.Update(notificationForUpdate);
                     }
                 }

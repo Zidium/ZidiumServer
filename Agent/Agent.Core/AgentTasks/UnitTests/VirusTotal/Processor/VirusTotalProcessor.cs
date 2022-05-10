@@ -241,13 +241,13 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                 // если прошло 2 дня, а нового отчета нет, выполним новое сканирование
                 if (inputData.AttempCount > 2
                     && inputData.ScanTime.HasValue &&
-                    inputData.ScanTime.Value.AddDays(2) < DateTime.Now)
+                    inputData.ScanTime.Value.AddDays(2) < timeService.Now())
                 {
                     logger.LogWarning("Выполним Scan еще раз");
                     return new VirusTotalProcessorOutputData()
                     {
                         NextStep = VirusTotalStep.Scan,
-                        NextStepProcessTime = DateTime.Now.AddMinutes(1), // увеличиваем паузу с ростом ошибок
+                        NextStepProcessTime = timeService.Now().AddMinutes(1), // увеличиваем паузу с ростом ошибок
                         ScanId = inputData.ScanId,
                         ScanTime = inputData.ScanTime
                     };

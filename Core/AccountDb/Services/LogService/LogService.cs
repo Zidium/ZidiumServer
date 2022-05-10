@@ -10,12 +10,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class LogService : ILogService
     {
-        public LogService(IStorage storage)
+        public LogService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public LogConfigForRead GetLogConfig(Guid componentId)
         {
@@ -29,7 +31,7 @@ namespace Zidium.Core.AccountsDb
                     {
                         ComponentId = componentId,
                         Enabled = true,
-                        LastUpdateDate = DateTime.Now,
+                        LastUpdateDate = _timeService.Now(),
                         IsDebugEnabled = true,
                         IsTraceEnabled = true,
                         IsInfoEnabled = true,
@@ -57,7 +59,7 @@ namespace Zidium.Core.AccountsDb
             try
             {
                 // Получим компонент
-                var componentService = new ComponentService(_storage);
+                var componentService = new ComponentService(_storage, _timeService);
                 var component = componentService.GetComponentById(componentId);
 
                 var log = ApiConverter.GetLog(component.Id, message);
@@ -83,7 +85,7 @@ namespace Zidium.Core.AccountsDb
 
             try
             {
-                var componentService = new ComponentService(_storage);
+                var componentService = new ComponentService(_storage, _timeService);
 
                 // Добавим все записи в одной транзакции
                 foreach (var message in messages)

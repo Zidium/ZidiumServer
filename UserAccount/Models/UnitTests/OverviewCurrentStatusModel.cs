@@ -21,7 +21,7 @@ namespace Zidium.UserAccount.Models.UnitTests
             model.UnitTestId = unitTest.Id;
             model.Status = bulb.Status;
             model.StatusId = bulb.StatusEventId;
-            model.StatusDuration = bulb.GetDuration(DateTime.Now);
+            model.StatusDuration = bulb.GetDuration(DateTime.UtcNow);
             model.DisableComment = unitTest.DisableComment;
             model.DisableEndTime = unitTest.DisableToDate;
             return model;

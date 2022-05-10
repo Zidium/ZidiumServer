@@ -1,5 +1,6 @@
 ﻿using System;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.UserAccount.Models
@@ -50,7 +51,7 @@ namespace Zidium.UserAccount.Models
                 {
                     var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
                     var component = storage.Components.GetOneById(ComponentId.Value);
-                    ComponentFullName = ShowAsList ? component.DisplayName : new ComponentService(storage).GetFullDisplayName(component);
+                    ComponentFullName = ShowAsList ? component.DisplayName : new ComponentService(storage, _timeService).GetFullDisplayName(component);
                 }
             }
             return ComponentFullName;
@@ -73,6 +74,8 @@ namespace Zidium.UserAccount.Models
         }
 
         public string ComponentName { get; set; }
+
+        private readonly ITimeService _timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
     }
 }

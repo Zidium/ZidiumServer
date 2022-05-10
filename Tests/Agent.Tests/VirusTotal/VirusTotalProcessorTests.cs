@@ -4,7 +4,7 @@ using Xunit;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal;
 using Zidium.Agent.AgentTasks.UnitTests.VirusTotal.Processor;
 using Zidium.Api.Dto;
-using Zidium.Core.Common.TimeService;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Agent.Tests

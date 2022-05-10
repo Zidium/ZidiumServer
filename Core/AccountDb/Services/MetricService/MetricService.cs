@@ -15,14 +15,16 @@ namespace Zidium.Core.AccountsDb
 {
     public class MetricService : IMetricService
     {
-        public MetricService(IStorage storage)
+        public MetricService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
             _logger = DependencyInjection.GetLogger<MetricService>();
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
         private readonly ILogger _logger;
+        private readonly ITimeService _timeService;
 
         private IMetricCacheReadObject GetActualMetricInternal(IMetricCacheReadObject metric, DateTime processDate)
         {
@@ -44,7 +46,8 @@ namespace Zidium.Core.AccountsDb
                 }
             }
 
-            var statusService = new BulbService(_storage);
+            // TODO DI
+            var statusService = new BulbService(_storage, _timeService);
             var data = statusService.GetRaw(metric.StatusDataId);
 
             // если надо выключить
@@ -208,7 +211,7 @@ namespace Zidium.Core.AccountsDb
                 componentMetricsStatusDataIds.Add(metric.StatusDataId);
             }
 
-            var bulbService = new BulbService(_storage);
+            var bulbService = new BulbService(_storage, _timeService);
             bulbService.CalculateByChilds(
                 componentMetricsStatusDataId,
                 componentMetricsStatusDataIds.ToArray());
@@ -264,7 +267,7 @@ namespace Zidium.Core.AccountsDb
             metric.Value = value;
 
             // Обновим статус метрики
-            var statusService = new BulbService(_storage);
+            var statusService = new BulbService(_storage, _timeService);
             var noSignalColor = metric.NoSignalColor ?? metricType.NoSignalColor ?? ObjectColor.Red;
             var noSignalImportance = EventImportanceHelper.Get(noSignalColor);
             var signal = new BulbSignal()
@@ -390,7 +393,7 @@ namespace Zidium.Core.AccountsDb
 
         public int UpdateMetrics(int maxCount)
         {
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
             var metricIds = _storage.Metrics.GetNotActualIds(maxCount, processDate);
             var cache = new AccountCache();
 
@@ -423,19 +426,19 @@ namespace Zidium.Core.AccountsDb
             }
 
             // обновим колбаски
-            var statusService = new BulbService(_storage);
-            var processDate = DateTime.Now;
+            var statusService = new BulbService(_storage, _timeService);
+            var processDate = _timeService.Now();
             var unknownSignal = BulbSignal.CreateUnknown(processDate);
             statusService.SetSignal(metricRead.StatusDataId, unknownSignal);
-            var componentService = new ComponentService(_storage);
+            var componentService = new ComponentService(_storage, _timeService);
             componentService.CalculateAllStatuses(metricRead.ComponentId);
         }
 
         protected IBulbCacheReadObject UpdateEnableOrDisableStatusData(IMetricCacheReadObject metric)
         {
-            var statusService = new BulbService(_storage);
+            var statusService = new BulbService(_storage, _timeService);
             IBulbCacheReadObject data = null;
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
             if (metric.CanProcess)
             {
                 var unknownSignal = BulbSignal.CreateUnknown(processDate);
@@ -578,11 +581,11 @@ namespace Zidium.Core.AccountsDb
 
         public void UpdateNoSignalColor(IMetricCacheReadObject metric)
         {
-            var statusService = new BulbService(_storage);
+            var statusService = new BulbService(_storage, _timeService);
             var statusData = statusService.GetRaw(metric.StatusDataId);
             if (!statusData.HasSignal)
             {
-                SaveNoSignalColor(metric, DateTime.Now);
+                SaveNoSignalColor(metric, _timeService.Now());
             }
         }
 
@@ -601,10 +604,10 @@ namespace Zidium.Core.AccountsDb
                     throw new UserFriendlyException("У компонента уже есть метрика данного типа");
                 }
 
-                var processDate = DateTime.Now;
+                var processDate = _timeService.Now();
                 var metricId = Ulid.NewUlid();
 
-                var bulbService = new BulbService(_storage);
+                var bulbService = new BulbService(_storage, _timeService);
                 var statusDataId = bulbService.CreateBulb(
                     processDate,
                     EventCategory.MetricStatus,
@@ -624,7 +627,7 @@ namespace Zidium.Core.AccountsDb
                         MetricTypeId = metricTypeId,
                         ParentEnable = component.CanProcess,
                         StatusDataId = statusDataId,
-                        CreateDate = DateTime.Now,
+                        CreateDate = _timeService.Now(),
                         Value = null
                     };
 
@@ -692,7 +695,7 @@ namespace Zidium.Core.AccountsDb
                 throw new ParameterErrorException("ActualIntervalSecs must be >= 0");
             }
 
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
 
             var limitChecker = AccountLimitsCheckerManager.GetChecker();
             var size = data.GetSize();
@@ -798,7 +801,7 @@ namespace Zidium.Core.AccountsDb
             {
                 throw new ParameterErrorException("Не удалось найти метрику");
             }
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
             return GetActualMetricInternal(metric, processDate);
         }
 
@@ -806,7 +809,7 @@ namespace Zidium.Core.AccountsDb
         {
             var component = _storage.Components.GetOneById(metric.ComponentId);
             var metricType = _storage.MetricTypes.GetOneById(metric.MetricTypeId);
-            var componentService = new ComponentService(_storage);
+            var componentService = new ComponentService(_storage, _timeService);
             return componentService.GetFullDisplayName(component) + " / " + metricType.DisplayName;
         }
     }

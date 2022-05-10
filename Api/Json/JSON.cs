@@ -757,7 +757,7 @@ namespace Zidium.Api.JsonClasses
             if (_params.UseUTCDateTime == false && utc == false)
                 return new DateTime(year, month, day, hour, min, sec, ms);
             else
-                return new DateTime(year, month, day, hour, min, sec, ms, DateTimeKind.Utc).ToLocalTime();
+                return new DateTime(year, month, day, hour, min, sec, ms, DateTimeKind.Utc);
         }
 
         private object CreateArray(List<object> data, Type pt, Type bt, Dictionary<string, object> globalTypes)

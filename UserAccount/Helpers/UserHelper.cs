@@ -71,6 +71,9 @@ namespace Zidium.UserAccount.Helpers
                 userInfo = UserInfoByUser(user, roles);
                 userInfo.IsSwitched = GetIsUserSwitched(httpContext);
 
+                var userSettingService = new UserSettingService(storage);
+                userInfo.TimeZoneOffsetMinutes = userSettingService.TimeZoneOffsetMinutes(user.Id);
+
                 // обновим статистику входа
                 if (!userInfo.IsSwitched)
                 {

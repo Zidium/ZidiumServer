@@ -202,7 +202,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             {
                 ErrorCode = HttpRequestErrorCode.Success,
                 Rule = rule,
-                StartDate = DateTime.Now
+                StartDate = TimeService.Now()
             };
 
             try
@@ -232,7 +232,7 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             {
                 if (result.EndDate == null)
                 {
-                    result.EndDate = DateTime.Now;
+                    result.EndDate = TimeService.Now();
                 }
             }
             return result;

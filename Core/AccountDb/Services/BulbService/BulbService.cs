@@ -4,6 +4,7 @@ using System.Linq;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.Caching;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -11,12 +12,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class BulbService : IBulbService
     {
-        public BulbService(IStorage storage)
+        public BulbService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         private IEventCacheReadObject CreateOrUpdateStatusEvent(BulbCacheWriteObject data)
         {
@@ -53,7 +56,7 @@ namespace Zidium.Core.AccountsDb
         private IEventCacheReadObject AddStatusEvent(BulbCacheWriteObject data, Guid ownerId)
         {
             var eventType = SystemEventType.GetStatusEventType(data.EventCategory);
-            var now = DateTime.Now;
+            var now = _timeService.Now();
 
             // создаем новый статус
             var newStatus = new EventForAdd()
@@ -428,7 +431,7 @@ namespace Zidium.Core.AccountsDb
                     return;
                 }
 
-                var processDate = DateTime.Now;
+                var processDate = _timeService.Now();
 
                 BulbSignal signal = null;
 
@@ -511,7 +514,7 @@ namespace Zidium.Core.AccountsDb
 
         public void CalculateByChilds(Guid statusId, Guid[] childs)
         {
-            var processDate = DateTime.Now;
+            var processDate = _timeService.Now();
             var request = new AccountCacheRequest()
             {
                 ObjectId = statusId

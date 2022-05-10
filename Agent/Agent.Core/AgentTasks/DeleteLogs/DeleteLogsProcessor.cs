@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -19,10 +20,13 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
 
         public int DeletedPropertiesCount { get; protected set; }
 
+        protected readonly ITimeService TimeService;
+
         public DeleteLogsProcessor(ILogger logger, CancellationToken cancellationToken)
         {
             Logger = logger;
             CancellationToken = cancellationToken;
+            TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
         }
 
         public void Process()
@@ -33,7 +37,7 @@ namespace Zidium.Agent.AgentTasks.DeleteLogs
             DeletedPropertiesCount = 0;
 
             var logicSettings = LogicSettingsCache.LogicSettings;
-            var date = DateTimeHelper.TrimMs(DateTime.Now.AddDays(-logicSettings.LogMaxDays));
+            var date = DateTimeHelper.TrimMs(TimeService.Now().AddDays(-logicSettings.LogMaxDays));
 
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
             var logRepository = storage.Logs;

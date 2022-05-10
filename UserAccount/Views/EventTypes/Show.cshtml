@@ -20,6 +20,10 @@
 
 @Html.Partial("_PageTitle")
 
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
 @if (UserHelper.CurrentUser(Context).CanEditCommonData())
 {
     <div class="bottom20px">
@@ -115,7 +119,7 @@
             </p>
             <p>
                 <span class="simple-text-header">Создан: </span>
-                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Created)</span>
+                <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Created, currentUser.TimeZoneOffsetMinutes)</span>
             </p>
         </div>
 

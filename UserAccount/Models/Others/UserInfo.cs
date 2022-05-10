@@ -1,6 +1,4 @@
 ﻿using System;
-using Zidium.UserAccount.Helpers;
-using Zidium.UserAccount.Models;
 
 namespace Zidium.UserAccount
 {
@@ -14,6 +12,9 @@ namespace Zidium.UserAccount
 
         public UserInfoRole[] Roles { get; set; }
 
+        // TODO Remove
         public bool IsSwitched { get; set; }
+
+        public int TimeZoneOffsetMinutes { get; set; }
     }
 }

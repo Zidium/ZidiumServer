@@ -4,11 +4,6 @@ namespace Zidium.Core.Common.Helpers
 {
     public static class ReportPeriodHelper
     {
-        public static ReportPeriodRange GetRange(ReportPeriod period)
-        {
-            return GetRange(period, DateTime.Now);
-        }
-
         public static ReportPeriodRange GetRange(ReportPeriod period, DateTime to)
         {
             var data = new ReportPeriodRange()

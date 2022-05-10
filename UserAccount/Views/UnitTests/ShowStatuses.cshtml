@@ -5,6 +5,10 @@
 
 @model ShowStatusesModel
 
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
 <div>
     <style>
         #last-statuses-caption {
@@ -47,12 +51,12 @@
                 var color = GuiHelper.GetStrongFgColor(status.Importance);
                 <tr style="color: @color">
                     <td>
-                        @DateTimeHelper.GetRussianDateTime(status.Date)
+                        @DateTimeHelper.GetRussianDateTime(status.Date, currentUser.TimeZoneOffsetMinutes)
                         <br/>
                         <span class="status-duration">@GuiHelper.TimeSpanAs2UnitString(status.Duration)</span>
                     </td>
                     <td>
-                        @DateTimeHelper.GetRussianDateTime(status.EndDate)
+                        @DateTimeHelper.GetRussianDateTime(status.EndDate, currentUser.TimeZoneOffsetMinutes)
                         <br/>
                         <span class="status-count">
                             @status.Count раз

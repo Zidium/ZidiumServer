@@ -7,11 +7,11 @@ namespace Zidium.UserAccount.Models
     {
         public DashboardEventsByPeriodModel(DashboardEventModel[] events)
         {
-            var byTodayEvents = events.Where(t => t.StartDate.Date == DateTime.Now.Date).ToArray();
+            var byTodayEvents = events.Where(t => t.StartDate.Date == DateTime.Now.Date.ToUniversalTime()).ToArray();
             ByToday = new DashboardEventsByPeriodLineModel(byTodayEvents);
-            var byWeekEvents = events.Where(t => t.StartDate.Date >= DateTime.Now.AddDays(-7).Date).ToArray();
+            var byWeekEvents = events.Where(t => t.StartDate.Date >= DateTime.Now.AddDays(-7).Date.ToUniversalTime()).ToArray();
             ByWeek = new DashboardEventsByPeriodLineModel(byWeekEvents);
-            var byMonthEvents = events.Where(t => t.StartDate.Date >= DateTime.Now.AddMonths(-1).Date).ToArray();
+            var byMonthEvents = events.Where(t => t.StartDate.Date >= DateTime.Now.AddMonths(-1).Date.ToUniversalTime()).ToArray();
             ByMonth = new DashboardEventsByPeriodLineModel(byMonthEvents);
         }
 

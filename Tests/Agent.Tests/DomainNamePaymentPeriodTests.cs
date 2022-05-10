@@ -4,11 +4,11 @@ using System.Threading;
 using Zidium.Agent.AgentTasks;
 using Xunit;
 using Zidium.Core.AccountsDb;
-using Zidium.Core.Common.TimeService;
 using Zidium.Storage;
 using Zidium.Storage.Ef;
 using Zidium.TestTools;
 using Microsoft.Extensions.Logging.Abstractions;
+using Zidium.Core.Common;
 
 namespace Zidium.Agent.Tests
 {
@@ -168,8 +168,8 @@ namespace Zidium.Agent.Tests
             {
                 var test = accountDbContext.UnitTests.First(x => x.Id == unitTestId);
                 Assert.NotNull(test.NextExecutionDate);
-                Assert.True(test.NextExecutionDate > DateTime.Now.AddHours(23));
-                TestHelper.AreEqual(test.NextExecutionDate.Value, DateTime.Now.AddDays(1), TimeSpan.FromMinutes(5));
+                Assert.True(test.NextExecutionDate > DateTime.UtcNow.AddHours(23));
+                TestHelper.AreEqual(test.NextExecutionDate.Value, DateTime.UtcNow.AddDays(1), TimeSpan.FromMinutes(5));
             }
         }
     }

@@ -37,6 +37,10 @@
         }
 </style>
 
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
 <div id="component-logs-wrapper">
     <a href="@Url.Action("Index", "Logs", new{componentId = Model.ComponentId})"
        class="btn btn-default">Открыть</a>
@@ -60,7 +64,7 @@
                             }
                         </td>
                         <td style="width: 150px;">
-                            <span class="@css" style="white-space: nowrap;">@DateTimeHelper.GetRussianDateTime(message.Time)</span>
+                            <span class="@css" style="white-space: nowrap;">@DateTimeHelper.GetRussianDateTime(message.Time, currentUser.TimeZoneOffsetMinutes)</span>
                         </td>
                         <td class="log-message-cell">
                             <span class="log-message @css">@message.Message</span>

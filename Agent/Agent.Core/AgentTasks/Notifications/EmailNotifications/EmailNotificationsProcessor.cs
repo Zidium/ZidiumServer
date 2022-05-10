@@ -36,14 +36,16 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
             // составляем тело письма
             var user = storage.Users.GetOneById(notification.UserId);
-            var htmlBody = GetStatusEventHtml(user, notification, component, storage, eventObj);
+            var userSettingService = new UserSettingService(storage);
+            var timeZoneOffset = userSettingService.TimeZoneOffsetMinutes(user.Id);
+            var htmlBody = GetStatusEventHtml(user, notification, component, storage, eventObj, timeZoneOffset);
 
             // сохраняем письмо в очередь
             var command = new SendEmailCommandForAdd()
             {
                 Id = Ulid.NewUlid(),
                 Status = EmailStatus.InQueue,
-                CreateDate = DateTime.Now,
+                CreateDate = TimeService.Now(),
                 Body = htmlBody,
                 IsHtml = true,
                 Subject = subject,
@@ -58,7 +60,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected EventForRead GetRecentReasonEvent(EventForRead statusEvent, IStorage storage)
         {
-            var service = new EventService(storage);
+            var service = new EventService(storage, TimeService);
             return service.GetRecentReasonEvent(statusEvent);
         }
 
@@ -67,7 +69,8 @@ namespace Zidium.Agent.AgentTasks.Notifications
             NotificationForRead notification,
             ComponentForRead component,
             IStorage storage,
-            EventForRead statusEvent)
+            EventForRead statusEvent,
+            int timeZoneOffset)
         {
             var html = new HtmlRender();
 
@@ -79,10 +82,12 @@ namespace Zidium.Agent.AgentTasks.Notifications
             // Делаем строку:
             // 30.04.2016 в 08:37:43 компонент ПДК-10 перешёл в статус ОШИБКА.
 
+            var localStartDate = statusEvent.StartDate.AddMinutes(timeZoneOffset);
+
             var statusTimeText = string.Format(
                 "{0} в {1}",
-                statusEvent.StartDate.ToString("dd.MM.yyyy"),
-                statusEvent.StartDate.ToString("HH:mm:ss"));
+                localStartDate.ToString("dd.MM.yyyy"),
+                localStartDate.ToString("HH:mm:ss"));
 
             html.Write(statusTimeText);
             html.Write(" компонент ");

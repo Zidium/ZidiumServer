@@ -207,7 +207,7 @@ namespace Zidium.Api.Others
             // установим время, если оно не задано явно
             if (eventObj.StartDate == null)
             {
-                eventObj.StartDate = DateTime.Now;
+                eventObj.StartDate = DateTime.UtcNow;
                 eventObj.IsServerTime = false;
             }
 

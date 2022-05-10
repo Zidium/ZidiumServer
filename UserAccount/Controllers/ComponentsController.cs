@@ -122,7 +122,7 @@ namespace Zidium.UserAccount.Controllers
 
         public ActionResult GetComponentErrorStatisticsHtml(Guid componentId)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var repository = GetStorage().Events;
 
             var model = new ComponentErrorStatisticsModel();
@@ -677,7 +677,7 @@ namespace Zidium.UserAccount.Controllers
                     .ThenBy(x => x.CreatedDate)
                     .ToList();
 
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 foreach (var component in components)
                 {
                     var row = new StatesModelRow

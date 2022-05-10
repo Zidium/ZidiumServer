@@ -10,6 +10,7 @@
 @{
     ViewBag.Title = Model.Component.DisplayName + " (" + Model.Component.SystemName + ") - Просмотр компонента";
     ViewBag.ActiveMenuItems = "Components";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @section Styles
@@ -226,7 +227,7 @@
             <span class="simple-text-header">Статус длится</span>
             <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.ExternalState.GetDuration(Model.Now))</span>,
             <span class="simple-text-header">начался</span>
-            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.ExternalState.StartDate)</span>
+            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.ExternalState.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
             @if (UserHelper.CurrentUser(Context).CanEditCommonData())
             {
                 <a id="recalc-status-link" class="post-link" href='@Url.Action("RecalcStatus", new { id = Model.Component.Id })'><span class="glyphicon glyphicon-refresh"></span>Обновить</a>
@@ -243,7 +244,7 @@
             {
                 <p>
                     <span class="simple-text-header">Выключен до </span>
-                    <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Component.DisableToDate)</span>
+                    <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Component.DisableToDate, currentUser.TimeZoneOffsetMinutes)</span>
                 </p>
             }
             if (string.IsNullOrEmpty(Model.Component.DisableComment) == false)
@@ -365,7 +366,7 @@
             </p>
             <p class="no-bottom-margin">
                 <span class="simple-text-header">Дата создания: </span>
-                <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Component.CreatedDate)</span>
+                <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Component.CreatedDate, currentUser.TimeZoneOffsetMinutes)</span>
             </p>
         </div>
     </div>
@@ -445,7 +446,7 @@
                     var importanceColor = GuiHelper.GetImportanceColor(unitTest.Bulb.Status);
                     var color = GuiHelper.GetStrongFgColor(importanceColor);
                     <tr style="color: @color">
-                        <td class="text-nowrap">@GuiHelper.GetDateTimeString(unitTest.Bulb.EndDate)</td>
+                        <td class="text-nowrap">@DateTimeHelper.GetRussianDateTime(unitTest.Bulb.EndDate, currentUser.TimeZoneOffsetMinutes)</td>
                         <td class="text-nowrap">@(unitTest.Type.IsSystem ? unitTest.Type.DisplayName : "API")</td>
                         <td class="text-nowrap">
                             @Html.ActionLink(unitTest.DisplayName, "ResultDetails", "UnitTests", new { id = unitTest.Id }, null)
@@ -576,7 +577,7 @@
                 var importanceColor = GuiHelper.GetImportanceColor(statusData.Status);
                 var color = GuiHelper.GetStrongFgColor(importanceColor);
                 <tr style="color: @color">
-                    <td class="text-nowrap">@GuiHelper.GetDateTimeString(statusData.StartDate)</td>
+                    <td class="text-nowrap">@DateTimeHelper.GetRussianDateTime(statusData.StartDate, currentUser.TimeZoneOffsetMinutes)</td>
                     <td class="text-nowrap">@child.ComponentType.DisplayName</td>
                     <td class="text-nowrap">@Html.ActionLink(child.DisplayName, "Show", "Components", new { id = child.Id }, null)</td>
                     <td class="text-wordbreak">@statusData.Message</td>

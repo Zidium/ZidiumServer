@@ -389,7 +389,7 @@ namespace Zidium.UserAccount.Controllers
 
             if (model.ComponentId.HasValue)
             {
-                var service = new ComponentService(GetStorage());
+                var service = new ComponentService(GetStorage(), TimeService);
                 var component = GetStorage().Components.GetOneById(model.ComponentId.Value);
                 model.ComponentDisplayName = service.GetFullDisplayName(component);
             }
@@ -562,7 +562,7 @@ namespace Zidium.UserAccount.Controllers
             var model = new EditComponentSubscriptionsModel()
             {
                 Component = component,
-                ComponentFullName = new ComponentService(GetStorage()).GetFullDisplayName(component),
+                ComponentFullName = new ComponentService(GetStorage(), TimeService).GetFullDisplayName(component),
                 ComponentType = componentType,
                 User = user,
                 UserContacts = userContacts,

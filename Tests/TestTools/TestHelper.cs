@@ -145,7 +145,7 @@ namespace Zidium.TestTools
             Assert.Equal(createData.DisplayName, component.Info.DisplayName);
             Assert.Equal(createData.SystemName, component.SystemName);
             Assert.Equal(createData.SystemName, component.Info.SystemName);
-            Assert.True(component.Info.CreatedDate > DateTime.Now.AddDays(-1));
+            Assert.True(component.Info.CreatedDate > DateTime.UtcNow.AddDays(-1));
             Assert.True(component.Info.Id != Guid.Empty);
             Assert.NotNull(component.Info.ParentId);
             Assert.NotEqual(component.Info.ParentId, Guid.Empty);
@@ -370,7 +370,7 @@ namespace Zidium.TestTools
         {
             var account = GetTestAccount();
             var client = account.GetClient();
-            return GetRoundDateTime(client.ToServerTime(DateTime.Now));
+            return GetRoundDateTime(client.ToServerTime(DateTime.UtcNow));
         }
 
         public static void AreEqual(byte[] x, byte[] y)
@@ -488,7 +488,7 @@ namespace Zidium.TestTools
         public static void InitRandomEvent(SendEventBase eventBase)
         {
             eventBase.Message = "test comment " + PasswordHelper.GetRandomPassword(3000);
-            eventBase.StartDate = DateTime.Now;
+            eventBase.StartDate = DateTime.UtcNow;
             eventBase.Importance = GetRandomEventImportance();
             eventBase.JoinInterval = TimeSpan.FromSeconds(RandomHelper.GetRandomInt32(0, 1000000));
             eventBase.JoinKey = RandomHelper.GetRandomInt64(0, 100000000000);
@@ -505,7 +505,7 @@ namespace Zidium.TestTools
         {
             var name = "MetricType." + Ulid.NewUlid();
 
-            var service = new MetricService(GetStorage());
+            var service = new MetricService(GetStorage(), TimeService);
             var type = service.GetOrCreateType(name);
             return type;
         }
@@ -514,7 +514,7 @@ namespace Zidium.TestTools
         {
             var type = CreateTestMetricType();
 
-            var service = new MetricService(GetStorage());
+            var service = new MetricService(GetStorage(), TimeService);
             var metricId = service.CreateMetric(componentId, type.Id);
             return AllCaches.Metrics.Find(new AccountCacheRequest()
             {
@@ -531,7 +531,7 @@ namespace Zidium.TestTools
                 DisplayName = "display name " + guid,
                 SystemName = "sysName " + guid
             };
-            var service = new ComponentTypeService(GetStorage());
+            var service = new ComponentTypeService(GetStorage(), TimeService);
             var type = service.GetOrCreateComponentType(data);
             return type;
         }
@@ -556,12 +556,12 @@ namespace Zidium.TestTools
 
         public static DateTime GetRoundDateTime(DateTime date)
         {
-            return new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Second);
+            return new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
         }
 
         public static DateTime GetNow()
         {
-            return GetRoundDateTime(DateTime.Now);
+            return GetRoundDateTime(DateTime.UtcNow);
         }
 
         public static void AreEqual(DateTime a, DateTime b, TimeSpan maxGap)
@@ -590,20 +590,20 @@ namespace Zidium.TestTools
                 DisplayName = "display name for " + systemName,
                 Category = category
             };
-            var type = new EventTypeService(GetStorage()).GetOrCreate(eventType);
+            var type = new EventTypeService(GetStorage(), TimeService).GetOrCreate(eventType);
             return type;
         }
 
         public static UserForRead GetAccountAdminUser()
         {
-            var service = new UserService(GetStorage());
+            var service = new UserService(GetStorage(), TimeService);
             return service.GetAccountAdmin();
         }
 
         public static UserForRead CreateTestUser(string password = null, string displayName = null)
         {
             var storage = GetStorage();
-            var userService = new UserService(storage);
+            var userService = new UserService(storage, TimeService);
             var login = "Test.User." + Ulid.NewUlid();
             var user = new UserForAdd()
             {
@@ -669,12 +669,12 @@ namespace Zidium.TestTools
                 JoinIntervalSeconds = 5,
                 SystemName = "EventType.Test " + Ulid.NewUlid()
             };
-            return new EventTypeService(GetStorage()).GetOrCreate(eventType);
+            return new EventTypeService(GetStorage(), TimeService).GetOrCreate(eventType);
         }
 
         public static IUnitTestTypeCacheReadObject CreateTestUnitTestType()
         {
-            var service = new UnitTestTypeService(GetStorage());
+            var service = new UnitTestTypeService(GetStorage(), TimeService);
             var unitTestType = service.GetOrCreateUnitTestType(new GetOrCreateUnitTestTypeRequestDataDto()
             {
                 DisplayName = "Тестовый тип проверки " + Ulid.NewUlid(),
@@ -794,7 +794,7 @@ namespace Zidium.TestTools
                 foreach (var notification in notifications)
                 {
                     // сделаем вид, что уведомления отправлены
-                    notification.SendDate = DateTime.Now;
+                    notification.SendDate = DateTime.UtcNow;
                     notification.Status = NotificationStatus.Processed;
                 }
 
@@ -846,5 +846,7 @@ namespace Zidium.TestTools
                 return _dispatcherConfiguration;
             }
         }
+
+        private static ITimeService TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
     }
 }

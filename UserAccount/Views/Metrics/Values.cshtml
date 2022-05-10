@@ -9,6 +9,7 @@
 @{
     ViewBag.Title = "Значения метрики";
     ViewBag.ActiveMenuItems = "Metrics";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @section Styles
@@ -101,9 +102,9 @@
             .Titled("Компонент")
             .SortInitialDirection(GridSortDirection.Ascending);
 
-        columns.Add(m => m.BeginDate).Titled("Дата начала").RenderValueAs(m => GuiHelper.GetDateTimeString(m.BeginDate)).SetWidth(160);
+        columns.Add(m => m.BeginDate).Titled("Дата начала").RenderValueAs(m => DateTimeHelper.GetRussianDateTime(m.BeginDate, currentUser.TimeZoneOffsetMinutes)).SetWidth(160);
 
-        columns.Add(m => m.ActualDate).Titled("Дата актуальности").RenderValueAs(m => GuiHelper.GetDateTimeString(m.ActualDate)).SetWidth(160);
+        columns.Add(m => m.ActualDate).Titled("Дата актуальности").RenderValueAs(m => DateTimeHelper.GetRussianDateTime(m.ActualDate, currentUser.TimeZoneOffsetMinutes)).SetWidth(160);
 
     }).Sortable().Filterable(false).Selectable(false).WithPaging(20)
 

@@ -1,6 +1,11 @@
 ﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers 
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsMetricsModel
+
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
 
 @if (Model.CanEdit)
 {
@@ -39,7 +44,7 @@
                         </a>
                         <br />
                         <span class="metric-actual-interval">
-                            Актуальна @GuiHelper.TimeSpanAs2UnitString(metric.ActualInterval) (до @GuiHelper.GetDateTimeString(metric.ActualDate))
+                            Актуальна @GuiHelper.TimeSpanAs2UnitString(metric.ActualInterval) (до @DateTimeHelper.GetRussianDateTime(metric.ActualDate, currentUser.TimeZoneOffsetMinutes))
                         </span>
                     </td>
                     <td class="td-metric-value">
@@ -61,7 +66,7 @@
 
                         <br />
                         <span class="metric-last-result-date">
-                            @GuiHelper.GetDateTimeString(metric.LastResultDate)
+                            @DateTimeHelper.GetRussianDateTime(metric.LastResultDate, currentUser.TimeZoneOffsetMinutes)
                         </span>
                     </td>
                     <td class="td-actions">

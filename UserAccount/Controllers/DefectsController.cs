@@ -161,7 +161,7 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return PartialView(model);
 
-            var service = new DefectService(GetStorage());
+            var service = new DefectService(GetStorage(), TimeService);
             var createUser = GetStorage().Users.GetOneById(CurrentUser.Id);
             var responsibleUser = GetStorage().Users.GetOneById(model.ResponsibleUserId.Value);
             service.CreateDefect(model.Title, createUser, responsibleUser, model.Notes);
@@ -263,7 +263,7 @@ namespace Zidium.UserAccount.Controllers
 
             var storage = GetStorage();
             var eventType = storage.EventTypes.GetOneById(eventTypeId.Value);
-            var defectService = new DefectService(storage);
+            var defectService = new DefectService(storage, TimeService);
             var createUser = storage.Users.GetOneById(CurrentUser.Id);
             var responsibleUser = storage.Users.GetOneById(userId.Value);
             var defect = defectService.GetOrCreateDefectForEventType(eventType, createUser, responsibleUser, comment);
@@ -308,7 +308,7 @@ namespace Zidium.UserAccount.Controllers
 
             var storage = GetStorage();
             var defect = storage.Defects.GetOneById(model.DefectId.Value);
-            var defectService = new DefectService(storage);
+            var defectService = new DefectService(storage, TimeService);
             var user = storage.Users.GetOneById(CurrentUser.Id);
             defectService.ChangeStatus(defect, model.Status.Value, user, model.Comment);
 
@@ -321,7 +321,7 @@ namespace Zidium.UserAccount.Controllers
         {
             var storage = GetStorage();
             var eventType = storage.EventTypes.GetOneById(eventTypeId);
-            var defectService = new DefectService(storage);
+            var defectService = new DefectService(storage, TimeService);
             var user = storage.Users.GetOneById(CurrentUser.Id);
             var defectId = defectService.CreateAndCloseDefectForEventType(eventType, user);
 
@@ -342,7 +342,7 @@ namespace Zidium.UserAccount.Controllers
             };
             if (lastEvent != null)
             {
-                var componentService = new ComponentService(storage);
+                var componentService = new ComponentService(storage, TimeService);
                 var component = storage.Components.GetOneById(lastEvent.OwnerId);
                 model.ComponentId = component.Id;
                 model.ComponentFullName = componentService.GetFullDisplayName(component);

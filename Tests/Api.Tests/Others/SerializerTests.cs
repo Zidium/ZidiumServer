@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Zidium.Api.Dto;
 using Xunit;
-using Zidium.TestTools;
+using Zidium.Api.Dto;
 using Zidium.Common;
+using Zidium.TestTools;
 
 namespace Zidium.Api.Tests.Others
 {
@@ -68,6 +68,16 @@ namespace Zidium.Api.Tests.Others
             var metricData = package.Data.FirstOrDefault(t => t.Name == "CPU_Usage");
             Assert.NotNull(metricData);
             Assert.True(double.IsNaN(metricData.Value ?? 0.0));
+        }
+
+        [Fact]
+        public void ConvertUtcDate()
+        {
+            var serializer = new JsonSerializer();
+            var body = @"{""StartDate"":""2020-12-31T10:00:00Z""}";
+            var package = serializer.GetObject<SendEventRequestDataDto>(body);
+            Assert.Equal(DateTimeKind.Utc, package.StartDate.Value.Kind);
+            Assert.Equal(new DateTime(2020, 12, 31, 10, 00, 00, DateTimeKind.Utc), package.StartDate);
         }
     }
 }

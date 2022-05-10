@@ -115,7 +115,7 @@ namespace Zidium.Core.Caching
         /// </summary>
         public TimeSpan Duration
         {
-            get { return GetDuration(DateTime.Now); }
+            get { return GetDuration(DateTime.UtcNow); }
         }
 
         public TimeSpan GetDuration(DateTime now)

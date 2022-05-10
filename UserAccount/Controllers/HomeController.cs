@@ -120,7 +120,7 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                var userService = new UserService(null);
+                var userService = new UserService(null, TimeService);
                 var authInfo = userService.FindUser(model.Login);
 
                 if (authInfo == null)
@@ -129,7 +129,7 @@ namespace Zidium.UserAccount.Controllers
                     return View(model);
                 }
 
-                userService = new UserService(GetStorage());
+                userService = new UserService(GetStorage(), TimeService);
 
                 userService.StartResetPassword(authInfo.User.Id);
 
@@ -151,7 +151,7 @@ namespace Zidium.UserAccount.Controllers
         {
             var storage = GetStorage();
 
-            var tokenService = new TokenService(storage);
+            var tokenService = new TokenService(storage, TimeService);
             var token = tokenService.GetOneOrNullById(id);
 
             if (token == null)
@@ -182,13 +182,13 @@ namespace Zidium.UserAccount.Controllers
 
             var storage = GetStorage();
 
-            var tokenService = new TokenService(storage);
+            var tokenService = new TokenService(storage, TimeService);
             var token = tokenService.GetOneOrNullById(model.TokenId);
 
             if (token == null)
                 return View("LinkNotValid");
 
-            var userService = new UserService(storage);
+            var userService = new UserService(storage, TimeService);
 
             try
             {

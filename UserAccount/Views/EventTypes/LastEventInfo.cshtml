@@ -1,6 +1,11 @@
 ﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers
 
 @model Zidium.UserAccount.Models.EventTypeLastEventModel
+
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
 
 <p>
     <span class="simple-text-value"><b>@Model.Message</b></span>
@@ -9,7 +14,7 @@
 <p>
     <span class="simple-text-header">Случилось:</span>
     <span class="simple-text-value">
-        <a href="@Url.Action("Show", "Events", new { id = Model.Id })">@GuiHelper.GetDateTimeString(Model.EndDate)</a>
+        <a href="@Url.Action("Show", "Events", new { id = Model.Id })">@DateTimeHelper.GetRussianDateTime(Model.EndDate, currentUser.TimeZoneOffsetMinutes)</a>
     </span>
 </p>
 

@@ -37,7 +37,8 @@ namespace Zidium.Core.Single.Tests
 
             // Проверим, что нельзя удалить единственного админа
             var storage = TestHelper.GetStorage();
-            var service = new UserService(storage);
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+            var service = new UserService(storage, timeService);
             Assert.Throws<CantDeleteLastAdminException>(() =>
             {
                 service.DeleteUser(admin.Id);
@@ -77,7 +78,8 @@ namespace Zidium.Core.Single.Tests
             using (var context = TestHelper.GetDbContext())
             {
                 var storage = TestHelper.GetStorage();
-                var service = new UserService(storage);
+                var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+                var service = new UserService(storage, timeService);
                 Assert.Throws<CantRemoveAdminRoleFromLastAdmin>(() =>
                 {
                     var existingAdmin = context.Users.Find(admin.Id);

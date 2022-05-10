@@ -42,8 +42,6 @@ namespace Zidium.Core.Caching
                 var batchItems = batchGroup.ToList();
 
                 // сохраним пачку
-                var saveDate = DateTime.Now;
-
                 var batch = batchItems
                     .Select(x => x.WriteObject)
                     .ToList();

@@ -1,5 +1,6 @@
 ﻿@using Zidium.Api.Dto
 @using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers
 
 @model Zidium.Storage.GetGuiComponentShowInfo.MetricInfo
 
@@ -7,18 +8,19 @@
     var statusData = Model.Bulb;
     var status = statusData != null ? statusData.Status : MonitoringStatus.Unknown;
     var hasSignal = statusData != null && statusData.HasSignal;
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 <tr id="ccr_@Model.Id.ToString()" style="color: @GuiHelper.GetStrongFgColor(status)">
     <td class="text-center">
         @Html.MonitoringStatusIcon(status)
     </td>
-    <td class="text-nowrap">@(statusData != null ? GuiHelper.GetDateTimeString(statusData.EndDate) : null)</td>
+    <td class="text-nowrap">@(statusData != null ? DateTimeHelper.GetRussianDateTime(statusData.EndDate, currentUser.TimeZoneOffsetMinutes) : null)</td>
     <td>@Html.ActionLink(Model.MetricType.DisplayName, "Show", "Metrics", new { id = Model.Id }, new { })</td>
     @if (hasSignal)
     {
         <td class="text-nowrap text-center">@(Model.Value)</td>
-        <td class="text-nowrap">@GuiHelper.GetDateTimeString(statusData.ActualDate)</td>
+        <td class="text-nowrap">@DateTimeHelper.GetRussianDateTime(statusData.ActualDate, currentUser.TimeZoneOffsetMinutes)</td>
     }
     else
     {

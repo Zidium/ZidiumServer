@@ -11,12 +11,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class EventTypeService : IEventTypeService
     {
-        public EventTypeService(IStorage storage)
+        public EventTypeService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public EventTypeForRead GetOneById(Guid eventTypeId)
         {
@@ -44,7 +46,7 @@ namespace Zidium.Core.AccountsDb
                     {
                         eventType.Id = Ulid.NewUlid();
                     }
-                    eventType.CreateDate = DateTime.Now;
+                    eventType.CreateDate = _timeService.Now();
                     _storage.EventTypes.Add(eventType);
                     result = _storage.EventTypes.GetOneById(eventType.Id);
                 }
@@ -111,7 +113,7 @@ namespace Zidium.Core.AccountsDb
 
             // Обновим старые события
             var oldVersion = VersionHelper.FromString(eventType.OldVersion);
-            var now = DateTime.Now;
+            var now = _timeService.Now();
             var components = new List<Guid>();
 
             var events = _storage.Events.GetActualByType(eventType.Id, now).ToList();
@@ -161,7 +163,8 @@ namespace Zidium.Core.AccountsDb
             }
 
             // обновим статусы компонентов
-            var componentService = new ComponentService(_storage);
+            // TODO DI
+            var componentService = new ComponentService(_storage, _timeService);
             var componentIds = components.Distinct().ToList();
             foreach (var id in componentIds)
             {

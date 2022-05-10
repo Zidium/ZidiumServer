@@ -11,12 +11,14 @@ namespace Zidium.Core.AccountsDb
     // TODO Split to UserService and AuthService
     public class UserService : IUserService
     {
-        public UserService(IStorage storage)
+        public UserService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public AuthInfo FindUser(string login)
         {
@@ -75,7 +77,7 @@ namespace Zidium.Core.AccountsDb
                 FirstName = firstName,
                 MiddleName = middleName,
                 Post = post,
-                CreateDate = DateTime.Now,
+                CreateDate = _timeService.Now(),
             };
             user.DisplayName = user.FioOrLogin();
 
@@ -88,7 +90,7 @@ namespace Zidium.Core.AccountsDb
                     UserId = user.Id,
                     Type = UserContactType.MobilePhone,
                     Value = mobilePhone,
-                    CreateDate = DateTime.Now
+                    CreateDate = _timeService.Now()
                 });
             }
 
@@ -131,7 +133,7 @@ namespace Zidium.Core.AccountsDb
                 UserId = user.Id,
                 Type = UserContactType.Email,
                 Value = user.Login,
-                CreateDate = DateTime.Now
+                CreateDate = _timeService.Now()
             });
 
             using (var transaction = _storage.BeginTransaction())
@@ -147,7 +149,7 @@ namespace Zidium.Core.AccountsDb
             userSettingService.SendMeNews(user.Id, true);
 
             // Для нового пользователя нужно создать подписки
-            var subscriptionService = new SubscriptionService(_storage);
+            var subscriptionService = new SubscriptionService(_storage, _timeService);
             subscriptionService.CreateDefaultForUser(user.Id);
 
             if (sendLetter)
@@ -163,7 +165,7 @@ namespace Zidium.Core.AccountsDb
         {
             var user = _storage.Users.GetOneById(userId);
 
-            var tokenService = new TokenService(_storage);
+            var tokenService = new TokenService(_storage, _timeService);
             var token = tokenService.GenerateToken(user.Id, TokenPurpose.ResetPassword, TimeSpan.FromDays(1));
 
             if (sendLetter)
@@ -176,7 +178,7 @@ namespace Zidium.Core.AccountsDb
 
         public void EndResetPassword(Guid tokenId, string newPassword)
         {
-            var tokenService = new TokenService(_storage);
+            var tokenService = new TokenService(_storage, _timeService);
             var token = tokenService.UseToken(tokenId, TokenPurpose.ResetPassword);
             SetNewPassword(token.UserId, newPassword);
         }

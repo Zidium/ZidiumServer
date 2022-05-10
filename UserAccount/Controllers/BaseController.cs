@@ -181,6 +181,8 @@ namespace Zidium.UserAccount.Controllers
 
         private readonly IStorageFactory _storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
 
+        protected readonly ITimeService TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
+
         private IStorage _storage;
 
         public IStorage GetStorage()

@@ -305,7 +305,7 @@ namespace Zidium.Agent.AgentTasks
                 };
             }
 
-            var days = (int)((resultInfo.Date.Value - DateTime.Now.Date).TotalDays);
+            var days = (int)((resultInfo.Date.Value - TimeService.Now().Date).TotalDays);
             ruleForUpdate.LastRunErrorCode.Set(DomainNamePaymentPeriodErrorCode.Success);
             storage.DomainNamePaymentPeriodRules.Update(ruleForUpdate);
 

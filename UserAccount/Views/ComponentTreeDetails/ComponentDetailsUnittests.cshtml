@@ -1,6 +1,11 @@
 ﻿@using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers 
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsUnittestsModel
+
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
 
 @if (Model.CanEdit)
 {
@@ -73,7 +78,7 @@
                         <span title="@unittest.LastResult">@unittest.LastResult</span>
                         <br />
                         <span class="unittest-last-result-date">
-                            @GuiHelper.GetDateTimeString(unittest.LastResultDate)
+                            @DateTimeHelper.GetRussianDateTime(unittest.LastResultDate, currentUser.TimeZoneOffsetMinutes)
                         </span>
                     </td>
                     <td class="td-actions">
@@ -135,14 +140,14 @@
                         </a>
                         <br />
                         <span class="unittest-actual-interval">
-                            Актуальна @GuiHelper.TimeSpanAs2UnitString(unittest.ActualInterval) (до @GuiHelper.GetDateTimeString(unittest.ActualDate))
+                            Актуальна @GuiHelper.TimeSpanAs2UnitString(unittest.ActualInterval) (до @DateTimeHelper.GetRussianDateTime(unittest.ActualDate, currentUser.TimeZoneOffsetMinutes))
                         </span>
                     </td>
                     <td>
                         <span title="@unittest.LastResult">@unittest.LastResult</span>
                         <br />
                         <span class="unittest-last-result-date">
-                            @GuiHelper.GetDateTimeString(unittest.LastResultDate)
+                            @DateTimeHelper.GetRussianDateTime(unittest.LastResultDate, currentUser.TimeZoneOffsetMinutes)
                         </span>
                     </td>
                     <td class="td-actions">

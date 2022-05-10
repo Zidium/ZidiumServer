@@ -25,7 +25,7 @@ namespace Zidium.UserAccount.Controllers
             var metricType = GetStorage().MetricTypes.GetOneById(metric.MetricTypeId);
             var component = GetStorage().Components.GetOneById(metric.ComponentId);
             var bulb = GetStorage().Bulbs.GetOneById(metric.StatusDataId);
-            var componentService = new ComponentService(GetStorage());
+            var componentService = new ComponentService(GetStorage(), TimeService);
 
             var values = GetStorage().MetricHistory.GetLast(metric.ComponentId, metric.MetricTypeId, ShowModel.LastValuesCountMax);
 

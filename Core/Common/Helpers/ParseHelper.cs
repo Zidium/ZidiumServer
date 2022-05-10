@@ -66,10 +66,12 @@ namespace Zidium.Core.Common
                 value = value.Substring(0, 10) + " " + strs.Replace(".", ":");
             }
             value = value.Replace('.', '/');
-            
+
             DateTime result;
             if (DateTime.TryParse(value, culture, DateTimeStyles.None, out result))
             {
+                // Все даты передаются в UTC
+                result = DateTime.SpecifyKind(result, DateTimeKind.Utc);
                 return result;
             }
             return null;

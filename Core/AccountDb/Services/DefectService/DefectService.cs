@@ -2,18 +2,21 @@
 using Zidium.Api.Dto;
 using Zidium.Api.Others;
 using Zidium.Common;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.AccountsDb
 {
     public class DefectService : IDefectService
     {
-        public DefectService(IStorage storage)
+        public DefectService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         protected int GetNextDefectNumber()
         {
@@ -69,7 +72,7 @@ namespace Zidium.Core.AccountsDb
                 Id = Ulid.NewUlid(),
                 Status = status,
                 Comment = comment,
-                Date = DateTime.Now,
+                Date = _timeService.Now(),
                 UserId = user.Id,
                 DefectId = defect.Id
             };
@@ -99,7 +102,7 @@ namespace Zidium.Core.AccountsDb
 
         public Guid AutoReopen(DefectForRead defect)
         {
-            var userService = new UserService(_storage);
+            var userService = new UserService(_storage, _timeService);
             var user = userService.GetAccountAdmin();
             return ChangeStatus(defect, DefectStatus.Reopened, user, "Автоматически переоткрыт из-за новой ошибки");
         }

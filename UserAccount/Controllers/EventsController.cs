@@ -106,7 +106,7 @@ namespace Zidium.UserAccount.Controllers
 
             model.Events = eventsModel;
 
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, TimeService);
             model.Components = storage.Components.GetMany(model.Events.Select(t => t.OwnerId).Distinct().ToArray())
                 .Select(t => new EventsListComponentModel()
                 {
@@ -279,7 +279,7 @@ namespace Zidium.UserAccount.Controllers
             {
                 period = ReportPeriod.Day;
             }
-            model.PeriodRange = ReportPeriodHelper.GetRange(period.Value);
+            model.PeriodRange = ReportPeriodHelper.GetRange(period.Value, DateTime.UtcNow);
             model.Load(GetStorage());
             return View(model);
         }

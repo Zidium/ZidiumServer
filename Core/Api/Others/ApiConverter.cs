@@ -135,7 +135,7 @@ namespace Zidium.Core
         {
             if (message.Date == null)
             {
-                message.Date = DateTime.Now;
+                message.Date = DateTime.UtcNow;
             }
             if (message.Level == null)
             {
@@ -397,7 +397,7 @@ namespace Zidium.Core
                 Id = eventObj.Id,
                 Count = eventObj.Count,
                 StartDate = eventObj.StartDate,
-                EndDate = eventObj.GetEndDate(DateTime.Now),
+                EndDate = eventObj.GetEndDate(DateTime.UtcNow),
                 JoinKeyHash = eventObj.JoinKeyHash,
                 Importance = eventObj.Importance,
                 TypeId = eventObj.EventTypeId,

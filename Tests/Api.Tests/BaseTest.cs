@@ -4,6 +4,7 @@ using Zidium.Storage.Ef;
 using Zidium.Storage;
 using Microsoft.Extensions.Configuration;
 using Zidium.Core.InternalLogger;
+using Zidium.Core.Common;
 
 namespace Zidium.Api.Tests
 {
@@ -24,6 +25,7 @@ namespace Zidium.Api.Tests
             DependencyInjection.SetServicePersistent<ILogicConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
             DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(new InternalLoggerComponentMapping(null));
+            DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
         }
     }
 }

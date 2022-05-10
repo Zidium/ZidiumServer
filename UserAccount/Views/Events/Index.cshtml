@@ -4,6 +4,7 @@
 @using GridMvc.Sorting
 @using Zidium.Api.Dto
 @using Zidium.UserAccount.Models.Controls
+@using Zidium.Core.Common.Helpers
 
 @model EventsListModel
 
@@ -49,6 +50,10 @@
                 height: 16px;
             }
     </style>
+}
+
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @Html.Partial("_PageTitle")
@@ -209,7 +214,7 @@
     columns.Add(m => m.StartDate).Titled("Началось").RenderValueAs(m => Html.HtmlBlock(@<text>
         <a href='@Url.Action("Show", new {id = m.Id })' class='@GuiHelper.GetEventImportanceTextCssClass(m.Importance)'>
             <span>
-                @m.StartDate.ToString(GuiHelper.DateTimeDisplayFormat)
+                @DateTimeHelper.GetRussianDateTime(m.StartDate, currentUser.TimeZoneOffsetMinutes)
             </span>
         </a>
     </text>)
@@ -217,9 +222,9 @@
 
 columns.Add(m => m.EndDate).Titled("Закончилось").RenderValueAs(m => Html.HtmlBlock(@<text>
             <span class='@GuiHelper.GetEventImportanceTextCssClass(m.Importance)'>
-                @if (m.RealEndDateString != null)
+                @if (m.RealEndDate != null)
                             {
-                    <text>@m.RealEndDateString</text>
+                    <text>@DateTimeHelper.GetRussianDateTime(m.RealEndDate, currentUser.TimeZoneOffsetMinutes)</text>
         }
         else
         {

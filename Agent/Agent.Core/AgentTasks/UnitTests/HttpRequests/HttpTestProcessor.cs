@@ -30,7 +30,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             var outputData = new HttpTestOutputData
             {
                 ErrorCode = HttpRequestErrorCode.Success,
-                StartDate = DateTime.Now
+                StartDate = DateTime.UtcNow
             };
             try
             {
@@ -268,7 +268,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             {
                 if (outputData.EndDate == null)
                 {
-                    outputData.EndDate = DateTime.Now;
+                    outputData.EndDate = DateTime.UtcNow;
                 }
                 _logger.LogInformation(inputData.Url + " => " + outputData.ErrorCode);
             }

@@ -48,16 +48,6 @@ namespace Zidium.UserAccount.Models
             }
         }
 
-        public string StartDateStr
-        {
-            get { return GuiHelper.GetDateTimeString(StartDate); }
-        }
-
-        public string EndDateStr
-        {
-            get { return GuiHelper.GetDateTimeString(EndDate); }
-        }
-
         public int? Count { get; set; }
 
         public string CountStr

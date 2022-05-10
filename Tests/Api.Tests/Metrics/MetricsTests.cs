@@ -15,7 +15,7 @@ namespace Zidium.Api.Tests.Metrics
             var component = account.CreateRandomComponentControl();
             var counterName = Ulid.NewUlid().ToString();
             var counterValue = new Random().Next();
-            var counterBeginDate = DateTime.Now;
+            var counterBeginDate = DateTime.UtcNow;
             //var counterActualDate = counterBeginDate.AddDays(1);
 
             var sendResponse = component.SendMetric(counterName, counterValue, TimeSpan.FromDays(1));
@@ -47,7 +47,7 @@ namespace Zidium.Api.Tests.Metrics
             Assert.Empty(getResponse.GetDataAndCheck());
 
             var counterValue = new Random().Next();
-            //var counterBeginDate = DateTime.Now;
+            //var counterBeginDate = DateTime.UtcNow;
             //var counterActualDate = counterBeginDate.AddDays(1);
 
             var sendResponse = component.SendMetric(counterName, counterValue, TimeSpan.FromDays(1));

@@ -9,6 +9,7 @@
 @{
     ViewBag.Title = Model.Metric.DisplayName + " - Метрика";
     ViewBag.ActiveMenuItems = "Metrics";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @section styles {
@@ -67,7 +68,7 @@
         <span class="simple-text-header">Статус длится</span>
         <span class="simple-text-value">@TimeSpanHelper.Get2UnitsString(Model.Metric.Bulb.Duration)</span>,
         <span class="simple-text-header">начался</span>
-        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Metric.Bulb.StartDate)</span>
+        <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Metric.Bulb.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
     </p>
 </div>
 
@@ -95,11 +96,11 @@
         </p>
         <p>
             <span class="simple-text-header">Дата начала статуса:</span>
-            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Metric.Bulb.StartDate)</span>
+            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Metric.Bulb.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
         </p>
         <p>
             <span class="simple-text-header">Последняя проверка:</span>
-            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Metric.Bulb.EndDate)</span>
+            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Metric.Bulb.EndDate, currentUser.TimeZoneOffsetMinutes)</span>
         </p>
         <p>
             <span class="simple-text-header">Длительность:</span>
@@ -111,7 +112,7 @@
         </p>
         <p>
             <span class="simple-text-header">Актуальна до:</span>
-            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.Metric.Bulb.ActualDate)</span>
+            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.Metric.Bulb.ActualDate, currentUser.TimeZoneOffsetMinutes)</span>
         </p>
     </div>
 
@@ -209,9 +210,9 @@
             foreach (var value in Model.Values)
             {
                 <tr>
-                    <td class="text-nowrap">@GuiHelper.GetDateTimeString(value.BeginDate)</td>
+                    <td class="text-nowrap">@DateTimeHelper.GetRussianDateTime(value.BeginDate, currentUser.TimeZoneOffsetMinutes)</td>
                     <td class="text-center">
-                        <span title="Актуально до @GuiHelper.GetDateTimeString(value.ActualDate)">
+                        <span title="Актуально до @DateTimeHelper.GetRussianDateTime(value.ActualDate, currentUser.TimeZoneOffsetMinutes)">
                             @GuiHelper.GetMetricValueHtml(value.Value, value.Color, value.HasSignal)
                         </span>
                     </td>
@@ -231,7 +232,6 @@
         $('#btn-stats-week').click(function () { loadStats('@TimelineInterval.Week'); });
         $('#btn-stats-month').click(function () { loadStats('@TimelineInterval.Month'); });
         $('#btn-stats-day').click();
-
     });
 
     function loadStats(interval) {

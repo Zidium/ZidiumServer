@@ -1,9 +1,10 @@
-﻿var DateSelector = function(control, hidden, displayFormat, paramFormat, callback) {
+﻿var DateSelector = function(control, hidden, displayFormat, paramFormat, callback, timeZoneOffset) {
     var me = this;
     me.control = control;
     me.hidden = hidden;
     me.paramFormat = paramFormat;
     me.callback = callback;
+    me.timeZoneOffset = timeZoneOffset;
     me.control.parent().datetimepicker({
         format: displayFormat,
         locale: 'ru',
@@ -32,7 +33,7 @@ DateSelector.prototype.onChange = function (e) {
 DateSelector.prototype.SetDate = function (date) {
     var paramStr;
     if (date != null)
-        paramStr = date.format(this.paramFormat);
+        paramStr = date.add(-this.timeZoneOffset, 'minutes').format(this.paramFormat);
     else
         paramStr = null;
     this.control.data('paramvalue', paramStr);

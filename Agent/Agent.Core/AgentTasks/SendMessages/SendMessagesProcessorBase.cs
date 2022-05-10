@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Agent.AgentTasks.SendMessages
@@ -18,6 +19,8 @@ namespace Zidium.Agent.AgentTasks.SendMessages
 
         public int SendMaxCount = 100;
 
+        protected readonly ITimeService TimeService;
+
         protected SendMessagesProcessorBase(
             ILogger logger,
             CancellationToken cancellationToken
@@ -25,6 +28,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
         {
             Logger = logger;
             CancellationToken = cancellationToken;
+            TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
         }
 
         protected abstract SubscriptionChannel Channel { get; }
@@ -66,7 +70,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                     Send(command.To, command.Body);
 
                     // обновим статус  и статистику
-                    messageCommandRepository.MarkAsSendSuccessed(command.Id, DateTime.Now);
+                    messageCommandRepository.MarkAsSendSuccessed(command.Id, TimeService.Now());
                     Interlocked.Increment(ref SuccessSendCount);
 
                     // если есть соответствующее уведомление, поменяем его статус
@@ -92,7 +96,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                     // Пользователь не разрешает отправку сообщений
                     // Статус поменяем, но ошибкой задачи не считаем
 
-                    messageCommandRepository.MarkAsSendFail(command.Id, DateTime.Now, exception.Message);
+                    messageCommandRepository.MarkAsSendFail(command.Id, TimeService.Now(), exception.Message);
 
                     // если есть соответствующее уведомление, поменяем его статус
                     if (command.ReferenceId != null)
@@ -126,7 +130,7 @@ namespace Zidium.Agent.AgentTasks.SendMessages
                     exception.Data.Add("CommandId", command.Id);
                     Logger.LogError(exception, exception.Message);
 
-                    messageCommandRepository.MarkAsSendFail(command.Id, DateTime.Now, exception.Message);
+                    messageCommandRepository.MarkAsSendFail(command.Id, TimeService.Now(), exception.Message);
 
                     // если есть соответствующее уведомление, поменяем его статус
                     if (command.ReferenceId != null)

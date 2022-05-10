@@ -526,7 +526,7 @@ namespace Zidium.Api
         {
             if (eventData.StartDate == null)
             {
-                eventData.StartDate = DateTime.Now;
+                eventData.StartDate = DateTime.UtcNow;
             }
             if (CanConvertToServerDate())
             {
@@ -549,7 +549,7 @@ namespace Zidium.Api
             var response = ApiService.GetServerTime();
             if (response.Success)
             {
-                return response.GetDataAndCheck().Date - DateTime.Now;
+                return response.GetDataAndCheck().Date - DateTime.UtcNow;
             }
             return null;
         }

@@ -1,9 +1,11 @@
 ﻿@using Zidium.Api.Dto
 @using Zidium.UserAccount.Helpers
+@using Zidium.Core.Common.Helpers;
 
 @model Zidium.UserAccount.Models.TimelineModel
 
-@{ var id = Guid.NewGuid().ToString(); }
+@{ var id = Guid.NewGuid().ToString();
+                var currentUser = UserHelper.CurrentUser(Context); }
 
 <div class="timeline-container">
     <div>
@@ -11,57 +13,55 @@
             <div class="timeline-subcontainer" id="@id">
                 @foreach (var item in Model.Items)
                 {
-                    <a href="@(item.EventId.HasValue ? Url.Action("Show", "Events", new { id = item.EventId }) : null)" target="_blank" class="timeline-item"
-                       style="display: inline-block; width: @item.WidthStr%; height: 100%; background-color: @item.Color; float: left;"
-                       data-start-date="@item.StartDateStr" data-end-date="@item.EndDateStr" data-count="@item.CountStr" data-duration="@item.DurationStr"
-                       data-is-empty="@(!item.EventId.HasValue)" data-message="@item.Message">
-                    </a>
-                }
+    <a href="@(item.EventId.HasValue ? Url.Action("Show", "Events", new { id = item.EventId }) : null)" target="_blank" class="timeline-item"
+       style="display: inline-block; width: @item.WidthStr%; height: 100%; background-color: @item.Color; float: left;"
+       data-start-date="@DateTimeHelper.GetRussianDateTime(item.StartDate, currentUser.TimeZoneOffsetMinutes)" 
+       data-end-date="@DateTimeHelper.GetRussianDateTime(item.EndDate, currentUser.TimeZoneOffsetMinutes)" 
+       data-count="@item.CountStr" data-duration="@item.DurationStr"
+       data-is-empty="@(!item.EventId.HasValue)" data-message="@item.Message">
+    </a>}
             </div>
         </div>
         <div class="timeline-right @(!Model.HideUptime ? "timeline-right-uptime" : null)">
             @if (!Model.HideUptime)
             {
-                <span>
-                    @(Model.OkTime)%
-                </span>
-            }
+<span>
+    @(Model.OkTime)%
+</span>            }
             <span class="timeline-icon">
-                @{
-                    string url;
-                    if (Model.Category == EventCategory.UnitTestStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {unitTestId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else if (Model.Category == EventCategory.MetricStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {metricId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else if (Model.Category == EventCategory.ComponentExternalStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else if (Model.Category == EventCategory.ComponentEventsStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else if (Model.Category == EventCategory.ComponentUnitTestsStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else if (Model.Category == EventCategory.ComponentMetricsStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else if (Model.Category == EventCategory.ComponentChildsStatus)
-                    {
-                        url = Url.Action("Index", "Events", new {componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString()});
-                    }
-                    else
-                    {
-                        url = Url.Action("Index", "Events", new {componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), eventTypeId = Model.EventTypeId});
-                    }
-                }
+                @{ string url;
+                                if (Model.Category == EventCategory.UnitTestStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { unitTestId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else if (Model.Category == EventCategory.MetricStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { metricId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else if (Model.Category == EventCategory.ComponentExternalStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else if (Model.Category == EventCategory.ComponentEventsStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else if (Model.Category == EventCategory.ComponentUnitTestsStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else if (Model.Category == EventCategory.ComponentMetricsStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else if (Model.Category == EventCategory.ComponentChildsStatus)
+                                {
+                                    url = Url.Action("Index", "Events", new { componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), category = Model.Category.ToString() });
+                                }
+                                else
+                                {
+                                    url = Url.Action("Index", "Events", new { componentId = Model.OwnerId, fromDate = GuiHelper.GetUrlDateTimeString(Model.DateFrom), toDate = GuiHelper.GetUrlDateTimeString(Model.DateTo), eventTypeId = Model.EventTypeId });
+                                } }
                 <a href='@url' title='Показать в виде таблицы' target="_blank">
                     <span class="glyphicon glyphicon-list-alt"></span>
                 </a>

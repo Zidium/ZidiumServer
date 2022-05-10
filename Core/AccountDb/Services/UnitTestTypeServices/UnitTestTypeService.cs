@@ -11,12 +11,14 @@ namespace Zidium.Core.AccountsDb
 {
     public class UnitTestTypeService : IUnitTestTypeService
     {
-        public UnitTestTypeService(IStorage storage)
+        public UnitTestTypeService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public IUnitTestTypeCacheReadObject GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequestDataDto data)
         {
@@ -113,7 +115,7 @@ namespace Zidium.Core.AccountsDb
                 {
                     var unitTests = _storage.UnitTests.GetByUnitTestTypeId(unitTestType.Id).Select(t => t.Id).ToArray();
 
-                    var unitTestService = new UnitTestService(_storage);
+                    var unitTestService = new UnitTestService(_storage, _timeService);
                     foreach (var unitTestId in unitTests)
                     {
                         var unitTestCacheReadObject = cache.UnitTests.Read(unitTestId);

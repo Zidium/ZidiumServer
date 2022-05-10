@@ -13,13 +13,6 @@ namespace Zidium.Agent.Tests
             //var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://www.google.ru"));
             var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://yandex.ru"));
             date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://zidium.net"));
-            date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://doc.alcospot.ru"));
-        }
-
-        [Fact]
-        public void TooManyRedirectionsTest()
-        {
-            var date = SslCertificateExpirationDateCheckProcessor.GetPaymentDate(new Uri("https://owa.aps-tender.com"));
         }
 
         [Fact]

@@ -105,9 +105,9 @@ namespace Zidium.Api.Tests.Events
             // добавим событие в очередь в цикле много раз
             string eventType = "test event " + Ulid.NewUlid();
             string messageText = "test message " + Ulid.NewUlid();
-            var startTime = DateTime.Now;
+            var startTime = DateTime.UtcNow;
             var endTime = startTime.AddSeconds(10);
-            while (DateTime.Now < endTime)
+            while (DateTime.UtcNow < endTime)
             {
                 component.AddComponentEvent(eventType, messageText);
             }
@@ -194,7 +194,7 @@ namespace Zidium.Api.Tests.Events
             var error = component
                 .CreateApplicationError(errorType)
                 .SetJoinInterval(TimeSpan.Zero)
-                .SetStartDate(DateTime.Now);
+                .SetStartDate(DateTime.UtcNow);
 
             var addResult = error.Add();
 
@@ -228,7 +228,7 @@ namespace Zidium.Api.Tests.Events
 
             var error = component
                 .CreateApplicationError(errorType)
-                .SetStartDate(DateTime.Now)
+                .SetStartDate(DateTime.UtcNow)
                 .SetJoinInterval(TimeSpan.Zero);
             
             var addResult1 = error.Add();

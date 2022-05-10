@@ -27,7 +27,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected EventForRead GetRecentReasonEvent(EventForRead statusEvent, IStorage storage)
         {
-            var service = new EventService(storage);
+            var service = new EventService(storage, TimeService);
             return service.GetRecentReasonEvent(statusEvent);
         }
 

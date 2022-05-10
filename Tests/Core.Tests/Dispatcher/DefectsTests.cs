@@ -5,6 +5,7 @@ using Zidium.Api.Dto;
 using Zidium.Storage;
 using Zidium.TestTools;
 using Zidium.Common;
+using Zidium.Core.Common;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -20,6 +21,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = TestHelper.GetTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Отправим ошибку
             var eventTypeName = "TestEventType." + Ulid.NewUlid();
@@ -36,7 +38,7 @@ namespace Zidium.Core.Tests.Dispatcher
             Guid defectId;
             var eventType = storage.EventTypes.GetOneOrNullBySystemName(eventTypeName);
 
-            var service = new DefectService(storage);
+            var service = new DefectService(storage, timeService);
             var defect = service.GetOrCreateDefectForEventType(eventType, user, user, "Comment for open");
 
             defectId = defect.Id;
@@ -69,6 +71,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = TestHelper.GetTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Отправим ошибку
             var eventTypeName = "TestEventType." + Ulid.NewUlid();
@@ -86,7 +89,7 @@ namespace Zidium.Core.Tests.Dispatcher
             Guid defectId;
             var eventType = storage.EventTypes.GetOneOrNullBySystemName(eventTypeName);
 
-            var service = new DefectService(storage);
+            var service = new DefectService(storage, timeService);
             var defect = service.GetOrCreateDefectForEventType(eventType, user, user, "Comment for open");
 
             defectId = defect.Id;
@@ -120,6 +123,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var component = TestHelper.GetTestApplicationComponent();
             var dispatcher = TestHelper.GetDispatcherClient();
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Отправим ошибку
             var eventTypeName = "TestEventType." + Ulid.NewUlid();
@@ -137,7 +141,7 @@ namespace Zidium.Core.Tests.Dispatcher
             Guid defectId;
             var eventType = storage.EventTypes.GetOneOrNullBySystemName(eventTypeName);
 
-            var service = new DefectService(storage);
+            var service = new DefectService(storage, timeService);
             var defect = service.GetOrCreateDefectForEventType(eventType, user, user, "Comment for open");
 
             defectId = defect.Id;

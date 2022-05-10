@@ -17,9 +17,10 @@ namespace Zidium.Core.Tests.Services
             var password = PasswordHelper.GetRandomPassword(10);
             var user = TestHelper.CreateTestUser(password);
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Проверим, что можно зайти под созданным пользователем
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
             var authInfo = service.Auth(user.Login, password);
             Assert.Equal(user.Id, authInfo.User.Id);
         }
@@ -30,9 +31,10 @@ namespace Zidium.Core.Tests.Services
             var password = PasswordHelper.GetRandomPassword(10);
             var user = TestHelper.CreateTestUser(password);
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Проверим, что нельзя зайти под созданным пользователем с неправильным паролем
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
             Assert.ThrowsAny<WrongLoginException>(() =>
             {
                 service.Auth(user.Login, "-");
@@ -51,9 +53,10 @@ namespace Zidium.Core.Tests.Services
             var password = PasswordHelper.GetRandomPassword(10);
             var user = TestHelper.CreateTestUser(password);
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Удалим пользователя
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
             service.DeleteUser(user.Id);
 
             // Проверим, что нельзя зайти под удалённым пользователем
@@ -70,8 +73,9 @@ namespace Zidium.Core.Tests.Services
             var newPassword = PasswordHelper.GetRandomPassword(20);
             var user = TestHelper.CreateTestUser(oldPassword);
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
 
             // Инициируем смену пароля
             var token = service.StartResetPassword(user.Id, false);
@@ -97,9 +101,10 @@ namespace Zidium.Core.Tests.Services
             var newPassword = PasswordHelper.GetRandomPassword(20);
             var user = TestHelper.CreateTestUser(oldPassword);
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Проверим, что нельзя поменять пароль по несуществующему токену
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
             Assert.ThrowsAny<TokenNotValidException>(() => service.EndResetPassword(Ulid.NewUlid(), newPassword));
 
             // Проверим, что можно зайти со старым паролем
@@ -114,6 +119,7 @@ namespace Zidium.Core.Tests.Services
             var password = PasswordHelper.GetRandomPassword(10);
             var user = TestHelper.CreateTestUser(password);
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
 
             // Проверим, что можно зайти с мастер-паролем
             var logicConfiguration = DependencyInjection.GetServicePersistent<ILogicConfiguration>();
@@ -121,7 +127,7 @@ namespace Zidium.Core.Tests.Services
             if (masterPassword == null)
                 return;
 
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
             var authInfo = service.Auth(user.Login, masterPassword);
             Assert.Equal(user.Id, authInfo.User.Id);
         }
@@ -131,6 +137,7 @@ namespace Zidium.Core.Tests.Services
         {
             // Проверим, что нельзя создать двух пользователей с одинаковым email в одном аккаунте             
             var storage = TestHelper.GetStorage();
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
             var email = Ulid.NewUlid() + "@test.com";
 
             var userForAdd = new UserForAdd()
@@ -142,7 +149,7 @@ namespace Zidium.Core.Tests.Services
                 LastName = string.Empty
             };
 
-            var service = new UserService(storage);
+            var service = new UserService(storage, timeService);
             service.CreateUser(userForAdd, new List<UserContactForAdd>(), new List<UserRoleForAdd>(), false);
 
             var userForAdd2 = new UserForAdd()

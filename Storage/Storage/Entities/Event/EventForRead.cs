@@ -7,26 +7,26 @@ namespace Zidium.Storage
     public class EventForRead
     {
         public EventForRead(
-            Guid id, 
-            Guid ownerId, 
-            Guid eventTypeId, 
-            string message, 
-            EventImportance importance, 
-            EventImportance previousImportance, 
-            int count, 
-            long joinKeyHash, 
-            DateTime createDate, 
-            DateTime startDate, 
-            DateTime endDate, 
-            DateTime actualDate, 
-            bool isSpace, 
-            DateTime lastUpdateDate, 
-            DateTime? lastNotificationDate, 
-            bool isUserHandled, 
-            string version, 
-            long? versionLong, 
-            EventCategory category, 
-            Guid? lastStatusEventId, 
+            Guid id,
+            Guid ownerId,
+            Guid eventTypeId,
+            string message,
+            EventImportance importance,
+            EventImportance previousImportance,
+            int count,
+            long joinKeyHash,
+            DateTime createDate,
+            DateTime startDate,
+            DateTime endDate,
+            DateTime actualDate,
+            bool isSpace,
+            DateTime lastUpdateDate,
+            DateTime? lastNotificationDate,
+            bool isUserHandled,
+            string version,
+            long? versionLong,
+            EventCategory category,
+            Guid? lastStatusEventId,
             Guid? firstReasonEventId)
         {
             Id = id;
@@ -98,12 +98,12 @@ namespace Zidium.Storage
         public DateTime CreateDate { get; }
 
         /// <summary>
-        /// Дата начала события (по местному времени аккаунта)
+        /// Дата начала события (UTC)
         /// </summary>
         public DateTime StartDate { get; }
 
         /// <summary>
-        /// Дата завершения события (по местному времени аккаунта)
+        /// Дата завершения события (UTC)
         /// </summary>
         public DateTime EndDate { get; }
 

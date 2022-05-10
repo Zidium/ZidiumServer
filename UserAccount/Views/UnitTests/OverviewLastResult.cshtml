@@ -8,13 +8,17 @@
     var textCss = GuiHelper.GetComponentStatusTextCssClass(Model.Status);
 }
 
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
 <div class="tiles-box" style="display: flex; flex-direction:column;">
     <div style="flex: 1 0 auto;">
         <div class="tiles-box-header1">Последнее выполнение</div>
         <div class="tiles-box-content">
             @if (Model.HasExecution)
             {
-                <p>@DateTimeHelper.GetRussianDateTime(Model.ExecutionTime)</p>
+                <p>@DateTimeHelper.GetRussianDateTime(Model.ExecutionTime, currentUser.TimeZoneOffsetMinutes)</p>
                 <p class="@textCss big-font">@Model.Message</p>
                 if (Model.ShowDetailsUrl != null)
                 {

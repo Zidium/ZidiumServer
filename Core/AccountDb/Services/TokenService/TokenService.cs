@@ -1,17 +1,20 @@
 ﻿using System;
 using Zidium.Common;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.AccountsDb
 {
     public class TokenService : ITokenService
     {
-        public TokenService(IStorage storage)
+        public TokenService(IStorage storage, ITimeService timeService)
         {
             _storage = storage;
+            _timeService = timeService;
         }
 
         private readonly IStorage _storage;
+        private readonly ITimeService _timeService;
 
         public TokenForRead GenerateToken(Guid userId, TokenPurpose purpose, TimeSpan actualInterval)
         {
@@ -20,11 +23,11 @@ namespace Zidium.Core.AccountsDb
             var token = new TokenForAdd()
             {
                 Id = Ulid.NewUlid(),
-                CreationDate = DateTime.Now,
+                CreationDate = _timeService.Now(),
                 Purpose = purpose,
                 UserId = user.Id,
                 SecurityStamp = user.SecurityStamp,
-                EndDate = DateTime.Now.Add(actualInterval)
+                EndDate = _timeService.Now().Add(actualInterval)
             };
 
             _storage.Tokens.Add(token);
@@ -52,7 +55,7 @@ namespace Zidium.Core.AccountsDb
                 throw new TokenNotValidException("Неверный тип токена");
             }
 
-            if (token.EndDate < DateTime.Now)
+            if (token.EndDate < _timeService.Now())
             {
                 throw new TokenNotValidException("Истекло время жизни токена");
             }

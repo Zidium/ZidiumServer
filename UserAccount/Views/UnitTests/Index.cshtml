@@ -1,11 +1,13 @@
 ﻿@using Zidium.UserAccount.Helpers
 @using Zidium.UserAccount.Models.Controls
+@using Zidium.Core.Common.Helpers 
 
 @model Zidium.UserAccount.Models.UnitTestsListModel
 
 @{
     ViewBag.Title = "Список проверок";
     ViewBag.ActiveMenuItems = "UnitTests,UnitTestsList";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @Html.Partial("_PageTitle")
@@ -81,7 +83,7 @@
                         @if (unitTest.Date.HasValue)
                         {
                             <text>
-                                <span class='@textClass'>@unitTest.Date.Value.ToString(GuiHelper.DateTimeDisplayFormat)</span>
+                                <span class='@textClass'>@DateTimeHelper.GetRussianDateTime(unitTest.Date.Value, currentUser.TimeZoneOffsetMinutes)</span>
                             </text>
                         }
                     </td>

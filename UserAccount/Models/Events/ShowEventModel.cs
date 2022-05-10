@@ -5,7 +5,6 @@ using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
-using Zidium.UserAccount.Helpers;
 using Zidium.UserAccount.Models.Events;
 
 namespace Zidium.UserAccount.Models
@@ -151,7 +150,7 @@ namespace Zidium.UserAccount.Models
             }
 
             CanChangeImportance = !EventType.IsSystem;
-            CanChangeActuality = Event.Category.IsComponentCategory() && !Event.Category.IsStatus() && (Event.ActualDate > DateTime.Now);
+            CanChangeActuality = Event.Category.IsComponentCategory() && !Event.Category.IsStatus() && (Event.ActualDate > DateTime.UtcNow);
 
             // Оставим только 100 последних причин, иначе они долго рассчитываются и выводятся
             UnitTestsReasons = UnitTestsReasons.OrderByDescending(t => t.Event.StartDate).Take(100).ToList();
@@ -253,12 +252,12 @@ namespace Zidium.UserAccount.Models
 
         public bool CanChangeActuality { get; set; }
 
-        public string GetRealEndDateString(EventForRead eventObj)
+        public DateTime? GetRealEndDate(EventForRead eventObj)
         {
-            var realEndDate = eventObj.StartDate + EventHelper.GetDuration(eventObj.StartDate, eventObj.ActualDate, DateTime.Now);
+            var realEndDate = eventObj.StartDate + EventHelper.GetDuration(eventObj.StartDate, eventObj.ActualDate, DateTime.UtcNow);
             return eventObj.ActualDate == DateTimeHelper.InfiniteActualDate
                 ? null
-                : realEndDate.ToString(GuiHelper.DateTimeDisplayFormat);
+                : realEndDate;
         }
     }
 }

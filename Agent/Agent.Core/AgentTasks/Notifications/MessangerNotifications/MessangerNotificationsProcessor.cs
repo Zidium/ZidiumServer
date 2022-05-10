@@ -41,7 +41,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
             {
                 Id = Ulid.NewUlid(),
                 Status = MessageStatus.InQueue,
-                CreateDate = DateTime.Now,
+                CreateDate = TimeService.Now(),
                 Body = body,
                 To = notification.Address,
                 Channel = notification.Type,
@@ -55,7 +55,7 @@ namespace Zidium.Agent.AgentTasks.Notifications
 
         protected EventForRead GetRecentReasonEvent(EventForRead statusEvent, IStorage storage)
         {
-            var service = new EventService(storage);
+            var service = new EventService(storage, TimeService);
             return service.GetRecentReasonEvent(statusEvent);
         }
 

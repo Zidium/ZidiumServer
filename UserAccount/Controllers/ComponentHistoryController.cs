@@ -156,7 +156,7 @@ namespace Zidium.UserAccount.Controllers
             DateTime from,
             DateTime to)
         {
-            var service = new EventService(GetStorage());
+            var service = new EventService(GetStorage(), TimeService);
             var states = service.GetTimelineStates(component.Id, EventCategory.ComponentExternalStatus, from, to);
             var okTime = service.GetTimelineOkTime(states, from, to);
             var items = this.GetTimelineItemsByStates(states, from, to);
@@ -231,7 +231,7 @@ namespace Zidium.UserAccount.Controllers
             DateTime from,
             DateTime to)
         {
-            var service = new EventService(GetStorage());
+            var service = new EventService(GetStorage(), TimeService);
 
             var eventsStates = service.GetTimelineStates(component.Id, EventCategory.ComponentEventsStatus, from, to);
             var eventsOkTime = service.GetTimelineOkTime(eventsStates, from, to);

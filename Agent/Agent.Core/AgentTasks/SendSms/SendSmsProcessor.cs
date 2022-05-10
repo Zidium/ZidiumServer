@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using Zidium.Common;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Storage;
 
@@ -27,6 +28,8 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
         public int SendMaxCount = 100;
 
+        private readonly ITimeService _timeService;
+
         public SendSmsProcessor(
             ILogger logger, CancellationToken cancellationToken,
             string apiId,
@@ -36,6 +39,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
             CancellationToken = cancellationToken;
             ApiId = apiId;
             From = from;
+            _timeService = DependencyInjection.GetServicePersistent<ITimeService>();
         }
 
         public string Process(Guid? smsId = null)
@@ -70,13 +74,13 @@ namespace Zidium.Agent.AgentTasks.SendSms
                         .CreateComponentEvent("Отправка sms")
                         .SetJoinInterval(TimeSpan.FromDays(1))
                         .SetImportance(EventImportance.Unknown)
-                        .SetJoinKey(DateTime.Now.ToString("yyyy.MM.dd"))
+                        .SetJoinKey(_timeService.Now().ToString("yyyy.MM.dd"))
                         .Add();
                     */
                     // TODO Тут нужно писать метрику
 
                     // обновим статус  и статистику
-                    storage.SendSmsCommands.MarkAsSendSuccessed(sms.Id, DateTime.Now, externalId);
+                    storage.SendSmsCommands.MarkAsSendSuccessed(sms.Id, _timeService.Now(), externalId);
                     Interlocked.Increment(ref SuccessSendCount);
 
                     Logger.LogInformation("Отправлено sms на номер {0}", sms.Phone);
@@ -92,7 +96,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
 
                     Logger.LogInformation(exception.Message, new { SmsId = sms.Id.ToString() });
 
-                    storage.SendSmsCommands.MarkAsSendFail(sms.Id, DateTime.Now, exception.Message);
+                    storage.SendSmsCommands.MarkAsSendFail(sms.Id, _timeService.Now(), exception.Message);
                 }
                 catch (Exception exception)
                 {
@@ -101,7 +105,7 @@ namespace Zidium.Agent.AgentTasks.SendSms
                     exception.Data.Add("SmsId", sms.Id);
                     Logger.LogError(exception, exception.Message);
 
-                    storage.SendSmsCommands.MarkAsSendFail(sms.Id, DateTime.Now, exception.Message);
+                    storage.SendSmsCommands.MarkAsSendFail(sms.Id, _timeService.Now(), exception.Message);
                 }
             }
 

@@ -110,7 +110,7 @@ namespace Zidium.UserAccount.Controllers
                     Post = model.Post
                 };
 
-                var userService = new UserService(GetStorage());
+                var userService = new UserService(GetStorage(), TimeService);
 
                 // обновим роль
                 var roles = new List<UserRoleForAdd>();
@@ -202,7 +202,7 @@ namespace Zidium.UserAccount.Controllers
                 userForUpdate.Post.Set(model.Post);
                 GetStorage().Users.Update(userForUpdate);
 
-                var userService = new UserService(GetStorage());
+                var userService = new UserService(GetStorage(), TimeService);
 
                 // обновим роль, если она поменялась
                 if (CurrentUser.CanManageAccount())
@@ -264,7 +264,7 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult Delete(DeleteConfirmationModel model)
         {
             var user = GetStorage().Users.GetOneById(Guid.Parse(model.Id));
-            var userService = new UserService(GetStorage());
+            var userService = new UserService(GetStorage(), TimeService);
             userService.DeleteUser(user.Id);
 
             return RedirectToAction("Index");
@@ -449,7 +449,7 @@ namespace Zidium.UserAccount.Controllers
                 }
                 if (ModelState.IsValid)
                 {
-                    var userService = new UserService(GetStorage());
+                    var userService = new UserService(GetStorage(), TimeService);
                     userService.SetNewPassword(model.UserId, model.Password);
                     var endModel = new ChangePasswordEndModel()
                     {
@@ -470,7 +470,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditPrivateData]
         public ActionResult StartResetPassword(Guid id)
         {
-            var userService = new UserService(GetStorage());
+            var userService = new UserService(GetStorage(), TimeService);
             userService.StartResetPassword(id);
             var user = GetStorage().Users.GetOneById(id);
             var message = $"На адрес {user.Login} отправлено письмо с одноразовой ссылкой на смену пароля";

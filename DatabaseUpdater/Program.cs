@@ -7,6 +7,7 @@ using NLog.Extensions.Logging;
 using Microsoft.Extensions.Logging;
 using Zidium.Common;
 using Zidium.Core;
+using Zidium.Core.Common;
 
 namespace Zidium.DatabaseUpdater
 {
@@ -37,6 +38,7 @@ namespace Zidium.DatabaseUpdater
             var serviceProvider = services.BuildServiceProvider();
             var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             DependencyInjection.SetLoggerFactory(loggerFactory);
+            DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
 
             var configuration = new Configuration(appConfiguration);
             DependencyInjection.SetServicePersistent<IDebugConfiguration>(configuration);

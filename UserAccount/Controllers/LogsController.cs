@@ -265,7 +265,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     found = false,
                     id = logSearchResult.Record.Id.ToString(),
-                    date = DateTimeHelper.GetRussianDateTime(logSearchResult.Record.Date)
+                    date = DateTimeHelper.GetRussianDateTime(logSearchResult.Record.Date, CurrentUser.TimeZoneOffsetMinutes)
                 });
             }
 
@@ -317,7 +317,7 @@ namespace Zidium.UserAccount.Controllers
                 {
                     found = false,
                     id = logSearchResult.Record.Id.ToString(),
-                    date = DateTimeHelper.GetRussianDateTime(logSearchResult.Record.Date)
+                    date = DateTimeHelper.GetRussianDateTime(logSearchResult.Record.Date, CurrentUser.TimeZoneOffsetMinutes)
                 });
             }
 
@@ -445,7 +445,7 @@ namespace Zidium.UserAccount.Controllers
         [CanEditAllData]
         public ActionResult Edit(Guid componentId)
         {
-            var service = new LogService(GetStorage());
+            var service = new LogService(GetStorage(), TimeService);
             var config = service.GetLogConfig(componentId);
             var component = GetStorage().Components.GetOneById(componentId);
 
@@ -470,7 +470,7 @@ namespace Zidium.UserAccount.Controllers
             if (!ModelState.IsValid)
                 return PartialView(model);
 
-            var service = new LogService(GetStorage());
+            var service = new LogService(GetStorage(), TimeService);
             var config = service.GetLogConfig(model.Id);
             var component = GetStorage().Components.GetOneById(model.Id);
 

@@ -386,8 +386,8 @@ namespace Zidium.Storage.Ef
 
                 // Если в текущей секунде не нашли, то ищем в блоке из N записей
                 // Сначала проверим, есть ли вообще такие записи
-                // Условие с DateTime.Now нужно, чтобы не получить бесконечный цикл при постоянном добавлении новых записей
-                var now = DateTime.Now;
+                // Условие с DateTime.UtcNow нужно, чтобы не получить бесконечный цикл при постоянном добавлении новых записей
+                var now = DateTime.UtcNow;
                 var iterationQuery = query.Where(t => t.Date > date && t.Date <= now);
 
                 var hasAnyRecords = iterationQuery.Any();

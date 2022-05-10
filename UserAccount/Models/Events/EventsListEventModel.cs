@@ -1,7 +1,6 @@
 ﻿using System;
 using Zidium.Api.Dto;
 using Zidium.Core.Common.Helpers;
-using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models
 {
@@ -33,26 +32,17 @@ namespace Zidium.UserAccount.Models
 
         public TimeSpan Duration
         {
-            get { return EventHelper.GetDuration(StartDate, ActualDate, DateTime.Now); }
+            get { return EventHelper.GetDuration(StartDate, ActualDate, DateTime.UtcNow); }
         }
 
-        public DateTime RealEndDate
-        {
-            get
-            {
-                return StartDate + Duration;
-            }
-        }
-
-        public string RealEndDateString
+        public DateTime? RealEndDate
         {
             get
             {
                 return ActualDate == DateTimeHelper.InfiniteActualDate
                     ? null
-                    : RealEndDate.ToString(GuiHelper.DateTimeDisplayFormat);
+                    : StartDate + Duration;
             }
         }
-
     }
 }

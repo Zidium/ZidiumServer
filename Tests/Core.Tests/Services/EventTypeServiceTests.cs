@@ -3,6 +3,7 @@ using Xunit;
 using Zidium.Api.Dto;
 using Zidium.Common;
 using Zidium.Core.AccountsDb;
+using Zidium.Core.Common;
 using Zidium.Storage;
 
 namespace Zidium.Core.Tests.Services
@@ -13,7 +14,8 @@ namespace Zidium.Core.Tests.Services
         public void GetOrCreateEventTypeUnicodeTest()
         {
             var storage = DependencyInjection.GetServicePersistent<IStorageFactory>().GetStorage();
-            var service = new EventTypeService(storage);
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+            var service = new EventTypeService(storage, timeService);
             var guid = Ulid.NewUlid();
 
             EventTypeForAdd eventType1ForAdd = new EventTypeForAdd()

@@ -50,7 +50,7 @@ namespace Zidium.UserAccount.Models.Events
                 Component = storage.Components.GetOneById(ComponentId.Value);
             }
 
-            var periodRange = ReportPeriodHelper.GetRange(Period);
+            var periodRange = ReportPeriodHelper.GetRange(Period, DateTime.UtcNow);
             ToTime = periodRange.To;
             FromTime = periodRange.From;
 

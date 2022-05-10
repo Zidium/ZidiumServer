@@ -28,12 +28,13 @@ namespace Zidium.Core
 
         private static DispatcherWrapper _wrapper;
 
-        private DispatcherService(IComponentControl control, ILogger logger)
+        private DispatcherService(IComponentControl control, ILogger logger, ITimeService timeService)
         {
             _accountStorageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
             Control = control;
             StaticControl = control;
             _logger = logger;
+            _timeService = timeService;
         }
 
         private readonly ILogger _logger;
@@ -44,6 +45,7 @@ namespace Zidium.Core
 
         private static readonly object _lockObject = new object();
 
+        // Refactor to normal DI
         public static DispatcherWrapper Wrapper
         {
             get
@@ -60,7 +62,8 @@ namespace Zidium.Core
                             var mapping = DependencyInjection.GetServicePersistent<InternalLoggerComponentMapping>();
                             mapping.MapLoggerToComponent("Dispatcher", realControl.Info.Id);
 
-                            var realService = new DispatcherService(realControl, realLogger);
+                            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+                            var realService = new DispatcherService(realControl, realLogger, timeService);
                             var wrapper = new DispatcherWrapper(realService, realControl, realLogger);
                             AllCaches.SetControl(realControl);
                             _wrapper = wrapper;
@@ -80,7 +83,8 @@ namespace Zidium.Core
                 // делаем цепочку вызовов:
                 // контрол => внутренний диспетчер => фейковый контрол
                 var fakeControl = GetFakeControl();
-                IDispatcherService internalDispatcher = new DispatcherService(fakeControl, NullLogger.Instance); // обслуживает только запросы самого диспетчера (через контрол АПИ)
+                var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+                IDispatcherService internalDispatcher = new DispatcherService(fakeControl, NullLogger.Instance, timeService); // обслуживает только запросы самого диспетчера (через контрол АПИ)
                 internalDispatcher = new DispatcherWrapper(internalDispatcher, fakeControl, NullLogger.Instance);
                 var apiService = new ApiService(internalDispatcher);
                 var client = Client.Instance;
@@ -160,6 +164,7 @@ namespace Zidium.Core
         }
 
         private static string _secretKey;
+        private readonly ITimeService _timeService;
 
         #endregion
 
@@ -189,7 +194,7 @@ namespace Zidium.Core
                 Code = ResponseCode.Success,
                 Data = new GetServerTimeResponseDataDto()
                 {
-                    Date = DateTime.Now
+                    Date = _timeService.Now()
                 }
             };
         }
@@ -242,7 +247,7 @@ namespace Zidium.Core
             var componentType = storage.ComponentTypes.GetOneById(root.ComponentTypeId);
             var properties = storage.ComponentProperties.GetByComponentId(root.Id);
 
-            var logService = new LogService(storage);
+            var logService = new LogService(storage, _timeService);
             var logConfig = logService.GetLogConfig(root.Id);
 
             return new GetRootControlDataResponseDto()
@@ -268,14 +273,14 @@ namespace Zidium.Core
 
             // создаём компонент
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var component = componentService.CreateComponent(request.Data);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
             var properties = storage.ComponentProperties.GetByComponentId(component.Id);
             var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
 
             // получаем конфиг веб-лога
-            var logService = new LogService(storage);
+            var logService = new LogService(storage, _timeService);
             var logConfig = logService.GetLogConfig(component.Id);
             var logConfigDto = ApiConverter.GetLogConfig(logConfig);
 
@@ -303,14 +308,14 @@ namespace Zidium.Core
 
             // получаем или создаём компонент
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var component = componentService.GetOrCreateComponent(request.Data);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
             var properties = storage.ComponentProperties.GetByComponentId(component.Id);
             var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
 
             // получаем конфиг веб-лога
-            var logService = new LogService(storage);
+            var logService = new LogService(storage, _timeService);
             var logConfig = logService.GetLogConfig(component.Id);
             var logConfigDto = ApiConverter.GetLogConfig(logConfig);
 
@@ -343,7 +348,7 @@ namespace Zidium.Core
 
             // получаем или создаём компонент
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
 
             var component = componentService.GetComponentByIdNoCache(componentId);
             if (component.IsDeleted)
@@ -356,7 +361,7 @@ namespace Zidium.Core
             var componentInfo = ApiConverter.GetComponentInfo(component, properties, componentType);
 
             // получаем конфиг веб-лога
-            var logService = new LogService(storage);
+            var logService = new LogService(storage, _timeService);
             var logConfig = logService.GetLogConfig(component.Id);
             var logConfigDto = ApiConverter.GetLogConfig(logConfig);
 
@@ -383,7 +388,7 @@ namespace Zidium.Core
 
             // получаем или создаём компонент
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var component = componentService.GetOrCreateComponent(request.Data);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
             var properties = storage.ComponentProperties.GetByComponentId(component.Id);
@@ -434,7 +439,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var component = componentService.GetComponentByIdNoCache(componentId);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
             var properties = storage.ComponentProperties.GetByComponentId(component.Id);
@@ -467,7 +472,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var component = componentService.GetComponentBySystemName(request.Data.ParentId.Value, request.Data.SystemName);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
             var properties = storage.ComponentProperties.GetByComponentId(component.Id);
@@ -495,7 +500,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             componentService.UpdateComponent(request.Data);
             var component = storage.Components.GetOneById(request.Data.Id.Value);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
@@ -526,7 +531,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var components = componentService.GetChildComponents(componentId);
             var componentInfos = components.Select(component =>
             {
@@ -557,7 +562,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             componentService.EnableComponent(request.Data.ComponentId.Value);
 
             return new SetComponentEnableResponseDto()
@@ -581,7 +586,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             componentService.DisableComponent(
                     request.Data.ComponentId.Value,
                     request.Data.ToDate,
@@ -610,7 +615,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             componentService.DeleteComponent(componentId);
 
             return new DeleteComponentResponseDto()
@@ -637,7 +642,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var result = componentService.GetComponentAndChildIds(componentId);
 
             return new GetComponentAndChildIdsResponse()
@@ -654,7 +659,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var updated = componentService.UpdateEventsStatuses(request.Data.MaxCount);
 
             return new UpdateEventsStatusesResponse()
@@ -686,7 +691,7 @@ namespace Zidium.Core
                 var componentId = request.Data.ComponentId.Value;
 
                 var storage = GetStorage();
-                var service = new EventService(storage);
+                var service = new EventService(storage, _timeService);
 
                 var eventData = service.SendEvent(
                     componentId,
@@ -725,7 +730,7 @@ namespace Zidium.Core
             try
             {
                 var storage = GetStorage();
-                var service = new EventService(storage);
+                var service = new EventService(storage, _timeService);
 
                 foreach (var joinData in request.Data)
                 {
@@ -753,7 +758,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new EventTypeService(storage);
+            var service = new EventTypeService(storage, _timeService);
             service.Update(request.Data);
 
             return new UpdateEventTypeResponse()
@@ -804,7 +809,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new EventService(storage);
+            var service = new EventService(storage, _timeService);
             var events = service.GetEvents(request.Data);
 
             var eventInfos = events.Select(eventObj =>
@@ -837,7 +842,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var metric = service.CreateMetric(request.Data);
             var responseData = new CreateMetricResponseData()
             {
@@ -869,7 +874,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var metrics = service.GetMetrics(componentId);
             var metricInfos = new List<MetricDto>(metrics.Count);
             foreach (var metric in metrics)
@@ -917,7 +922,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var rows = service.GetMetricsHistory(request.Data);
 
             // конвертируем историю в MetricInfo
@@ -958,7 +963,7 @@ namespace Zidium.Core
             AuthRequest(typeRequest);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.DeleteMetricType(typeRequest.Data.MetricTypeId);
 
             return new DeleteMetricTypeResponse()
@@ -978,7 +983,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.SaveMetrics(request.Data);
             return new SendMetricsResponseDto()
             {
@@ -993,7 +998,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var updated = service.UpdateMetrics(request.Data.MaxCount);
 
             return new UpdateMetricsResponse()
@@ -1017,7 +1022,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.EnableMetric(request.Data.MetricId);
 
             return new SetMetricEnableResponse()
@@ -1037,7 +1042,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.DisableMetric(request.Data);
 
             return new SetMetricDisableResponse()
@@ -1057,7 +1062,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.UpdateMetric(request.Data);
 
             return new UpdateMetricResponse()
@@ -1077,7 +1082,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.UpdateMetricType(request.Data);
 
             return new UpdateMetricTypeResponse()
@@ -1097,7 +1102,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var metricType = service.CreateMetricType(request.Data);
             var responseData = new CreateMetricTypeResponseData()
             {
@@ -1126,7 +1131,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var metric = service.SaveMetric(request.Data);
 
             var metricType = AllCaches.MetricTypes.Find(
@@ -1167,7 +1172,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             var metric = service.GetActualMetric(request.Data.ComponentId.Value, request.Data.Name);
             var statusData = AllCaches.StatusDatas.Find(new AccountCacheRequest()
             {
@@ -1192,7 +1197,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new MetricService(storage);
+            var service = new MetricService(storage, _timeService);
             service.DeleteMetric(request.Data);
 
             var checker = AccountLimitsCheckerManager.GetChecker();
@@ -1228,7 +1233,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var service = new LogService(storage);
+            var service = new LogService(storage, _timeService);
             service.SaveLogMessage(componentId, request.Data);
 
             return new SendLogResponseDto()
@@ -1254,7 +1259,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var service = new LogService(storage);
+            var service = new LogService(storage, _timeService);
             var rows = service.GetLogs(componentId, request.Data);
             var rowsDto = rows.Select(log =>
             {
@@ -1286,7 +1291,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var service = new LogService(storage);
+            var service = new LogService(storage, _timeService);
             var logConfig = service.GetLogConfig(componentId);
             var logConfigDto = ApiConverter.GetLogConfig(logConfig);
 
@@ -1308,7 +1313,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new LogService(storage);
+            var service = new LogService(storage, _timeService);
 
             service.SaveLogMessages(request.Data);
 
@@ -1333,7 +1338,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new LogService(storage);
+            var service = new LogService(storage, _timeService);
 
             var configs = service.GetChangedConfigs(
                 request.Data.LastUpdateDate.Value,
@@ -1397,7 +1402,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new ComponentTypeService(storage);
+            var service = new ComponentTypeService(storage, _timeService);
 
             var type = service.GetOrCreateComponentType(request.Data);
             var typeDto = ApiConverter.GetComponentTypeInfo(type);
@@ -1424,7 +1429,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new ComponentTypeService(storage);
+            var service = new ComponentTypeService(storage, _timeService);
 
             service.UpdateComponentType(request.Data);
             var type = storage.ComponentTypes.GetOneById(request.Data.Id.Value);
@@ -1452,7 +1457,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new ComponentTypeService(storage);
+            var service = new ComponentTypeService(storage, _timeService);
             service.Delete(request.Data.ComponentTypeId.Value);
 
             return new DeleteComponentTypeResponse()
@@ -1481,7 +1486,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.SetUnitTestNextTime(request.Data);
 
             return new SetUnitTestNextTimeResponse()
@@ -1510,7 +1515,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.SetUnitTestNextStepProcessTime(request.Data);
 
             return new SetUnitTestNextStepProcessTimeResponse()
@@ -1534,7 +1539,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestTypeService(storage);
+            var service = new UnitTestTypeService(storage, _timeService);
 
             var unitTestType = service.GetOrCreateUnitTestType(request.Data);
             var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
@@ -1561,7 +1566,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestTypeService(storage);
+            var service = new UnitTestTypeService(storage, _timeService);
             var unitTestType = service.GetUnitTestTypeById(request.Data.Id.Value);
             var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
 
@@ -1587,7 +1592,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestTypeService(storage);
+            var service = new UnitTestTypeService(storage, _timeService);
             service.UpdateUnitTestType(request.Data);
             var unitTestType = service.GetUnitTestTypeById(request.Data.UnitTestTypeId.Value);
             var typeDto = ApiConverter.GetUnitTestTypeInfo(unitTestType);
@@ -1614,7 +1619,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestTypeService(storage);
+            var service = new UnitTestTypeService(storage, _timeService);
             service.DeleteUnitTestType(request.Data.UnitTestTypeId.Value);
 
             return new DeleteUnitTestTypeResponse()
@@ -1638,7 +1643,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             var result = service.GetOrCreateUnitTest(request.Data);
 
             return new GetOrCreateUnitTestResponseDto()
@@ -1663,7 +1668,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.UpdateUnitTest(request.Data);
 
             return new UpdateUnitTestResponse()
@@ -1689,7 +1694,7 @@ namespace Zidium.Core
             var unitTestId = request.Data.UnitTestId.Value;
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.Delete(unitTestId);
 
             return new DeleteUnitTestResponse()
@@ -1713,7 +1718,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.SendUnitTestResult(request.Data);
 
             return new SendUnitTestResultResponseDto()
@@ -1733,7 +1738,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.SendUnitTestResults(request.Data);
 
             return new SendUnitTestResultsResponseDto()
@@ -1757,7 +1762,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             var result = service.GetUnitTestResult(request.Data.UnitTestId.Value);
             var resultDto = ApiConverter.GetStateDataInfo(result);
 
@@ -1787,7 +1792,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             var result = service.AddPingUnitTest(request.Data);
             var unittest = storage.UnitTests.GetOneById(result);
             var rule = storage.UnitTestPingRules.GetOneByUnitTestId(result);
@@ -1818,7 +1823,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             var id = service.AddHttpUnitTest(request.Data);
             var unittest = storage.UnitTests.GetOneById(id);
             var rules = storage.HttpRequestUnitTestRules.GetByUnitTestId(id);
@@ -1837,7 +1842,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             var updated = service.RecalcUnitTestsResults(request.Data.MaxCount);
 
             return new RecalcUnitTestsResultsResponse()
@@ -1863,7 +1868,7 @@ namespace Zidium.Core
             var unitTestId = request.Data.UnitTestId;
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.Enable(unitTestId.Value);
 
             return new SetUnitTestEnableResponseDto()
@@ -1883,7 +1888,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new UnitTestService(storage);
+            var service = new UnitTestService(storage, _timeService);
             service.Disable(request.Data);
 
             return new SetUnitTestDisableResponseDto()
@@ -1903,7 +1908,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new SubscriptionService(storage);
+            var service = new SubscriptionService(storage, _timeService);
             var subscription = service.CreateSubscription(request.Data);
             var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
 
@@ -1921,7 +1926,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new SubscriptionService(storage);
+            var service = new SubscriptionService(storage, _timeService);
             var subscription = service.CreateDefaultForUser(request.Data.UserId);
             var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
 
@@ -1939,7 +1944,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new SubscriptionService(storage);
+            var service = new SubscriptionService(storage, _timeService);
             service.UpdateSubscription(request.Data);
             var subscription = storage.Subscriptions.GetOneById(request.Data.Id);
             var subscriptionDto = ApiConverter.GetSubscriptionInfo(subscription);
@@ -1958,7 +1963,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new SubscriptionService(storage);
+            var service = new SubscriptionService(storage, _timeService);
             service.SetSubscriptionDisable(request.Data);
 
             return new SetSubscriptionDisableResponse()
@@ -1974,7 +1979,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new SubscriptionService(storage);
+            var service = new SubscriptionService(storage, _timeService);
             service.SetSubscriptionEnable(request.Data);
 
             return new SetSubscriptionEnableResponse()
@@ -1990,7 +1995,7 @@ namespace Zidium.Core
             AuthRequest(request);
 
             var storage = GetStorage();
-            var service = new SubscriptionService(storage);
+            var service = new SubscriptionService(storage, _timeService);
             service.DeleteSubscription(request.Data);
 
             return new DeleteSubscriptionResponse()
@@ -2009,7 +2014,7 @@ namespace Zidium.Core
             var entity = new SendSmsCommandForAdd()
             {
                 Id = Ulid.NewUlid(),
-                CreateDate = DateTime.Now,
+                CreateDate = _timeService.Now(),
                 Status = SmsStatus.InQueue,
                 ReferenceId = request.Data.ReferenceId,
                 Body = request.Data.Body,
@@ -2048,7 +2053,7 @@ namespace Zidium.Core
 
             var storage = GetStorage();
             var recalc = request.Data.Recalc;
-            var componentService = new ComponentService(storage);
+            var componentService = new ComponentService(storage, _timeService);
             var state = componentService.GetComponentExternalState(componentId, recalc);
             var stateDto = ApiConverter.GetStateDataInfo(state);
 
@@ -2081,7 +2086,7 @@ namespace Zidium.Core
 
             var storage = GetStorage();
             var recalc = request.Data.Recalc;
-            var service = new ComponentService(storage);
+            var service = new ComponentService(storage, _timeService);
             var state = service.GetComponentInternalState(componentId, recalc);
             var stateDto = ApiConverter.GetStateDataInfo(state);
 
@@ -2109,7 +2114,7 @@ namespace Zidium.Core
             var componentId = request.Data.ComponentId.Value;
 
             var storage = GetStorage();
-            var service = new ComponentService(storage);
+            var service = new ComponentService(storage, _timeService);
             var component = service.CalculateAllStatuses(componentId);
 
             return new UpdateComponentStateResponse()

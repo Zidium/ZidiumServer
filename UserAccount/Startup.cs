@@ -15,6 +15,7 @@ using Web.ModelBindings;
 using Zidium.Api;
 using Zidium.Common;
 using Zidium.Core;
+using Zidium.Core.Common;
 using Zidium.Core.Common.Helpers;
 using Zidium.Core.InternalLogger;
 using Zidium.Storage;
@@ -40,6 +41,7 @@ namespace Zidium.UserAccount
             DependencyInjection.SetServicePersistent<IDispatcherConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IAccessConfiguration>(configuration);
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
+            DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
 
             services.AddHttpContextAccessor();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();

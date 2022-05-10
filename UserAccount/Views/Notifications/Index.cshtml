@@ -4,12 +4,14 @@
 @using GridMvc.Sorting
 @using Zidium.Storage
 @using Zidium.UserAccount.Models.Controls
+@using Zidium.Core.Common.Helpers 
 
 @model NotificationsListModel
 
 @{
     ViewBag.Title = "Уведомления";
     ViewBag.ActiveMenuItems = "Manage,NotificationsList";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @Html.Partial("_PageTitle")
@@ -74,7 +76,7 @@
 @Html.Grid(Model.Notifications).Columns(columns =>
 {
     columns.Add(m => m.CreationDate).Titled("Дата").RenderValueAs(m => Html.HtmlBlock(x =>
-        Html.ActionLink(m.CreationDate.ToString(GuiHelper.DateTimeDisplayFormat), "Show", new { id = m.Id, componentId = m.Component.Id })))
+        Html.ActionLink(DateTimeHelper.GetRussianDateTime(m.CreationDate, currentUser.TimeZoneOffsetMinutes), "Show", new { id = m.Id, componentId = m.Component.Id })))
         .Encoded(false).Sanitized(false).SortInitialDirection(GridSortDirection.Descending).Css("text-nowrap").SetWidth("150px");
 
     columns.Add(t => t.Component.DisplayName).Titled("Компонент").RenderValueAs(t => Html.HtmlBlock(x =>

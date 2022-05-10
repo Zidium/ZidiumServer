@@ -1,11 +1,13 @@
 ﻿@using Zidium.Core.Common.Helpers
 @using Zidium.UserAccount.Controllers
 @using Microsoft.AspNetCore.Http.Extensions
+@using Zidium.UserAccount.Helpers 
 @model Zidium.UserAccount.Models.DisableDialogGetModel
 
 @{
     ViewBag.Title = Model.Title;
     Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 <style>
     #disableTable td {
@@ -116,7 +118,7 @@
         $("#disableComponentWaitDiv").show();
         var date = $('#disableDatePicker').data("DateTimePicker").date();
         if (date) {
-            date = date.format("@BaseController.MomentDateTimeParamFormat");
+            date = date.add(-@(currentUser.TimeZoneOffsetMinutes), 'minutes').format("@BaseController.MomentDateTimeParamFormat");
         }
         var params = {
             interval: $("input[name=disableInterval]:checked").val(),

@@ -10,6 +10,7 @@
     ViewBag.ActiveMenuItems = "UnitTests";
 
     var overviewCurrentStatusUrl = Url.Action("OverviewCurrentStatus", new { id = Model.UnitTest.Id });
+    var currentUser = UserHelper.CurrentUser(Context);
 }
 
 @section styles {
@@ -142,11 +143,11 @@ else
                 <div class="info-table-column">
                     <p>
                         <span class="simple-text-header">Дата начала статуса:</span>
-                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTestBulb.StartDate)</span>
+                        <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.UnitTestBulb.StartDate, currentUser.TimeZoneOffsetMinutes)</span>
                     </p>
                     <p>
                         <span class="simple-text-header">Последняя проверка:</span>
-                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTest.LastExecutionDate)</span>
+                        <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.UnitTest.LastExecutionDate, currentUser.TimeZoneOffsetMinutes)</span>
                     </p>
                     <p>
                         <span class="simple-text-header">Длительность:</span>
@@ -176,12 +177,12 @@ else
                     {
                         <p>
                             <span class="simple-text-header">Следующая проверка:</span>
-                            <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTest.NextExecutionDate)</span>
+                            <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.UnitTest.NextExecutionDate, currentUser.TimeZoneOffsetMinutes)</span>
                         </p>
                     }
                     <p>
                         <span class="simple-text-header">Актуальна до:</span>
-                        <span class="simple-text-value">@GuiHelper.GetDateTimeString(Model.UnitTestBulb.ActualDate)</span>
+                        <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.UnitTestBulb.ActualDate, currentUser.TimeZoneOffsetMinutes)</span>
                     </p>
                     @if (!SystemUnitTestType.IsSystem(Model.UnitTest.TypeId))
                     {

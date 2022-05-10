@@ -44,6 +44,7 @@ namespace Zidium.Agent.AgentTasks.UnitTests.VirusTotal
                     // The Public API is limited to 4 requests per minute
                     // Перестрахуемся, будем делать вызовы раз в 30 сек (2 запроса в минуту)
                     var sleepDuration = TimeSpan.FromSeconds(30);
+                    // TOD Refactor to StopWatch
                     var duration = DateTime.Now - lastTime.Value;
                     if (duration < sleepDuration)
                     {

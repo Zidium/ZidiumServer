@@ -77,7 +77,7 @@ namespace Zidium.Api
                 return;
             }
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var webLogs = new WebLogMessage()
             {
                 Attemps = 0,
