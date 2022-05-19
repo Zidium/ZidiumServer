@@ -120,7 +120,7 @@ namespace Zidium.UserAccount.Controllers
 
             try
             {
-                var userService = new UserService(null, TimeService);
+                var userService = new UserService(GetStorage(), TimeService);
                 var authInfo = userService.FindUser(model.Login);
 
                 if (authInfo == null)
