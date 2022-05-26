@@ -157,7 +157,7 @@ namespace Zidium.UserAccount.Controllers
             var model = new SetPasswordModel()
             {
                 TokenId = id,
-                UserName = user.DisplayName,
+                UserName = user.NameOrLogin(),
                 AccountId = accountId
             };
 

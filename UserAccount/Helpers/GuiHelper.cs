@@ -1089,7 +1089,7 @@ namespace Zidium.UserAccount.Helpers
             items.AddRange(users.Select(t => new SelectListItem()
             {
                 Value = t.Id.ToString(),
-                Text = t.DisplayName,
+                Text = t.NameOrLogin(),
                 Selected = t.Id == userId
             }));
             return items;

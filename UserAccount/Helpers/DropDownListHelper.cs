@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Zidium.Api.Dto;
 using Zidium.Core;
+using Zidium.Core.AccountsDb;
 using Zidium.Core.Common;
 using Zidium.Storage;
 
@@ -108,7 +109,7 @@ namespace Zidium.UserAccount.Helpers
 
             var items = users.Select(x => new SelectListItem()
             {
-                Text = x.DisplayName,
+                Text = x.NameOrLogin(),
                 Value = x.Id.ToString(),
                 Selected = x.Id == selected
             }).ToList();
