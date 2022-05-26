@@ -93,7 +93,7 @@ namespace Zidium.Agent.Tests
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = SubscriptionChannel.Email,
-                    Address = user.Login,
+                    Address = user.Email,
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now
                 };

@@ -9,7 +9,7 @@
     using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm" }))
     {
         @Html.AntiForgeryToken()
-        @Html.ActionLink(currentUser.Login, "Show", "Users", new { id = currentUser.Id }, new { @class = "topLogoRightLink" })
+        @Html.ActionLink(currentUser.Name, "Show", "Users", new { id = currentUser.Id }, new { @class = "topLogoRightLink" })
         <a title="Выход" class="topLogoRightLink" href="javascript:document.getElementById('logoutForm').submit()">
             Выход
             @*<img style="height: 16px;" src="/Content/Icons/log_off.png" />*@

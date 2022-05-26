@@ -51,7 +51,7 @@ namespace Zidium.Core.Common.Helpers
         {
             var html = new HtmlRender();
 
-            html.Write("Уважаемый " + (!string.IsNullOrEmpty(user.FirstName) || !string.IsNullOrEmpty(user.MiddleName) ? user.FirstName + " " + user.MiddleName : user.Login) + "!");
+            html.Write("Уважаемый " + user.NameOrLogin() + "!");
 
             html.NewLine();
             html.NewLine();

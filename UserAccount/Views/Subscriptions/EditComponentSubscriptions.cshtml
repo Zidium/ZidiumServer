@@ -213,7 +213,7 @@
         <td>@Html.ComponentLink(Model.Component.Id, Model.ComponentFullName)</td>
         <td>@Model.ComponentType.DisplayName</td>
         <td>
-            @Model.User.FioOrLogin()
+            @Model.User.NameOrLogin()
             <div style="margin-top: 5px;">
                 @if (Model.UserContacts != null)
                 {

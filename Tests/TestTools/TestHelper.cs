@@ -610,11 +610,8 @@ namespace Zidium.TestTools
                 Id = Ulid.NewUlid(),
                 CreateDate = GetNow(),
                 Login = login,
-                DisplayName = displayName,
-                LastName = login,
-                FirstName = login,
-                MiddleName = login,
-                Post = "Post"
+                EMail = Ulid.NewUlid().ToString(),
+                DisplayName = displayName
             };
 
             if (!string.IsNullOrEmpty(password))
@@ -622,6 +619,15 @@ namespace Zidium.TestTools
 
             // Создадим по одному контакту каждого типа
             var contacts = new List<UserContactForAdd>();
+            contacts.Add(new UserContactForAdd()
+            {
+                Id = Ulid.NewUlid(),
+                UserId = user.Id,
+                Type = UserContactType.Email,
+                Value = user.EMail,
+                CreateDate = GetNow()
+            });
+
             contacts.Add(new UserContactForAdd()
             {
                 Id = Ulid.NewUlid(),

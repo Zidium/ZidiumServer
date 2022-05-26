@@ -72,7 +72,7 @@ namespace Zidium.UserAccount.Models.Subscriptions
                         filtered.Add(new SubscriptionInfo()
                         {
                             Info = onComponent,
-                            UserName = user.FioOrLogin()
+                            UserName = user.NameOrLogin()
                         });
                         continue;
                     }
@@ -87,7 +87,7 @@ namespace Zidium.UserAccount.Models.Subscriptions
                         filtered.Add(new SubscriptionInfo()
                         {
                             Info = onComponentType,
-                            UserName = user.FioOrLogin()
+                            UserName = user.NameOrLogin()
                         });
                         continue;
                     }
@@ -99,7 +99,7 @@ namespace Zidium.UserAccount.Models.Subscriptions
                         filtered.Add(new SubscriptionInfo()
                         {
                             Info = defaultSubscription,
-                            UserName = user.FioOrLogin()
+                            UserName = user.NameOrLogin()
                         });
                     }
                 }

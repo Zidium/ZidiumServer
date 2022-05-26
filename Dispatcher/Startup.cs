@@ -199,7 +199,7 @@ namespace Zidium.Dispatcher
                 // создаем админа
                 var adminUserId = userService.CreateAccountAdmin(
                     "Admin",
-                    null, null, null, null, null);
+                    null, null);
 
                 // Установим пароль админа
                 var passwordToken = userService.StartResetPassword(adminUserId, false);

@@ -21,10 +21,10 @@
 
 @Html.Grid(Model.Users).Columns(columns =>
 {
-    columns.Add(m => m.DisplayName).Titled("Отображаемое имя").RenderValueAs(
-        m => Html.HtmlBlock(t => Html.ActionLink(m.DisplayName ?? m.Login, "Show", new { id = m.Id }))).Encoded(false).Sanitized(false);
-    columns.Add(m => m.Login).Titled("Логин").SortInitialDirection(GridSortDirection.Ascending);
-    columns.Add(m => m.Post).Titled("Должность");
+    columns.Add(m => m.Login).Titled("Имя").RenderValueAs(
+        m => Html.HtmlBlock(t => Html.ActionLink(m.Name, "Show", new { id = m.Id }))).Encoded(false).Sanitized(false)
+        .SortInitialDirection(GridSortDirection.Ascending);
+    columns.Add(m => m.EMail).Titled("EMail");
     columns.Add(m => m.Role).Titled("Роль");
 
     columns.Add().Titled(string.Empty).RenderValueAs(m => Html.HtmlBlock(@<text>

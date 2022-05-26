@@ -18,12 +18,9 @@ namespace Zidium.UserAccount.Controllers
 {
     public class AccountController : BaseController
     {
-        public AccountController(IComponentControl componentControl, ILogger<AccountController> logger) : base(logger)
+        public AccountController(ILogger<AccountController> logger) : base(logger)
         {
-            _componentControl = componentControl;
         }
-
-        private readonly IComponentControl _componentControl;
 
         public ActionResult Logon(string returnUrl)
         {
@@ -61,14 +58,16 @@ namespace Zidium.UserAccount.Controllers
             }
             catch (UserFriendlyException e)
             {
+                var componentControl = DependencyInjection.GetServicePersistent<IComponentControl>();
+
                 // Общее событие
-                _componentControl.CreateComponentEvent("LogonFailure", "Неудачный вход")
+                componentControl.CreateComponentEvent("LogonFailure", "Неудачный вход")
                     .SetJoinInterval(TimeSpan.FromDays(1))
                     .SetJoinKey(DateTime.Now.ToString("ddMMyyyy"))
                     .Add();
 
                 // Индивидуальное событие для каждого логина
-                _componentControl.CreateComponentEvent("LogonFailure", "Неудачный вход - " + model.UserName)
+                componentControl.CreateComponentEvent("LogonFailure", "Неудачный вход - " + model.UserName)
                     .SetJoinInterval(TimeSpan.FromDays(1))
                     .SetJoinKey(DateTime.Now.ToString("ddMMyyyy"), model.UserName)
                     .Add();

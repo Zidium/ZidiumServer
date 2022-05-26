@@ -23,13 +23,10 @@ namespace Zidium.Storage.Ef
                     Id = entity.Id,
                     DisplayName = entity.DisplayName,
                     CreateDate = entity.CreateDate,
-                    FirstName = entity.FirstName,
                     InArchive = entity.InArchive,
-                    LastName = entity.LastName,
                     Login = entity.Login,
-                    MiddleName = entity.MiddleName,
+                    EMail = entity.EMail,
                     PasswordHash = entity.PasswordHash,
-                    Post = entity.Post,
                     SecurityStamp = entity.SecurityStamp
                 });
                 contextWrapper.Context.SaveChanges();
@@ -45,23 +42,14 @@ namespace Zidium.Storage.Ef
                 if (entity.Login.Changed())
                     user.Login = entity.Login.Get();
 
+                if (entity.EMail.Changed())
+                    user.EMail = entity.EMail.Get();
+
                 if (entity.PasswordHash.Changed())
                     user.PasswordHash = entity.PasswordHash.Get();
 
-                if (entity.FirstName.Changed())
-                    user.FirstName = entity.FirstName.Get();
-
-                if (entity.LastName.Changed())
-                    user.LastName = entity.LastName.Get();
-
-                if (entity.MiddleName.Changed())
-                    user.MiddleName = entity.MiddleName.Get();
-
                 if (entity.DisplayName.Changed())
                     user.DisplayName = entity.DisplayName.Get();
-
-                if (entity.Post.Changed())
-                    user.Post = entity.Post.Get();
 
                 if (entity.InArchive.Changed())
                     user.InArchive = entity.InArchive.Get();
@@ -155,8 +143,8 @@ namespace Zidium.Storage.Ef
             if (entity == null)
                 return null;
 
-            return new UserForRead(entity.Id, entity.Login, entity.PasswordHash, entity.FirstName, entity.LastName,
-                entity.MiddleName, entity.DisplayName, entity.CreateDate, entity.Post, entity.InArchive,
+            return new UserForRead(entity.Id, entity.Login, entity.EMail, entity.PasswordHash,
+                entity.DisplayName, entity.CreateDate, entity.InArchive,
                 entity.SecurityStamp);
         }
     }

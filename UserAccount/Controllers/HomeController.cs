@@ -19,7 +19,7 @@ namespace Zidium.UserAccount.Controllers
         [Authorize]
         public ActionResult Start()
         {
-            var hasMobilePhone = GetStorage().UserContacts 
+            var hasMobilePhone = GetStorage().UserContacts
                 .GetByType(CurrentUser.Id, UserContactType.MobilePhone)
                 .Any(t => !string.IsNullOrEmpty(t.Value));
 
@@ -123,17 +123,12 @@ namespace Zidium.UserAccount.Controllers
                 var userService = new UserService(GetStorage(), TimeService);
                 var authInfo = userService.FindUser(model.Login);
 
-                if (authInfo == null)
+                if (authInfo != null)
                 {
-                    ModelState.AddModelError(string.Empty, "Такого пользователя не существует");
-                    return View(model);
+                    userService.StartResetPassword(authInfo.User.Id);
                 }
 
-                userService = new UserService(GetStorage(), TimeService);
-
-                userService.StartResetPassword(authInfo.User.Id);
-
-                return View("PasswordRestored", (object)authInfo.User.Login);
+                return View("PasswordRestored");
             }
             catch (UserFriendlyException exception)
             {
@@ -206,7 +201,6 @@ namespace Zidium.UserAccount.Controllers
 
             return View("PasswordChanged");
         }
-
 
         /// <summary>
         /// Для unit-тестов

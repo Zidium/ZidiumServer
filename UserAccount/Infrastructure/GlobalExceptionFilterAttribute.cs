@@ -68,9 +68,12 @@ namespace Zidium.UserAccount
             };
 
             var controller = context.HttpContext.Items["ControllerObject"] as BaseController;
-            controller.ViewBag.IsChildAction = context.HttpContext.Items.ContainsKey("ChildAction");
-            var fullContext = new FullRequestContext(controller);
-            FullRequestContext.SetCurrent(controller.HttpContext, fullContext);
+            if (controller != null)
+            {
+                controller.ViewBag.IsChildAction = context.HttpContext.Items.ContainsKey("ChildAction");
+                var fullContext = new FullRequestContext(controller);
+                FullRequestContext.SetCurrent(controller.HttpContext, fullContext);
+            }
 
             context.Result = result;
         }

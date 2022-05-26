@@ -23,7 +23,7 @@ namespace Zidium.UserAccount.Models.Defects
 
             public string Comment;
 
-            public string UserLogin;
+            public string User;
         }
     }
 }

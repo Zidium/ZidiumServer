@@ -11,12 +11,9 @@ namespace Zidium.Storage
         {
             Id = id;
             Login = new ChangeTracker<string>();
+            EMail = new ChangeTracker<string>();
             PasswordHash = new ChangeTracker<string>();
-            FirstName = new ChangeTracker<string>();
-            LastName = new ChangeTracker<string>();
-            MiddleName = new ChangeTracker<string>();
             DisplayName = new ChangeTracker<string>();
-            Post = new ChangeTracker<string>();
             InArchive = new ChangeTracker<bool>();
             SecurityStamp = new ChangeTracker<string>();
         }
@@ -32,34 +29,19 @@ namespace Zidium.Storage
         public ChangeTracker<string> Login { get; }
 
         /// <summary>
+        /// EMail
+        /// </summary>
+        public ChangeTracker<string> EMail { get; }
+
+        /// <summary>
         /// Хэш пароля
         /// </summary>
         public ChangeTracker<string> PasswordHash { get; }
 
         /// <summary>
-        /// Имя
-        /// </summary>
-        public ChangeTracker<string> FirstName { get; }
-
-        /// <summary>
-        /// Фамилия
-        /// </summary>
-        public ChangeTracker<string> LastName { get; }
-
-        /// <summary>
-        /// Отчество
-        /// </summary>
-        public ChangeTracker<string> MiddleName { get; }
-
-        /// <summary>
         /// Отображаемое имя пользователя в ЛК
         /// </summary>
         public ChangeTracker<string> DisplayName { get; }
-
-        /// <summary>
-        /// Должность
-        /// </summary>
-        public ChangeTracker<string> Post { get; }
 
         /// <summary>
         /// В архиве?

@@ -69,20 +69,22 @@ namespace Zidium.UserAccount
             services.AddAuthorization();
 
             services.AddTransient<GlobalExceptionFilterAttribute>();
-
-            InitMonitoring(services);
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, IComponentControl componentControl)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             try
             {
+                DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
+                InitMonitoring();
+                var componentControl = DependencyInjection.GetServicePersistent<IComponentControl>();
+
                 logger.LogInformation("Start, IsFake={0}", componentControl.IsFake());
                 logger.LogInformation("Version {0}", VersionHelper.GetProductVersion());
 
                 var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
                 DependencyInjection.SetLoggerFactory(loggerFactory);
-                DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
+
 
                 var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
                 logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
@@ -183,15 +185,15 @@ namespace Zidium.UserAccount
             }
         }
 
-        protected void InitMonitoring(IServiceCollection services)
+        protected void InitMonitoring()
         {
             var client = SystemAccountHelper.GetInternalSystemClient();
             client.WaitUntilAvailable(TimeSpan.FromSeconds(60));
 
             // Создадим компонент
             var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
-            var folder = !debugConfiguration.DebugMode ? 
-                client.GetRootComponentControl().GetOrCreateChildFolderControl("Zidium") : 
+            var folder = !debugConfiguration.DebugMode ?
+                client.GetRootComponentControl().GetOrCreateChildFolderControl("Zidium") :
                 client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
             var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? SystemComponentType.WebSite.SystemName : DebugHelper.DebugComponentType);
             var componentControl = folder
@@ -204,7 +206,7 @@ namespace Zidium.UserAccount
             // Присвоим Id компонента по умолчанию, чтобы адаптер логирования мог его использовать
             Client.Instance = client;
             Client.Instance.Config.DefaultComponent.Id = componentControl.Info?.Id;
-            services.AddSingleton(componentControl);
+            DependencyInjection.SetServicePersistent<IComponentControl>(componentControl);
         }
 
     }

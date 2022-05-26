@@ -32,9 +32,9 @@ namespace Zidium.UserAccount.Controllers
                 Users = users.Select(t => new IndexModel.UserInfo()
                 {
                     Id = t.Id,
-                    DisplayName = t.DisplayName,
                     Login = t.Login,
-                    Post = t.Post,
+                    Name = !string.IsNullOrEmpty(t.DisplayName) ? t.DisplayName + " (" + t.Login + ")" : t.Login,
+                    EMail = t.Email,
                     Role = GetStorage().Roles.GetByUserId(t.Id).FirstOrDefault()?.DisplayName
                 }).ToArray()
             };
@@ -52,6 +52,7 @@ namespace Zidium.UserAccount.Controllers
             {
                 Id = user.Id,
                 Login = user.Login,
+                EMail = user.Email,
                 DisplayName = user.DisplayName,
                 Contacts = GetStorage().UserContacts.GetByUserId(user.Id),
                 Role = GetStorage().Roles.GetByUserId(user.Id).FirstOrDefault()?.DisplayName
@@ -88,15 +89,6 @@ namespace Zidium.UserAccount.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Add(AddUserModel model)
         {
-            if (ModelState.IsValid)
-            {
-                if (string.IsNullOrWhiteSpace(model.DisplayName))
-                {
-                    var modelState = new ModelStateHelper<AddUserModel>(ModelState, HttpContext);
-                    modelState.AddErrorFor(x => x.DisplayName, "Значение не должно быть пустым");
-                }
-            }
-
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -106,11 +98,25 @@ namespace Zidium.UserAccount.Controllers
                 {
                     Id = Ulid.NewUlid(),
                     Login = model.Login,
-                    DisplayName = model.DisplayName,
-                    Post = model.Post
+                    EMail = model.EMail,
+                    DisplayName = model.DisplayName
                 };
 
                 var userService = new UserService(GetStorage(), TimeService);
+
+                var contacts = new List<UserContactForAdd>();
+
+                if (!string.IsNullOrWhiteSpace(model.EMail))
+                {
+                    contacts.Add(new UserContactForAdd()
+                    {
+                        Id = Ulid.NewUlid(),
+                        UserId = user.Id,
+                        Type = UserContactType.Email,
+                        Value = model.EMail,
+                        CreateDate = Now()
+                    });
+                }
 
                 // обновим роль
                 var roles = new List<UserRoleForAdd>();
@@ -125,7 +131,7 @@ namespace Zidium.UserAccount.Controllers
                     });
                 }
 
-                userService.CreateUser(user, new List<UserContactForAdd>(), roles);
+                userService.CreateUser(user, contacts, roles);
 
                 var userSettingService = new UserSettingService(GetStorage());
                 userSettingService.TimeZoneOffsetMinutes(user.Id, model.TimeZoneOffsetMinutes);
@@ -154,8 +160,8 @@ namespace Zidium.UserAccount.Controllers
             {
                 Id = user.Id,
                 Login = user.Login,
+                EMail = user.Email,
                 DisplayName = user.DisplayName,
-                Post = user.Post,
                 RoleId = GetStorage().Roles.GetByUserId(user.Id).FirstOrDefault()?.Id,
                 Contacts = GetStorage().UserContacts.GetByUserId(user.Id)
             };
@@ -182,15 +188,6 @@ namespace Zidium.UserAccount.Controllers
 
             model.Contacts = GetStorage().UserContacts.GetByUserId(user.Id);
 
-            if (ModelState.IsValid)
-            {
-                if (string.IsNullOrWhiteSpace(model.DisplayName))
-                {
-                    var modelState = new ModelStateHelper<EditUserModel>(ModelState, HttpContext);
-                    modelState.AddErrorFor(x => x.DisplayName, "Значение не должно быть пустым");
-                }
-            }
-
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -198,8 +195,8 @@ namespace Zidium.UserAccount.Controllers
             {
                 var userForUpdate = user.GetForUpdate();
                 userForUpdate.Login.Set(model.Login);
+                userForUpdate.EMail.Set(model.EMail);
                 userForUpdate.DisplayName.Set(model.DisplayName);
-                userForUpdate.Post.Set(model.Post);
                 GetStorage().Users.Update(userForUpdate);
 
                 var userService = new UserService(GetStorage(), TimeService);
@@ -466,23 +463,11 @@ namespace Zidium.UserAccount.Controllers
             return PartialView(model);
         }
 
-        [HttpPost]
-        [CanEditPrivateData]
-        public ActionResult StartResetPassword(Guid id)
-        {
-            var userService = new UserService(GetStorage(), TimeService);
-            userService.StartResetPassword(id);
-            var user = GetStorage().Users.GetOneById(id);
-            var message = $"На адрес {user.Login} отправлено письмо с одноразовой ссылкой на смену пароля";
-            this.SetTempMessage(TempMessageType.Success, message);
-            return RedirectToAction("Edit", new { Id = id });
-        }
-
         public JsonResult CheckNewLogin(AddUserModel model)
         {
             var user = GetStorage().Users.GetOneOrNullByLogin(model.Login);
             if (user != null)
-                return Json("Пользователь с таким EMail уже существует");
+                return Json("Пользователь с таким логином уже существует");
             return Json(true);
         }
 
@@ -490,7 +475,7 @@ namespace Zidium.UserAccount.Controllers
         {
             var user = GetStorage().Users.GetOneOrNullByLogin(model.Login);
             if (user != null && user.Id != model.Id)
-                return Json("Пользователь с таким EMail уже существует");
+                return Json("Пользователь с таким логином уже существует");
             return Json(true);
         }
 

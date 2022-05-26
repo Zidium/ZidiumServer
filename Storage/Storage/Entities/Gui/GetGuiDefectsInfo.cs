@@ -27,12 +27,11 @@ namespace Zidium.Storage
             public DefectStatus Status;
 
             public string Comment;
-
         }
 
         public class ResponsibleUserInfo
         {
-            public string FioOrLogin;
+            public string NameOrLogin;
         }
 
         public class EventTypeInfo

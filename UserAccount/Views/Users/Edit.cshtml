@@ -17,7 +17,7 @@
 
     @Html.EditorFor(m => m.Login, "LabeledEdit", new { HorizontalForm = true })
     @Html.EditorFor(m => m.DisplayName, "LabeledEdit", new { HorizontalForm = true })
-    @Html.EditorFor(m => m.Post, "LabeledEdit", new { HorizontalForm = true })
+    @Html.EditorFor(m => m.EMail, "LabeledEdit", new { HorizontalForm = true })
 
     if (UserHelper.CurrentUser(Context).CanManageAccount())
     {
@@ -42,7 +42,7 @@
             @Html.DropDownListFor(x => x.TimeZoneOffsetMinutes, GuiHelper.GetTimeZoneItems(Model.TimeZoneOffsetMinutes), new { @class = "form-control" })
         </div>
         <div class="col-sm-6">
-            @Html.ValidationMessageFor(x => x.TimeZoneOffsetMinutes)
+            @Html.ValidationMessageFor(x => x.TimeZoneOffsetMinutes, null, "p")
         </div>
     </div>
 

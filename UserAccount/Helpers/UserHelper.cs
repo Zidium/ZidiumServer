@@ -92,7 +92,7 @@ namespace Zidium.UserAccount.Helpers
             {
                 Id = user.Id,
                 Login = user.Login,
-                Name = user.DisplayName,
+                Name = user.NameOrLogin(),
                 Roles = roles.Select(t => new UserInfoRole()
                 {
                     Id = t.Id,

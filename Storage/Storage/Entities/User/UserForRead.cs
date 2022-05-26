@@ -8,27 +8,21 @@ namespace Zidium.Storage
     public class UserForRead
     {
         public UserForRead(
-            Guid id, 
-            string login, 
-            string passwordHash, 
-            string firstName, 
-            string lastName, 
-            string middleName, 
-            string displayName, 
-            DateTime createDate, 
-            string post, 
-            bool inArchive, 
+            Guid id,
+            string login,
+            string email,
+            string passwordHash,
+            string displayName,
+            DateTime createDate,
+            bool inArchive,
             string securityStamp)
         {
             Id = id;
             Login = login;
+            Email = email;
             PasswordHash = passwordHash;
-            FirstName = firstName;
-            LastName = lastName;
-            MiddleName = middleName;
             DisplayName = displayName;
             CreateDate = createDate;
-            Post = post;
             InArchive = inArchive;
             SecurityStamp = securityStamp;
         }
@@ -44,24 +38,14 @@ namespace Zidium.Storage
         public string Login { get; }
 
         /// <summary>
+        /// EMail
+        /// </summary>
+        public string Email { get; }
+
+        /// <summary>
         /// Хэш пароля
         /// </summary>
         public string PasswordHash { get; }
-
-        /// <summary>
-        /// Имя
-        /// </summary>
-        public string FirstName { get; }
-
-        /// <summary>
-        /// Фамилия
-        /// </summary>
-        public string LastName { get; }
-
-        /// <summary>
-        /// Отчество
-        /// </summary>
-        public string MiddleName { get; }
 
         /// <summary>
         /// Отображаемое имя пользователя в ЛК
@@ -72,11 +56,6 @@ namespace Zidium.Storage
         /// Дата создания
         /// </summary>
         public DateTime CreateDate { get; }
-
-        /// <summary>
-        /// Должность
-        /// </summary>
-        public string Post { get; }
 
         /// <summary>
         /// В архиве?

@@ -29,7 +29,7 @@ namespace Zidium.Core
 
         public static UserContactForRead[] GetUserContactsOfType(UserForRead user, UserContactType contactType, IStorage storage)
         {
-            return GetUserContactsOfType(user.Id, user.Login, user.CreateDate, contactType, storage);
+            return GetUserContactsOfType(user.Id, user.Email, user.CreateDate, contactType, storage);
         }
     }
 }

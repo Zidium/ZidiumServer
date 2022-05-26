@@ -15,24 +15,14 @@ namespace Zidium.Storage
         public string Login;
 
         /// <summary>
+        /// Email
+        /// </summary>
+        public string EMail;
+
+        /// <summary>
         /// Хэш пароля
         /// </summary>
         public string PasswordHash;
-
-        /// <summary>
-        /// Имя
-        /// </summary>
-        public string FirstName;
-
-        /// <summary>
-        /// Фамилия
-        /// </summary>
-        public string LastName;
-
-        /// <summary>
-        /// Отчество
-        /// </summary>
-        public string MiddleName;
 
         /// <summary>
         /// Отображаемое имя пользователя в ЛК
@@ -43,11 +33,6 @@ namespace Zidium.Storage
         /// Дата создания
         /// </summary>
         public DateTime CreateDate;
-
-        /// <summary>
-        /// Должность
-        /// </summary>
-        public string Post;
 
         /// <summary>
         /// В архиве?

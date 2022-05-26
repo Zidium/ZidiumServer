@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Zidium.Storage;
 
@@ -14,6 +13,9 @@ namespace Zidium.UserAccount.Models
 
         [Display(Name = "Отображаемое имя")]
         public string DisplayName { get; set; }
+
+        [Display(Name = "EMail")]
+        public string EMail { get; set; }
 
         [Display(Name = "Роль")]
         public string Role { get; set; }

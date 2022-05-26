@@ -186,10 +186,10 @@ namespace Zidium.UserAccount.Controllers
                     Status = t.Status,
                     Comment = t.Comment,
                     Date = t.Date,
-                    UserLogin = t.UserId != null ? changeUsers[t.UserId.Value].Login : null
+                    User = t.UserId != null ? changeUsers[t.UserId.Value].NameOrLogin() : null
                 }).ToArray(),
-                LastChangeUser = lastChangeUser?.FioOrLogin(),
-                ResponsibleUser = responsibleUser?.FioOrLogin()
+                LastChangeUser = lastChangeUser?.NameOrLogin(),
+                ResponsibleUser = responsibleUser?.NameOrLogin()
             };
             if (defect.EventTypeId.HasValue)
             {

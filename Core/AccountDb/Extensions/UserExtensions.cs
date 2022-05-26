@@ -4,28 +4,20 @@ namespace Zidium.Core.AccountsDb
 {
     public static class UserExtensions
     {
-        public static string FioOrLogin(this UserForAdd user)
+        public static string NameOrLogin(this UserForAdd user)
         {
-            if (user.LastName != null)
+            if (!string.IsNullOrEmpty(user.DisplayName))
             {
-                if (user.FirstName != null)
-                {
-                    return user.LastName + " " + user.FirstName;
-                }
-                return user.LastName;
+                return user.DisplayName;
             }
             return user.Login;
         }
 
-        public static string FioOrLogin(this UserForRead user)
+        public static string NameOrLogin(this UserForRead user)
         {
-            if (user.LastName != null)
+            if (!string.IsNullOrEmpty(user.DisplayName))
             {
-                if (user.FirstName != null)
-                {
-                    return user.LastName + " " + user.FirstName;
-                }
-                return user.LastName;
+                return user.DisplayName;
             }
             return user.Login;
         }

@@ -433,13 +433,11 @@ namespace Zidium.Storage.Ef.MsSql.Migrations
 
                     b.HasIndex("LastStatusEventId");
 
-                    b.HasIndex(new[] { "Category", "ActualDate", "StartDate", "Id" }, "IX_AccountBased");
+                    b.HasIndex(new[] { "Category", "ActualDate" }, "IX_ForDeletion");
 
-                    b.HasIndex(new[] { "OwnerId", "EventTypeId", "Importance", "ActualDate" }, "IX_ForJoin");
+                    b.HasIndex(new[] { "OwnerId", "EventTypeId", "Importance" }, "IX_ForJoin");
 
-                    b.HasIndex(new[] { "IsUserHandled", "EventTypeId", "VersionLong" }, "IX_ForProcessing");
-
-                    b.HasIndex(new[] { "OwnerId", "Category", "ActualDate", "StartDate" }, "IX_OwnerBased");
+                    b.HasIndex(new[] { "OwnerId", "Category", "StartDate" }, "IX_OwnerBased");
 
                     b.ToTable("Events");
                 });
@@ -1699,36 +1697,24 @@ namespace Zidium.Storage.Ef.MsSql.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("DisplayName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("FirstName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<string>("EMail")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<bool>("InArchive")
                         .HasColumnType("bit");
-
-                    b.Property<string>("LastName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Login")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("MiddleName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Post")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("SecurityStamp")
                         .HasMaxLength(50)

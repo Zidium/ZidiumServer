@@ -47,15 +47,15 @@ namespace Zidium.DatabaseUpdater
                     componentService.CreateRoot(SystemComponentType.Root.Id);
 
                     // создаем админа
-                    string adminEMail;
+                    string adminLogin;
                     if (!isTestEnviroment)
                     {
-                        Console.Write("Укажите EMail администратора: ");
-                        adminEMail = Console.ReadLine();
+                        Console.Write("Укажите логин администратора: ");
+                        adminLogin = Console.ReadLine();
                     }
                     else
                     {
-                        adminEMail = "admin@none";
+                        adminLogin = "admin";
                     }
 
                     string adminPassword;
@@ -70,14 +70,15 @@ namespace Zidium.DatabaseUpdater
                     }
 
                     var adminUserId = userService.CreateAccountAdmin(
-                        adminEMail,
-                        null, null, null, null, null);
+                        adminLogin,
+                        null,
+                        null);
 
                     // Установим пароль админа
                     var passwordToken = userService.StartResetPassword(adminUserId, false);
                     userService.EndResetPassword(passwordToken, adminPassword);
 
-                    logger.LogInformation($"Создан пользователь {adminEMail} с паролем {adminPassword}");
+                    logger.LogInformation($"Создан пользователь {adminLogin} с паролем {adminPassword}");
                 }
 
                 logger.LogInformation("База успешно обновлена");

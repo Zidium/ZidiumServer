@@ -554,7 +554,7 @@ namespace Zidium.Storage.Ef
                     ResponsibleUserId = t.ResponsibleUserId,
                     ResponsibleUser = new GetGuiDefectsInfo.ResponsibleUserInfo()
                     {
-                        FioOrLogin = t.ResponsibleUser.DisplayName
+                        NameOrLogin = t.ResponsibleUser.DisplayName
                     },
                     Title = t.Title,
                     LastChange = new GetGuiDefectsInfo.LastChangeInfo()

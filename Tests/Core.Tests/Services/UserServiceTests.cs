@@ -135,18 +135,16 @@ namespace Zidium.Core.Tests.Services
         [Fact]
         public void AddSameUsersInOneAccountTest()
         {
-            // Проверим, что нельзя создать двух пользователей с одинаковым email в одном аккаунте             
+            // Проверим, что нельзя создать двух пользователей с одинаковым логином            
             var storage = TestHelper.GetStorage();
             var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
-            var email = Ulid.NewUlid() + "@test.com";
+            var login = "user_" + Ulid.NewUlid();
 
             var userForAdd = new UserForAdd()
             {
                 Id = Ulid.NewUlid(),
                 CreateDate = DateTime.Now,
-                Login = email,
-                FirstName = string.Empty,
-                LastName = string.Empty
+                Login = login
             };
 
             var service = new UserService(storage, timeService);
@@ -156,9 +154,7 @@ namespace Zidium.Core.Tests.Services
             {
                 Id = Ulid.NewUlid(),
                 CreateDate = DateTime.Now,
-                Login = email,
-                FirstName = string.Empty,
-                LastName = string.Empty
+                Login = login
             };
 
             Assert.ThrowsAny<LoginAlreadyExistsException>(() =>

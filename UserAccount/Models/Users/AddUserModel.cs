@@ -11,19 +11,18 @@ namespace Zidium.UserAccount.Models
     {
         [Required]
         [MaxLength(255)]
-        [Display(Name = "EMail", Description = "Будет использован как логин")]
-        [EmailAddress(ErrorMessage = "Это не похоже на Email")]
+        [Display(Name = "Логин")]
         [Remote("CheckNewLogin", "Users", AdditionalFields = "Id")]
         public string Login { get; set; }
 
-        [MaxLength(100)]
+        [MaxLength(255)]
         [Display(Name = "Отображаемое имя")]
-        [Required]
         public string DisplayName { get; set; }
 
-        [MaxLength(100)]
-        [Display(Name = "Должность")]
-        public string Post { get; set; }
+        [MaxLength(255)]
+        [Display(Name = "EMail")]
+        [EmailAddress(ErrorMessage = "Это не похоже на Email")]
+        public string EMail { get; set; }
 
         [Required]
         [Display(Name = "Роль")]

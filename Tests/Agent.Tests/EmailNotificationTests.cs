@@ -45,7 +45,7 @@ namespace Zidium.Agent.Tests
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = SubscriptionChannel.Email,
-                    Address = user.Login,
+                    Address = user.Email,
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now
                 };
@@ -65,7 +65,7 @@ namespace Zidium.Agent.Tests
                 var email = context.SendEmailCommands.FirstOrDefault(t => t.ReferenceId == notificationId);
 
                 Assert.NotNull(email);
-                Assert.Equal(user.Login, email.To);
+                Assert.Equal(user.Email, email.To);
 
                 // У уведомления должна появиться ссылка на письмо
                 var notification = context.Notifications.Find(notificationId);

@@ -66,7 +66,7 @@ namespace Zidium.UserAccount.Controllers
 
             if (filterContext.HttpContext.User?.Identity?.IsAuthenticated == true && !CurrentUser.IsSwitched)
             {
-                var control = filterContext.HttpContext.RequestServices.GetRequiredService<IComponentControl>();
+                var control = DependencyInjection.GetServicePersistent<IComponentControl>();
 
                 var message = string.Format(
                     "Пользователь {0} c IP {1}",

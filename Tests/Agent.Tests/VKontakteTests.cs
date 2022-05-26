@@ -84,7 +84,7 @@ namespace Zidium.Agent.Tests
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = SubscriptionChannel.VKontakte,
-                    Address = user.Login,
+                    Address = "address",
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now
                 };

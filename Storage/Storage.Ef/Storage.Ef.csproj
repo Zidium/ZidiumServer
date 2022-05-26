@@ -21,9 +21,4 @@
     <ProjectReference Include="..\Storage\Storage.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="MsSql\Migrations\" />
-    <Folder Include="Sqlite\Migrations\" />
-  </ItemGroup>
-
 </Project>

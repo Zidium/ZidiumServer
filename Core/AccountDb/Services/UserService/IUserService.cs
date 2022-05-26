@@ -12,11 +12,9 @@ namespace Zidium.Core.AccountsDb
         // TODO Move to auth service
         UserService.AuthInfo Auth(string login, string password);
 
-        Guid CreateAccountAdmin(string email,
-            string lastName,
-            string firstName,
-            string middleName,
-            string post,
+        Guid CreateAccountAdmin(
+            string login,
+            string email,
             string mobilePhone);
 
         Guid CreateUser(UserForAdd user, List<UserContactForAdd> contacts, List<UserRoleForAdd> roles, bool sendLetter = true);

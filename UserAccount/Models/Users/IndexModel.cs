@@ -12,9 +12,9 @@ namespace Zidium.UserAccount.Models.Users
 
             public string Login;
 
-            public string DisplayName;
+            public string Name;
 
-            public string Post;
+            public string EMail;
 
             public string Role;
 

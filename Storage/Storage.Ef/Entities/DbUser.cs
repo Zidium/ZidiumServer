@@ -27,24 +27,14 @@ namespace Zidium.Storage.Ef
         public string Login { get; set; }
 
         /// <summary>
+        /// EMail
+        /// </summary>
+        public string EMail { get; set; }
+
+        /// <summary>
         /// Хэш пароля
         /// </summary>
         public string PasswordHash { get; set; }
-
-        /// <summary>
-        /// Имя
-        /// </summary>
-        public string FirstName { get; set; }
-
-        /// <summary>
-        /// Фамилия
-        /// </summary>
-        public string LastName { get; set; }
-
-        /// <summary>
-        /// Отчество
-        /// </summary>
-        public string MiddleName { get; set; }
 
         /// <summary>
         /// Отображаемое имя пользователя в ЛК
@@ -55,11 +45,6 @@ namespace Zidium.Storage.Ef
         /// Дата создания
         /// </summary>
         public DateTime CreateDate { get; set; }
-
-        /// <summary>
-        /// Должность
-        /// </summary>
-        public string Post { get; set; }
 
         /// <summary>
         /// В архиве?
@@ -82,14 +67,14 @@ namespace Zidium.Storage.Ef
         public virtual HashSet<DbSubscription> Subscriptions { get; set; }
 
         /// <summary>
-        /// Роли пользователя
+        /// Роли
         /// </summary>
         public virtual HashSet<DbUserRole> Roles { get; set; }
 
         /// <summary>
-        /// Настройки пользователя
+        /// Настройки
         /// </summary>
         public virtual HashSet<DbUserSetting> Settings { get; set; }
-        
+
     }
 }

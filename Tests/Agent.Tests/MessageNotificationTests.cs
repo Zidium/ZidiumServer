@@ -47,7 +47,7 @@ namespace Zidium.Agent.Tests
                     UserId = user.Id,
                     EventId = eventResponse.Data.EventId,
                     Type = channel,
-                    Address = user.Login,
+                    Address = "address",
                     Status = NotificationStatus.InQueue,
                     CreationDate = DateTime.Now
                 };

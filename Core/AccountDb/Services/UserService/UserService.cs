@@ -25,7 +25,7 @@ namespace Zidium.Core.AccountsDb
             var user = _storage.Users.GetOneOrNullByLogin(login);
 
             if (user == null)
-                throw new WrongLoginException();
+                return null;
 
             return new AuthInfo()
             {
@@ -62,26 +62,34 @@ namespace Zidium.Core.AccountsDb
             throw new WrongLoginException();
         }
 
-        public Guid CreateAccountAdmin(string email,
-            string lastName,
-            string firstName,
-            string middleName,
-            string post,
+        public Guid CreateAccountAdmin(
+            string login,
+            string email,
             string mobilePhone)
         {
             var user = new UserForAdd()
             {
                 Id = Ulid.NewUlid(),
-                Login = email,
-                LastName = lastName,
-                FirstName = firstName,
-                MiddleName = middleName,
-                Post = post,
-                CreateDate = _timeService.Now(),
+                Login = login,
+                EMail = email,
+                CreateDate = _timeService.Now()
             };
-            user.DisplayName = user.FioOrLogin();
+            user.DisplayName = user.NameOrLogin();
 
             var contacts = new List<UserContactForAdd>();
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                contacts.Add(new UserContactForAdd()
+                {
+                    Id = Ulid.NewUlid(),
+                    UserId = user.Id,
+                    Type = UserContactType.Email,
+                    Value = email,
+                    CreateDate = _timeService.Now()
+                });
+            }
+
             if (!string.IsNullOrEmpty(mobilePhone))
             {
                 contacts.Add(new UserContactForAdd()
@@ -125,16 +133,6 @@ namespace Zidium.Core.AccountsDb
                 throw new LoginAlreadyExistsException(user.Login);
 
             user.SecurityStamp = Ulid.NewUlid().ToString();
-            user.DisplayName = user.DisplayName ?? user.Login;
-
-            contacts.Add(new UserContactForAdd()
-            {
-                Id = Ulid.NewUlid(),
-                UserId = user.Id,
-                Type = UserContactType.Email,
-                Value = user.Login,
-                CreateDate = _timeService.Now()
-            });
 
             using (var transaction = _storage.BeginTransaction())
             {
@@ -164,6 +162,9 @@ namespace Zidium.Core.AccountsDb
         public Guid StartResetPassword(Guid userId, bool sendLetter = true)
         {
             var user = _storage.Users.GetOneById(userId);
+
+            if (string.IsNullOrEmpty(user.Email))
+                throw new UserFriendlyException("У данного пользователя нет привязанного email. Попросите администратора системы поменять ваш пароль.");
 
             var tokenService = new TokenService(_storage, _timeService);
             var token = tokenService.GenerateToken(user.Id, TokenPurpose.ResetPassword, TimeSpan.FromDays(1));
@@ -200,7 +201,7 @@ namespace Zidium.Core.AccountsDb
             var user = _storage.Users.GetOneById(userId);
 
             var url = UrlHelper.GetPasswordSetUrl(token);
-            var emailCommand = EmailMessageHelper.NewUserLetter(user.Login, url);
+            var emailCommand = EmailMessageHelper.NewUserLetter(user.Email, url);
             emailCommand.ReferenceId = token;
 
             _storage.SendEmailCommands.Add(emailCommand);
@@ -211,7 +212,7 @@ namespace Zidium.Core.AccountsDb
             var user = _storage.Users.GetOneById(userId);
 
             var url = UrlHelper.GetPasswordSetUrl(token);
-            var emailCommand = EmailMessageHelper.ResetPasswordLetter(user.Login, url);
+            var emailCommand = EmailMessageHelper.ResetPasswordLetter(user.Email, url);
             emailCommand.ReferenceId = token;
 
             _storage.SendEmailCommands.Add(emailCommand);
