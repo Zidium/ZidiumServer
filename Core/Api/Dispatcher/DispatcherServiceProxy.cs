@@ -478,5 +478,30 @@ namespace Zidium.Core.Api
         {
             return ExecuteAction<GetLogicSettingsResponse>(request);
         }
+
+        public GetApiKeysResponse GetApiKeys(RequestDto request)
+        {
+            return ExecuteAction<GetApiKeysResponse>(request);
+        }
+
+        public ResponseDto AddApiKey(AddApiKeyRequest request)
+        {
+            return ExecuteAction<ResponseDto>(request);
+        }
+
+        public GetApiKeyByIdResponse GetApiKeyById(GetApiKeyByIdRequest request)
+        {
+            return ExecuteAction<GetApiKeyByIdResponse>(request);
+        }
+
+        public ResponseDto UpdateApiKey(UpdateApiKeyRequest request)
+        {
+            return ExecuteAction<ResponseDto>(request);
+        }
+
+        public ResponseDto DeleteApiKey(DeleteApiKeyRequest request)
+        {
+            return ExecuteAction<ResponseDto>(request);
+        }
     }
 }

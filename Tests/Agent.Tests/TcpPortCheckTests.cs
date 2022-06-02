@@ -12,7 +12,7 @@ namespace Zidium.Agent.Tests
             var inputData = new TcpPortCheckInputData()
             {
                 Port = 80,
-                Host = "recursion.ru"
+                Host = "google.com"
             };
             var outputData = processor.Process(inputData);
             Assert.Equal(TcpPortCheckCode.Opened, outputData.Code);

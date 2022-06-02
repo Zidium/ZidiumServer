@@ -483,5 +483,30 @@ namespace Zidium.Core.Api
         {
             AllCaches.Stop();
         }
+
+        public GetApiKeysResponse GetApiKeys(RequestDto request)
+        {
+            return Execute(() => InternalService.GetApiKeys(request));
+        }
+
+        public ResponseDto AddApiKey(AddApiKeyRequest request)
+        {
+            return Execute(() => InternalService.AddApiKey(request));
+        }
+
+        public GetApiKeyByIdResponse GetApiKeyById(GetApiKeyByIdRequest request)
+        {
+            return Execute(() => InternalService.GetApiKeyById(request));
+        }
+
+        public ResponseDto UpdateApiKey(UpdateApiKeyRequest request)
+        {
+            return Execute(() => InternalService.UpdateApiKey(request));
+        }
+
+        public ResponseDto DeleteApiKey(DeleteApiKeyRequest request)
+        {
+            return Execute(() => InternalService.DeleteApiKey(request));
+        }
     }
 }

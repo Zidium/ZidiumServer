@@ -129,5 +129,19 @@ namespace Zidium.Core.Api
 
         #endregion
 
+        #region Api keys
+
+        GetApiKeysResponse GetApiKeys(RequestDto request);
+
+        ResponseDto AddApiKey(AddApiKeyRequest request);
+
+        ResponseDto UpdateApiKey(UpdateApiKeyRequest request);
+
+        ResponseDto DeleteApiKey(DeleteApiKeyRequest request);
+
+        GetApiKeyByIdResponse GetApiKeyById(GetApiKeyByIdRequest request);
+
+        #endregion
+
     }
 }

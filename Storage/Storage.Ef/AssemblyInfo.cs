@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Zidium.UserAccount.Tests")]
 [assembly: InternalsVisibleTo("Zidium.TestTools")]
 [assembly: InternalsVisibleTo("Zidium.Core.Tests")]
 [assembly: InternalsVisibleTo("Zidium.Core.Single.Tests")]

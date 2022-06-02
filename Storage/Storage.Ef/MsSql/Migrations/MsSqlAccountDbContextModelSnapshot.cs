@@ -40,6 +40,36 @@ namespace Zidium.Storage.Ef.MsSql.Migrations
                     b.ToTable("AccountSettings");
                 });
 
+            modelBuilder.Entity("Zidium.Storage.Ef.DbApiKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id")
+                        .IsClustered(false);
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ApiKeys");
+                });
+
             modelBuilder.Entity("Zidium.Storage.Ef.DbArchivedStatus", b =>
                 {
                     b.Property<long>("Id")
@@ -1802,6 +1832,15 @@ namespace Zidium.Storage.Ef.MsSql.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserSettings");
+                });
+
+            modelBuilder.Entity("Zidium.Storage.Ef.DbApiKey", b =>
+                {
+                    b.HasOne("Zidium.Storage.Ef.DbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Zidium.Storage.Ef.DbArchivedStatus", b =>

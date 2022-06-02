@@ -8,8 +8,8 @@ namespace Zidium.Storage
     public class AccountSettingForRead
     {
         public AccountSettingForRead(
-            Guid id, 
-            string name, 
+            Guid id,
+            string name,
             string value)
         {
             Id = id;
@@ -17,16 +17,16 @@ namespace Zidium.Storage
             Value = value;
         }
 
-        public Guid Id { get;}
+        public Guid Id { get; }
 
-        public string Name { get;}
+        public string Name { get; }
 
-        public string Value { get;}
+        public string Value { get; }
 
         public AccountSettingForUpdate GetForUpdate()
         {
             return new AccountSettingForUpdate(Id);
         }
-        
+
     }
 }

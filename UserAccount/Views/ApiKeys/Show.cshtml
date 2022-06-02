@@ -1,0 +1,42 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.ApiKeys.ShowModel
+
+@if (Model.ModalMode)
+{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Просмотр ключа доступа к Api";
+    ViewBag.ActiveMenuItems = "Manage,ApiKeys";
+}
+
+@if (!Model.ModalMode)
+{
+    @Html.Partial("_PageTitle")
+}
+
+<div class="smart-container">
+    @{
+        var form = Html.GetFormBuilder(Model);
+    }
+
+    @form.GroupFor(m => m.Value).Paragraph(Model.Value).Partial()
+    @form.GroupFor(m => m.Name).Paragraph(Model.Name).Partial()
+
+    @if (!Model.ModalMode)
+    {
+        @form.Group("Submit").Control(@<text>
+            <a class="btn btn-default" href="@Model.ReturnUrl">Закрыть</a>
+        </text>).Partial()
+    }
+</div>
+
+@if (Model.ModalMode)
+{
+    <hr />
+    <div class="text-right top10px">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+    </div>
+}

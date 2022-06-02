@@ -2,6 +2,9 @@
 
 namespace Zidium.Storage.Ef
 {
+    /// <summary>
+    /// Токен на любые одноразовые действия
+    /// </summary>
     public class DbToken
     {
         public Guid Id { get; set; }

@@ -18,7 +18,7 @@ namespace Zidium.UserAccount.Models
         public UserContactType Type { get; set; }
 
         [Required]
-        [MaxLength(70)]
+        [MaxLength(255)]
         [Display(Name = "Контакт")]
         public string Value { get; set; }
 

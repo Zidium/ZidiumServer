@@ -200,7 +200,7 @@ namespace Zidium.Api.JsonClasses
             // datetime format standard : yyyy-MM-dd HH:mm:ss
             DateTime dt = dateTime;
             if (_params.UseUTCDateTime)
-                dt = dateTime.ToUniversalTime();
+                dt = dateTime.Kind != DateTimeKind.Unspecified ? dateTime.ToUniversalTime() : dateTime;
 
             _output.Append('\"');
             _output.Append(dt.Year.ToString("0000", NumberFormatInfo.InvariantInfo));

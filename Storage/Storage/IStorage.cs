@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace Zidium.Storage
+﻿namespace Zidium.Storage
 {
     public interface IStorage
     {
@@ -92,6 +90,8 @@ namespace Zidium.Storage
 
         IUserSettingRepository UserSettings { get; }
 
+        IApiKeyRepository ApiKeys { get; }
+
         IGuiRepository Gui { get; }
 
         void Check();
@@ -99,6 +99,5 @@ namespace Zidium.Storage
         ITransaction BeginTransaction();
 
         int Migrate();
-
     }
 }

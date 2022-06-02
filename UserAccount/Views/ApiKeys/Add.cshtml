@@ -1,0 +1,62 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.ApiKeys.AddModel
+
+@if (Model.ModalMode)
+{
+    Layout = "~/Views/Shared/_ModalDlgLayout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Добавление ключа доступа к Api";
+    ViewBag.ActiveMenuItems = "Manage,ApiKeys";
+}
+
+@if (!Model.ModalMode)
+{
+    @Html.Partial("_PageTitle")
+}
+
+@if (Model.ModalMode)
+{
+    Html.BeginForm(null, null, FormMethod.Post,
+        new { data_ajax = "true", data_ajax_method = "post", data_ajax_mode = "before", data_ajax_update = "#api-keys-table", data_ajax_success = "HideModal" });
+}
+else
+{
+    Html.BeginForm();
+}
+
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true)
+@Html.HiddenFor(model => model.ModalMode)
+@Html.HiddenFor(model => model.ReturnUrl)
+
+<div class="smart-container" id="form-add-api-key">
+    @{
+        var form = Html.GetFormBuilder(Model);
+    }
+
+    @form.GroupFor(m => m.Value).TextBox().Partial()
+    @form.GroupFor(m => m.Name).TextBox().Partial()
+    @form.GroupFor(m => m.UserId).DropDownList(GuiHelper.GetAccountUsers(Model.UserId, true)).Partial()
+
+    @if (!Model.ModalMode)
+    {
+        @form.Group("Submit").Control(@<text>
+            <button type="submit" class="btn btn-primary">Добавить</button>
+            <a class="btn btn-default" href="@Model.ReturnUrl">Отмена</a>
+        </text>).Partial()
+    }
+</div>
+
+@if (Model.ModalMode)
+{
+    <hr />
+    <div class="text-right top10px">
+        <button type="submit" class="btn btn-primary">Добавить</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+    </div>
+}
+
+@{Html.EndForm();}

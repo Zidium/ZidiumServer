@@ -71,13 +71,39 @@ namespace Zidium.Api.Tests.Others
         }
 
         [Fact]
-        public void ConvertUtcDate()
+        public void ParseUtcDate()
         {
             var serializer = new JsonSerializer();
             var body = @"{""StartDate"":""2020-12-31T10:00:00Z""}";
             var package = serializer.GetObject<SendEventRequestDataDto>(body);
             Assert.Equal(DateTimeKind.Utc, package.StartDate.Value.Kind);
             Assert.Equal(new DateTime(2020, 12, 31, 10, 00, 00, DateTimeKind.Utc), package.StartDate);
+        }
+
+        [Fact]
+        public void SerializeUtcDate()
+        {
+            var serializer = new JsonSerializer();
+            var package = new SendEventRequestDataDto()
+            {
+                StartDate = new DateTime(2020, 12, 31, 10, 00, 00, DateTimeKind.Utc)
+            };
+            var json = serializer.GetString(package);
+            Assert.Equal(@"{""StartDate"":""2020-12-31T10:00:00Z""}", json);
+        }
+
+        [Fact]
+        public void SerializeUnspecifiedDate()
+        {
+            // Даты в объектах EF имеют kind = Unspecified
+            // Они должны считаться за UTC
+            var serializer = new JsonSerializer();
+            var package = new SendEventRequestDataDto()
+            {
+                StartDate = new DateTime(2020, 12, 31, 10, 00, 00, DateTimeKind.Unspecified)
+            };
+            var json = serializer.GetString(package);
+            Assert.Equal(@"{""StartDate"":""2020-12-31T10:00:00Z""}", json);
         }
     }
 }

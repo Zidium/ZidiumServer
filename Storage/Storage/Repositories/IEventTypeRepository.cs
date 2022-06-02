@@ -22,8 +22,7 @@ namespace Zidium.Storage
         EventTypeForRead[] Filter(
             EventImportance? importance,
             EventCategory? category,
-            string search, 
+            string search,
             int maxCount);
-
     }
 }

@@ -20,7 +20,7 @@ namespace Zidium.Core.Api
             if (useLocalDispatcher)
             {
                 // это настоящий диспетчер (локальный)
-                return DispatcherService.Wrapper;
+                return DispatcherService.CreateWrapperInstance();
             }
 
             // это прокси веб-службы диспетчера

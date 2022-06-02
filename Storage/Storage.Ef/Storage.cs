@@ -276,6 +276,11 @@ namespace Zidium.Storage.Ef
             get { return new GuiRepository(this); }
         }
 
+        public IApiKeyRepository ApiKeys
+        {
+            get { return new ApiKeyRepository(this); }
+        }
+
         public void Check()
         {
             using (var context = CreateContext())

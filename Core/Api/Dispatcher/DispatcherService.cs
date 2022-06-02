@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Zidium.Api;
 using Zidium.Api.Dto;
 using Zidium.Common;
+using Zidium.Core.AccountDb;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
@@ -28,18 +29,29 @@ namespace Zidium.Core
 
         private static DispatcherWrapper _wrapper;
 
-        private DispatcherService(IComponentControl control, ILogger logger, ITimeService timeService)
+        private DispatcherService(
+            IComponentControl control,
+            ILogger logger,
+            ITimeService timeService)
         {
             _accountStorageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
             Control = control;
             StaticControl = control;
             _logger = logger;
             _timeService = timeService;
+
+            // TODO Refactor to normal DI
+            _apiKeyService = new ApiKeyService(_timeService);
+            _apiKeyService.Load(GetStorage());
+
+            var accessConfiguration = DependencyInjection.GetServicePersistent<IAccessConfiguration>();
+            _accessService = new AccessService(accessConfiguration, _apiKeyService);
         }
 
         private readonly ILogger _logger;
-
         private readonly IStorageFactory _accountStorageFactory;
+        private readonly IApiKeyService _apiKeyService;
+        private readonly IAccessService _accessService;
 
         public static IComponentControl StaticControl = new FakeComponentControl();
 
@@ -56,22 +68,29 @@ namespace Zidium.Core
                     {
                         if (_wrapper == null)
                         {
-                            var realControl = GetRealControl();
-
-                            var realLogger = DependencyInjection.GetLogger("Dispatcher");
-                            var mapping = DependencyInjection.GetServicePersistent<InternalLoggerComponentMapping>();
-                            mapping.MapLoggerToComponent("Dispatcher", realControl.Info.Id);
-
-                            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
-                            var realService = new DispatcherService(realControl, realLogger, timeService);
-                            var wrapper = new DispatcherWrapper(realService, realControl, realLogger);
-                            AllCaches.SetControl(realControl);
-                            _wrapper = wrapper;
+                            _wrapper = CreateWrapperInstance();
                         }
                     }
                 }
                 return _wrapper;
             }
+        }
+
+        // Refactor to normal DI
+        internal static DispatcherWrapper CreateWrapperInstance()
+        {
+            var realControl = GetRealControl();
+
+            var realLogger = DependencyInjection.GetLogger("Dispatcher");
+            var mapping = DependencyInjection.GetServicePersistent<InternalLoggerComponentMapping>();
+            mapping.MapLoggerToComponent("Dispatcher", realControl.Info.Id);
+
+            var timeService = DependencyInjection.GetServicePersistent<ITimeService>();
+            var realService = new DispatcherService(realControl, realLogger, timeService);
+            var wrapper = new DispatcherWrapper(realService, realControl, realLogger);
+            AllCaches.SetControl(realControl);
+
+            return wrapper;
         }
 
         public static string Version { get; set; }
@@ -94,8 +113,8 @@ namespace Zidium.Core
 
                 // Создадим компонент
                 var debugConfiguration = DependencyInjection.GetServicePersistent<IDebugConfiguration>();
-                var folder = !debugConfiguration.DebugMode ? 
-                    client.GetRootComponentControl().GetOrCreateChildFolderControl("Zidium") : 
+                var folder = !debugConfiguration.DebugMode ?
+                    client.GetRootComponentControl().GetOrCreateChildFolderControl("Zidium") :
                     client.GetRootComponentControl().GetOrCreateChildFolderControl("DEBUG");
                 var componentType = client.GetOrCreateComponentTypeControl(!debugConfiguration.DebugMode ? "Dispatcher" : DebugHelper.DebugComponentType);
                 var version = Version ?? typeof(DispatcherService).Assembly.GetName().Version.ToString();
@@ -135,35 +154,36 @@ namespace Zidium.Core
             }
         }
 
+        protected void CheckRequestData<T>(RequestDtoT<T> request)
+        {
+            if (request.Data == null)
+            {
+                throw new ParameterRequiredException("Request.Data");
+            }
+        }
+
         // TODO Remove trivial method
         protected IStorage GetStorage()
         {
             return _accountStorageFactory.GetStorage();
         }
 
-        protected void AuthRequest(RequestDto request)
+        protected void AuthApiRequest(RequestDto request)
         {
-            if (request.Token.SecretKey != SecretKey)
+            if (!_accessService.HasApiAccess(request.Token.SecretKey))
             {
                 throw new ResponseCodeException(ResponseCode.InvalidSecretKey, "Неверный SecretKey");
             }
         }
 
-        private static string SecretKey
+        protected void AuthSystemRequest(RequestDto request)
         {
-            get
+            if (!_accessService.HasSystemAccess(request.Token.SecretKey))
             {
-                if (_secretKey == null)
-                {
-                    var accessConfiguration = DependencyInjection.GetServicePersistent<IAccessConfiguration>();
-                    _secretKey = accessConfiguration.SecretKey;
-                }
-
-                return _secretKey;
+                throw new ResponseCodeException(ResponseCode.InvalidSecretKey, "Неверный SecretKey");
             }
         }
 
-        private static string _secretKey;
         private readonly ITimeService _timeService;
 
         #endregion
@@ -173,12 +193,9 @@ namespace Zidium.Core
         public GetEchoResponseDto GetEcho(GetEchoRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request); // чтобы убедиться, что AccountId и SecretKey верные
+            AuthApiRequest(request);
 
             return new GetEchoResponseDto()
             {
@@ -202,6 +219,7 @@ namespace Zidium.Core
         public SaveAllCachesResponse SaveAllCaches(SaveAllCachesRequest request)
         {
             CheckRequest(request);
+            AuthSystemRequest(request);
             AllCaches.SaveChanges();
             return new SaveAllCachesResponse()
             {
@@ -212,7 +230,7 @@ namespace Zidium.Core
         public GetLogicSettingsResponse GetLogicSettings(GetLogicSettingsRequest request)
         {
             CheckRequest(request);
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var logicSettingsService = new LogicSettingsService();
 
@@ -239,7 +257,7 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
 
@@ -264,12 +282,9 @@ namespace Zidium.Core
         public CreateComponentResponse CreateComponent(CreateComponentRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             // создаём компонент
             var storage = GetStorage();
@@ -299,12 +314,9 @@ namespace Zidium.Core
         public GetOrCreateComponentResponseDto GetOrCreateComponent(GetOrCreateComponentRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             // получаем или создаём компонент
             var storage = GetStorage();
@@ -333,16 +345,14 @@ namespace Zidium.Core
         public GetComponentControlByIdResponseDto GetComponentControlById(GetComponentControlByIdRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -379,12 +389,9 @@ namespace Zidium.Core
         public GetOrAddComponentResponseDto GetOrAddComponent(GetOrAddComponentRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             // получаем или создаём компонент
             var storage = GetStorage();
@@ -406,7 +413,7 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var root = storage.Components.GetRoot();
@@ -419,22 +426,18 @@ namespace Zidium.Core
                 Code = ResponseCode.Success,
                 Data = componentInfo
             };
-
         }
 
         public GetComponentByIdResponseDto GetComponentById(GetComponentByIdRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -456,10 +459,8 @@ namespace Zidium.Core
         public GetComponentBySystemNameResponseDto GetComponentBySystemName(GetComponentBySystemNameRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ParentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ParentId");
@@ -469,7 +470,7 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.SystemName");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var componentService = new ComponentService(storage, _timeService);
@@ -488,16 +489,14 @@ namespace Zidium.Core
         public UpdateComponentResponseDto UpdateComponent(UpdateComponentRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.Id == null)
             {
                 throw new ParameterRequiredException("Request.Data.Id");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var componentService = new ComponentService(storage, _timeService);
@@ -517,16 +516,14 @@ namespace Zidium.Core
         public GetChildComponentsResponseDto GetChildComponents(GetChildComponentsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -550,16 +547,14 @@ namespace Zidium.Core
         public SetComponentEnableResponseDto SetComponentEnable(SetComponentEnableRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var componentService = new ComponentService(storage, _timeService);
@@ -574,16 +569,14 @@ namespace Zidium.Core
         public SetComponentDisableResponseDto SetComponentDisable(SetComponentDisableRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var componentService = new ComponentService(storage, _timeService);
@@ -601,16 +594,14 @@ namespace Zidium.Core
         public DeleteComponentResponseDto DeleteComponent(DeleteComponentRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -627,17 +618,14 @@ namespace Zidium.Core
         public GetComponentAndChildIdsResponse GetComponentAndChildIds(GetComponentAndChildIdsRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -656,7 +644,7 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var componentService = new ComponentService(storage, _timeService);
@@ -679,12 +667,9 @@ namespace Zidium.Core
         public SendEventResponseDto SendEvent(SendEventRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             try
             {
@@ -720,12 +705,9 @@ namespace Zidium.Core
         public JoinEventsResponseDto JoinEvents(JoinEventsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             try
             {
@@ -750,12 +732,9 @@ namespace Zidium.Core
         public UpdateEventTypeResponse UpdateEventType(UpdateEventTypeRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new EventTypeService(storage, _timeService);
@@ -770,16 +749,14 @@ namespace Zidium.Core
         public GetEventByIdResponseDto GetEventById(GetEventByIdRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.EventId == null)
             {
                 throw new ParameterRequiredException("Request.Data.EventId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var eventData = storage.Events.GetOneById(request.Data.EventId.Value);
@@ -797,16 +774,14 @@ namespace Zidium.Core
         public GetEventsResponseDto GetEvents(GetEventsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.OwnerId == null)
             {
                 throw new ParameterRequiredException("Request.Data.OwnerId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new EventService(storage, _timeService);
@@ -834,12 +809,9 @@ namespace Zidium.Core
         public CreateMetricResponse CreateMetric(CreateMetricRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -860,16 +832,14 @@ namespace Zidium.Core
         public GetMetricsResponseDto GetMetrics(GetMetricsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -899,27 +869,24 @@ namespace Zidium.Core
                 metricInfos.Add(metricInfo);
             }
 
-            var response = new GetMetricsResponseDto
+            return new GetMetricsResponseDto
             {
                 Code = ResponseCode.Success,
                 Data = metricInfos
             };
-            return response;
         }
 
         public GetMetricsHistoryResponseDto GetMetricsHistory(GetMetricsHistoryRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -948,23 +915,21 @@ namespace Zidium.Core
             };
         }
 
-        public DeleteMetricTypeResponse DeleteMetricType(DeleteMetricTypeRequest typeRequest)
+        public DeleteMetricTypeResponse DeleteMetricType(DeleteMetricTypeRequest request)
         {
-            CheckRequest(typeRequest);
-            if (typeRequest.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
-            if (typeRequest.Data.MetricTypeId == null)
+            CheckRequest(request);
+            CheckRequestData(request);
+
+            if (request.Data.MetricTypeId == null)
             {
                 throw new ParameterRequiredException("Request.Data.MetricTypeId");
             }
 
-            AuthRequest(typeRequest);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
-            service.DeleteMetricType(typeRequest.Data.MetricTypeId);
+            service.DeleteMetricType(request.Data.MetricTypeId);
 
             return new DeleteMetricTypeResponse()
             {
@@ -975,12 +940,9 @@ namespace Zidium.Core
         public SendMetricsResponseDto SendMetrics(SendMetricsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -995,7 +957,7 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1014,12 +976,9 @@ namespace Zidium.Core
         public SetMetricEnableResponse SetMetricEnable(SetMetricEnableRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1034,12 +993,9 @@ namespace Zidium.Core
         public SetMetricDisableResponse SetMetricDisable(SetMetricDisableRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1054,12 +1010,9 @@ namespace Zidium.Core
         public UpdateMetricResponse UpdateMetric(UpdateMetricRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1074,12 +1027,9 @@ namespace Zidium.Core
         public UpdateMetricTypeResponse UpdateMetricType(UpdateMetricTypeRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1094,12 +1044,9 @@ namespace Zidium.Core
         public CreateMetricTypeResponse CreateMetricType(CreateMetricTypeRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1119,16 +1066,14 @@ namespace Zidium.Core
         public SendMetricResponseDto SendMetric(SendMetricRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1156,10 +1101,8 @@ namespace Zidium.Core
         public GetMetricResponseDto GetMetric(GetMetricRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
@@ -1169,7 +1112,7 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.Name");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1194,7 +1137,7 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new MetricService(storage, _timeService);
@@ -1219,16 +1162,14 @@ namespace Zidium.Core
         public SendLogResponseDto SendLog(SendLogRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -1245,16 +1186,14 @@ namespace Zidium.Core
         public GetLogsResponseDto GetLogs(GetLogsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -1277,16 +1216,14 @@ namespace Zidium.Core
         public GetLogConfigResponseDto GetLogConfig(GetLogConfigRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -1305,12 +1242,9 @@ namespace Zidium.Core
         public SendLogsResponseDto SendLogs(SendLogsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new LogService(storage, _timeService);
@@ -1326,16 +1260,14 @@ namespace Zidium.Core
         public GetChangedWebLogConfigsResponseDto GetChangedWebLogConfigs(GetChangedWebLogConfigsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.LastUpdateDate == null)
             {
                 throw new ParameterRequiredException("Request.Data.LastUpdateDate");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new LogService(storage, _timeService);
@@ -1360,16 +1292,14 @@ namespace Zidium.Core
         public GetComponentTypeResponseDto GetComponentType(GetComponentTypeRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.SystemName == null && request.Data.Id == null)
             {
                 throw new ParameterRequiredException("Request.Data.SystemName or Request.Data.Id");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
 
@@ -1394,12 +1324,9 @@ namespace Zidium.Core
         public GetOrCreateComponentTypeResponseDto GetOrCreateComponentType(GetOrCreateComponentTypeRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new ComponentTypeService(storage, _timeService);
@@ -1417,16 +1344,14 @@ namespace Zidium.Core
         public UpdateComponentTypeResponseDto UpdateComponentType(UpdateComponentTypeRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.Id == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentTypeId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new ComponentTypeService(storage, _timeService);
@@ -1445,16 +1370,14 @@ namespace Zidium.Core
         public DeleteComponentTypeResponse DeleteComponentType(DeleteComponentTypeRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentTypeId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentTypeId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new ComponentTypeService(storage, _timeService);
@@ -1473,17 +1396,14 @@ namespace Zidium.Core
         public SetUnitTestNextTimeResponse SetUnitTestNextTime(SetUnitTestNextTimeRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1498,11 +1418,8 @@ namespace Zidium.Core
         public SetUnitTestNextStepProcessTimeResponse SetUnitTestNextStepProcessTime(SetUnitTestNextStepProcessTimeRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
@@ -1512,7 +1429,7 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.NextStepProcessTime");
             }
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1527,16 +1444,14 @@ namespace Zidium.Core
         public GetOrCreateUnitTestTypeResponseDto GetOrCreateUnitTestType(GetOrCreateUnitTestTypeRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (string.IsNullOrEmpty(request.Data.SystemName))
             {
                 throw new ParameterRequiredException("Request.Data.SystemName");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestTypeService(storage, _timeService);
@@ -1554,16 +1469,14 @@ namespace Zidium.Core
         public GetUnitTestTypeByIdResponse GetUnitTestTypeById(GetUnitTestTypeByIdRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.Id == null)
             {
                 throw new ParameterRequiredException("Request.Data.Id");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestTypeService(storage, _timeService);
@@ -1580,16 +1493,14 @@ namespace Zidium.Core
         public UpdateUnitTestTypeResponse UpdateUnitTestType(UpdateUnitTestTypeRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.UnitTestTypeId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestTypeId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestTypeService(storage, _timeService);
@@ -1607,16 +1518,14 @@ namespace Zidium.Core
         public DeleteUnitTestTypeResponse DeleteUnitTestType(DeleteUnitTestTypeRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.UnitTestTypeId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestTypeId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestTypeService(storage, _timeService);
@@ -1631,16 +1540,14 @@ namespace Zidium.Core
         public GetOrCreateUnitTestResponseDto GetOrCreateUnitTest(GetOrCreateUnitTestRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1656,16 +1563,14 @@ namespace Zidium.Core
         public UpdateUnitTestResponse UpdateUnitTest(UpdateUnitTestRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1680,16 +1585,14 @@ namespace Zidium.Core
         public DeleteUnitTestResponse DeleteUnitTest(DeleteUnitTestRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var unitTestId = request.Data.UnitTestId.Value;
 
@@ -1706,16 +1609,14 @@ namespace Zidium.Core
         public SendUnitTestResultResponseDto SendUnitTestResult(SendUnitTestResultRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1730,12 +1631,9 @@ namespace Zidium.Core
         public SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultsRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1750,16 +1648,14 @@ namespace Zidium.Core
         public GetUnitTestStateResponseDto GetUnitTestState(GetUnitTestStateRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1776,10 +1672,8 @@ namespace Zidium.Core
         public AddPingUnitTestResponse AddPingUnitTest(AddPingUnitTestRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (string.IsNullOrEmpty(request.Data.SystemName))
             {
                 throw new ParameterRequiredException("Request.Data.SystemName");
@@ -1789,7 +1683,7 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1807,10 +1701,8 @@ namespace Zidium.Core
         public AddHttpUnitTestResponse AddHttpUnitTest(AddHttpUnitTestRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (string.IsNullOrEmpty(request.Data.SystemName))
             {
                 throw new ParameterRequiredException("Request.Data.SystemName");
@@ -1820,7 +1712,7 @@ namespace Zidium.Core
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1839,7 +1731,7 @@ namespace Zidium.Core
         {
             CheckRequest(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1858,12 +1750,14 @@ namespace Zidium.Core
         public SetUnitTestEnableResponseDto SetUnitTestEnable(SetUnitTestEnableRequestDto request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
+
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var unitTestId = request.Data.UnitTestId;
 
@@ -1880,12 +1774,14 @@ namespace Zidium.Core
         public SetUnitTestDisableResponseDto SetUnitTestDisable(SetUnitTestDisableRequestDto request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
+
             if (request.Data.UnitTestId == null)
             {
                 throw new ParameterRequiredException("Request.Data.UnitTestId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var storage = GetStorage();
             var service = new UnitTestService(storage, _timeService);
@@ -1904,8 +1800,9 @@ namespace Zidium.Core
         public CreateSubscriptionResponse CreateSubscription(CreateSubscriptionRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new SubscriptionService(storage, _timeService);
@@ -1922,8 +1819,9 @@ namespace Zidium.Core
         public CreateUserDefaultSubscriptionResponse CreateUserDefaultSubscription(CreateUserDefaultSubscriptionRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new SubscriptionService(storage, _timeService);
@@ -1940,8 +1838,9 @@ namespace Zidium.Core
         public UpdateSubscriptionResponse UpdateSubscription(UpdateSubscriptionRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new SubscriptionService(storage, _timeService);
@@ -1959,8 +1858,9 @@ namespace Zidium.Core
         public SetSubscriptionDisableResponse SetSubscriptionDisable(SetSubscriptionDisableRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new SubscriptionService(storage, _timeService);
@@ -1975,8 +1875,9 @@ namespace Zidium.Core
         public SetSubscriptionEnableResponse SetSubscriptionEnable(SetSubscriptionEnableRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new SubscriptionService(storage, _timeService);
@@ -1991,8 +1892,9 @@ namespace Zidium.Core
         public DeleteSubscriptionResponse DeleteSubscription(DeleteSubscriptionRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var service = new SubscriptionService(storage, _timeService);
@@ -2007,7 +1909,9 @@ namespace Zidium.Core
         public SendSmsResponse SendSms(SendSmsRequest request)
         {
             CheckRequest(request);
-            AuthRequest(request);
+            CheckRequestData(request);
+
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
 
@@ -2038,16 +1942,14 @@ namespace Zidium.Core
         public GetComponentTotalStateResponseDto GetComponentTotalState(GetComponentTotalStateRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -2071,16 +1973,14 @@ namespace Zidium.Core
         public GetComponentInternalStateResponseDto GetComponentInternalState(GetComponentInternalStateRequestDto request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthApiRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -2100,16 +2000,14 @@ namespace Zidium.Core
         public UpdateComponentStateResponse UpdateComponentState(UpdateComponentStateRequest request)
         {
             CheckRequest(request);
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
+            CheckRequestData(request);
+
             if (request.Data.ComponentId == null)
             {
                 throw new ParameterRequiredException("Request.Data.ComponentId");
             }
 
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var componentId = request.Data.ComponentId.Value;
 
@@ -2130,13 +2028,9 @@ namespace Zidium.Core
         public GetAccountLimitsResponse GetAccountLimits(GetAccountLimitsRequest request)
         {
             CheckRequest(request);
+            CheckRequestData(request);
 
-            if (request.Data == null)
-            {
-                throw new ParameterRequiredException("Request.Data");
-            }
-
-            AuthRequest(request);
+            AuthSystemRequest(request);
 
             var storage = GetStorage();
             var limits = GetAccountLimitsResponseData(storage, request.Data.ArchiveDays);
@@ -2163,6 +2057,106 @@ namespace Zidium.Core
             {
                 UsedToday = usedToday,
                 UsedOverall = usedOverall
+            };
+        }
+
+        #endregion
+
+        #region Api Keys
+
+        public GetApiKeysResponse GetApiKeys(RequestDto request)
+        {
+            CheckRequest(request);
+
+            AuthSystemRequest(request);
+
+            var apiKeys = _apiKeyService.GetAll();
+            var userIds = apiKeys.Where(t => t.UserId != null).Select(t => t.UserId.Value).ToArray();
+            var users = GetStorage().Users.GetMany(userIds).ToDictionary(t => t.Id);
+
+            var data = apiKeys.Select(t => new GetApiKeysResponseData()
+            {
+                Id = t.Id,
+                Name = t.Name,
+                UpdatedAt = t.UpdatedAt,
+                UserId = t.UserId,
+                User = t.UserId.HasValue ? users[t.UserId.Value].NameOrLogin() : null
+            }).ToList();
+
+            return new GetApiKeysResponse()
+            {
+                Code = ResponseCode.Success,
+                Data = data
+            };
+        }
+
+        public ResponseDto AddApiKey(AddApiKeyRequest request)
+        {
+            CheckRequest(request);
+            CheckRequestData(request);
+
+            AuthSystemRequest(request);
+
+            _apiKeyService.Add(GetStorage(), request.Data);
+
+            return new ResponseDto()
+            {
+                Code = ResponseCode.Success
+            };
+        }
+
+        public GetApiKeyByIdResponse GetApiKeyById(GetApiKeyByIdRequest request)
+        {
+            CheckRequest(request);
+            CheckRequestData(request);
+
+            var apikey = _apiKeyService.GetById(request.Data);
+            var user = apikey.UserId.HasValue ? GetStorage().Users.GetOneById(apikey.UserId.Value) : null;
+
+            var data = new GetApiKeyByIdResponseData()
+            {
+                Id = apikey.Id,
+                Name = apikey.Name,
+                Value = apikey.Value,
+                UpdatedAt = apikey.UpdatedAt,
+                UserId = apikey.UserId,
+                User = user?.NameOrLogin()
+            };
+
+            return new GetApiKeyByIdResponse()
+            {
+                Code = ResponseCode.Success,
+                Data = data
+            };
+        }
+
+        public ResponseDto UpdateApiKey(UpdateApiKeyRequest request)
+        {
+            CheckRequest(request);
+            CheckRequestData(request);
+
+            AuthSystemRequest(request);
+
+            _apiKeyService.Update(GetStorage(), request.Data);
+
+            return new ResponseDto()
+            {
+                Code = ResponseCode.Success
+            };
+        }
+
+        public ResponseDto DeleteApiKey(DeleteApiKeyRequest request)
+        {
+            CheckRequest(request);
+            CheckRequestData(request);
+
+            AuthSystemRequest(request);
+
+            _apiKeyService.Delete(GetStorage(), request.Data);
+
+            return new ResponseDto()
+            {
+                Code = ResponseCode.Success
             };
         }
 

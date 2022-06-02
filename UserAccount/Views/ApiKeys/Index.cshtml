@@ -1,0 +1,39 @@
+﻿@using Zidium.UserAccount.Helpers
+
+@model Zidium.UserAccount.Models.ApiKeys.IndexModel
+
+@{
+    ViewBag.Title = "Ключи доступа к Api";
+    ViewBag.ActiveMenuItems = "Manage,ApiKeys";
+    var currentUser = UserHelper.CurrentUser(Context);
+}
+
+@Html.Partial("_PageTitle")
+
+@if (currentUser.CanManageAccount())
+{
+    <div class="form-horizontal">
+        <div class="form-group">
+            <div class="col-sm-12">
+                @Html.ActionLink("Добавить", "Add", "ApiKeys", null, new { @class = "btn btn-primary", onclick = "ModalBtnClick(this, event);" })
+            </div>
+        </div>
+    </div>
+}
+
+<table class="table simpleTableClear table-condensed">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Обновлён</th>
+            <th>Для пользователя</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="api-keys-table">
+        @foreach (var apiKey in Model.ApiKeys)
+        {
+            @Html.Partial("IndexRow", apiKey)
+        }
+    </tbody>
+</table>

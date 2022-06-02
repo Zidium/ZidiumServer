@@ -4,6 +4,7 @@ using Zidium.Core.InternalLogger;
 
 namespace Zidium.Core.Caching
 {
+    // Refactor to non-static service
     public static class AllCaches
     {
         public static EventCacheStorage Events { get; private set; }

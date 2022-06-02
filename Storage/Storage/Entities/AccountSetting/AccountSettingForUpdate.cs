@@ -13,9 +13,8 @@ namespace Zidium.Storage
             Value = new ChangeTracker<string>();
         }
 
-        public Guid Id { get;}
+        public Guid Id { get; }
 
-        public ChangeTracker<string> Value { get;}
-
+        public ChangeTracker<string> Value { get; }
     }
 }

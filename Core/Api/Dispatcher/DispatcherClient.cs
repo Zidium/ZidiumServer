@@ -631,5 +631,48 @@ namespace Zidium.Core.Api.Dispatcher
 
         #endregion
 
+        #region Api keys
+
+        public GetApiKeysResponse GetApiKeys()
+        {
+            var request = GetRequest<RequestDto>();
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.GetApiKeys(request);
+        }
+
+        public void AddApiKey(AddApiKeyRequestData data)
+        {
+            var request = GetRequest<AddApiKeyRequest>();
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            dispatcher.AddApiKey(request).Check();
+        }
+
+        public void UpdateApiKey(UpdateApiKeyRequestData data)
+        {
+            var request = GetRequest<UpdateApiKeyRequest>();
+            request.Data = data;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            dispatcher.UpdateApiKey(request).Check();
+        }
+
+        public void DeleteApiKey(Guid id)
+        {
+            var request = GetRequest<DeleteApiKeyRequest>();
+            request.Data = id;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            dispatcher.DeleteApiKey(request).Check();
+        }
+
+        public GetApiKeyByIdResponse GetApiKeyById(Guid id)
+        {
+            var request = GetRequest<GetApiKeyByIdRequest>();
+            request.Data = id;
+            var dispatcher = DispatcherHelper.GetDispatcherService();
+            return dispatcher.GetApiKeyById(request);
+        }
+
+        #endregion
+
     }
 }

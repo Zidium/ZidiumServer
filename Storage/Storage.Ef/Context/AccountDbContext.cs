@@ -7,6 +7,7 @@ namespace Zidium.Storage.Ef
 {
     internal abstract class AccountDbContext : DataContextBase
     {
+        // TODO Check if this called on migrations only - not needed for context usage
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AccountDbContext).Assembly);
@@ -187,6 +188,11 @@ namespace Zidium.Storage.Ef
         /// Часовые пояса
         /// </summary>
         public DbSet<DbTimeZone> TimeZones { get; set; }
+
+        /// <summary>
+        /// Ключи доступа к Api
+        /// </summary>
+        public DbSet<DbApiKey> ApiKeys { get; set; }
 
         protected AccountDbContext(
             DbConnection connection,
