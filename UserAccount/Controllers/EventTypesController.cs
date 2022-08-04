@@ -23,10 +23,6 @@ namespace Zidium.UserAccount.Controllers
         {
             var eventImportance = EnumHelper.StringToEnum<EventImportance>(importance);
             var eventCategory = EnumHelper.StringToEnum<EventCategory>(category);
-            if (eventCategory == null)
-            {
-                eventCategory = EventCategory.ComponentEvent;
-            }
 
             var eventTypes = GetStorage().EventTypes.Filter(
                 eventImportance,
@@ -208,7 +204,8 @@ namespace Zidium.UserAccount.Controllers
             var eventTypes = query.Select(t => new EventTypesMiniListItemModel()
                 {
                     Id = t.Id,
-                    DisplayName = t.DisplayName
+                    DisplayName = t.DisplayName,
+                    Code = t.Code
                 }).ToArray();
 
             var model = new EventTypesMiniListModel()

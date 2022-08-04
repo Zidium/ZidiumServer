@@ -9,6 +9,8 @@ namespace Zidium.UserAccount.Models.Defects
 
         public Guid? EventTypeId { get; set; }
 
+        public string EventTypeCode { get; set; }
+
         public DateTime LastChangeDate { get; set; }
 
         public DefectStatus Status { get; set; }

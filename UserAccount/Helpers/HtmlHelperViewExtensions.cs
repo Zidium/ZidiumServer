@@ -99,9 +99,9 @@ namespace Zidium.UserAccount.Helpers
             using (var writer = new StringWriter())
             {
                 IViewEngine viewEngine = controller.HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
-                ViewEngineResult viewResult = viewEngine.FindView(controller.ControllerContext, viewName, !partial);
+                ViewEngineResult viewResult = viewEngine.GetView(viewName, viewName, !partial);
 
-                if (viewResult.Success == false)
+                if (!viewResult.Success)
                 {
                     return $"A view with the name {viewName} could not be found";
                 }

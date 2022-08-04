@@ -38,6 +38,8 @@ namespace Zidium.UserAccount.Models.Events
 
         public ComponentForRead Component { get; set; }
 
+        public string Code { get; set; }
+
         public List<EventTypeData> EventTypeDatas { get; set; }
 
         public ShowMode Mode { get; set; }
@@ -77,7 +79,7 @@ namespace Zidium.UserAccount.Models.Events
             }
 
             // загружаем события
-            var events = storage.Events.GetErrorsByPeriod(ComponentId, FromTime, ToTime);
+            var events = storage.Events.GetErrorsByPeriod(ComponentId, FromTime, ToTime, Mode == ShowMode.NotProcessed, Code);
             var eventTypes = storage.EventTypes.GetMany(events.Select(t => t.EventTypeId).Distinct().ToArray()).ToDictionary(a => a.Id, b => b);
 
             var data = events.Select(t => new
@@ -85,11 +87,6 @@ namespace Zidium.UserAccount.Models.Events
                 Event = t,
                 EventType = eventTypes[t.EventTypeId]
             });
-
-            if (Mode == ShowMode.NotProcessed)
-            {
-                data = data.Where(t => t.EventType.DefectId == null);
-            }
 
             var eventsArray = data.OrderBy(x => x.Event.StartDate).ToArray();
 
@@ -105,13 +102,12 @@ namespace Zidium.UserAccount.Models.Events
                     Message = eventTypeGroup.First().Event.Message
                 };
 
-                var eventType = storage.EventTypes.GetOneById(eventTypeData.EventType.Id);
-                var defect = eventType.DefectId != null ? storage.Defects.GetOneById(eventType.DefectId.Value) : null;
+                var defect = eventTypeData.EventType.DefectId != null ? storage.Defects.GetOneById(eventTypeData.EventType.DefectId.Value) : null;
                 var lastChange = defect != null ? storage.DefectChanges.GetLastByDefectId(defect.Id) : null;
 
                 eventTypeData.DefectControl = new Defects.DefectControlModel()
                 {
-                    EventType = eventType,
+                    EventType = eventTypeData.EventType,
                     Defect = defect,
                     LastChange = lastChange
                 };
@@ -121,7 +117,6 @@ namespace Zidium.UserAccount.Models.Events
 
             // сортируем типы
             EventTypeDatas = EventTypeDatas.OrderByDescending(x => x.Count).ToList();
-
         }
     }
 }

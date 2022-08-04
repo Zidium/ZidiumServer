@@ -2,6 +2,7 @@
 @using Zidium.UserAccount.Models
 @using Zidium.UserAccount.Models.Controls
 @using Zidium.UserAccount.Models.Events
+@using Zidium.UserAccount.Helpers
 
 @model ErrorStatisticsModel
 
@@ -93,6 +94,11 @@
     </div>
 
     <div class="col-sm-1 col-auto-width bottom10px">
+        <label>Номер</label>
+        @Html.TextFilter("Code", "Номер", Model.Code, true)
+    </div>
+
+    <div class="col-sm-1 col-auto-width bottom10px">
         <label>Компонент</label>
         <div style="width: 500px;">
             @Html.ComponentSelectorNew(m => m.ComponentId, new ComponentSelectorOptions()
@@ -116,64 +122,64 @@
     </div>
 </div>
 
-@if (Model.EventTypeDatas.Count == 0)
-{
-    <p class="no-errors">Нет ошибок</p>
-}
-@foreach (var eventTypeData in Model.EventTypeDatas)
-{
-    var message = eventTypeData.Message;
-    var period = TimelineInterval.Day;
-    if (Model.Period == ReportPeriod.Hour)
+    @if (Model.EventTypeDatas.Count == 0)
     {
-        period = TimelineInterval.Hour;
+        <p class="no-errors">Нет ошибок</p>
     }
-    else if (Model.Period == ReportPeriod.Day)
+    @foreach (var eventTypeData in Model.EventTypeDatas)
     {
-        period = TimelineInterval.Day;
-    }
-    else if (Model.Period == ReportPeriod.Week)
-    {
-        period = TimelineInterval.Week;
-    }
-    else if (Model.Period == ReportPeriod.Month)
-    {
-        period = TimelineInterval.Month;
-    }
-    <div class="event-type-block">
-        <table class="event-type-table">
-            <tr id="defect-row-@eventTypeData.EventType.Id">
-                <td class="event-type-table-count-column">
-                    <span class="badge alert-danger event-type-table-count" title="Ошибка случилась @eventTypeData.Count раз">@eventTypeData.Count</span>
-                </td>
-                <td class="event-type-table-main-column">
-                    <div class="event-type-name" title="eventTypeData.EventType.DisplayName">
-                        <a href="@Url.Action("Show", "EventTypes", new {id = eventTypeData.EventType.Id, period})">
-                            @eventTypeData.EventType.DisplayName
-                        </a>
-                    </div>
-                    @if (string.IsNullOrEmpty(message) == false)
-                    {
-                        <div class="event-message" title="@message">@message</div>
-                    }
-                    else
-                    {
-                        <div class="event-message">Нет сообщения</div>
-                    }
-                </td>
-                <td class="event-type-table-defect-column">
-                    @Html.Partial("~/Views/Defects/DefectControl.cshtml", eventTypeData.DefectControl)
-                </td>
-            </tr>
-        </table>
-        <div class="event-type-timeline"
-             data-url='@Url.Action("ForEventTypeAnyComponentsByInterval", "Timeline", new { eventTypeId = eventTypeData.EventType.Id, interval = period, hideUptime = true })'>
-            <img src="~/Content/Icons/ajax-loader.gif" class="event-type-timeline-loader" />
+        var message = eventTypeData.Message;
+        var period = TimelineInterval.Day;
+        if (Model.Period == ReportPeriod.Hour)
+        {
+            period = TimelineInterval.Hour;
+        }
+        else if (Model.Period == ReportPeriod.Day)
+        {
+            period = TimelineInterval.Day;
+        }
+        else if (Model.Period == ReportPeriod.Week)
+        {
+            period = TimelineInterval.Week;
+        }
+        else if (Model.Period == ReportPeriod.Month)
+        {
+            period = TimelineInterval.Month;
+        }
+        <div class="event-type-block">
+            <table class="event-type-table">
+                <tr id="defect-row-@eventTypeData.EventType.Id">
+                    <td class="event-type-table-count-column">
+                        <span class="badge alert-danger event-type-table-count" title="Ошибка случилась @eventTypeData.Count раз">@eventTypeData.Count</span>
+                    </td>
+                    <td class="event-type-table-main-column">
+                        <div class="event-type-name" title="@eventTypeData.EventType.SystemName">
+                            <a href="@Url.Action("Show", "EventTypes", new {id = eventTypeData.EventType.Id, period})">
+                                @GuiHelper.GetEventTypeDisplayNameWithCode(eventTypeData.EventType)
+                            </a>
+                        </div>
+                        @if (string.IsNullOrEmpty(message) == false)
+                        {
+                            <div class="event-message" title="@message">@message</div>
+                        }
+                        else
+                        {
+                            <div class="event-message">Нет сообщения</div>
+                        }
+                    </td>
+                    <td class="event-type-table-defect-column">
+                        @Html.Partial("~/Views/Defects/DefectControl.cshtml", eventTypeData.DefectControl)
+                    </td>
+                </tr>
+            </table>
+            <div class="event-type-timeline"
+                 data-url='@Url.Action("ForEventTypeAnyComponentsByInterval", "Timeline", new { eventTypeId = eventTypeData.EventType.Id, interval = period, hideUptime = true })'>
+                <img src="~/Content/Icons/ajax-loader.gif" class="event-type-timeline-loader" />
+            </div>
         </div>
-    </div>
-}
+    }
 
-<script>
+    <script>
     $(function () {
         @if (Model.Period == ReportPeriod.Hour)
         {
@@ -197,4 +203,4 @@
             $(element).load(url);
         });
     });
-</script>
+    </script>

@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Zidium.Storage;
+using Zidium.UserAccount.Helpers;
 
 namespace Zidium.UserAccount.Models
 {
@@ -36,7 +37,7 @@ namespace Zidium.UserAccount.Models
                     var eventType = storage.EventTypes.GetOneById(EventTypeId.Value);
                     if (eventType != null)
                     {
-                        result = eventType.DisplayName;
+                        result = GuiHelper.GetEventTypeDisplayNameWithCode(eventType);
                     }
                 }
                 return result;

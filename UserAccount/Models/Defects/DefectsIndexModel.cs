@@ -24,7 +24,7 @@ namespace Zidium.UserAccount.Models.Defects
         [Display(Name = "Компонент")]
         public Guid? ComponentId { get; set; }
 
-        [Display(Name = "Текст")]
+        [Display(Name = "Поиск")]
         public string Title { get; set; }
 
         public DefectsIndexItemModel[] Items { get; set; }

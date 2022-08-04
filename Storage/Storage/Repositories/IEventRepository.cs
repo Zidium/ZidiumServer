@@ -79,7 +79,7 @@ namespace Zidium.Storage
 
         int GetErrorsCountByPeriod(Guid componentId, DateTime from, DateTime to);
 
-        EventForRead[] GetErrorsByPeriod(Guid? componentId, DateTime from, DateTime to);
+        EventForRead[] GetErrorsByPeriod(Guid? componentId, DateTime from, DateTime to, bool onlyNotProcessed, string code);
 
         EventForRead[] GetErrorsByPeriod(Guid[] componentIds, DateTime from, DateTime to);
 

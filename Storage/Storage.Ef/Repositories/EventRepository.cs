@@ -1022,7 +1022,7 @@ namespace Zidium.Storage.Ef
             }
         }
 
-        public EventForRead[] GetErrorsByPeriod(Guid? componentId, DateTime from, DateTime to)
+        public EventForRead[] GetErrorsByPeriod(Guid? componentId, DateTime from, DateTime to, bool onlyNotProcessed, string code)
         {
             using (var contextWrapper = _storage.GetContextWrapper())
             {
@@ -1036,6 +1036,14 @@ namespace Zidium.Storage.Ef
                     x.StartDate < to &&
                     x.ActualDate >= from
                     );
+
+                if (onlyNotProcessed)
+                    query = query.Where(t => t.EventType.DefectId == null);
+
+                if (!string.IsNullOrEmpty(code))
+                {
+                    query = query.Where(t => t.EventType.Code != null && t.EventType.Code.Contains(code.ToLower().Trim()));
+                }
 
                 return query
                     .AsEnumerable()

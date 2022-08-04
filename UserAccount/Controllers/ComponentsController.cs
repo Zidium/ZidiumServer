@@ -866,6 +866,7 @@ namespace Zidium.UserAccount.Controllers
                         OwnerId = id,
                         EventTypeId = t.EventTypeId,
                         Name = t.DisplayName,
+                        Code = t.Code,
                         Comment = t.LastMessage,
                         Url = Url.Action("Show", "EventTypes", new { Id = t.EventTypeId })
                     })

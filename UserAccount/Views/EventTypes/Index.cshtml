@@ -11,6 +11,12 @@
     ViewBag.ActiveMenuItems = "Events,EventTypes";
 }
 
+<style>
+    .column-code {
+        width: 100px;
+    }
+</style>
+
 @Html.Partial("_PageTitle")
      
 @if (UserHelper.CurrentUser(Context).CanEditCommonData())
@@ -25,8 +31,8 @@
 
 <div class="row">
     <div class="col-md-6 bottom10px">
-        @Html.Label("Название или Id")
-        @Html.TextFilter("search", "Введите часть названия или Id", Model.Search, true)
+        @Html.Label("Поиск")
+        @Html.TextFilter("search", "Id, название или номер", Model.Search, true)
     </div>    
     <div class="col-md-3 bottom10px">
         @Html.Label("Категория")
@@ -40,7 +46,9 @@
 
 @Html.Grid(Model.EventTypes).Columns(columns =>
 {
-    columns.Add(t => t.DisplayName).Titled("Дружелюбное имя")
+    columns.Add(t => t.Code).Titled("Номер").Css("text-nowrap column-code");
+
+    columns.Add(t => t.DisplayName).Titled("Название")
         .RenderValueAs(t => Html.HtmlBlock(x =>
         {
             var displayName = t.DisplayName.Length <= EventTypesListModel.MaxMessageLength ? t.DisplayName : t.DisplayName.Substring(0, EventTypesListModel.MaxMessageLength);
@@ -48,14 +56,6 @@
         }))
         .SortInitialDirection(GridSortDirection.Ascending).Encoded(false).Sanitized(false).Css("text-wordbreak");
 
-    columns.Add(t => t.SystemName).Titled("Системное имя")
-        .RenderValueAs(t => Html.HtmlBlock(x =>
-        {
-            var systemName = t.SystemName.Length <= EventTypesListModel.MaxMessageLength ? t.SystemName : t.SystemName.Substring(0, EventTypesListModel.MaxMessageLength);
-            return Html.ActionLink(systemName, "Show", new { id = t.Id }, null);
-        }))
-        .Encoded(false).Sanitized(false).Css("text-wordbreak");
-    
     columns.Add().Titled("Системный?").RenderValueAs(m => m.IsSystem ? "Да" : "Нет").Css("text-center");
 
     if (UserHelper.CurrentUser(Context).CanEditCommonData())

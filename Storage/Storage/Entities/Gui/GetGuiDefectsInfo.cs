@@ -37,6 +37,8 @@ namespace Zidium.Storage
         public class EventTypeInfo
         {
             public string OldVersion;
+
+            public string Code;
         }
     }
 }

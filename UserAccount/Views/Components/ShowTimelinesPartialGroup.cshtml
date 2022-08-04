@@ -18,11 +18,23 @@
                 }
                 @if (!string.IsNullOrEmpty(item.Url))
                 {
-                    <a href="@item.Url" target="_blank" title="@item.Name">@item.Name</a>
+                    <a href="@item.Url" target="_blank" title="@item.Name">
+                        @if (!string.IsNullOrEmpty(item.Code))
+                        {
+                            <text>@item.Code &mdash;</text>
+                        }
+                        @item.Name
+                    </a>
                 }
                 else
                 {
-                    <span title="@item.Name">@item.Name</span>
+                    <span title="@item.Name">
+                        @if (!string.IsNullOrEmpty(item.Code))
+                        {
+                            <text>@item.Code &mdash;</text>
+                        }
+                        @item.Name
+                    </span>
                 }
             </div>
             if (!string.IsNullOrEmpty(item.Comment))

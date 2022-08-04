@@ -70,7 +70,7 @@ if (Model.Component != null)
                         }
                         <p>
                             <span class="simple-text-header">Тип: </span>
-                            @Html.ActionLink(Model.EventType.DisplayName, "Show", "EventTypes", new {id = Model.EventType.Id}, null)
+                            @Html.ActionLink(GuiHelper.GetEventTypeDisplayNameWithCode(Model.EventType), "Show", "EventTypes", new {id = Model.EventType.Id}, null)
                         </p>
                     </div>
                 </td>

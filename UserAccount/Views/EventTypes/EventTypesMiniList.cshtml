@@ -1,15 +1,20 @@
 ﻿@model Zidium.UserAccount.Models.EventTypesMiniListModel
-           
+
 @if (Model.IsLimited)
 {
     <p><i>Показаны только первые 100 записей</i></p>
 }
 
-<ul style="padding-left: 0;">
-    @foreach (var eventType in Model.EventTypes)
-    {
-        <li style="white-space: nowrap; list-style: none; padding-bottom: 10px;">
-            <a data-id='@eventType.Id.ToString()' style="cursor: pointer;">@eventType.DisplayName</a>
-        </li>
-    }
-</ul>
+<table>
+    <tbody>
+        @foreach (var eventType in Model.EventTypes)
+        {
+            <tr>
+                <td class="text-nowrap" style="padding-bottom: 10px; padding-right: 15px;">@eventType.Code</td>
+                <td class="text-nowrap" style="padding-bottom: 10px;">
+                    <a data-id='@eventType.Id.ToString()' style="cursor: pointer;">@eventType.DisplayName</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

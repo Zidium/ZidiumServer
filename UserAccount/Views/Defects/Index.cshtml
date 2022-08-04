@@ -104,7 +104,8 @@
         @ViewBag.Title
         @if (UserHelper.CurrentUser(Context).CanEditCommonData())
         {
-<button type="button" class="btn btn-primary" id="add-defect-button">Создать дефект</button>}
+            <button type="button" class="btn btn-primary" id="add-defect-button">Создать дефект</button>
+        }
     </div>
     <hr class="submenu" />
 
@@ -133,7 +134,7 @@
 
             <div class="smart-row">
                 <div class="smart-col-fields" id="filter-component">
-                    @Html.Label(null, "ComponentId", new { @for = "ComponentId_Text" })
+                    @Html.Label(null, "Компонент", new { @for = "ComponentId_Text" })
                     @Html.ComponentSelectorNew(m => m.ComponentId, new ComponentSelectorOptions()
                     {
                         ShowAsList = false,
@@ -145,7 +146,7 @@
 
                 <div class="smart-col-fields" id="filter-title">
                     @Html.LabelFor(m => m.Title)
-                    @Html.TextFilter("Title", "Поиск по тексту...", Model.Title, true)
+                    @Html.TextFilter("Title", "Текст или номер", Model.Title, true)
                 </div>
 
                 <div class="smart-col-fields" id="filter-col-minimize">
@@ -162,68 +163,75 @@
 
 @if (Model.Items.Length == 0)
 {
-    <p>Нет дефектов</p> 
+    <p>Нет дефектов</p>
 }
 else
 {
-<table id="defects-table" class="simpleTable">
-    <thead>
-        <tr>
-            <th width="70px"></th>
-            <th>Дефект</th>
-            <th>Статус</th>
-            <th>Комментарий</th>
-            <th>Описание</th>
-            <th>Ответственный</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var defect in Model.Items)
-        {
-            var changeStatusUrl = Url.Action("ChangeStatusDialog", "Defects", new { defectId = defect.Id });
-            var statusCss = (defect.Status == DefectStatus.Closed) ? "badge text-strongbggreen" : "badge text-strongbgred";
-            var duration = DateTime.Now - defect.LastChangeDate;
-            var durationText = TimeSpanHelper.GetOneUnitString(duration);
-<tr>
-    <td>
-        <a href="@Url.Action("Index", "Events", new {eventTypeId = defect.EventTypeId, versionFrom = defect.OldVersion})" target="_blank">
-            <span class="badge alert-danger" style="font-size: 18px;" title="Ошибка случилась @defect.Count раз @(defect.OldVersion != null ? "после версии " + defect.OldVersion : null)">@defect.Count</span>
-        </a>
-    </td>
-    <td>
-        <div>
-            <a href="@Url.Action("Show", "Defects", new {id = defect.Id})" style="white-space: nowrap; font-size: 18px;">
-                № @defect.Code
-            </a>
-        </div>
-    </td>
-    <td>
-        <div>
-            @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+    <table id="defects-table" class="simpleTable">
+        <thead>
+            <tr>
+                <th width="70px"></th>
+                <th>Дефект</th>
+                <th>Статус</th>
+                <th>Комментарий</th>
+                <th>Описание</th>
+                <th>Ответственный</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var defect in Model.Items)
             {
-<a href="#" data-ajax-url="@changeStatusUrl" onclick="beginChangeDefectStatus(this, event)">
-    <span class="@statusCss" style="white-space: nowrap">@enumName.GetName(defect.Status)</span>
-</a> }
-else
-{
-<span class="@statusCss">@enumName.GetName(defect.Status)</span>}
-        </div>
-        <div>
-            <span style="font-size: 12px; margin-left: 5px; margin-top: 3px; color: gray; white-space: nowrap; text-align: center" title="@DateTimeHelper.GetRussianDateTime(defect.LastChangeDate, currentUser.TimeZoneOffsetMinutes)">@durationText назад</span>
-        </div>
-    </td>
-    <td>
-        @if (defect.Comment != null)
-        {
-<div>@defect.Comment</div>}
-    </td>
-    <td>@defect.Title</td>
-    <td>
-        @defect.ResponsibleUser.NameOrLogin
-    </td>
-</tr>}
-    </tbody>
-</table>}
+                var changeStatusUrl = Url.Action("ChangeStatusDialog", "Defects", new { defectId = defect.Id });
+                var statusCss = (defect.Status == DefectStatus.Closed) ? "badge text-strongbggreen" : "badge text-strongbgred";
+                var duration = DateTime.Now - defect.LastChangeDate;
+                var durationText = TimeSpanHelper.GetOneUnitString(duration);
+                <tr>
+                    <td>
+                        <a href="@Url.Action("Index", "Events", new {eventTypeId = defect.EventTypeId, versionFrom = defect.OldVersion})" target="_blank">
+                            <span class="badge alert-danger" style="font-size: 18px;" title="Ошибка случилась @defect.Count раз @(defect.OldVersion != null ? "после версии " + defect.OldVersion : null)">@defect.Count</span>
+                        </a>
+                    </td>
+                    <td>
+                        <div>
+                            <a href="@Url.Action("Show", "Defects", new {id = defect.Id})" style="white-space: nowrap; font-size: 18px;">
+                                № @defect.Code
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            @if (UserHelper.CurrentUser(Context).CanEditCommonData())
+                            {
+                                <a href="#" data-ajax-url="@changeStatusUrl" onclick="beginChangeDefectStatus(this, event)">
+                                    <span class="@statusCss" style="white-space: nowrap">@enumName.GetName(defect.Status)</span>
+                                </a> }
+                            else
+                            {
+                                <span class="@statusCss">@enumName.GetName(defect.Status)</span>}
+                        </div>
+                        <div>
+                            <span style="font-size: 12px; margin-left: 5px; margin-top: 3px; color: gray; white-space: nowrap; text-align: center" title="@DateTimeHelper.GetRussianDateTime(defect.LastChangeDate, currentUser.TimeZoneOffsetMinutes)">@durationText назад</span>
+                        </div>
+                    </td>
+                    <td>
+                        @if (defect.Comment != null)
+                        {
+                            <div>@defect.Comment</div>}
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(defect.EventTypeCode))
+                        {
+                            <text>@defect.EventTypeCode &mdash;</text>
+                        }
+                        @defect.Title
+                    </td>
+                    <td>
+                        @defect.ResponsibleUser.NameOrLogin
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>}
 
 <script>
     $(function() {

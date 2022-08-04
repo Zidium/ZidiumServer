@@ -42,6 +42,7 @@ namespace Zidium.UserAccount.Controllers
             {
                 Id = t.Id,
                 EventTypeId = t.EventTypeId,
+                EventTypeCode = t.EventType.Code,
                 LastChangeDate = t.LastChange.Date,
                 Status = t.LastChange.Status,
                 ResponsibleUserId = t.ResponsibleUserId,

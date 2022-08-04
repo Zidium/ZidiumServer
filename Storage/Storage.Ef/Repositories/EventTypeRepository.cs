@@ -138,9 +138,11 @@ namespace Zidium.Storage.Ef
 
                 if (!string.IsNullOrEmpty(search))
                 {
-                    search = search.ToLower();
-                    query = query.Where(t => t.SystemName.ToLower().Contains(search) ||
-                                             t.DisplayName.ToLower().Contains(search));
+                    search = search.ToLower().Trim();
+                    query = query.Where(t => t.Id.ToString().ToLower().Contains(search) ||
+                        t.SystemName.ToLower().Contains(search) ||
+                        t.DisplayName.ToLower().Contains(search) ||
+                        (t.Code != null && t.Code.ToLower().Contains(search)));
                 }
 
                 query = query.OrderBy(t => t.DisplayName).Take(maxCount);

@@ -8,6 +8,8 @@ namespace Zidium.Storage
 
         public string DisplayName;
 
+        public string Code;
+
         public string LastMessage;
     }
 }

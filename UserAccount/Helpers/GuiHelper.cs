@@ -921,6 +921,11 @@ namespace Zidium.UserAccount.Helpers
             return string.Empty;
         }
 
+        public static string GetEventTypeDisplayNameWithCode(EventTypeForRead eventType)
+        {
+            return (!string.IsNullOrEmpty(eventType.Code) ? eventType.Code + " - " : "") + eventType.DisplayName;
+        }
+
 
         public static IHtmlContent GetMetricValueHtml(double? value, ObjectColor color, bool hasSignal)
         {

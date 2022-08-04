@@ -287,13 +287,15 @@ namespace Zidium.UserAccount.Controllers
         public ActionResult ErrorStatictics(
             ReportPeriod? period,
             Guid? componentId,
-            ErrorStatisticsModel.ShowMode? mode)
+            ErrorStatisticsModel.ShowMode? mode,
+            string code)
         {
             var model = new ErrorStatisticsModel()
             {
                 ComponentId = componentId,
                 Period = period ?? ReportPeriod.Day,
-                Mode = mode ?? ErrorStatisticsModel.ShowMode.NotProcessed
+                Mode = mode ?? ErrorStatisticsModel.ShowMode.NotProcessed,
+                Code = code
             };
             model.LoadData(GetStorage());
             return View(model);
@@ -313,7 +315,7 @@ namespace Zidium.UserAccount.Controllers
                 LastChange = lastChange
             };
 
-            var html = this.RenderViewAsync("~/Views/Defects/DefectControl.cshtml", model).Result;
+            var html = this.RenderViewAsync("~/Views/Defects/DefectControl.cshtml", model, true).Result;
             return GetSuccessJsonResponse(new
             {
                 html = html

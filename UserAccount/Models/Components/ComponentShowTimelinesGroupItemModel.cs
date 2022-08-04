@@ -7,6 +7,8 @@ namespace Zidium.UserAccount.Models
     {
         public string Name { get; set; }
 
+        public string Code { get; set; }
+
         public string Comment { get; set; }
 
         public string Action { get; set; }

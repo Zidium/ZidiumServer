@@ -82,12 +82,13 @@ namespace Zidium.UserAccount.Helpers
                 EventCategory.ApplicationError,
                 EventCategory.ComponentEvent
             };
-            return categories.Select(x => new SelectListItem()
+            var items = categories.Select(x => new SelectListItem()
             {
                 Text = x.ToString(),
                 Selected = x == selected,
                 Value = x.ToString()
             }).ToList();
+            return GetAllowEmptyItems(items, allowEmpty);
         }
 
         public static List<SelectListItem> GetSubscriptionChannels(SubscriptionChannel? selected, bool allowEmpty)

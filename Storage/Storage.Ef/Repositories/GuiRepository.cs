@@ -474,12 +474,13 @@ namespace Zidium.Storage.Ef
                                 importances.Contains(t.Importance) &&
                                 t.StartDate <= toDate &&
                                 t.ActualDate >= fromDate)
-                    .GroupBy(t => new { EventTypeId = t.EventType.Id, DisplayName = t.EventType.DisplayName })
+                    .GroupBy(t => new { EventTypeId = t.EventType.Id, DisplayName = t.EventType.DisplayName, Code = t.EventType.Code })
                     .Select(t => t.Key)
                     .Select(t => new GetGuiTimelinesEventsInfo()
                     {
                         EventTypeId = t.EventTypeId,
                         DisplayName = t.DisplayName,
+                        Code = t.Code,
                         LastMessage = contextWrapper.Context.Events
                           .Where(z => z.OwnerId == componentId &&
                                 z.EventTypeId == t.EventTypeId &&
@@ -540,7 +541,11 @@ namespace Zidium.Storage.Ef
                     .Include(t => t.EventType).AsQueryable();
 
                 if (!string.IsNullOrEmpty(title))
-                    query = query.Where(t => t.Title.ToLower().Contains(title.ToLower()));
+                {
+                    title = title.ToLower().Trim();
+                    query = query.Where(t => t.Title.ToLower().Contains(title) ||
+                        t.EventType.Code != null && t.EventType.Code.Contains(title));
+                }
 
                 return query.Select(t => new GetGuiDefectsInfo()
                 {
@@ -549,7 +554,8 @@ namespace Zidium.Storage.Ef
                     Number = t.Number,
                     EventType = new GetGuiDefectsInfo.EventTypeInfo()
                     {
-                        OldVersion = t.EventType.OldVersion
+                        OldVersion = t.EventType.OldVersion,
+                        Code = t.EventType.Code,
                     },
                     ResponsibleUserId = t.ResponsibleUserId,
                     ResponsibleUser = new GetGuiDefectsInfo.ResponsibleUserInfo()

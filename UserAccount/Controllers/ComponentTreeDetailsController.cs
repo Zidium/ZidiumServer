@@ -310,7 +310,7 @@ namespace Zidium.UserAccount.Controllers
                         Id = t.Id,
                         Importance = t.Importance,
                         Count = t.Count,
-                        Name = eventTypes[t.Id].DisplayName,
+                        Name = GuiHelper.GetEventTypeDisplayNameWithCode(eventTypes[t.Id]),
                         LastMessage = t.LastMessage
                     })
                     .OrderByDescending(t => t.Importance)
