@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Zidium.Api.Dto;
 using Zidium.Core.AccountsDb;
 using Zidium.Core.Common.Helpers;
@@ -1467,7 +1468,7 @@ namespace Zidium.UserAccount.Helpers
                 Type = type,
                 Message = message
             };
-            controller.TempData["Alert"] = tempmessage;
+            controller.TempData["Alert"] = JsonConvert.SerializeObject(tempmessage);
         }
 
         public static TempMessage GetTempMessage(HttpContext httpContext)
@@ -1475,7 +1476,8 @@ namespace Zidium.UserAccount.Helpers
             var currentContext = FullRequestContext.GetCurrent(httpContext);
             if (currentContext == null)
                 return null;
-            return (TempMessage)currentContext.Controller.TempData["Alert"];
+            var json = (string)currentContext.Controller.TempData["Alert"];
+            return json != null ? JsonConvert.DeserializeObject<TempMessage>(json) : null;
         }
 
         public static string FormatSize(Int64 value)
