@@ -203,6 +203,8 @@ namespace Zidium.Core.AccountsDb
             var url = UrlHelper.GetPasswordSetUrl(token);
             var emailCommand = EmailMessageHelper.NewUserLetter(user.Email, url);
             emailCommand.ReferenceId = token;
+            emailCommand.CreateDate = _timeService.Now();
+            emailCommand.Status = EmailStatus.InQueue;
 
             _storage.SendEmailCommands.Add(emailCommand);
         }
@@ -214,6 +216,8 @@ namespace Zidium.Core.AccountsDb
             var url = UrlHelper.GetPasswordSetUrl(token);
             var emailCommand = EmailMessageHelper.ResetPasswordLetter(user.Email, url);
             emailCommand.ReferenceId = token;
+            emailCommand.CreateDate = _timeService.Now();
+            emailCommand.Status = EmailStatus.InQueue;
 
             _storage.SendEmailCommands.Add(emailCommand);
         }
