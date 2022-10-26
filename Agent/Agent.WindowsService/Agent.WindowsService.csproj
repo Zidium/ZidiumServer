@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <UserSecretsId>dotnet-Agent.WindowsService-368B7600-9F93-4565-AE7C-78DC08B2DA32</UserSecretsId>
     <AssemblyName>Zidium.Agent</AssemblyName>
     <RootNamespace>Zidium.Agent</RootNamespace>
@@ -22,11 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="5.0.0" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="1.7.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.1.0" />
     <PackageReference Include="TopShelf.ServiceInstaller" Version="4.3.0" />
   </ItemGroup>
 

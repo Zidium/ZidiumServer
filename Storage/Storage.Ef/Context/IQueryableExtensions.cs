@@ -30,7 +30,7 @@ namespace Zidium.Storage.Ef
             IList<SqlParameter> parameters;
             if (relationalCommandCache != null)
             {
-                var command = relationalCommandCache.GetRelationalCommand(parameterValues);
+                var command = relationalCommandCache.GetRelationalCommandTemplate(parameterValues);
                 var parameterNames = new HashSet<string>(command.Parameters.Select(p => p.InvariantName));
                 sql = command.CommandText;
                 parameters = parameterValues.Where(pv => parameterNames.Contains(pv.Key)).Select(ToSqlParameter).ToList();

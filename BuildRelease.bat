@@ -21,7 +21,7 @@ dotnet publish "Agent\Agent.ConsoleApplication\Agent.ConsoleApplication.csproj" 
 echo.
 echo Building Agent.WindowsService
 echo.
-dotnet publish "Agent\Agent.WindowsService\Agent.WindowsService.csproj" -f:net5.0 -r:win-x64 --no-self-contained -v:minimal -c:Release -o:.\Release\Agent\WindowsService
+dotnet publish "Agent\Agent.WindowsService\Agent.WindowsService.csproj" -f:net6.0 -r:win-x64 --no-self-contained -v:minimal -c:Release -o:.\Release\Agent\WindowsService
 
 echo.
 echo Building DatabaseUpdater
