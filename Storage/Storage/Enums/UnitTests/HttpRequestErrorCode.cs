@@ -21,7 +21,7 @@
         SuccessHtmlNotFound = 3,
 
         /// <summary>
-        /// Обнаружен фрагмент html,которого быть не должно
+        /// Обнаружен фрагмент html, которого быть не должно
         /// </summary>
         ErrorHtmlFound = 4,
 

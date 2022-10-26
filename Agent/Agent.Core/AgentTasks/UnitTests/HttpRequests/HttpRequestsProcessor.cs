@@ -202,7 +202,8 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
             {
                 ErrorCode = HttpRequestErrorCode.Success,
                 Rule = rule,
-                StartDate = TimeService.Now()
+                StartDate = TimeService.Now(),
+                EndDate = TimeService.Now()
             };
 
             try
@@ -227,13 +228,6 @@ namespace Zidium.Agent.AgentTasks.HttpRequests
 
                 result.ErrorCode = HttpRequestErrorCode.UnknownError;
                 result.ErrorMessage = exception.Message;
-            }
-            finally
-            {
-                if (result.EndDate == null)
-                {
-                    result.EndDate = TimeService.Now();
-                }
             }
             return result;
         }

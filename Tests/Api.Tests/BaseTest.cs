@@ -5,6 +5,7 @@ using Zidium.Storage;
 using Microsoft.Extensions.Configuration;
 using Zidium.Core.InternalLogger;
 using Zidium.Core.Common;
+using System;
 
 namespace Zidium.Api.Tests
 {
@@ -12,6 +13,8 @@ namespace Zidium.Api.Tests
     {
         static BaseTest()
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var appConfiguration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, false)
                 .AddUserSecrets(typeof(BaseTest).Assembly, true)

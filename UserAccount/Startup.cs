@@ -75,6 +75,7 @@ namespace Zidium.UserAccount
         {
             try
             {
+                AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
                 DependencyInjection.SetServicePersistent<InternalLoggerComponentMapping>(app.ApplicationServices.GetRequiredService<InternalLoggerComponentMapping>());
                 InitMonitoring();
                 var componentControl = DependencyInjection.GetServicePersistent<IComponentControl>();

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using Zidium.Common;
 using Zidium.Core;
 using Zidium.Core.Common;
@@ -12,6 +13,8 @@ namespace Zidium.Agent.Tests
     {
         static BaseTest()
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var appConfiguration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, false)
                 .AddUserSecrets(typeof(BaseTest).Assembly, true)
