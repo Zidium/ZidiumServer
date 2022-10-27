@@ -48,6 +48,7 @@ namespace Zidium.Dispatcher
         {
             try
             {
+                AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
                 Client.Instance.Disable = true;
                 var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
                 DependencyInjection.SetLoggerFactory(loggerFactory);

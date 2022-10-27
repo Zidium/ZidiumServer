@@ -15,6 +15,8 @@ namespace Zidium.Agent
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var services = new ServiceCollection();
 
             var appConfigurationBuilder = new ConfigurationBuilder()

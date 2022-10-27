@@ -30,7 +30,8 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             var outputData = new HttpTestOutputData
             {
                 ErrorCode = HttpRequestErrorCode.Success,
-                StartDate = DateTime.UtcNow
+                StartDate = DateTime.UtcNow, // TODO Refactor to TimeService
+                EndDate = DateTime.UtcNow
             };
             try
             {
@@ -266,10 +267,6 @@ namespace Zidium.Agent.AgentTasks.UnitTests.HttpRequests
             }
             finally
             {
-                if (outputData.EndDate == null)
-                {
-                    outputData.EndDate = DateTime.UtcNow;
-                }
                 _logger.LogInformation(inputData.Url + " => " + outputData.ErrorCode);
             }
             return outputData;

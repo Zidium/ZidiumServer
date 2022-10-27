@@ -16,6 +16,7 @@ namespace Zidium.Agent
         public static void Main(string[] args)
         {
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             var appConfiguration = new ConfigurationBuilder()
                 .ConfigureAppSettingsFile()

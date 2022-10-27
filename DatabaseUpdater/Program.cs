@@ -16,6 +16,8 @@ namespace Zidium.DatabaseUpdater
     {
         public static void Main(string[] args)
         {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var services = new ServiceCollection();
 
             var appConfiguration = new ConfigurationBuilder()

@@ -163,7 +163,7 @@ namespace Zidium.Core.AccountsDb
         {
             var user = _storage.Users.GetOneById(userId);
 
-            if (string.IsNullOrEmpty(user.Email))
+            if (sendLetter && string.IsNullOrEmpty(user.Email))
                 throw new UserFriendlyException("У данного пользователя нет привязанного email. Попросите администратора системы поменять ваш пароль.");
 
             var tokenService = new TokenService(_storage, _timeService);

@@ -1,10 +1,10 @@
 # Zidium
 Zidium - это open source мониторинг приложений и информационных систем.
-Написан на .Net 5, работает на разных платформах.
+Написан на .Net 6, работает на разных платформах.
 
 ## Требования
-- Любая платформа, поддерживающая .Net 5. Подробнее можно узнать тут: https://docs.microsoft.com/en-us/dotnet/core/install
-- .Net 5 runtime
+- Любая платформа, поддерживающая .Net 6. Подробнее можно узнать тут: https://docs.microsoft.com/en-us/dotnet/core/install
+- .Net 6 runtime
 - Вместо .net можно использовать Docker
 - PostgreSql или MS Sql Server (в том числе Express), также поддерживается встроенная база Sqlite
 

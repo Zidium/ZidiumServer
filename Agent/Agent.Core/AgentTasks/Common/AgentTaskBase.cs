@@ -170,7 +170,7 @@ namespace Zidium.Agent.AgentTasks
             if (WorkThread != null)
             {
                 if (!WorkThread.Join(TimeSpan.FromSeconds(60))) // ждем максимум 60 сек
-                    WorkThread.Abort();
+                    WorkThread.Interrupt();
                 WorkThread = null;
             }
         }
