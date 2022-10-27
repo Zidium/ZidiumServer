@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 LABEL maintainer="Zidium, https://zidium.net"
 WORKDIR /src
 COPY . .
@@ -10,7 +10,7 @@ COPY ["Docker/user-account.appsettings.prod.json", "/Release/UserAccount/appsett
 COPY ["Docker/agent.appsettings.prod.json", "/Release/Agent/appsettings.prod.json"]
 COPY ["Docker/zidium.sh", "/Release/"]
 
-FROM mcr.microsoft.com/dotnet/aspnet:5.0
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 RUN groupadd -r zidium && useradd --no-log-init -r -g zidium zidium
 WORKDIR /zidium
 RUN chown zidium:zidium $(pwd)
