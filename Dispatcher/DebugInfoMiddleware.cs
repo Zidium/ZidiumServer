@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Net.Http.Headers;
 using Zidium.Api;
 using Zidium.Common;
@@ -30,6 +31,8 @@ namespace Zidium.Dispatcher
                 debugInfo = exception.ToString();
             }
 
+            var requestInfo = GetRequestInfo(httpContext.Request);
+
             var responseHeaders = httpContext.Response.GetTypedHeaders();
             responseHeaders.CacheControl = new CacheControlHeaderValue()
             {
@@ -42,7 +45,9 @@ namespace Zidium.Dispatcher
             mediaType.Encoding = Encoding.UTF8;
             httpContext.Response.ContentType = mediaType.ToString();
 
-            await httpContext.Response.WriteAsync(debugInfo);
+            var result = debugInfo + requestInfo;
+
+            await httpContext.Response.WriteAsync(result);
         }
 
         protected string GetDebugInfo()
@@ -77,6 +82,22 @@ namespace Zidium.Dispatcher
 
                 output.AppendLine("");
             }
+
+            return output.ToString();
+        }
+
+        protected string GetRequestInfo(HttpRequest request)
+        {
+            var output = new StringBuilder();
+            output.AppendLine("");
+
+            output.AppendLine("Url: " + request.GetDisplayUrl());
+
+            output.AppendLine("");
+            output.AppendLine("Headers:");
+
+            foreach (var header in request.Headers)
+                output.AppendLine(header.Key + ": " + header.Value);
 
             return output.ToString();
         }
