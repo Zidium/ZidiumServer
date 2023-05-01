@@ -41,13 +41,15 @@ namespace Zidium.Dispatcher
             DependencyInjection.SetServicePersistent<IStorageFactory>(new StorageFactory());
             DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
 
-            services.AddHttpContextAccessor();
-
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders =
                     ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownProxies.Clear();
+                options.KnownNetworks.Clear();
             });
+
+            services.AddHttpContextAccessor();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)

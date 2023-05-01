@@ -52,6 +52,14 @@ namespace Zidium.UserAccount
             EnumHelper.RegisterNaming(new MonitoringStatusNaming());
             EnumHelper.RegisterNaming(new EventCategoryNaming());
 
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownProxies.Clear();
+                options.KnownNetworks.Clear();
+            });
+
             services.AddControllersWithViews(options =>
             {
                 options.ModelBinderProviders.Insert(0, new ZidiumModelBinderProvider());
@@ -69,12 +77,6 @@ namespace Zidium.UserAccount
             services.AddAuthorization();
 
             services.AddTransient<GlobalExceptionFilterAttribute>();
-
-            services.Configure<ForwardedHeadersOptions>(options =>
-            {
-                options.ForwardedHeaders =
-                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
