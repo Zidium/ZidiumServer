@@ -1,0 +1,6 @@
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* text=auto
+
+Docker/zidium.sh text eol=lf
