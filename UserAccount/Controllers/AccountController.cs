@@ -4,7 +4,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Zidium.Api;
@@ -51,7 +50,7 @@ namespace Zidium.UserAccount.Controllers
                 var tokenService = new TokenService(storage, TimeService);
                 var token = tokenService.GenerateToken(authInfo.User.Id, TokenPurpose.Logon, TimeSpan.FromMinutes(1));
 
-                var currentUrl = Url.ToAbsolute(Request.GetDisplayUrl());
+                var currentUrl = Request.Scheme + "://" + Request.Host + Request.Path + Request.QueryString;
                 var logonUrl = Url.Action("LogonByToken", new { id = token.Id, rememberMe = model.RememberMe, returnUrl = model.ReturnUrl });
                 var url = Core.Common.UrlHelper.GetAccountWebsiteUrl(logonUrl, currentUrl);
                 return Redirect(url);

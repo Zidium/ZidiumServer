@@ -63,11 +63,11 @@ namespace Zidium.Core.Common
             return GetFullUrl(url, accountWebSiteUrl);
         }
 
-        public static string GetFullUrl(string pathAndQuery, string accountWebSiteUrl = null, string scheme = null)
+        public static string GetFullUrl(string pathAndQuery, string accountWebSiteUrl = null)
         {
             var uri = new Uri(accountWebSiteUrl ?? AccountWebSite);
             // TODO Use uri builder
-            var result = new Uri((scheme ?? uri.Scheme) + "://" + uri.Authority + pathAndQuery);
+            var result = new Uri(uri.Scheme + "://" + uri.Authority + pathAndQuery);
             return result.AbsoluteUri;
         }
 
@@ -76,7 +76,7 @@ namespace Zidium.Core.Common
             var currentUri = new Uri(currentUrl);
             if (!currentUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
             {
-                return GetFullUrl(pathAndQuery, accountWebSiteUrl, currentUri.Scheme);
+                return GetFullUrl(pathAndQuery, accountWebSiteUrl);
             }
             else
             {

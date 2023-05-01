@@ -18,7 +18,7 @@ namespace Zidium.Core.Tests.Others
         [Fact]
         public void GetAccountWebsiteUrlHttpsTest()
         {
-            var result = UrlHelper.GetAccountWebsiteUrl("/Info", "https://zidium.net/Logon", "http://lk.zidium.net");
+            var result = UrlHelper.GetAccountWebsiteUrl("/Info", "https://zidium.net/Logon", "https://lk.zidium.net");
             Assert.Equal("https://lk.zidium.net/Info", result);
         }
 

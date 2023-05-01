@@ -42,6 +42,12 @@ namespace Zidium.Dispatcher
             DependencyInjection.SetServicePersistent<ITimeService>(new TimeService());
 
             services.AddHttpContextAccessor();
+
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
@@ -73,10 +79,7 @@ namespace Zidium.Dispatcher
                 var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
                 logger.LogInformation("Listening on: " + (serverAddressesFeature.Addresses.Count > 0 ? string.Join("; ", serverAddressesFeature.Addresses) : "IIS reverse proxy"));
 
-                app.UseForwardedHeaders(new ForwardedHeadersOptions
-                {
-                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-                });
+                app.UseForwardedHeaders();
 
                 if (env.IsDevelopment())
                 {

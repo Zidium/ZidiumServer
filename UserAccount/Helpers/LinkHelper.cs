@@ -12,7 +12,7 @@ namespace Zidium.UserAccount
     {
         //Builds URL by finding the best matching route that corresponds to the current URL,
         //with given parameters added or replaced.
-        public static IHtmlContent Current(this UrlHelper helper, object substitutes = null, string action = null, string controller = null)
+        public static IHtmlContent Current(this IUrlHelper helper, object substitutes = null, string action = null, string controller = null)
         {
             //get the route data for the current URL e.g. /Research/InvestmentModelling/RiskComparison
             //this is needed because unlike UrlHelper.Action, UrlHelper.RouteUrl sets includeImplicitMvcValues to false
@@ -67,12 +67,6 @@ namespace Zidium.UserAccount
 
             var url = helper.RouteUrl(rc);
             return new HtmlString(url);
-        }
-
-        public static string ToAbsolute(this IUrlHelper urlHelper, string url)
-        {
-            var uri = new Uri(new Uri(urlHelper.ActionContext.HttpContext.Request.GetDisplayUrl()), url);
-            return uri.AbsoluteUri;
         }
 
         public static string GenerateUrl(IUrlHelper urlHelper, string action, string controller, object values)

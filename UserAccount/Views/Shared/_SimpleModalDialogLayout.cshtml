@@ -1,13 +1,13 @@
 ﻿@using Zidium.UserAccount.Models.Dialogs
 @{
-    var layouModel = SimpleModalDialogLayoutModel.Get(this);
+    var layoutModel = SimpleModalDialogLayoutModel.Get(this);
 }
 <div class="modal" id="ModalDlg" tabindex="-1" role="dialog" aria-labelledby="ModalDlgLabel" aria-hidden="true" style="display:none">
-    <div class="modal-dialog @(layouModel.Large ? "modal-lg" : string.Empty)">
+    <div class="modal-dialog @(layoutModel.Large ? "modal-lg" : string.Empty)">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="ModalDlgLabel">@layouModel.Title</h4>
+                <h4 class="modal-title" id="ModalDlgLabel">@layoutModel.Title</h4>
             </div>
             <div class="modal-body" id="ModalDlgBody">
                 <div id="zi-simple-dialog-body">
@@ -18,13 +18,13 @@
                 </div>
                 <div class="row" style="text-align: right">
                     <div class="col-sm-12">
-                        <a id="zi-simple-dialog-submit" href="@layouModel.SubmitUrl" class="btn btn-primary">@layouModel.SubmitBtnName</a>
+                        <a id="zi-simple-dialog-submit" href="@layoutModel.SubmitUrl" class="btn btn-primary">@layoutModel.SubmitBtnName</a>
                         <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
                     </div>
                 </div>
             </div>
         </div>
-        @if (layouModel.EnableUnobtrusiveValidation)
+        @if (layoutModel.EnableUnobtrusiveValidation)
         {
             <script type="text/javascript">
                 function ReValidate() {

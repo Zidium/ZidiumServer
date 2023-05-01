@@ -125,7 +125,7 @@
             date: date,
             comment: $("#disableComment").val()
         };
-        var url = '@Context.Request.GetDisplayUrl()';
+        var url = '@Url.Current()';
         var successCallback = function() {
             document.location.reload();
         };

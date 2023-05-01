@@ -21,7 +21,7 @@ namespace Zidium.UserAccount.Models.Dialogs
 
         private SimpleModalDialogLayoutModel(RazorPage page)
         {
-            SubmitUrl = page.Context.Request.GetDisplayUrl();
+            SubmitUrl = "/" + page.Context.Request.Path + page.Context.Request.QueryString;
 
             // запомним модель во ViewBag
             dynamic viewBag = page.ViewBag;
