@@ -11,6 +11,7 @@ COPY ["Docker/agent.appsettings.prod.json", "/Release/Agent/appsettings.prod.jso
 COPY ["Docker/zidium.sh", "/Release/"]
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
+RUN apt update && apt install -y iputils-ping
 RUN groupadd -r zidium && useradd --no-log-init -r -g zidium zidium
 WORKDIR /zidium
 RUN chown zidium:zidium $(pwd)
