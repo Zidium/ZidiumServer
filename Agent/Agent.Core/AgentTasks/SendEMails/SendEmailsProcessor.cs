@@ -228,6 +228,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
                 builder.TextBody = body;
             }
             message.Body = builder.ToMessageBody();
+            message.Headers.Remove("Message-Id");
             smtpClient.Send(message);
         }
 
