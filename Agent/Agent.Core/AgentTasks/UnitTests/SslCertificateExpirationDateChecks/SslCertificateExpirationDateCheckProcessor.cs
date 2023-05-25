@@ -38,13 +38,7 @@ namespace Zidium.Agent.AgentTasks
             if (certificate == null)
                 throw new UserFriendlyException("Не удалось получить сертификат для url: " + uri);
 
-            var value = certificate.GetExpirationDateString();
-            var date = ParseHelper.TryParseDateTime(value);
-            if (date == null)
-            {
-                throw new UserFriendlyException("Не удалось получить дату из строки: " + value);
-            }
-            return date.Value;
+            return certificate.NotAfter;
         }
 
         protected override Guid GetUnitTestTypeId()
