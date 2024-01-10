@@ -172,5 +172,14 @@ namespace Zidium.Agent.Tests
                 TestHelper.AreEqual(test.NextExecutionDate.Value, DateTime.UtcNow.AddDays(1), TimeSpan.FromMinutes(5));
             }
         }
+
+        [Fact]
+        public void KzDomainTest()
+        {
+            var result = DomainNamePaymentPeriodCheckProcessor.GetPaymentDate("top-priority.kz");
+            Assert.Equal(DomainNamePaymentPeriodErrorCode.Success, result.Code);
+            Assert.True(result.Date.HasValue);
+        }
+
     }
 }

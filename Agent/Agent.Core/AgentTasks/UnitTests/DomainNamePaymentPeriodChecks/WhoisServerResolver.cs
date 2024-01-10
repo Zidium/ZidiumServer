@@ -98,6 +98,7 @@ namespace Zidium.Agent.AgentTasks
             {"jp", "whois.jprs.jp"},
             {"ke", "whois.kenic.or.ke"},
             {"kg", "whois.domain.kg"},
+            {"kz", "whois.nic.kz"},
             {"kr", "whois.nic.or.kr"},
             {"la", "whois2.afilias-grs.net"},
             {"li", "whois.nic.li"},

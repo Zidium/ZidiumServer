@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Sockets;
@@ -23,9 +24,12 @@ namespace Zidium.Agent.AgentTasks
             var whoisServerName = WhoisServerResolver.GetWhoisServerName(domainName);
             using (var whoisClient = new TcpClient())
             {
-                whoisClient.Connect(whoisServerName, WhoisServerDefaultPortNumber);
+                if (!whoisClient.ConnectAsync(whoisServerName, WhoisServerDefaultPortNumber).Wait(10_000))
+                {
+                    throw new TimeoutException($"Can't connect to whois server {whoisServerName}");
+                }
 
-                var domainQuery = new IdnMapping().GetAscii(domainName) + "\r\n";
+                var domainQuery = new IdnMapping().GetAscii(domainName).ToUpperInvariant() + "\r\n";
                 var domainQueryBytes = Encoding.ASCII.GetBytes(domainQuery.ToCharArray());
 
                 Stream whoisStream = whoisClient.GetStream();
