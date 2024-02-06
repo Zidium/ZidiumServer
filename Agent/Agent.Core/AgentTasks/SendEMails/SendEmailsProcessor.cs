@@ -17,7 +17,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
         public string SmtpLogin { get; set; }
 
         public string SmtpFrom { get; set; }
-
+        public string SmtpFromEmail { get; }
         public string SmtpPassword { get; set; }
 
         public string SmtpServer { get; set; }
@@ -27,6 +27,8 @@ namespace Zidium.Agent.AgentTasks.SendEMails
         public bool UseMailKit { get; set; }
 
         public bool UseSsl { get; set; }
+
+        public string LocalServerName { get; }
 
         public bool FakeMode { get; set; }
 
@@ -47,9 +49,11 @@ namespace Zidium.Agent.AgentTasks.SendEMails
             int smtpPort,
             string smtpLogin,
             string smtpFrom,
+            string smtpFromEmail,
             string smtpPassword,
-            bool useMailKit,
-            bool useSsl)
+            bool useMailKit, 
+            bool useSsl, string 
+            localServerName)
         {
             Logger = logger;
             CancellationToken = cancellationToken;
@@ -57,9 +61,11 @@ namespace Zidium.Agent.AgentTasks.SendEMails
             SmtpPort = smtpPort;
             SmtpLogin = smtpLogin;
             SmtpFrom = smtpFrom;
+            SmtpFromEmail = smtpFromEmail;
             SmtpPassword = smtpPassword;
             UseMailKit = useMailKit;
             UseSsl = useSsl;
+            LocalServerName = localServerName;
             TimeService = DependencyInjection.GetServicePersistent<ITimeService>();
         }
 
@@ -203,7 +209,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
         {
             using (var message = new MailMessage())
             {
-                message.From = new MailAddress(SmtpLogin, SmtpFrom);
+                message.From = new MailAddress(SmtpFromEmail, SmtpFrom);
                 message.To.Add(new MailAddress(to));
                 message.Subject = subject;
                 message.Body = body;
@@ -215,7 +221,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
         protected void SendMailKitEmail(MailKit.Net.Smtp.SmtpClient smtpClient, string to, string subject, string body, bool isHtml)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(SmtpFrom, SmtpLogin));
+            message.From.Add(new MailboxAddress(SmtpFrom, SmtpFromEmail));
             message.To.Add(new MailboxAddress(to, to));
             message.Subject = subject;
             var builder = new BodyBuilder();
@@ -246,6 +252,7 @@ namespace Zidium.Agent.AgentTasks.SendEMails
             else
             {
                 var smtpClient = new MailKit.Net.Smtp.SmtpClient();
+                smtpClient.LocalDomain = LocalServerName;
                 if (!FakeMode)
                 {
                     smtpClient.Connect(SmtpServer, SmtpPort, UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.Auto);

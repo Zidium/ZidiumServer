@@ -41,6 +41,10 @@ namespace Zidium.Agent
 
         public bool SmtpUseSsl => Get().Smtp.SmtpUseSsl;
 
+        public string SmtpFromEmail => Get().Smtp.SmtpFromEmail;
+
+        public string SmtpLocalServerName => Get().Smtp.SmtpLocalServerName;
+
         public string SmsRuApiId => Get().Sms.SmsRuApiId;
 
         public string SmsRuFrom => Get().Sms.SmsRuFrom;
@@ -52,6 +56,5 @@ namespace Zidium.Agent
         public int? EventsMaxDeleteCount => Get().EventsMaxDeleteCount;
 
         public string SecretKey => Get().SecretKey;
-
     }
 }

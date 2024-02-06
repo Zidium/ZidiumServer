@@ -16,9 +16,13 @@
 
         string SmtpFrom { get; }
 
+        string SmtpFromEmail { get; }
+
         bool SmtpUseMailKit { get; }
 
         bool SmtpUseSsl { get; }
+
+        string SmtpLocalServerName { get; }
 
         string SmsRuApiId { get; }
 

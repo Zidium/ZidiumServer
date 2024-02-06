@@ -46,9 +46,13 @@
 
             public string SmtpFrom { get; set; }
 
+            public string SmtpFromEmail { get; set; }
+
             public bool SmtpUseMailKit { get; set; }
 
             public bool SmtpUseSsl { get; set; }
+
+            public string SmtpLocalServerName { get; set; }
         }
 
         public class SmsOptions

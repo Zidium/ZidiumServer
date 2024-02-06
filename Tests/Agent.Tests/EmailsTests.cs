@@ -46,9 +46,11 @@ namespace Zidium.Agent.Tests
             bool useMailKit = true;
             bool useSsl = true;
             string login = "robot";
-            string from = "robor@mail.server.ru";
+            string from = "Zidium";
+            string fromEmail = "robot@mail.server.ru";
             string password = "12345";
-            var processor = new SendEmailsProcessor(NullLogger.Instance, new CancellationToken(), server, port, login, from, password, useMailKit, useSsl);
+            string localServerName = "robot.zidium.net";
+            var processor = new SendEmailsProcessor(NullLogger.Instance, new CancellationToken(), server, port, login, from, fromEmail, password, useMailKit, useSsl, localServerName);
             processor.FakeMode = true;
             processor.Process(emailId);
 
@@ -126,9 +128,11 @@ namespace Zidium.Agent.Tests
             bool useMailKit = true;
             bool useSsl = true;
             string login = "robot";
-            string from = "robor@mail.server.ru";
+            string from = "Zidium";
+            string fromEmail = "robot@mail.server.ru";
             string password = "12345";
-            var processor = new SendEmailsProcessor(NullLogger.Instance, new CancellationToken(), server, port, login, from, password, useMailKit, useSsl);
+            string localServerName = "robot.zidium.net";
+            var processor = new SendEmailsProcessor(NullLogger.Instance, new CancellationToken(), server, port, login, from, fromEmail, password, useMailKit, useSsl, localServerName);
             processor.FakeMode = true;
             processor.Process(emailId);
 
