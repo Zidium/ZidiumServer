@@ -820,14 +820,6 @@ namespace Zidium.Core.AccountsDb
         {
             var componentProperties = _storage.ComponentProperties.GetByComponentId(componentId);
 
-            // удаляем
-            var forDelete = componentProperties.Where(x => properties.All(y => !string.Equals(y.Name, x.Name, StringComparison.Ordinal))).ToArray();
-            foreach (var componentProperty in forDelete)
-            {
-                _storage.ComponentProperties.Delete(componentProperty.Id);
-            }
-
-            // обновляем или вставляем
             foreach (var property in properties)
             {
                 var componentProperty = componentProperties.FirstOrDefault(t => string.Equals(t.Name, property.Name, StringComparison.Ordinal));
@@ -845,10 +837,17 @@ namespace Zidium.Core.AccountsDb
                 }
                 else
                 {
-                    var componentPropertyForUpdate = componentProperty.GetForUpdate();
-                    componentPropertyForUpdate.Value.Set(property.Value);
-                    componentPropertyForUpdate.DataType.Set(property.Type);
-                    _storage.ComponentProperties.Update(componentPropertyForUpdate);
+                    if (property.Value != null)
+                    {
+                        var componentPropertyForUpdate = componentProperty.GetForUpdate();
+                        componentPropertyForUpdate.Value.Set(property.Value);
+                        componentPropertyForUpdate.DataType.Set(property.Type);
+                        _storage.ComponentProperties.Update(componentPropertyForUpdate);
+                    }
+                    else
+                    {
+                        _storage.ComponentProperties.Delete(componentProperty.Id);
+                    }
                 }
             }
         }

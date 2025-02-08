@@ -22,4 +22,16 @@
         <span class="simple-text-header">Дата создания: </span>
         <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.CreateTime, currentUser.TimeZoneOffsetMinutes)</span>
     </p>
+    <p>
+        <span class="simple-text-header">Версия: </span>
+        <span class="simple-text-value">@Model.Version</span>
+    </p>
+    
+    @foreach (var property in Model.Properties)
+    {
+        <p>
+            <span class="simple-text-header">@property.Name: </span>
+            <span class="simple-text-value">@property.Value</span>
+        </p>
+    }
 </div>

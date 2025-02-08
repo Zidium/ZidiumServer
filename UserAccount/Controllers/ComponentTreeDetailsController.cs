@@ -212,13 +212,16 @@ namespace Zidium.UserAccount.Controllers
             var storage = GetStorage();
             var component = storage.Components.GetOneById(id);
             var componentType = storage.ComponentTypes.GetOneById(component.ComponentTypeId);
+            var componentProperties = storage.ComponentProperties.GetByComponentId(component.Id);
             var model = new ComponentDetailsInfoModel()
             {
                 ComponentId = id,
                 SystemName = component.SystemName,
                 TypeId = component.ComponentTypeId,
                 TypeName = componentType.DisplayName,
-                CreateTime = component.CreatedDate
+                CreateTime = component.CreatedDate,
+                Version = component.Version,
+                Properties = componentProperties
             };
             return PartialView(model);
         }

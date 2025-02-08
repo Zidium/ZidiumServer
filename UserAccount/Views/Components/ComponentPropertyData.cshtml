@@ -4,7 +4,7 @@
 <td><span class="text-prewrap">@Model.Value</span></td>
 <td>@Model.DataType</td>
 <td class="text-center">
-    <a href='@Url.Action("DeleteProperty", new {id = Model.Id.ToString()})' onclick=" ModalBtnClick(this, event); " title="Удалить свойство">
+    <a href='@Url.Action("DeleteProperty", new {id = Model.Id.ToString()})' class="text-danger" onclick=" ModalBtnClick(this, event); " title="Удалить свойство">
         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
     </a>
 </td>
