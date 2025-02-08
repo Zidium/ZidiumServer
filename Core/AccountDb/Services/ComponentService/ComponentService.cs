@@ -826,14 +826,17 @@ namespace Zidium.Core.AccountsDb
 
                 if (componentProperty == null)
                 {
-                    _storage.ComponentProperties.Add(new ComponentPropertyForAdd()
+                    if (property.Value != null)
                     {
-                        Id = Ulid.NewUlid(),
-                        ComponentId = componentId,
-                        Name = property.Name,
-                        Value = property.Value,
-                        DataType = property.Type
-                    });
+                        _storage.ComponentProperties.Add(new ComponentPropertyForAdd()
+                        {
+                            Id = Ulid.NewUlid(),
+                            ComponentId = componentId,
+                            Name = property.Name,
+                            Value = property.Value,
+                            DataType = property.Type
+                        });
+                    }
                 }
                 else
                 {
