@@ -1,9 +1,11 @@
 ﻿@using Zidium.Core.Common.Helpers
-@using Zidium.UserAccount.Helpers 
+@using Zidium.UserAccount.Helpers
 
 @model Zidium.UserAccount.Models.ComponentTreeDetails.ComponentDetailsInfoModel
 
-@{ var currentUser = UserHelper.CurrentUser(Context); }
+@{
+    var currentUser = UserHelper.CurrentUser(Context);
+}
 
 <div id="component-info-wrapper">
     <p>
@@ -22,11 +24,15 @@
         <span class="simple-text-header">Дата создания: </span>
         <span class="simple-text-value">@DateTimeHelper.GetRussianDateTime(Model.CreateTime, currentUser.TimeZoneOffsetMinutes)</span>
     </p>
-    <p>
-        <span class="simple-text-header">Версия: </span>
-        <span class="simple-text-value">@Model.Version</span>
-    </p>
-    
+
+    @if (!String.IsNullOrEmpty(Model.Version))
+    {
+        <p>
+            <span class="simple-text-header">Версия: </span>
+            <span class="simple-text-value">@Model.Version</span>
+        </p>
+    }
+
     @foreach (var property in Model.Properties)
     {
         <p>
