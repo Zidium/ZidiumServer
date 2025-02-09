@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,29 @@ namespace Zidium.Storage.Ef
             base.OnModelCreating(modelBuilder);
             if (OnModelCreatingOverride != null)
                 OnModelCreatingOverride.Invoke(modelBuilder);
+        }
+
+        public override long GetDatabaseSize()
+        {
+            DbConnection connection = null;
+            try
+            {
+                connection = CreateConnection();
+
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandTimeout = 0;
+                    command.CommandText = $"SELECT page_count * page_size AS size FROM pragma_page_count(), pragma_page_size();";
+                    return (long)command.ExecuteScalar();
+                }
+            }
+            finally
+            {
+                ReleaseConnection(connection);
+            }
         }
 
         public static Action<ModelBuilder> OnModelCreatingOverride = null;

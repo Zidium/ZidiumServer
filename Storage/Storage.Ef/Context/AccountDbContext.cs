@@ -228,6 +228,8 @@ namespace Zidium.Storage.Ef
             Database.ExecuteSqlRaw("SELECT NULL;");
         }
 
+        public abstract long GetDatabaseSize();
+
         #region Статистика использования
 
         public static object LockObject = new object();

@@ -99,5 +99,7 @@
         ITransaction BeginTransaction();
 
         int Migrate();
+
+        long GetDatabaseSize();
     }
 }

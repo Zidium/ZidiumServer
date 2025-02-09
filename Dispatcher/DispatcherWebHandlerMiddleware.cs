@@ -12,6 +12,7 @@ using Zidium.Api.Dto;
 using Zidium.Core;
 using Zidium.Core.Api;
 using Zidium.Core.Caching;
+using Zidium.Storage;
 
 namespace Zidium.Dispatcher
 {
@@ -173,6 +174,22 @@ namespace Zidium.Dispatcher
             ComponentControl.SendMetric("Memory Managed, Mb", managedSize, metricActualInterval);
         }
 
+        private static void SendDatabaseSize()
+        {
+            try
+            {
+                var storageFactory = DependencyInjection.GetServicePersistent<IStorageFactory>();
+                var storage = storageFactory.GetStorage();
+                var size = storage.GetDatabaseSize() / 1024 / 1024;
+                ComponentControl.SendMetric("Database size, Mb", size, metricActualInterval);
+            }
+            catch (Exception e)
+            {
+                var logger = DependencyInjection.GetLogger<DispatcherWebHandlerMiddleware>();
+                logger.LogError(e, e.Message);
+            }
+        }
+
         protected static object CounterLockObject = new object();
 
         protected static void UpdateCounters(long ms, string action)
@@ -214,6 +231,7 @@ namespace Zidium.Dispatcher
             {
                 SendCacheMetrics();
                 SendMemoryMetrics();
+                SendDatabaseSize();
 
                 var avgRequestDuration = RequestsDuration / (RequestsCount > 0 ? RequestsCount : 1);
                 var selfPercent = (RequestsDuration - InvokeDuration) * 100 / (RequestsDuration > 0 ? RequestsDuration : 1);

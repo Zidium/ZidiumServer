@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -31,9 +32,27 @@ namespace Zidium.Storage.Ef
             return base.CreateConnection() ?? new SqlConnection(ConnectionString);
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        public override long GetDatabaseSize()
         {
-            base.OnModelCreating(modelBuilder);
+            DbConnection connection = null;
+            try
+            {
+                connection = CreateConnection();
+
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandTimeout = 0;
+                    command.CommandText = $"SELECT SUM(size) * 8 * 1024 as size FROM sys.master_files WHERE database_id = DB_ID();";
+                    return (long)command.ExecuteScalar();
+                }
+            }
+            finally
+            {
+                ReleaseConnection(connection);
+            }
         }
     }
 }

@@ -316,5 +316,13 @@ namespace Zidium.Storage.Ef
                 return count;
             }
         }
+
+        public long GetDatabaseSize()
+        {
+            using (var context = CreateContext())
+            {
+                return context.GetDatabaseSize();
+            }
+        }
     }
 }
