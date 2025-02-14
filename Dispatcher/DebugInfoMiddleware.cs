@@ -72,7 +72,7 @@ namespace Zidium.Dispatcher
                 output.AppendLine("Count: " + cache.Count + " / " + cache.MaxCount);
                 output.AppendLine("Size: " + DataSizeHelper.GetSizeText(cache.GetSize()));
                 output.AppendLine("Changed: " + cache.GetChangedCount());
-                output.AppendLine("LastSaveChangesDate: " + cache.GetLastSaveChangesDate());
+                output.AppendLine("LastSaveChangesDate: " + cache.GetLastSaveChangesDate().ToString("O"));
                 output.AppendLine("AddCacheCount: " + cache.AddCacheCount);
                 output.AppendLine("AddDataBaseCount: " + cache.AddDataBaseCount);
                 output.AppendLine("UpdateCacheCount: " + cache.UpdateCacheCount);

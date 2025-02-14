@@ -24,8 +24,7 @@ namespace Zidium.Dispatcher
 
         public async Task Invoke(HttpContext httpContext)
         {
-            var timer = new Stopwatch();
-            timer.Start();
+            var timer = Stopwatch.StartNew();
 
             var action = await InvokeInternal(httpContext);
 
@@ -238,7 +237,8 @@ namespace Zidium.Dispatcher
                 var avgInvokeDuration = InvokeDuration / (RequestsCount > 0 ? RequestsCount : 1);
 
                 var actualInterval = TimeSpan.FromDays(365);
-                ComponentControl.SendMetric("Запросов в минуту", RequestsCount, actualInterval);
+                var minutesInInterval = saveCountersTimerInterval.TotalMinutes;
+                ComponentControl.SendMetric("Запросов в минуту", RequestsCount / minutesInInterval, actualInterval);
                 ComponentControl.SendMetric("Мс на запрос", avgRequestDuration, actualInterval);
                 ComponentControl.SendMetric("Процент собственных действий", selfPercent, actualInterval);
                 ComponentControl.SendMetric("Мс на обработку", avgInvokeDuration, actualInterval);
@@ -254,7 +254,7 @@ namespace Zidium.Dispatcher
 
                     var avgActionDuration = stat.Duration / (stat.Count > 0 ? stat.Count : 1);
                     stat.Component.SendMetric("Мс на запрос", avgActionDuration, actualInterval);
-                    stat.Component.SendMetric("Запросов в минуту", stat.Count, actualInterval);
+                    stat.Component.SendMetric("Запросов в минуту", stat.Count / minutesInInterval, actualInterval);
                 }
 
                 // TODO Collect storage stats

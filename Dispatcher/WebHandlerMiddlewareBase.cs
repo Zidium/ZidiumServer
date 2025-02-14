@@ -104,8 +104,7 @@ namespace Zidium.Dispatcher
                         var handler = GetRealHandler();
 
                         // получим response
-                        var timer = new Stopwatch();
-                        timer.Start();
+                        var timer = Stopwatch.StartNew();
 
                         response = InvokeMethod(handler, method, requestPackage);
 
