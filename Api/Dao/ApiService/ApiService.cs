@@ -274,9 +274,9 @@ namespace Zidium.Api
             return DtoService.SendUnitTestResult(request);
         }
 
-        public SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultRequestDataDto[] data)
+        public SendUnitTestResultsResponseDto SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data)
         {
-            var request = GetRequest<SendUnitTestResultsRequestDto, SendUnitTestResultRequestDataDto[]>(data);
+            var request = GetRequest<SendUnitTestResultsRequestDto, List<SendUnitTestResultRequestDataDto>>(data);
             return DtoService.SendUnitTestResults(request);
         }
 

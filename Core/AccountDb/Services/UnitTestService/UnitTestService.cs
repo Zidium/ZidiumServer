@@ -714,7 +714,7 @@ namespace Zidium.Core.AccountsDb
             }
         }
 
-        public void SendUnitTestResults(SendUnitTestResultRequestDataDto[] data)
+        public void SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data)
         {
             foreach (var item in data)
             {

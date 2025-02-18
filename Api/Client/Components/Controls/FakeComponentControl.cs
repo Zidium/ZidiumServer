@@ -285,6 +285,11 @@ namespace Zidium.Api
             return new FakeUnitTestControl();
         }
 
+        public SendUnitTestResultsResponseDto SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data)
+        {
+            return ResponseHelper.GetOfflineResponse<SendUnitTestResultsResponseDto>();
+        }
+
         public GetMetricsResponseDto GetMetrics()
         {
             return ResponseHelper.GetOfflineResponse<GetMetricsResponseDto>();
@@ -339,5 +344,6 @@ namespace Zidium.Api
         {
             return ResponseHelper.GetOfflineResponse<SendEventResponseDto>();
         }
+
     }
 }

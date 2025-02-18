@@ -38,11 +38,11 @@ namespace Zidium.Api
             Client.SetLastResponse(lastResponse);
             if (response.Success)
             {
-                Log.Trace("Success end " + action);
+                if (Log.IsTraceEnabled) Log.Trace("Success end " + action);
             }
             else // todo нужно проверять код ошибки
             {
-                Log.Trace("Failed end " + action + "; errorCode " + response.Code + "; " + response.ErrorMessage);
+                if (Log.IsTraceEnabled) Log.Trace("Failed end " + action + "; errorCode " + response.Code + "; " + response.ErrorMessage);
 
                 // ошибка "событие из будущего"
                 if (response.Code == ResponseCode.FutureEvent)
@@ -61,7 +61,7 @@ namespace Zidium.Api
             TResponse response = null;
             try
             {
-                Log.Trace("Begin " + actionName);
+                if (Log.IsTraceEnabled) Log.Trace("Begin " + actionName);
                 response = action();
             }
             catch (ResponseException exception)
@@ -74,6 +74,7 @@ namespace Zidium.Api
             }
             catch (Exception exception)
             {
+                Log.Error("Exception: " + exception.Message, exception);
                 response = new TResponse()
                 {
                     ErrorMessage = exception.Message,
@@ -230,7 +231,7 @@ namespace Zidium.Api
             return Execute("SendUnitTestResult", () => ApiServiceInternal.SendUnitTestResult(data));
         }
 
-        public SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultRequestDataDto[] data)
+        public SendUnitTestResultsResponseDto SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data)
         {
             return Execute("SendUnitTestResults", () => ApiServiceInternal.SendUnitTestResults(data));
         }

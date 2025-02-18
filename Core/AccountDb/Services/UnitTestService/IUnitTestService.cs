@@ -3,6 +3,7 @@ using Zidium.Core.Api;
 using Zidium.Core.Caching;
 using Zidium.Storage;
 using Zidium.Api.Dto;
+using System.Collections.Generic;
 
 namespace Zidium.Core.AccountsDb
 {
@@ -33,7 +34,7 @@ namespace Zidium.Core.AccountsDb
         /// Отправляет набор результатов проверок
         /// </summary>
         /// <param name="data"></param>
-        void SendUnitTestResults(SendUnitTestResultRequestDataDto[] data);
+        void SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data);
 
         /// <summary>
         /// Получает результат проверки

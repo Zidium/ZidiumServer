@@ -9,6 +9,22 @@ namespace Zidium.Api.Logs
     {
         protected IClient Client { get; set; }
 
+        public bool IsTraceEnabled
+        {
+            get
+            {
+                return Client.Config.Logs.InternalLog.MinLevel == LogLevel.Trace;
+            }
+        }
+
+        public bool IsDebugEnabled
+        {
+            get
+            {
+                return Client.Config.Logs.InternalLog.MinLevel <= LogLevel.Debug;
+            }
+        }
+
         public InternalLog(IClient client)
         {
             if (client == null)

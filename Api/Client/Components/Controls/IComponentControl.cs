@@ -30,7 +30,7 @@ namespace Zidium.Api
         #endregion Разное
 
         #region Компоненты и папки
-        
+
         GetComponentByIdResponseDto GetParent();
 
         GetChildComponentsResponseDto GetChildComponents();
@@ -44,7 +44,7 @@ namespace Zidium.Api
         IComponentControl GetOrCreateChildComponentControl(IComponentTypeControl type, string systemName, string version);
 
         UpdateComponentResponseDto Update(UpdateComponentData data);
-        
+
         IComponentControl GetOrCreateChildFolderControl(string systemName);
 
         IComponentControl GetOrCreateChildFolderControl(GetOrCreateFolderData data);
@@ -69,7 +69,7 @@ namespace Zidium.Api
 
         ApplicationErrorData CreateApplicationError(Exception exception);
 
-      
+
         AddEventResult AddApplicationError(string errorTypeSystemName);
 
         AddEventResult AddApplicationError(string errorTypeSystemName, Exception exception);
@@ -86,7 +86,7 @@ namespace Zidium.Api
         SendEventResponseDto SendApplicationError(Exception exception);
 
         #endregion
-        
+
         #region ComponentEvent
 
         ComponentEventData CreateComponentEvent(string typeSystemName);
@@ -103,13 +103,13 @@ namespace Zidium.Api
 
         #endregion
 
-        #region Юнит-тесты
+        #region Проверки
 
         GetOrCreateUnitTestResponseDto GetOrCreateUnitTest(string systemName, string displayName);
 
         GetOrCreateUnitTestResponseDto GetOrCreateUnitTest(IUnitTestTypeControl unitTestTypeControl, string systemName);
 
-        GetOrCreateUnitTestResponseDto GetOrCreateUnitTest(GetOrCreateUnitTestData data);
+        GetOrCreateUnitTestResponseDto GetOrCreateUnitTest(GetOrCreateUnitTestData data);        
 
         // контролы
 

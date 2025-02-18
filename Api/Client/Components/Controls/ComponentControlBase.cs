@@ -301,7 +301,7 @@ namespace Zidium.Api
 
         #endregion
 
-        #region UnitTests
+        #region Проверки
 
         public abstract GetOrCreateUnitTestResponseDto GetOrCreateUnitTest(GetOrCreateUnitTestData data);
 

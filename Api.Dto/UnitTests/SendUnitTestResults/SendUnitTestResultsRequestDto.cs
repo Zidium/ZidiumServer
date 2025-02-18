@@ -1,6 +1,8 @@
-﻿namespace Zidium.Api.Dto
+﻿using System.Collections.Generic;
+
+namespace Zidium.Api.Dto
 {
-    public class SendUnitTestResultsRequestDto : RequestDtoT<SendUnitTestResultRequestDataDto[]>
+    public class SendUnitTestResultsRequestDto : RequestDtoT<List<SendUnitTestResultRequestDataDto>>
     {
     }
 }

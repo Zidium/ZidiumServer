@@ -9,7 +9,7 @@ namespace Zidium.Api.Dto
     public class SendUnitTestResultRequestDataDto
     {
         public Guid? UnitTestId { get; set; }
-        
+
         public double? ActualIntervalSeconds { get; set; }
 
         public UnitTestResult? Result { get; set; }

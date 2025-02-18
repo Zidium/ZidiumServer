@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Zidium.Api.Dto;
 using Zidium.Core.Common.Helpers;
 
@@ -356,8 +357,7 @@ namespace Zidium.Core.Api.Dispatcher
             return dispatcher.SendUnitTestResult(request);
         }
 
-        public SendUnitTestResultsResponseDto SendUnitTestResults(
-            SendUnitTestResultRequestDataDto[] data)
+        public SendUnitTestResultsResponseDto SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data)
         {
             var request = GetRequest<SendUnitTestResultsRequestDto>();
             request.Data = data;

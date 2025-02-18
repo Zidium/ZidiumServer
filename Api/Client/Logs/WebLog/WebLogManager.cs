@@ -338,6 +338,7 @@ namespace Zidium.Api
         }
 
         public void EndReloadConfig(IComponentControl componentControl)
+
         {
             lock (ReloadConfigsSynchRoot)
             {

@@ -15,7 +15,7 @@ namespace Zidium.Api
         protected ComponentControlOnline GetByIdOnline(Guid id)
         {
             var controlResponse = Client.ApiService.GetComponentControlById(id);
-            var controlInfo = controlResponse.Data;
+            var controlInfo = controlResponse.GetDataAndCheck();
             return new ComponentControlOnline(ClientInternal, controlInfo);
         }
 
@@ -425,5 +425,6 @@ namespace Zidium.Api
             var control = ControlActivator.GetControl();
             return control.Disable(comment, date);
         }
+
     }
 }

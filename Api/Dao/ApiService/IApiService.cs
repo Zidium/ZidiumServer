@@ -152,7 +152,7 @@ namespace Zidium.Api
 
         SendUnitTestResultResponseDto SendUnitTestResult(SendUnitTestResultRequestDataDto data);
 
-        SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultRequestDataDto[] data);
+        SendUnitTestResultsResponseDto SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data);
 
         GetUnitTestStateResponseDto GetUnitTestState(Guid unitTestId);
 

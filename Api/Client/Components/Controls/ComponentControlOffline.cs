@@ -185,5 +185,6 @@ namespace Zidium.Api
         {
             return ResponseHelper.GetOfflineResponse<SetComponentDisableResponseDto>();
         }
+
     }
 }

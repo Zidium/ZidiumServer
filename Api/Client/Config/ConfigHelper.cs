@@ -133,6 +133,7 @@ namespace Zidium.Api.XmlConfig
             access.SecretKey = GetString(element, "secretKey") ?? access.SecretKey;
             access.Disable = GetBool(element, "disable");
             access.WaitOnError = GetTimeSpanFromSeconds(element, "waitOnErrorSeconds") ?? access.WaitOnError;
+            access.Timeout = GetTimeSpanFromSeconds(element, "timeoutSeconds") ?? access.Timeout;
             return access;
         }
 

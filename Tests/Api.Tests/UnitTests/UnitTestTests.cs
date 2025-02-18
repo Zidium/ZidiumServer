@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Xunit;
 using Zidium.Api.Dto;
@@ -324,7 +325,7 @@ namespace Zidium.Api.Tests.UnitTests
             var unitTest1 = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
             var unitTest2 = component.GetOrCreateUnitTestControl(Ulid.NewUlid().ToString());
 
-            var data = new []
+            var data = new List<SendUnitTestResultRequestDataDto>
             {
                 new SendUnitTestResultRequestDataDto()
                 {

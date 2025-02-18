@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using Zidium.Api;
 using Zidium.Api.Dto;
-using Zidium.Core;
 
 namespace Zidium.Dispatcher
 {

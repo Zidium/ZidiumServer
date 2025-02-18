@@ -4,7 +4,7 @@
     {
         public bool Success
         {
-            get { return Code == ResponseCode.Success; }
+            get { return Code == ResponseCode.Success || Code == ResponseCode.ObjectDisabled; }
         }
 
         public int? Code { get; set; }

@@ -175,7 +175,7 @@ namespace Zidium.Api
             return GetResponse<SendUnitTestResultResponseDto>();
         }
 
-        public SendUnitTestResultsResponseDto SendUnitTestResults(SendUnitTestResultRequestDataDto[] data)
+        public SendUnitTestResultsResponseDto SendUnitTestResults(List<SendUnitTestResultRequestDataDto> data)
         {
             return GetResponse<SendUnitTestResultsResponseDto>();
         }

@@ -238,7 +238,7 @@ namespace Zidium.Dispatcher
 
                 var actualInterval = TimeSpan.FromDays(365);
                 var minutesInInterval = saveCountersTimerInterval.TotalMinutes;
-                ComponentControl.SendMetric("Запросов в минуту", RequestsCount / minutesInInterval, actualInterval);
+                ComponentControl.SendMetric("Запросов в минуту", Math.Round(RequestsCount / minutesInInterval), actualInterval);
                 ComponentControl.SendMetric("Мс на запрос", avgRequestDuration, actualInterval);
                 ComponentControl.SendMetric("Процент собственных действий", selfPercent, actualInterval);
                 ComponentControl.SendMetric("Мс на обработку", avgInvokeDuration, actualInterval);
@@ -254,7 +254,7 @@ namespace Zidium.Dispatcher
 
                     var avgActionDuration = stat.Duration / (stat.Count > 0 ? stat.Count : 1);
                     stat.Component.SendMetric("Мс на запрос", avgActionDuration, actualInterval);
-                    stat.Component.SendMetric("Запросов в минуту", stat.Count / minutesInInterval, actualInterval);
+                    stat.Component.SendMetric("Запросов в минуту", Math.Round(stat.Count / minutesInInterval), actualInterval);
                 }
 
                 // TODO Collect storage stats

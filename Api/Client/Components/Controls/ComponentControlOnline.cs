@@ -267,5 +267,6 @@ namespace Zidium.Api
         {
             return Client.ApiService.SetComponentDisable(Info.Id, date, comment);
         }
+
     }
 }

@@ -5,6 +5,7 @@ using Zidium.Core.Api;
 using Zidium.Api.Dto;
 using Zidium.TestTools;
 using Zidium.Common;
+using System.Collections.Generic;
 
 namespace Zidium.Core.Tests.Dispatcher
 {
@@ -38,7 +39,7 @@ namespace Zidium.Core.Tests.Dispatcher
             var unittest1 = TestHelper.CreateTestUnitTest(component.Id);
             var unittest2 = TestHelper.CreateTestUnitTest(component.Id);
 
-            var data = new[]
+            var data = new List<SendUnitTestResultRequestDataDto>
             {
                 new SendUnitTestResultRequestDataDto()
                 {
