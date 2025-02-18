@@ -4,14 +4,21 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Zidium.Api</AssemblyName>
     <RootNamespace>Zidium.Api</RootNamespace>
-    <Version>2.1.10</Version>
+    <Version>2.2.0</Version>
     <Description>This is an official .Net Core Api library for Zidium monitoring system</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageIconUrl>https://zidium.net/banners/nuget-icon.png</PackageIconUrl>
     <PackageProjectUrl>https://zidium.net</PackageProjectUrl>
     <PackageTags>Zidium monitoring events unittests metrics log core</PackageTags>
     <Title>Zidium Api for .Net Core</Title>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>
+      - Отправка данных отключенному объекту больше не считается ошибкой
+      - В сборку net api встроена отладочная информация
+      - В настройки добавлен таймаут запросов
+      - Оптимизирована работа внутреннего лога
+      - Во внутренний лог добавлена статистика времени выполения запросов
+      - Переход на пул клиентов http
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
